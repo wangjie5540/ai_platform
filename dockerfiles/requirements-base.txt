@@ -26,6 +26,4 @@ cos-python-sdk-v5==1.9.15
 google-auth==2.6.6
 google-auth-oauthlib==0.5.1
 ortools==9.3.10497
-
-
-
+openpyxl==3.0.9
