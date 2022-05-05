@@ -3,7 +3,7 @@ FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/miniconda3:4.11.0
 # 添加requirements-base的依赖
 COPY requirements-base.txt /tmp/requirements.txt
 # 安装python依赖包
-RUN pip --default-timeout=1000 install --ignore-installed --use-deprecated=legacy-resolver -r /tmp/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN source ~/.bashrc && pip --default-timeout=1000 install --ignore-installed --use-deprecated=legacy-resolver -r /tmp/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 执行命令如下
 # docker build -t miniconda3-base -f Dockerfile-base .
