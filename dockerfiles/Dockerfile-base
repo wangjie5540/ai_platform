@@ -1,7 +1,5 @@
 # 基于miniconda生成基础镜像
-FROM continuumio/miniconda3:4.11.0
-# 添加apt的阿里源
-COPY debian-10-sourcelist /etc/apt/sources.list
+FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/miniconda3:4.11.0
 # 添加requirements-base的依赖
 COPY requirements-base.txt /tmp/requirements.txt
 # 安装python依赖包
