@@ -128,3 +128,4 @@ def ctr_hot_op(input_file, output_file):
 
 def click_hot_op(input_file, output_file):
     pass
+
