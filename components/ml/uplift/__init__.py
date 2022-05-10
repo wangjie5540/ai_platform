@@ -1,19 +1,27 @@
 # coding: utf-8
 from kfp.dsl import ContainerOp
-from . import uplift_model
+
+import common.constants.global_constant as global_constant
+from common.utils import component_helper
+
+component_name = 'uplift'
+version = 'latest'
+image_name = f'{global_constant.image_registry}/{global_constant.registry_db}/{component_name}'
+image_tag = 'latest'
+image_full_name = f'{image_name}:{image_tag}'
+out_1 = component_helper.get_output(component_name)
 
 
+# TODO 后续做成门面模式，单独提供pip包
 class UpliftOp(ContainerOp):
-    def __init__(self, input_file):
+    def __init__(self, input_file, volume):
         super(UpliftOp, self).__init__(
-            name='uplift op',
-            image='digit-force-docker.pkg.coding.net/marketing_algorithm/hello-world/my_test_component:latest',
-            command=[],
-            arguments=[
-                '--input_file',
-                input_file,
-            ],
+            name=component_name,
+            image=image_full_name,
+            command=['python', 'uplift_model.py'],
+            arguments=['--input_file', input_file],
             file_outputs={
-                'model': uplift_model.output_file
+                'out_1': out_1
             },
+            pvolumes={'/mnt/nfs': volume}
         )
