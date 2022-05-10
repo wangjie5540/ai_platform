@@ -1,18 +1,19 @@
-from kfp.dsl import component, ContainerOp
-import common.utils.resource_helper as resource_helper
+# coding: utf-8
+from kfp.dsl import ContainerOp
+import uplift_model
 
 
-@component
-def component_uplift(input_file: str):
-    return ContainerOp(
-        name='operator uplift',
-        image='xxxxxxxxxxxxx',
-        command=['python', 'uplift_model.py'],
-        arguments=[
-            '--input_file',
-            input_file,
-        ],
-        file_outputs={
-            'model': resource_helper.apply_resource()
-        }
-    )
+class UpliftOp(ContainerOp):
+    def __init__(self, input_file):
+        super(UpliftOp, self).__init__(
+            name='uplift op',
+            image='digit-force-docker.pkg.coding.net/marketing_algorithm/hello-world/my_test_component:latest',
+            command=[],
+            arguments=[
+                '--input_file',
+                input_file,
+            ],
+            file_outputs={
+                'model': uplift_model.output_file
+            },
+        )

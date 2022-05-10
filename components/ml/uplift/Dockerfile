@@ -4,4 +4,3 @@ CMD mkdir -p $COMPONENT_DIR
 WORKDIR $COMPONENT_DIR
 COPY common ./common
 COPY components/ml/uplift .
-CMD ["python", "-V"]
