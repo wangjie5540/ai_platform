@@ -11,3 +11,7 @@ def pass_output(output_params: dict):
             print(save_path)
             with open(save_path, 'w') as f:
                 f.write(value)
+
+
+def get_output(component_name):
+    return os.path.join(global_constant.component_output_path, component_name)
