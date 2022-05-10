@@ -1,6 +1,6 @@
 # coding: utf-8
 from kfp.dsl import ContainerOp
-import uplift_model
+from . import uplift_model
 
 
 class UpliftOp(ContainerOp):
