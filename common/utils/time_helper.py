@@ -9,8 +9,8 @@ def get_today_str(data_format=DATE_FORMAT):
     return datetime.datetime.today().strftime(data_format)
 
 
-def get_day_str(date: datetime, data_format=DATE_FORMAT):
-    return date.strftime(data_format)
+def get_day_str(date: datetime, date_format=DATE_FORMAT):
+    return date.strftime(date_format)
 
 
 def n_days_ago(days):
