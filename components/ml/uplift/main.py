@@ -4,13 +4,14 @@ import argparse
 from facade.components.ml.uplift import *
 
 if __name__ == '__main__':
+    print("uplift component running")
     # 解析输入参数
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_1', type=str, required=True, help='样本数据')
     args = parser.parse_args()
-
+    print(f"参数解析完毕. [input_1={args.input_1}]")
     # 调用组件功能
-    up = uplift_model.uplift_train(args.intput_1, out_1)
+    up = uplift_model.uplift_train(args.input_1, out_1)
 
     # 向下游传递参数
     # TODO 后续将进行封装
