@@ -1,4 +1,6 @@
 # coding: utf-8
+
+# 文件相关工具类
 import pickle
 import os
 

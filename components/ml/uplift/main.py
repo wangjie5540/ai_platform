@@ -3,7 +3,8 @@ import uplift_model
 import argparse
 from facade.components.ml.uplift import *
 
-if __name__ == '__main__':
+
+def run():
     print("uplift component running")
     # 解析输入参数
     parser = argparse.ArgumentParser()
@@ -16,3 +17,7 @@ if __name__ == '__main__':
     # 向下游传递参数
     # TODO 后续将进行封装
     component_helper.pass_output({'out_1': out_1})
+
+
+if __name__ == '__main__':
+    run()
