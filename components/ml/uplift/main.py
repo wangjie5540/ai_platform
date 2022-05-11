@@ -2,6 +2,7 @@
 import uplift_model
 import argparse
 from facade.components.ml.uplift import *
+import os
 
 
 def run():
@@ -12,11 +13,12 @@ def run():
     args = parser.parse_args()
     print(f"参数解析完毕. [input_1={args.input_1}]")
     # 调用组件功能
-    up = uplift_model.uplift_train(args.input_1, out_1)
+    model_path = os.path.join(global_constant.mount_nfs_dir, 'uplift.model')
+    uplift_model.uplift_train(args.input_1, model_path)
 
     # 向下游传递参数
     # TODO 后续将进行封装
-    component_helper.pass_output({'out_1': out_1})
+    component_helper.pass_output(model_path, 1)
 
 
 if __name__ == '__main__':
