@@ -1,6 +1,8 @@
 import pandas as pd
 from pyhive import hive
 
+from common.config.bigdata_config import HIVE_HOST, HIVE_PORT
+
 
 def _get_conn(func):
     def wrapper(self, *args, **kwargs):
@@ -44,8 +46,8 @@ class HiveClient:
         self.conn = None
 
 
-ss_dev_hive_helper = HiveClient(host="172.21.32.74", port=10000)
+dg_hive_helper = HiveClient(host=HIVE_HOST, port=HIVE_PORT)
 
 if __name__ == '__main__':
-    df = ss_dev_hive_helper.query_to_df("select * from algorithm.sku_profile limit 100")
+    df = dg_hive_helper.query_to_df("select * from algorithm.sku_profile limit 100")
     print(df)
