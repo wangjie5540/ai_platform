@@ -2,11 +2,13 @@ import glob
 
 import pyhdfs
 
+from common.config.bigdata_config import HDFS_HOST, HDFS_PORT
+
 
 class HdfsClient:
     def __init__(self, hosts=None, user_name="root"):
         if hosts is None:
-            hosts = ["172.21.32.108:9870"]
+            hosts = []
         self.hosts = hosts
         self.user_name = user_name
         self.hdfs_client = None
@@ -51,13 +53,13 @@ class HdfsClient:
         files = glob.glob(local_dir)
 
 
-ss_hdfs_client = HdfsClient()
+dg_hdfs_client = HdfsClient(hosts=[f"{HDFS_HOST}:{HDFS_PORT}"])
 
 
 def main():
-    ss_hdfs_client.mkdir_dirs("/user/zhangxueren/host_1/hosts_2/host_3")
-    print(ss_hdfs_client.exists("/user/zhangxueren/host_1/hosts_2/host_3"))
-    print(ss_hdfs_client.list_status("/user/zhangxueren/host_1/hosts_2/"))
+    dg_hdfs_client.mkdir_dirs("/user/zhangxueren/host_1/hosts_2/host_3")
+    print(dg_hdfs_client.exists("/user/zhangxueren/host_1/hosts_2/host_3"))
+    print(dg_hdfs_client.list_status("/user/zhangxueren/host_1/hosts_2/"))
     # print(hdfs_client.list_dir("/user/zhangxueren"))
     # print(hdfs_client.list_status("/user/zhangxueren"))
 
