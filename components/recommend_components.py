@@ -1,5 +1,6 @@
 import kfp.dsl as dsl
 
+
 ############################## io ############################
 def hdfs_to_local(hdfs_file, local_path, image_tag="latest"):
     '''
@@ -11,7 +12,7 @@ def hdfs_to_local(hdfs_file, local_path, image_tag="latest"):
     '''
 
     return dsl.ContainerOp(name="hdfs_to_local'",
-                           image="xxxxxx" + f":{image_tag}",  # todo
+                           image="digit-force-docker.pkg.coding.net/ai-platform/ai-components/components-source-hdfs" + f":{image_tag}",
                            command="python",
                            arguments=["main.py", 'hdfs_to_local', hdfs_file, local_path])
 
@@ -27,9 +28,10 @@ def local_to_hdfs(hdfs_file, local_path, image_tag="latest"):
     '''
 
     return dsl.ContainerOp(name="local_to_hdfs",
-                           image="xxxxxx" + f":{image_tag}",  # todo
+                           image="digit-force-docker.pkg.coding.net/ai-platform/ai-components/components-source-hdfs" + f":{image_tag}",
                            command="python",
-                           arguments=["main.py", 'hdfs_to_local', hdfs_file, local_path])
+                           arguments=["main.py", 'hdfs_from_local', hdfs_file, local_path])
+
 
 ######################## dataset #############################
 def generate_mf_train_dataset_op(input_file, output_file, user_and_id_map_file, item_and_id_map_file,
@@ -47,8 +49,8 @@ def generate_mf_train_dataset_op(input_file, output_file, user_and_id_map_file, 
     :return: deep_mf_op
     '''
 
-    return dsl.ContainerOp(name="deep_mf'",
-                           image="xxxxxx" + f":{image_tag}",  # todo
+    return dsl.ContainerOp(name="mf-data_generator'",
+                           image="digit-force-docker.pkg.coding.net/ai-platform/ai-components/components-data_prepocess-dataset-mf-data_generator" + f":{image_tag}",
                            command="python",
                            arguments=["main.py", input_file, output_file, user_and_id_map_file, item_and_id_map_file])
 
@@ -75,7 +77,7 @@ def deep_mf_op(input_file, item_embeding_file, user_embeding_file, image_tag="la
     :return: deep_mf_op
     '''
     return dsl.ContainerOp(name="deep_mf'",
-                           image="xxxxxx" + f":{image_tag}",  # todo
+                           image="digit-force-docker.pkg.coding.net/ai-platform/ai-components/components-recommend-recall-mf-deep_mf" + f":{image_tag}",  # todo
                            command="python",
                            arguments=["main.py", input_file, item_embeding_file, user_embeding_file])
 
@@ -94,8 +96,8 @@ def user_profile_calculator_op(input_file, user_profile_file, image_tag="latest"
     :param image_tag: 组件版本
     :return: user_profile_calculator_op
     '''
-    return dsl.ContainerOp(name="deep_mf'",
-                           image="xxxxxx" + f":{image_tag}",  # todo
+    return dsl.ContainerOp(name="user_profile_calculator",
+                           image="digit-force-docker.pkg.coding.net/ai-platform/ai-components/components-recommend-user_profile-user_profile_caculator" + f":{image_tag}",
                            command="python",
                            arguments=["main.py", input_file, user_profile_file])
 
@@ -116,9 +118,10 @@ def user_profile_recall_op(input_file, output_file, profile_and_hot_item_file, i
     :return:
     '''
     return dsl.ContainerOp(name="deep_mf'",
-                           image="xxxxxx" + f":{image_tag}",  # todo
+                           image="digit-force-docker.pkg.coding.net/ai-platform/ai-components/components-recommend-recall-user_profile-user_profile_recall" + f":{image_tag}",
                            command="python",
-                           arguments=["main.py", input_file, output_file, profile_and_hot_item_file])
+                           arguments=["main.py", input_file, output_file, profile_and_hot_item_file],
+                           )
 
 
 ######################## hot ########################################
