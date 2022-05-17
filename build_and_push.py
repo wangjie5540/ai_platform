@@ -15,23 +15,29 @@ RUN mkdir -p $PROJECT_DIR
 WORKDIR $PROJECT_DIR
 ENV PYTHONPATH=$PROJECT_DIR
 
-COPY .digitforce_ai_platform $PROJECT_DIR/.digitforce_ai_platform
-COPY ./common $PROJECT_DIR/common
+RUN mkdir -p $PROJECT_DIR/digitforce/aip
+COPY ./digitforce/__init__.py $PROJECT_DIR/digitforce/__init__.py
+COPY ./digitforce/aip/__init__.py $PROJECT_DIR/digitforce/aip/__init__.py
 
-COPY {image_dir}/* $PROJECT_DIR/
+COPY ./digitforce/aip/cgf $PROJECT_DIR/digitforce/aip/common
+COPY ./digitforce/aip/cgf $PROJECT_DIR/digitforce/aip/cgf
+
+COPY {image_dir}/*py $PROJECT_DIR/
+
 '''
 
 
-def generate_docker_file(one_dir, bottom_image_name=None):
+def generate_docker_file(one_dir, bottom_image_name=None, tag="latest"):
     dockerfile_path = os.path.join(one_dir, "Dockerfile")
     with open(dockerfile_path, mode='w', encoding='utf-8') as fo:
         fo.write(get_dockerfile_content(one_dir, bottom_image_name))
+    image_name = f"digit-force-docker.pkg.coding.net/ai-platform/ai-components/{one_dir.replace('/', '-')}:{tag}"
     build_cmd = f"docker build -t " \
-                f"digit-force-docker.pkg.coding.net/ai-platform/ai-src/{one_dir.replace('/', '-')}" \
+                f"{image_name}" \
                 f" -f {dockerfile_path} ."
     os.system(build_cmd)
     push_cmt = f"docker push " \
-               f"digit-force-docker.pkg.coding.net/ai-platform/ai-src/{one_dir.replace('/', '-')}"
+               f"{image_name}"
     os.system(push_cmt)
 
 

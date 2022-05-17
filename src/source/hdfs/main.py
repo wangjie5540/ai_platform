@@ -1,7 +1,7 @@
 import logging
 import os.path
 
-from digitforce.aip.common import dg_hdfs_client
+from digitforce.aip.common.hdfs_helper import dg_hdfs_client
 
 
 def main():
