@@ -1,8 +1,8 @@
 # coding: utf-8
 from kfp.dsl import ContainerOp, PipelineVolume
 
-import common.constants.global_constant as global_constant
-from common.utils import component_helper
+import digitforce.aip.common.constants.global_constant as global_constant
+from digitforce.aip.common.utils import component_helper
 
 component_name = 'uplift'
 version = 'latest'
