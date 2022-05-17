@@ -13,7 +13,7 @@ def run():
     args = parser.parse_args()
     print(f"参数解析完毕. [input_1={args.input_1}]")
     # 调用组件功能
-    model_path = os.path.join(global_constant.mount_nfs_dir, 'uplift.model')
+    model_path = os.path.join(global_constant.MOUNT_NFS_DIR, 'uplift.model')
     uplift_model.uplift_train(args.input_1, model_path)
 
     # 向下游传递参数
