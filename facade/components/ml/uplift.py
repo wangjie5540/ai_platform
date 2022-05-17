@@ -6,7 +6,7 @@ from digitforce.aip.common.utils import component_helper
 
 component_name = 'uplift'
 version = 'latest'
-image_name = f'{global_constant.image_registry}/{global_constant.registry_db}/{component_name}'
+image_name = f'{global_constant.IMAGE_REGISTRY}/{global_constant.REGISTRY_DB}/{component_name}'
 image_tag = 'latest'
 image_full_name = f'{image_name}:{image_tag}'
 out_1 = component_helper.get_output(component_name)
@@ -23,5 +23,5 @@ class UpliftOp(ContainerOp):
             file_outputs={
                 'out_1': out_1
             },
-            pvolumes={global_constant.mount_nfs_dir: PipelineVolume(pvc=global_constant.default_pvc)}
+            pvolumes={global_constant.MOUNT_NFS_DIR: PipelineVolume(pvc=global_constant.DEFAULT_PVC)}
         )
