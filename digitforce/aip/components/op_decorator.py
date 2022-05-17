@@ -1,7 +1,7 @@
-from kfp.dsl import PipelineVolume
+from kfp import dsl
 from kubernetes.client.models import V1VolumeMount
 
-NFS_DATA_VOLUME = PipelineVolume(pvc="ai-platform-pvc")
+NFS_DATA_VOLUME = dsl.PipelineVolume(pvc="ai-platform-pvc")
 DATA_VOLUME_MOUNT = V1VolumeMount(mount_path="/data", name="data_volume")
 
 

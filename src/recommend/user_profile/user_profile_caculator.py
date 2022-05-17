@@ -89,10 +89,10 @@ def calculate_user_score_and_save(user_id, user_events, output_fo, calculator=No
     fcntl.fcntl(output_fo.fileno(), fcntl.LOCK_UN)
 
 
-def get_event_type(click_cnt, share_cnt, save_cnt):
-    if save_cnt:
+def get_event_type(click_cnt, save_cnt, order_cnt):
+    if order_cnt:
         return 10
-    if share_cnt:
+    if save_cnt:
         return 2
     if click_cnt:
         return 1
@@ -113,10 +113,10 @@ def calculate_user_profile(input_file, output_file):
             item_id = vals[1]
             profile_id = vals[2]
             click_cnt = vals[3]
-            share_cnt = vals[4]
-            save_cnt = vals[5]
+            save_cnt = vals[4]
+            order_cnt = vals[5]
             event_timestamp = vals[6]
-            event_type = get_event_type(click_cnt, share_cnt, save_cnt)
+            event_type = get_event_type(click_cnt, save_cnt, order_cnt)
             u = UserEvent(user_id, item_id, event_type, "cid3", profile_id, event_timestamp)
             if cur_user_id is None:
                 cur_user_id = user_id

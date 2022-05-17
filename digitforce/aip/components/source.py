@@ -1,6 +1,6 @@
 import kfp.dsl as dsl
 
-from op_decorator import *
+from digitforce.aip.components.op_decorator import *
 
 
 @mount_data_pv
