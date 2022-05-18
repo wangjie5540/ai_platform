@@ -1,5 +1,5 @@
 import faiss
-
+import numpy as np
 
 def find_neighbor(user_vec_file, item_vec_file, output_file, topk=100):
     item_and_vec_map = {}

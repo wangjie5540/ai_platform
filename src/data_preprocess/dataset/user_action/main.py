@@ -7,8 +7,8 @@ def main():
     import sys
     input_table = sys.argv[1]
     output_file = sys.argv[2]
-
-    generate_train_data(input_table, output_file,)
+    profile_name = sys.argv[3]
+    generate_train_data(input_table, output_file, profile_name)
 
 
 if __name__ == '__main__':

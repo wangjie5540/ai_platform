@@ -1,5 +1,4 @@
-import kfp.dsl as dsl
-
+from digitforce.aip.common.constants.global_constant import AI_PLATFORM_IMAGE_REPO
 from digitforce.aip.components.op_decorator import *
 
 
@@ -13,10 +12,10 @@ def hdfs_to_local(hdfs_file, local_path, image_tag="latest"):
     :return:
     '''
     op = dsl.ContainerOp(name="hdfs_to_local'",
-                         image="digit-force-docker.pkg.coding.net/ai-platform/"
-                               "ai-image/src-source-hdfs" + f":{image_tag}",
+                         image=f"{AI_PLATFORM_IMAGE_REPO}"
+                               "/src-source-hdfs" + f":{image_tag}",
                          command="python",
-                         arguments=["main.py", 'hdfs_to_local', hdfs_file, local_path]
+                         arguments=["main.py", 'hdfs_to_local', local_path, hdfs_file]
                          )
     return op
 
@@ -31,9 +30,9 @@ def local_to_hdfs(hdfs_file, local_path, image_tag="latest"):
     :return:
     '''
     op = dsl.ContainerOp(name="local_to_hdfs",
-                         image="digit-force-docker.pkg.coding.net/ai-platform/"
-                               "ai-image/src-source-hdfs" + f":{image_tag}",
+                         image=f"{AI_PLATFORM_IMAGE_REPO}"
+                               "/src-source-hdfs" + f":{image_tag}",
                          command="python",
                          arguments=["main.py", 'local_to_hdfs',
-                                    hdfs_file, local_path])
+                                    local_path, hdfs_file])
     return op

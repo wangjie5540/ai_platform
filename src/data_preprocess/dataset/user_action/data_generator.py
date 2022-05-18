@@ -12,6 +12,7 @@ def generate_train_data(input_table, output_file, profile_col_name):
         order_cnt,
         event_timestamp  
     FROM {input_table}
+    WHERE click_cnt > 0 OR save_cnt > 0 OR order_cnt > 0 
     ORDER BY user_id, event_timestamp DESC
 '''
     df = dg_hive_helper.query_to_df(sql)

@@ -6,3 +6,5 @@ IMAGE_REGISTRY = 'digit-force-docker.pkg.coding.net/marketing_algorithm'
 REGISTRY_DB = 'hello-world'
 # 默认的pvc，需要在部署完毕之后同步创建
 DEFAULT_PVC = 'ai-platform-pvc'
+
+AI_PLATFORM_IMAGE_REPO = "digit-force-docker.pkg.coding.net/ai-platform/ai-components"
