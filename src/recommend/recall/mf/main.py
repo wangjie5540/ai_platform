@@ -1,3 +1,4 @@
+import json
 import logging
 
 from deep_mf import train
@@ -17,11 +18,13 @@ def main():
     with open(item_embeding_file, "w") as fo:
         item_emb = mf_model.item_emb.weight.detach().to('cpu').numpy().tolist()
         for i, item_vec in enumerate(item_emb):
-            fo.write(f"{i},{item_vec}\n")
+            line = json.dumps({'item_id': i, 'item_vec': item_vec})
+            fo.write(f"{line}\n")
     with open(user_embeding_file, "w") as fo:
         user_emb = mf_model.user_emb.weight.detach().to('cpu').numpy().tolist()
         for i, user_vec in enumerate(user_emb):
-            fo.write(f"{i},{user_vec}\n")
+            line = json.dumps({'user_id': i, 'user_vec': user_vec})
+            fo.write(f"{line}\n")
     logging.info(f"finish....")
 
 

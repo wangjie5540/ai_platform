@@ -3,6 +3,7 @@ from digitforce.aip.components.op_decorator import *
 
 IMAGE_NAME_HEADER = "/src-recommend-recall"
 
+
 @mount_data_pv
 def user_profile_recall_op(input_file, output_file, hot_csv_file, item_and_profile_map_file, image_tag="latest"):
     '''
@@ -55,3 +56,22 @@ def deep_mf_op(input_file, item_embeding_file, user_embeding_file, image_tag="la
                                  f"{IMAGE_NAME_HEADER}-mf" + f":{image_tag}",
                            command="python",
                            arguments=["main.py", input_file, item_embeding_file, user_embeding_file])
+
+
+@mount_data_pv
+def similarity_search_recall_op(user_vec_file, item_vec_file, output_file, topk, image_tag="latest"):
+    '''
+    基于最近邻的向量召回策略
+
+    :param user_vec_file: 用户向量
+    :param item_vec_file: item向量
+    :param output_file: 召回结果
+    :param topk: 召回数量
+    :param image_tag: 组件版本
+    :return: deep_mf_op
+    '''
+    return dsl.ContainerOp(name="deep_mf'",
+                           image=f"{AI_PLATFORM_IMAGE_REPO}"
+                                 f"{IMAGE_NAME_HEADER}-mf" + f":{image_tag}",
+                           command="python",
+                           arguments=["main.py", user_vec_file, item_vec_file, output_file, topk])
