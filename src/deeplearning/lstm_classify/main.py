@@ -1,8 +1,7 @@
-# coding: utf-8
+
 import torch
 import lstm_model
 import argparse
-from facade.components.ml.uplift import *
 
 
 def run():
@@ -10,20 +9,29 @@ def run():
     # 解析输入参数
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--input_file_train', type=str, default="train.txt", help='input filename for train')
-    parser.add_argument('--input_file_predict', type=str, default="test.txt", help='input filename for test')
+    parser.add_argument('--input_file_train', type=str, default="data.sparse.train", help='input filename for train')
+    parser.add_argument('--input_file_valid', type=str, default="data.sparse.test", help='input filename for valid')
+    parser.add_argument('--input_file_predict', type=str, default="data.sparse.test", help='input filename for test')
+
     parser.add_argument('--train', type=bool, default=True, help='train or not')
+    parser.add_argument('--valid', type=bool, default=True, help='valid or not')
     parser.add_argument('--predict', type=bool, default=True, help='predict or not')
+
     parser.add_argument('--output_model', type=str, default="output.model", help='output model')
     parser.add_argument('--output_predict_file', type=str, default="output.predict", help='output predict file name')
 
-    parser.add_argument('--epochs', type=int, default=3, help='input dimension')
+    parser.add_argument('--epochs', type=int, default=10, help='input dimension')
     parser.add_argument('--input_size', type=int, default=1, help='input dimension')
-    parser.add_argument('--output_size', type=int, default=1, help='output dimension')
+    parser.add_argument('--output_size', type=int, default=6, help='output dimension')
+    parser.add_argument('--vocab_size', type=int, default=9277, help='vocab_size')
+    parser.add_argument('--embed_dim', type=int, default=70, help='embed_dim')
+    parser.add_argument('--dropout', type=float, default=0.5, help='dropout')
     parser.add_argument('--hidden_size', type=int, default=32, help='hidden size')
-    parser.add_argument('--num_layers', type=int, default=2, help='num layers')
+    parser.add_argument('--num_layers', type=int, default=1, help='num layers')
+    parser.add_argument('--attention_size', type=int, default=16, help='attention_size')
+    parser.add_argument('--sequence_length', type=int, default=16, help='sequence_length')
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
-    parser.add_argument('--batch_size', type=int, default=30, help='batch size')
+    parser.add_argument('--batch_size', type=int, default=17, help='batch size')
     parser.add_argument('--optimizer', type=str, default='adam', help='type of optimizer')
     parser.add_argument('--device', default=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     parser.add_argument('--weight_decay', type=float, default=1e-4, help='weight decay')

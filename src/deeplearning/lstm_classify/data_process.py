@@ -47,6 +47,9 @@ class MyDataset(Dataset):
 
 def nn_seq(B, input_file):
     print('data processing...')
+    data_feature = []
+    data_label = []
+    # feature_len = 0
     data = []
     with open(input_file) as f:
         for line in f:
@@ -54,19 +57,22 @@ def nn_seq(B, input_file):
             if len(parts) != 2:
                 continue
             x = []
-            y = []
             for term in parts[0].split(","):
-                x.append(float(term))
-            y.append(float(parts[1]))
+                x.append(int(term))
+            y = int(parts[1])
 
-            x = torch.FloatTensor(x)
-            y = torch.FloatTensor(y)
+
+            x = torch.IntTensor(x)
+            # y = torch.IntTensor(y)
+            # y = torch.from_numpy(np.asarray([y]))
+
             data.append((x, y))
 
-    zheng_len = int(len(data) / B) * B
-
-    mydata = MyDataset(data[:zheng_len])
-    data_loader = DataLoader(dataset=mydata, batch_size=B, shuffle=False, num_workers=0)
+    # zheng_len = int(len(data) / B) * B
+    # mydata = MyDataset(data[:zheng_len])
+    mydata = MyDataset(data)
+    data_loader = DataLoader(dataset=mydata, batch_size=B, shuffle=False, drop_last=True)
+    # data_loader = DataLoader(data_feature, data_label, feature_len, batch_size=B, shuffle=False)
     return data_loader
 
 
