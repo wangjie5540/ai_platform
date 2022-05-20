@@ -24,8 +24,14 @@ def lstm_regress_train_op(input_file_train, output_model, epochs, lr, batch_size
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"/src-deeplearning-lstm_regress" + f":{image_tag}",
                            command="python",
-                           arguments=[f"main.py --input_file_train {input_file_train} --output_model {output_model} --epochs {epochs} --lr {lr} --batch_size {batch_size} --predict False --valid False"])
-
+                           arguments=["main.py",
+                                      "--input_file_train", input_file_train,
+                                      "--output_model", output_model,
+                                      "--epochs", epochs,
+                                      "--lr", lr,
+                                      "--batch_size", batch_size,
+                                      "--predict", "",
+                                      "--valid", ""])
 
 @mount_data_pv
 def lstm_regress_predict_op(input_file_predict, model_file, output_file, image_tag="latest"):
@@ -48,4 +54,9 @@ def lstm_regress_predict_op(input_file_predict, model_file, output_file, image_t
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"/src-deeplearning-lstm_regress" + f":{image_tag}",
                            command="python",
-                           arguments=[f"main.py --input_file_predict {input_file_predict} --output_model {model_file} --output_predict_file {output_file} --train False --valid False"])
+                           arguments=["main.py",
+                                      "--input_file_predict", input_file_predict,
+                                      "--output_model", model_file,
+                                      "--output_predict_file", output_file,
+                                      "--train", "",
+                                      "--valid", ""])

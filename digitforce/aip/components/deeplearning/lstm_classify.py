@@ -26,7 +26,16 @@ def lstm_classify_train_op(input_file_train, output_model, class_nums, input_dic
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"/src-deeplearning-lstm_classify" + f":{image_tag}",
                            command="python",
-                           arguments=[f"main.py --input_file_train {input_file_train} --output_model {output_model} --epochs {epochs} --vocab_size {input_dict_size} --output_size {class_nums} --lr {lr} --batch_size {batch_size} --predict False --valid False"])
+                           arguments=["main.py",
+                                      "--input_file_train", input_file_train,
+                                      "--output_model", output_model,
+                                      "--epochs", epochs,
+                                      "--lr", lr,
+                                      "--vocab_size", input_dict_size,
+                                      "--output_size", class_nums,
+                                      "--batch_size", batch_size,
+                                      "--predict", "",
+                                      "--valid", ""])
 
 
 @mount_data_pv
@@ -52,4 +61,10 @@ def lstm_classify_predict_op(input_file_predict, model_file, output_file, class_
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"/src-deeplearning-lstm_classify" + f":{image_tag}",
                            command="python",
-                           arguments=[f"main.py --input_file_predict {input_file_predict} --output_model {model_file} --output_predict_file {output_file} --vocab_size {input_dict_size} --output_size {class_nums} --train False --valid False"])
+                           arguments=["main.py",
+                                      "--input_file_predict", input_file_predict,
+                                      "--output_model", model_file,
+                                      "--vocab_size", input_dict_size,
+                                      "--output_size", class_nums,
+                                      "--predict", "",
+                                      "--valid", ""])
