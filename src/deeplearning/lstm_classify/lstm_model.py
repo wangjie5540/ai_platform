@@ -1,4 +1,4 @@
-
+import logging
 import torch
 from torch import nn
 from models import LSTM
@@ -31,7 +31,6 @@ def train(args):
         optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
                                     momentum=0.9, weight_decay=args.weight_decay)
     # training
-    loss = 0
     for i in tqdm(range(args.epochs)):
         model.train()
         total_loss = 0
@@ -46,8 +45,7 @@ def train(args):
             optimizer.step()
             total_loss += loss.data
             count += 1
-        # print('train-epoch', i, ':', loss.item())
-        print('train-epoch', i, ':', total_loss.item()/count)
+        logging.info(f"train-epoch:{i}, loss:{total_loss.item()/count}")
 
         if args.valid:
             model.eval()
@@ -64,7 +62,7 @@ def train(args):
                 correct = (torch.max(y_pred, 1)[1].view(label.size()).data == label.data).sum()
                 corrects += correct
             acc = corrects.item()/(count * len(label))
-            print("valid: epoch {} | loss: {} | acc: {} | corrects: {}".format(i, total_loss.item()/count, acc, corrects))
+            logging.info(f"valid-epoch: {i} | loss: {total_loss.item()/count} | acc: {acc} | corrects: {corrects}")
 
     state = {'model': model.state_dict(), 'optimizer': optimizer.state_dict()}
     torch.save(state, args.output_model)
@@ -76,7 +74,7 @@ def predict(args):
 
     pred = []
     y = []
-    print('loading model...')
+    logging.info('loading model...')
     model = LSTM(batch_size=args.batch_size,
                  output_size=args.output_size,
                  hidden_size=args.hidden_size,
@@ -89,7 +87,7 @@ def predict(args):
 
     model.load_state_dict(torch.load(args.output_model)['model'])
     model.eval()
-    print('predicting...')
+    logging.info('predicting...')
     for (seq, target) in tqdm(Dte):
         y.append(target.item())
         seq = seq.to(args.device)
@@ -101,3 +99,4 @@ def predict(args):
     with open(args.output_predict_file, "w") as f:
         for index in range(len(pred)):
             f.write("%s\t%s\n" % (y[index], pred[index]))
+    logging.info("predict finished.")

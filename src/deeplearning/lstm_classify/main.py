@@ -2,10 +2,11 @@
 import torch
 import lstm_model
 import argparse
-
+from digitforce.aip.common.logging_config import setup_console_log
+import logging
 
 def run():
-    print("uplift component running")
+    setup_console_log()
     # 解析输入参数
     parser = argparse.ArgumentParser()
 
@@ -38,7 +39,7 @@ def run():
     parser.add_argument('--bidirectional', type=bool, default=False, help='LSTM direction')
 
     args = parser.parse_args()
-    print(f"参数解析完毕. args={args}]")
+    logging.info(f"参数解析完毕. args={args}")
 
     # 训练
     if args.train:
@@ -51,7 +52,6 @@ def run():
     # 向下游传递参数
     # TODO 后续将进行封装
     # component_helper.pass_output({'out_1': out_1})
-
 
 if __name__ == '__main__':
     run()
