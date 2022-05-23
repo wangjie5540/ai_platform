@@ -1,8 +1,9 @@
 # coding: utf-8
 import uplift_model
 import argparse
-from facade.components.ml.uplift import *
 import os
+import digitforce.aip.common.utils.component_helper as component_helper
+import digitforce.aip.common.constants.global_constant as global_constant
 
 
 def run():
