@@ -1,0 +1,46 @@
+FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/miniconda3-base
+COPY requirements-pytorch-cpu.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt && rm -rf /tmp/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip install jupyterlab==3.4.2 kfp==1.0.4 && jupyter lab --generate-config
+
+ENV NB_USER jovyan
+ENV NB_UID 1000
+ENV NB_PREFIX /
+ENV HOME /home/$NB_USER
+ENV SHELL /bin/bash
+
+# set shell to bash
+SHELL ["/bin/bash", "-c"]
+
+
+# create user and set required ownership
+RUN useradd -M -s /bin/bash -N -u ${NB_UID} ${NB_USER} \
+ && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
+ && mkdir -p ${HOME} \
+ && chown -R ${NB_USER}:users ${HOME}
+
+RUN yum install -y git sudo zip unzip
+
+# add spark
+ADD spark-3.2.1-bin-hadoop3.2.tgz /opt/
+ENV SPARK_HOME=/opt/spark-3.2.1-bin-hadoop3.2
+ADD yarn-site.xml /etc/hadoop/conf
+# add java
+ADD jdk1.8.0_181-cloudera.zip /opt/
+RUN unzip -d /opt /opt/jdk1.8.0_181-cloudera.zip
+ENV JAVA_HOME=/opt/jdk1.8.0_181-cloudera
+
+USER $NB_UID
+
+EXPOSE 8888
+ENTRYPOINT ["/bin/bash", "-c", "/opt/miniconda3/bin/jupyter lab \
+  --notebook-dir=$HOME \
+  --ip=0.0.0.0 \
+  --no-browser \
+  --allow-root \
+  --port=8888 \
+  --ServerApp.token='' \
+  --ServerApp.password='' \
+  --ServerApp.allow_origin='*' \
+  --ServerApp.base_url=$NB_PREFIX \
+ --ServerApp.authenticate_prometheus=False"]
