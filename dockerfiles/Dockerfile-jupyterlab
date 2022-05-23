@@ -1,7 +1,8 @@
 FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/miniconda3-base
 COPY requirements-pytorch-cpu.txt /tmp/requirements.txt
-RUN pip install -r /tmp/requirements.txt && rm -rf /tmp/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip install -r /tmp/requirements.txt && rm -rf /tmp/requirements.txt
 RUN pip install jupyterlab==3.4.2 kfp==1.0.4 && jupyter lab --generate-config
+RUN yum install -y git sudo zip unzip
 
 ENV NB_USER jovyan
 ENV NB_UID 1000
@@ -14,12 +15,10 @@ SHELL ["/bin/bash", "-c"]
 
 
 # create user and set required ownership
-RUN useradd -M -s /bin/bash -N -u ${NB_UID} ${NB_USER} \
+RUN useradd -M -N -s /bin/bash -u ${NB_UID} ${NB_USER} \
  && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
  && mkdir -p ${HOME} \
  && chown -R ${NB_USER}:users ${HOME}
-
-RUN yum install -y git sudo zip unzip
 
 # add spark
 ADD spark-3.2.1-bin-hadoop3.2.tgz /opt/
