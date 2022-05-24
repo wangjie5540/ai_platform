@@ -1,7 +1,7 @@
 from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, StringType
 
-from digitforce.aip.common import build_spark_session
+from digitforce.aip.common.spark_helper import build_spark_session
 
 
 def _to_row(index_and_value_map, max_index):

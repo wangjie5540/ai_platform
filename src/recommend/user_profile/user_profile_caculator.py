@@ -58,7 +58,9 @@ class UserProfileV1(ProfileCalculator):
         return 0
 
     def calculate_user_profile(self, user_event):
-        return UserProfileV1.get_action_weight(user_event) * UserProfileV1.get_decay_rate(user_event)
+        score = UserProfileV1.get_action_weight(user_event) * UserProfileV1.get_decay_rate(user_event)
+        score = max([score, 0.01])
+        return score
 
     def calculate_user_profile_score(self, user_events):
         profile_and_score_map = {}
@@ -83,16 +85,15 @@ def test_user_profile_v1():
 
 def calculate_user_score_and_save(user_id, user_events, output_fo, calculator=None):
     user_and_profile = calculator.calculate_user_profile_score(user_events)
-    json_str = json.dumps(user_and_profile)
     fcntl.fcntl(output_fo.fileno(), fcntl.LOCK_EX)
-    output_fo.write(f"{user_id}\t{json_str}\n")
+    output_fo.write(f"{json.dumps({'user_id':user_id,'profile_scores':user_and_profile})}\n")
     fcntl.fcntl(output_fo.fileno(), fcntl.LOCK_UN)
 
 
-def get_event_type(click_cnt, share_cnt, save_cnt):
-    if save_cnt:
+def get_event_type(click_cnt, save_cnt, order_cnt):
+    if order_cnt:
         return 10
-    if share_cnt:
+    if save_cnt:
         return 2
     if click_cnt:
         return 1
@@ -101,38 +102,32 @@ def get_event_type(click_cnt, share_cnt, save_cnt):
 
 def calculate_user_profile(input_file, output_file):
     user_profile_v1_calculator = UserProfileV1()
-    p = Pool(4)
     fo = open(output_file, "w")
     with open(input_file) as fi:
         cur_user_id = None
-        tasks = []
         user_events = []
         for line in fi:
             vals = line.strip().split(",")
             user_id = vals[0]
             item_id = vals[1]
-            profile_id = vals[2]
+            profile_id = int(vals[2])
             click_cnt = vals[3]
-            share_cnt = vals[4]
-            save_cnt = vals[5]
-            event_timestamp = vals[6]
-            event_type = get_event_type(click_cnt, share_cnt, save_cnt)
+            save_cnt = vals[4]
+            order_cnt = vals[5]
+            event_timestamp = int(vals[6])
+            event_type = get_event_type(click_cnt, save_cnt, order_cnt)
             u = UserEvent(user_id, item_id, event_type, "cid3", profile_id, event_timestamp)
             if cur_user_id is None:
                 cur_user_id = user_id
                 user_events.append(u)
             if user_id != cur_user_id:
-                tasks.append((cur_user_id, user_events, fo, user_profile_v1_calculator))
+                calculate_user_score_and_save(cur_user_id, user_events, fo, user_profile_v1_calculator)
                 cur_user_id = user_id
                 user_events = [u]
             else:
                 user_events.append(u)
-            if len(tasks) == 12:
-                for task in tasks:
-                    p.apply_async(calculate_user_score_and_save, task)
-                    p.join()
-                    tasks = []
-
+    if user_events:
+        calculate_user_score_and_save(cur_user_id, user_events, fo, user_profile_v1_calculator)
     fo.close()
 
 
