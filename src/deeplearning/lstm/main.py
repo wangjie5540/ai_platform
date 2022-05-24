@@ -23,7 +23,7 @@ def run():
     parser.add_argument('--output_model', type=str, default="output.model", help='output model')
     parser.add_argument('--output_predict_file', type=str, default="output.predict", help='output predict file name')
 
-    parser.add_argument('--epochs', type=int, default=3, help='input dimension')
+    parser.add_argument('--epochs', type=int, default=5, help='input dimension')
     parser.add_argument('--input_size', type=int, default=1, help='input dimension')
     parser.add_argument('--output_size', type=int, default=1, help='output dimension')
     parser.add_argument('--vocab_size', type=int, default=9277, help='vocab_size')
