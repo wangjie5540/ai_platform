@@ -8,7 +8,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-def get_crowd_by_seed(user_embedding_path, seed_file_path, crowd_file_path, result_path):
+def get_crowd_by_seed(user_embedding_path, seed_file_path, crowd_file_path, output_file_path):
     with open(user_embedding_path,'r',encoding='utf8')as fp:
         user_vec = json.load(fp)
     user_vec_df = pd.DataFrame.from_dict(user_vec,orient = 'index')
@@ -29,7 +29,7 @@ def get_crowd_by_seed(user_embedding_path, seed_file_path, crowd_file_path, resu
     seed_crowd_vec = seed_crowd_vec.astype('float64')
     expand_crowd_vec = expand_crowd_vec.astype('float64')
     result = get_expansion_result(seed_crowd_vec, expand_crowd_vec)
-    result.to_csv(result_path, header=0, index=0)
+    result.to_csv(output_file_path, index=0)
 
 
 def get_expansion_result(seed_crowd_vec, expand_crowd_vec):
