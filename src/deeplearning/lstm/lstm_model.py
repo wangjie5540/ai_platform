@@ -6,7 +6,6 @@ from data_process import nn_seq, setup_seed
 from tqdm import tqdm
 from itertools import chain
 
-
 setup_seed(20)
 
 def trainEpoch(epochnum, data, model, args, loss_function, optimizer, is_train, task_type):
@@ -42,9 +41,9 @@ def trainEpoch(epochnum, data, model, args, loss_function, optimizer, is_train, 
             logging.info(f"valid-epoch:{epochnum}, loss:{total_loss.item() / count}")
 
 def train(args):
-    Dtr = nn_seq(args.batch_size, args.input_file_train)
+    Dtr = nn_seq(args.batch_size, args.input_file_train, args.task_type)
     if args.valid:
-        Dva = nn_seq(args.batch_size, args.input_file_valid)
+        Dva = nn_seq(args.batch_size, args.input_file_valid, args.task_type)
 
     if args.task_type == "classify":
         model = LSTMClassify(batch_size=args.batch_size,
@@ -85,7 +84,7 @@ def train(args):
 
 def predict(args):
     args.batch_size = 1
-    Dte = nn_seq(args.batch_size, args.input_file_predict)
+    Dte = nn_seq(args.batch_size, args.input_file_predict, args.task_type)
 
     pred = []
     y = []
@@ -113,19 +112,14 @@ def predict(args):
     logging.info('predicting...')
 
     for (seq, target) in tqdm(Dte):
-        if args.task_type == "classify":
-            y.append(target.item())
-        else:
-            y.extend(chain.from_iterable(target.data.tolist()))
+        y.append(target.item())
         seq = seq.to(args.device)
         with torch.no_grad():
             y_pred = model(seq)
             if args.task_type == "classify":
                 pred.append(torch.max(y_pred, 1)[1].item())
             else:
-                pred.extend(list(chain.from_iterable(y_pred.data.tolist())))
-            pred.append(y_pred)
-
+                pred.append(y_pred.item())
     with open(args.output_predict_file, "w") as f:
         for index in range(len(pred)):
             f.write("%s\t%s\n" % (y[index], pred[index]))

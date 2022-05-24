@@ -80,35 +80,15 @@ class LSTMClassify(torch.nn.Module):
 
         self.label = nn.Linear(hidden_size * self.layer_size, output_size)
 
-    # self.attn_fc_layer = nn.Linear()
-
     def attention_net(self, lstm_output):
-        # print(lstm_output.size()) = (squence_length, batch_size, hidden_size*layer_size)
-
         output_reshape = torch.Tensor.reshape(lstm_output, [-1, self.hidden_size * self.layer_size])
-        # print(output_reshape.size()) = (squence_length * batch_size, hidden_size*layer_size)
-
         attn_tanh = torch.tanh(torch.mm(output_reshape, self.w_omega))
-        # print(attn_tanh.size()) = (squence_length * batch_size, attention_size)
-
         attn_hidden_layer = torch.mm(attn_tanh, torch.Tensor.reshape(self.u_omega, [-1, 1]))
-        # print(attn_hidden_layer.size()) = (squence_length * batch_size, 1)
-
         exps = torch.Tensor.reshape(torch.exp(attn_hidden_layer), [-1, self.sequence_length])
-        # print(exps.size()) = (batch_size, squence_length)
-
         alphas = exps / torch.Tensor.reshape(torch.sum(exps, 1), [-1, 1])
-        # print(alphas.size()) = (batch_size, squence_length)
-
         alphas_reshape = torch.Tensor.reshape(alphas, [-1, self.sequence_length, 1])
-        # print(alphas_reshape.size()) = (batch_size, squence_length, 1)
-
         state = lstm_output.permute(1, 0, 2)
-        # print(state.size()) = (batch_size, squence_length, hidden_size*layer_size)
-
         attn_output = torch.sum(state * alphas_reshape, 1)
-        # print(attn_output.size()) = (batch_size, hidden_size*layer_size)
-
         return attn_output
 
     def forward(self, input_sentences):

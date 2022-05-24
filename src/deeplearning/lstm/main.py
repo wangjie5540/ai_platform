@@ -10,11 +10,11 @@ def run():
     # 解析输入参数
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--task_type', type=str, default="classify", help='classify or regress')
+    parser.add_argument('--task_type', type=str, default="regress", help='classify or regress')
 
-    parser.add_argument('--input_file_train', type=str, default="data.sparse.train", help='input filename for train')
-    parser.add_argument('--input_file_valid', type=str, default="data.sparse.test", help='input filename for valid')
-    parser.add_argument('--input_file_predict', type=str, default="data.sparse.test", help='input filename for test')
+    parser.add_argument('--input_file_train', type=str, default="train.txt.full", help='input filename for train')
+    parser.add_argument('--input_file_valid', type=str, default="test.txt.full", help='input filename for valid')
+    parser.add_argument('--input_file_predict', type=str, default="test.txt.full", help='input filename for test')
 
     parser.add_argument('--train', type=bool, default=True, help='train or not')
     parser.add_argument('--valid', type=bool, default=True, help='valid or not')
@@ -23,9 +23,9 @@ def run():
     parser.add_argument('--output_model', type=str, default="output.model", help='output model')
     parser.add_argument('--output_predict_file', type=str, default="output.predict", help='output predict file name')
 
-    parser.add_argument('--epochs', type=int, default=10, help='input dimension')
+    parser.add_argument('--epochs', type=int, default=3, help='input dimension')
     parser.add_argument('--input_size', type=int, default=1, help='input dimension')
-    parser.add_argument('--output_size', type=int, default=6, help='output dimension')
+    parser.add_argument('--output_size', type=int, default=1, help='output dimension')
     parser.add_argument('--vocab_size', type=int, default=9277, help='vocab_size')
     parser.add_argument('--embed_dim', type=int, default=70, help='embed_dim')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout')

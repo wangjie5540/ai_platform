@@ -21,21 +21,6 @@ def setup_seed(seed):
     torch.backends.cudnn.deterministic = True
 
 
-def load_data(path):
-    """
-    :return: normalized dataframe
-    """
-    # path = os.path.dirname(os.path.realpath(__file__)) + '/data/data.csv'
-    df = pd.read_csv(path, encoding='gbk')
-    columns = df.columns
-    df.fillna(df.mean(), inplace=True)
-    MAX = np.max(df[columns[1]])
-    MIN = np.min(df[columns[1]])
-    df[columns[1]] = (df[columns[1]] - MIN) / (MAX - MIN)
-
-    return df, MAX, MIN
-
-
 class MyDataset(Dataset):
     def __init__(self, data):
         self.data = data
@@ -46,7 +31,8 @@ class MyDataset(Dataset):
     def __len__(self):
         return len(self.data)
 
-def nn_seq(B, input_file):
+
+def nn_seq_int(B, input_file):
     logging.info('data processing...')
     data = []
     with open(input_file) as f:
@@ -63,6 +49,33 @@ def nn_seq(B, input_file):
     mydata = MyDataset(data)
     data_loader = DataLoader(dataset=mydata, batch_size=B, shuffle=False, drop_last=True)
     return data_loader
+
+
+def nn_seq_float(B, input_file):
+    logging.info('data processing...')
+    data = []
+    with open(input_file) as f:
+        for line in f:
+            parts = line.strip().split("\t")
+            if len(parts) != 2:
+                continue
+            x = []
+            for term in parts[0].split(","):
+                x.append(float(term))
+            y = float(parts[1])
+            x = torch.FloatTensor(x)
+            y = torch.FloatTensor([y])
+            data.append((x, y))
+    mydata = MyDataset(data)
+    data_loader = DataLoader(dataset=mydata, batch_size=B, shuffle=False, drop_last=True)
+    return data_loader
+
+
+def nn_seq(B, input_file, task_type):
+    if task_type == "classify":
+        return nn_seq_int(B, input_file)
+    else:
+        return nn_seq_float(B, input_file)
 
 
 def get_mape(x, y):

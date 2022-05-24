@@ -71,8 +71,8 @@ def lstm_classify_op(train, valid, predict,
 @mount_data_pv
 def lstm_regress_op(train, valid, predict,
                      input_file_train, input_file_valid, input_file_predict,
-                     output_model, output_predict_file, epochs, output_size,
-                     vocab_size, embed_dim, dropout, hidden_size, num_layers,
+                     output_model, output_predict_file, epochs,
+                     dropout, hidden_size, num_layers,
                      lr, batch_size, image_tag="latest"):
     '''
     基于lstm的回归任务
@@ -111,6 +111,7 @@ def lstm_regress_op(train, valid, predict,
                  "--input_file_predict", input_file_predict,
                  "--output_model", output_model,
                  "--output_predict_file", output_predict_file,
+                 "--output_size", 1,
                  "--epochs", epochs,
                  "--dropout", dropout,
                  "--hidden_size", hidden_size,
