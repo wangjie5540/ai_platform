@@ -65,7 +65,7 @@ def find_main_file(one_dir, result):
 
 
 def main():
-    for _dir in ["src/recommend", "src/data_preprocess", "src/source", "src/test"]:
+    for _dir in ["src/recommend", "src/data_preprocess", "src/source", "src/test", "src/deeplearning"]:
         result = []
         find_main_file(_dir, result)
         for _ in result:

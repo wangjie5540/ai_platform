@@ -1,13 +1,50 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
-from torch.nn import functional as F
-import numpy as np
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-class LSTM(torch.nn.Module):
-    def __init__(self, batch_size, output_size, hidden_size, vocab_size, embed_dim, bidirectional, dropout, attention_size, sequence_length):
-        super(LSTM, self).__init__()
+class LSTMRegress(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, output_size, batch_size, bidirectional):
+        super().__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.output_size = output_size
+        self.bidirectional = bidirectional
+        self.num_directions = 1
+        if self.bidirectional:
+            self.num_directions = 2
+        self.batch_size = batch_size
+        self.lstm = nn.LSTM(self.input_size, self.hidden_size, self.num_layers, batch_first=True,
+                            bidirectional=bidirectional)
+        self.linear = nn.Linear(self.hidden_size, self.output_size)
+
+    def forward(self, input_seq):
+        h_0 = torch.randn(self.num_directions * self.num_layers, self.batch_size, self.hidden_size).to(device)
+        c_0 = torch.randn(self.num_directions * self.num_layers, self.batch_size, self.hidden_size).to(device)
+        seq_len = input_seq.shape[1]
+        # input(batch_size, seq_len, input_size)
+        input_seq = input_seq.view(self.batch_size, seq_len, self.input_size)
+        # output(batch_size, seq_len, num_directions * hidden_size)
+        output, _ = self.lstm(input_seq, (h_0, c_0))
+
+        if self.bidirectional:
+            output = output.contiguous().view(self.batch_size, seq_len, self.num_directions, self.hidden_size)
+            output = torch.mean(output, dim=2)
+
+        output = output.contiguous().view(self.batch_size * seq_len, self.hidden_size)  # (5 * 30, 64)
+        pred = self.linear(output)
+        pred = pred.view(self.batch_size, seq_len, -1)
+        pred = pred[:, -1, :]
+        return pred
+
+
+class LSTMClassify(torch.nn.Module):
+    def __init__(self, batch_size, output_size, hidden_size, vocab_size, embed_dim, bidirectional, dropout,
+                 attention_size, sequence_length):
+        super(LSTMClassify, self).__init__()
 
         self.batch_size = batch_size
         self.output_size = output_size
@@ -43,35 +80,15 @@ class LSTM(torch.nn.Module):
 
         self.label = nn.Linear(hidden_size * self.layer_size, output_size)
 
-    # self.attn_fc_layer = nn.Linear()
-
     def attention_net(self, lstm_output):
-        #print(lstm_output.size()) = (squence_length, batch_size, hidden_size*layer_size)
-
-        output_reshape = torch.Tensor.reshape(lstm_output, [-1, self.hidden_size*self.layer_size])
-        #print(output_reshape.size()) = (squence_length * batch_size, hidden_size*layer_size)
-
+        output_reshape = torch.Tensor.reshape(lstm_output, [-1, self.hidden_size * self.layer_size])
         attn_tanh = torch.tanh(torch.mm(output_reshape, self.w_omega))
-        #print(attn_tanh.size()) = (squence_length * batch_size, attention_size)
-
         attn_hidden_layer = torch.mm(attn_tanh, torch.Tensor.reshape(self.u_omega, [-1, 1]))
-        #print(attn_hidden_layer.size()) = (squence_length * batch_size, 1)
-
         exps = torch.Tensor.reshape(torch.exp(attn_hidden_layer), [-1, self.sequence_length])
-        #print(exps.size()) = (batch_size, squence_length)
-
         alphas = exps / torch.Tensor.reshape(torch.sum(exps, 1), [-1, 1])
-        #print(alphas.size()) = (batch_size, squence_length)
-
         alphas_reshape = torch.Tensor.reshape(alphas, [-1, self.sequence_length, 1])
-        #print(alphas_reshape.size()) = (batch_size, squence_length, 1)
-
         state = lstm_output.permute(1, 0, 2)
-        #print(state.size()) = (batch_size, squence_length, hidden_size*layer_size)
-
         attn_output = torch.sum(state * alphas_reshape, 1)
-        #print(attn_output.size()) = (batch_size, hidden_size*layer_size)
-
         return attn_output
 
     def forward(self, input_sentences):
@@ -91,4 +108,3 @@ class LSTM(torch.nn.Module):
         attn_output = lstm_output[-1, :, :]
         logits = self.label(attn_output)
         return logits
-
