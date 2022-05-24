@@ -22,14 +22,13 @@ def deal_user_id_and_item_id(df, min_user_action_cnt=5):
     return df, user_and_id_map, item_and_id_map
 
 
-def generate_train_data(input_file, output_file, user_and_id_map_file, item_and_id_map_file,
-                        user_cnt_max=None, item_cnt_max=None, names=None):
+def generate_train_data(input_file, output_file, user_and_id_map_file, item_and_id_map_file, names=None):
     if names:
         df = pd.read_csv(input_file, header=None, names=names)
     else:
         df = pd.read_csv(input_file)
     df, user_and_id_map, item_and_id_map = deal_user_id_and_item_id(df)
-    df["score"] = df.apply(lambda x: sum([x["click_cnt"], x["share_cnt"], x["save_cnt"]]), axis=1)
+    df["score"] = df.apply(lambda x: sum([x["click_cnt"], x["save_cnt"], x["order_cnt"]]), axis=1)
     fo = open(output_file, "w")
     all_item_ids = list(set(df["item_id"]))
     cnt = 0
@@ -47,11 +46,11 @@ def generate_train_data(input_file, output_file, user_and_id_map_file, item_and_
         if cnt % 100 == 0:
             logging.info(f"deal user cnt:{cnt}")
     fo.close()
+    logging.info(f"user_and_id_map_file:{user_and_id_map_file}")
     with open(user_and_id_map_file, "w") as fo:
-        for user_id, id in user_and_id_map.items():
-            fo.write(f"{user_id},{id}\n")
+        for user_id, _id in user_and_id_map.items():
+            fo.write(f"{user_id},{_id}\n")
+    logging.info(f"item_and_id_map_file:{item_and_id_map_file}")
     with open(item_and_id_map_file, "w") as fo:
-        for item_id, id in item_and_id_map.items():
-            fo.write(f"{item_id},{id}\n")
-
-
+        for item_id, _id in item_and_id_map.items():
+            fo.write(f"{item_id},{_id}\n")

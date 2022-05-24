@@ -12,7 +12,7 @@ RUN yum install -y gcc \
 COPY requirements-base.txt /tmp/requirements.txt
 # 安装python依赖包
 RUN conda install --yes pyhive
-RUN source ~/.bashrc && pip --default-timeout=1000 install --ignore-installed --use-deprecated=legacy-resolver -r /tmp/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN source ~/.bashrc && pip --default-timeout=1000 install --ignore-installed --use-deprecated=legacy-resolver -r /tmp/requirements.txt
 
 # 执行命令如下
 # docker build -t miniconda3-base -f Dockerfile-base .

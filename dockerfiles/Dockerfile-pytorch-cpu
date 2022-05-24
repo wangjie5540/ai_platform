@@ -1,0 +1,8 @@
+# 基于miniconda生成基础镜像
+FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/miniconda3-base:latest
+
+# 添加requirements的依赖
+COPY requirements-pytorch-cpu.txt /tmp/requirements.txt
+# 安装python依赖包
+RUN source ~/.bashrc && pip --default-timeout=1000 install --ignore-installed --use-deprecated=legacy-resolver -r /tmp/requirements.txt
+
