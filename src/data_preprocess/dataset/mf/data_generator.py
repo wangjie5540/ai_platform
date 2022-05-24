@@ -46,9 +46,11 @@ def generate_train_data(input_file, output_file, user_and_id_map_file, item_and_
         if cnt % 100 == 0:
             logging.info(f"deal user cnt:{cnt}")
     fo.close()
+    logging.info(f"user_and_id_map_file:{user_and_id_map_file}")
     with open(user_and_id_map_file, "w") as fo:
-        for user_id, id in user_and_id_map.items():
-            fo.write(f"{user_id},{id}\n")
+        for user_id, _id in user_and_id_map.items():
+            fo.write(f"{user_id},{_id}\n")
+    logging.info(f"item_and_id_map_file:{item_and_id_map_file}")
     with open(item_and_id_map_file, "w") as fo:
-        for item_id, id in item_and_id_map.items():
-            fo.write(f"{item_id},{id}\n")
+        for item_id, _id in item_and_id_map.items():
+            fo.write(f"{item_id},{_id}\n")
