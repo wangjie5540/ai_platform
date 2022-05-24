@@ -1,11 +1,16 @@
 import json
+import logging
 
 import faiss
 import numpy as np
 import pandas as pd
 
 
-def find_neighbor(user_vec_file, item_vec_file, output_file, topk=100, user_and_id_map=None):
+def find_neighbor(user_vec_file, item_vec_file, output_file, topk=100):
+    logging.info(f"begin find neighor... "
+                 f"user_vec_file:{user_vec_file} "
+                 f"item_vec_file:{item_vec_file} "
+                 f"output_file:{output_file} ")
     item_and_vec_map = {}
     with open(item_vec_file) as fi:
         for line in fi:
@@ -40,8 +45,6 @@ def find_neighbor(user_vec_file, item_vec_file, output_file, topk=100, user_and_
                         batch_item_ids = batch_item_ids.tolist()
                         for i, user_id in enumerate(batch_user_id):
                             recall_item_ids = batch_item_ids[i]
-                            if user_and_id_map:
-                                user_id = user_and_id_map.get(user_id, user_id)
                             fo.write(f"{json.dumps({'user_id': user_id, 'recall_item_ids': recall_item_ids})}\n")
 
 
@@ -54,18 +57,27 @@ def main():
     item_vec_file = sys.argv[2]
     output_file = sys.argv[3]
     topk = 100 if len(sys.argv) < 5 else int(sys.argv[4])
-    user_and_id_map = {}
-    if len(sys.argv) > 5:
+    user_and_id_map_file = None
+    item_and_id_map_file = None
+    if len(sys.argv) > 6:
         user_and_id_map_file = sys.argv[5]
-        # with open(user_and_id_map_file) as fi:
-        #     for _ in fi:
-        #         json_obj = json.loads(_)
-        #         user_id = json_obj["user_id"]
-        #         id = json_obj["id"]
-        #         user_and_id_map[id] = user_id
+        item_and_id_map_file = sys.argv[6]
+    output_file_tmp = output_file + ".tmp"
+    find_neighbor(user_vec_file, item_vec_file, output_file_tmp, topk)
+    fo = open(output_file, "w")
+    if user_and_id_map_file:
         df = pd.read_csv(user_and_id_map_file, header=None, names=["user_id", "id"])
-        user_and_id_map = dict(zip(df.user_id, df.id.astype(int)))
-    find_neighbor(user_vec_file, item_vec_file, output_file, topk, user_and_id_map)
+        user_and_id_map = dict(zip(df.id.astype(int), df.user_id))
+        df = pd.read_csv(item_and_id_map_file, header=None, names=["item_id", "id"])
+        item_and_id_map = dict(zip(df.id.astype(int), df.item_id))
+    print(item_and_id_map)
+    with open(output_file_tmp) as fi:
+        for line in fi:
+            json_obj = json.loads(line)
+            json_obj["user_id"] = user_and_id_map.get(json_obj["user_id"])
+            json_obj["recall_item_ids"] = [item_and_id_map.get(_) for _ in json_obj["recall_item_ids"]]
+            fo.write(f"{json.dumps(json_obj)}\n")
+    fo.close()
 
 
 if __name__ == '__main__':

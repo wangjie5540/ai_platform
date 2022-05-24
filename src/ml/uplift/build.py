@@ -1,7 +1,7 @@
 # coding: utf-8
 import subprocess
 import os
-from facade.components.ml.uplift import *
+from digitforce.aip.components.ml.uplift import *
 
 full_image_name = f'{image_name}:{image_tag}'
 # 如果是本地测试，需要把WORKSPACE指定为代码的跟目录
