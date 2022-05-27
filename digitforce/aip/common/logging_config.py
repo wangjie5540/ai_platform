@@ -64,9 +64,9 @@ def setup_logging(info_log_file=None, error_log_file=None, info_log_file_level="
     logging.config.dictConfig(log_config_dict)
 
 
-ss_kubeflow_pipeline_component_logger = logging.getLogger("ss_common_recommend_system_logger")
-
-
 def setup_console_log(level=logging.INFO):
     logging.basicConfig(format='[%(asctime)s] - %(pathname)s line:%(lineno)d - %(levelname)s: %(message)s',
                         level=level)
+
+
+setup_console_log()

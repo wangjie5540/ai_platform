@@ -1,0 +1,13 @@
+[data]
+table_sku_group='ai_dm.ibs_sku_group_model'#分类分组结果表
+ts_model_list=['bootstrap']
+feat_y='ai_dm_dev.feat_y'#y值表
+y_type_list=['c']
+cols_sku_grouping=['shop_id','goods_id','apply_model']
+apply_model='apply_model'
+y_type='y_type'
+cols_feat_y=['shop_id','goods_id','y','dt','y_type']
+sample_join_key=['shop_id','goods_id']
+time_col='dt'#表示时间的的列，例如：dt，周和月有可能不用这个表示
+sdate=''#样本开始日期
+edate=''#样本结束日期
