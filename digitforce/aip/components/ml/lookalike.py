@@ -1,3 +1,4 @@
+# coding: utf-8
 from digitforce.aip.common.constants.global_constant import AI_PLATFORM_IMAGE_REPO
 from digitforce.aip.components.op_decorator import *
 
