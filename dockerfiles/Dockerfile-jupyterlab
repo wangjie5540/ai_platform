@@ -21,8 +21,8 @@ RUN useradd -M -N -s /bin/bash -u ${NB_UID} ${NB_USER} \
  && chown -R ${NB_USER}:users ${HOME}
 
 # add spark
-ADD spark-3.2.1-bin-hadoop3.2.tgz /opt/
-ENV SPARK_HOME=/opt/spark-3.2.1-bin-hadoop3.2 YARN_CONF_DIR=/etc/hadoop/conf
+ADD spark-3.0.3-bin-without-hadoop.tgz /opt/
+ENV SPARK_HOME=/opt/spark-3.0.3-bin-without-hadoop YARN_CONF_DIR=/etc/hadoop/conf
 ADD hadoop_conf /etc/hadoop/conf
 # add java
 ADD jdk1.8.0_181-cloudera.zip /opt/
