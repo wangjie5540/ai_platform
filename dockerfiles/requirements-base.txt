@@ -27,3 +27,5 @@ google-auth==2.6.6
 google-auth-oauthlib==0.5.1
 ortools==9.3.10497
 openpyxl==3.0.9
+networkx==2.5.1
+graphframes==0.6
