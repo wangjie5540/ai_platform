@@ -1,12 +1,13 @@
 # coding: utf-8
 
-from pylift.generate_data import dgp
-import uplift_model
+import repurchase
+import json
 
-sample_path = 'sample.csv'
-model_path = 'uplift.model'
+input_train_params = ''
+output_model_path = ''
 
-# Generate some data.
-df = dgp(N=10000, discrete_outcome=True)
-df.to_csv(sample_path, index=False)
-uplift_model.uplift_train(sample_path, model_path)
+with open(input_train_params, 'r') as file:
+    data = file.readline()
+
+params_dict = json.loads(data)
+repurchase.train(params_dict, output_model_path)

@@ -80,7 +80,7 @@ def predict_main(input_params:Dict, path):
             res.to_csv(filepath, header=False, index=False)
 
             # upload result to hdfs
-            res_target_path = os.path.join('hdfs:///user/ai/cdp/fugou/result', str(input_params['crowdid'])+'.csv')
+            res_target_path = os.path.join('hdfs:///usr/algorithm/cd/fugou/result', str(input_params['crowdid'])+'.csv')
             upload_flag = upload_hdfs(filepath, res_target_path)
             logging.info(upload_flag)
             if upload_flag:

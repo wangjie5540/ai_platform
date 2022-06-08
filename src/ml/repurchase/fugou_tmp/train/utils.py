@@ -25,7 +25,7 @@ def upload(filepath):
 
 def upload_hdfs(filepath, target_file_path):
     try:
-        cli = pyhdfs.HdfsClient(hosts="bigdata-server-08:9870") 
+        cli = pyhdfs.HdfsClient(hosts='10.100.0.82:4008', user_name='root') 
         if cli.exists(target_file_path):
             cli.delete(target_file_path)
         cli.copy_from_local(filepath, target_file_path)
