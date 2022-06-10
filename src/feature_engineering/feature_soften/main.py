@@ -1,10 +1,8 @@
 from fe_soften import soften
 import argparse
-from digitforce.aip.common.logging_config import setup_console_log
 
 
 def main():
-    setup_console_log()
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_file', type=str)
     parser.add_argument('--soften_method', type=str)

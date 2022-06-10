@@ -1,10 +1,11 @@
 import pandas as pd
 
 
-def soften(input_file, sep=',',  soften_method='z-score', cols=None, thresh_max=None, thresh_min=None, percent_max=None, percent_min=None):
+def soften(input_file, sep=',', soften_method='z-score', cols=None, thresh_max=None, thresh_min=None, percent_max=None, percent_min=None):
     """
     特征异常平滑
-    @param df: 输入数据
+    @param input_file: 输入数据
+    @param sep: 分隔符
     @param soften_method: 平滑方式(z-score, thresh, percent, box_plot)
     @param cols: list, 平滑列名
     @param thresh_max: 阈值上限，当平滑方式为阈值时，需配置改参数
@@ -16,7 +17,7 @@ def soften(input_file, sep=',',  soften_method='z-score', cols=None, thresh_max=
     if soften_method == 'z-score':
         df[cols] = df[cols].apply(z_score_soften, axis=0)
     elif soften_method == 'thresh':
-        df[cols].clip(thresh_min, thresh_max, inplace=True)
+        df[cols] = df[cols].clip(thresh_min, thresh_max)
     elif soften_method == 'box_plot':
         df[cols] = df[cols].apply(boxplot_soften, axis=0)
     elif soften_method == 'percent':
