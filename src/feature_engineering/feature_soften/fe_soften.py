@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def soften(df, soften_method='z-score', cols=None, thresh_max=None, thresh_min=None, percent_max=None, percent_min=None):
+def soften(input_file, sep=',',  soften_method='z-score', cols=None, thresh_max=None, thresh_min=None, percent_max=None, percent_min=None):
     """
     特征异常平滑
     @param df: 输入数据
@@ -12,7 +12,7 @@ def soften(df, soften_method='z-score', cols=None, thresh_max=None, thresh_min=N
     @param percent_max: 百分数上限， 当平滑方式为百分位时，需配置改参数
     @param percent_min: 百分数下限， 当平滑方式为百分位时，需配置改参数
     """
-
+    df = pd.read_csv(input_file, sep=sep)
     if soften_method == 'z-score':
         df[cols] = df[cols].apply(z_score_soften, axis=0)
     elif soften_method == 'thresh':

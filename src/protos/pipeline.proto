@@ -947,6 +947,12 @@ message FeatureConfig {
 
     // use embedding variables
     optional bool use_embedding_variable = 31 [default=false];
+
+    // sub_field_type
+    optional FieldType sub_field_type = 32 [default=STRING];
+
+    // weight_name
+    optional string weight_name = 33;
 }
 
 message FeatureConfigV2 {

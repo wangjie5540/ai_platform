@@ -3,8 +3,8 @@ from feature_column import VarLenFeat, SparseFeat, DenseFeat, BucketFeat
 from tensorflow.python.ops.gen_math_ops import bucketize
 
 
-def parse_data(line, col_names, feature_columns):
-    csv_data = tf.io.decode_csv(line, record_defaults={}, field_delim='\t', use_quote_delim=False)
+def parse_data(line, col_names, feature_columns, record_defaults, field_delim='\t', use_quote_delim=False):
+    csv_data = tf.io.decode_csv(line, record_defaults, field_delim, use_quote_delim)
     parsed_data = dict(zip(col_names, csv_data))
     feature_dict = {}
     for feat_col in feature_columns:
