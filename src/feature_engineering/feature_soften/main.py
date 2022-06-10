@@ -19,6 +19,7 @@ def main():
     input_file = args.input_file
     soften_method = args.soften_method
     sep = args.sep
+    assert args.cols, 'there is no soften columns'
     cols = args.cols.split(',')
 
     thresh_max = thresh_min = percent_max = percent_min = None
