@@ -4,8 +4,8 @@
 import datetime
 from typing import Dict
 from xmlrpc.client import Boolean
-# from spark_env import SparkEnv
-import digitforce.aip.common.utils.spark_helper as SparkEnv
+from spark_env import SparkEnv
+# import digitforce.aip.common.utils.spark_helper as SparkEnv
 import requests
 import sys
 import time
@@ -42,20 +42,20 @@ class CreateDataset:
                           where_sql: str
                           ):
         today = datetime.datetime.today()
-        spark = SparkEnv.build_spark_session('Repurchase')
+        spark = SparkEnv('Repurchase')
         # spark = None
 
         if is_train:
             cur_str = get_min_date_of_4_table(spark, user_table, order_table, item_table, bh_table, usinfo, odinfo,
                                               itinfo, bhinfo)
-            #             print(cur_str)
+            # print(cur_str)
             cur_str = (datetime.datetime.strptime(cur_str, '%Y-%m-%d') - datetime.timedelta(days=30)).strftime(
                 '%Y-%m-%d')
-            #             print(cur_str)
+            # print(cur_str)
             feature_dates, train_date, predict_date = get_time_params(cur_str, train_period, predict_period)
             samples = get_samples_train(spark, order_table, odinfo, item_table, itinfo, cur_str, train_date, cat_list,
                                         predict_date)
-        #             print(samples)
+            # print(samples)
         else:
             # cur_str = today.strftime('%Y-%m-%d')
             cur_str = get_min_date_of_4_table(spark, user_table, order_table, item_table, bh_table, usinfo, odinfo,
@@ -71,12 +71,12 @@ class CreateDataset:
         else:
             features_of_order = get_order_features(spark, feature_dates, cur_str, order_table, odinfo, item_table,
                                                    itinfo, cat_list)
-
+            # print(features_of_order)
             features_of_user = get_label_features(spark, samples, user_table, usinfo, cur_str)
-
+            # print(features_of_user)
             features_of_behavior = get_behavior_features(spark, feature_dates, item_table, itinfo, bh_table, bhinfo,
                                                          bh_code_map, cur_str, cat_list)
-
+            # print(features_of_behavior)
             if not features_of_order.empty:
                 data = pd.merge(samples, features_of_order, how='left', on='user_id')
             else:
@@ -100,9 +100,7 @@ def get_min_date_of_4_table(spark, user_table: str, order_table: str, item_table
     dt2 = spark.sql(sql2).toPandas()
     dt3 = spark.sql(sql3).toPandas()
     dt4 = spark.sql(sql4).toPandas()
-    #     print(dt1,dt2,dt3,dt4)
     min_date = min([dt1.iloc[0, 0], dt2.iloc[0, 0], dt3.iloc[0, 0], dt4.iloc[0, 0]])
-    #     print(min_date)
     return min_date
 
 
@@ -457,11 +455,11 @@ def get_behavior_features(spark, feature_dates: List[str], item_table, itinfo_ma
             #             print(sql_dianji_all)
             dianji_cat_df = spark.sql(sql_dianji_cat).toPandas()
             dianji_cat_df[['user_id']] = dianji_cat_df[['user_id']].astype(str)
-            dianji_cat_df[['dianji_cat_' + last_x_day]] = dianji_cat_df[['dianji_cat_' + last_x_days_name[i]]].astype(
+            dianji_cat_df[['dianji_cat_' + last_x_days_name[i]]] = dianji_cat_df[['dianji_cat_' + last_x_days_name[i]]].astype(
                 np.int)
             dianji_all_df = spark.sql(sql_dianji_all).toPandas()
             dianji_all_df[['user_id']] = dianji_all_df[['user_id']].astype(str)
-            dianji_all_df['dianji_all_' + last_x_day] = dianji_all_df[['dianji_all_' + last_x_days_name[i]]].astype(
+            dianji_all_df['dianji_all_' + last_x_days_name[i]] = dianji_all_df[['dianji_all_' + last_x_days_name[i]]].astype(
                 np.int)
 
             if bh_df.empty:
@@ -501,11 +499,11 @@ def get_behavior_features(spark, feature_dates: List[str], item_table, itinfo_ma
             #             print(sql_jiagou_all)
             jiagou_cat_df = spark.sql(sql_jiagou_cat).toPandas()
             jiagou_cat_df[['user_id']] = jiagou_cat_df[['user_id']].astype(str)
-            jiagou_cat_df[['jiagou_cat_' + last_x_day]] = jiagou_cat_df[['jiagou_cat_' + last_x_days_name[i]]].astype(
+            jiagou_cat_df[['jiagou_cat_' + last_x_days_name[i]]] = jiagou_cat_df[['jiagou_cat_' + last_x_days_name[i]]].astype(
                 np.int)
             jiagou_all_df = spark.sql(sql_jiagou_all).toPandas()
             jiagou_all_df[['user_id']] = jiagou_all_df[['user_id']].astype(str)
-            jiagou_all_df['jiagou_all_' + last_x_day] = jiagou_all_df[['jiagou_all_' + last_x_days_name[i]]].astype(
+            jiagou_all_df['jiagou_all_' + last_x_days_name[i]] = jiagou_all_df[['jiagou_all_' + last_x_days_name[i]]].astype(
                 np.int)
 
             if bh_df.empty:
@@ -543,10 +541,10 @@ def get_behavior_features(spark, feature_dates: List[str], item_table, itinfo_ma
                        behavior_table, bhinfo_map['event_time'], last_x_day, cur_str, bh_code_map['browse'])
             view_cat_df = spark.sql(sql_view_cat).toPandas()
             view_cat_df[['user_id']] = view_cat_df[['user_id']].astype(str)
-            view_cat_df[['view_cat_' + last_x_day]] = view_cat_df[['view_cat_' + last_x_days_name[i]]].astype(np.int)
+            view_cat_df[['view_cat_' + last_x_days_name[i]]] = view_cat_df[['view_cat_' + last_x_days_name[i]]].astype(np.int)
             view_all_df = spark.sql(sql_view_all).toPandas()
             view_all_df[['user_id']] = view_all_df[['user_id']].astype(str)
-            view_all_df['view_all_' + last_x_day] = view_all_df[['view_all_' + last_x_days_name[i]]].astype(np.int)
+            view_all_df['view_all_' + last_x_days_name[i]] = view_all_df[['view_all_' + last_x_days_name[i]]].astype(np.int)
 
             if bh_df.empty:
                 bh_df = view_cat_df
@@ -560,6 +558,7 @@ def get_behavior_features(spark, feature_dates: List[str], item_table, itinfo_ma
 def get_label_features(spark, samples: pd.DataFrame, user_table, usinfo_map, cur_str):
     sample_spark_df = spark.createDataFrame(samples)
     sample_spark_df.createOrReplaceTempView('samples_tmp')
+    # print(spark.sql('select * from samples_tmp').head(50))
     userlabel_df = pd.DataFrame()
     le = LabelEncoder()
     # 待改进：可合并
@@ -579,7 +578,7 @@ def get_label_features(spark, samples: pd.DataFrame, user_table, usinfo_map, cur
             on a.user_id = b.user_id
 
         '''.format(usinfo_map['user_id'], usinfo_map['sex'], user_table, usinfo_map['dt'], cur_str)
-        #         print(sql_gender)
+        # print(sql_gender)
         gender_df = spark.sql(sql_gender).toPandas()
         gender_df.fillna(value=0, inplace=True)
         gender_df[['user_id', 'gender']] = gender_df[['user_id', 'gender']].astype(str)
