@@ -14,39 +14,39 @@ from create_dataset import CreateDataset
 import time
 import logging
 import traceback
-import digitforce.aip.common.hdfs_helper as HdfsClient
-from digitforce.aip.common.filesize_helper import get_filesize
+# import digitforce.aip.common.hdfs_helper as HdfsClient
+# from digitforce.aip.common.filesize_helper import get_filesize
 import warnings
 warnings.filterwarnings("ignore")
 
 train_set = None
 
 
-
-def upload_hdfs(filepath, target_file_path):
-    try:
-        cli = HdfsClient(hosts="bigdata-server-08:9870")
-        if cli.exists(target_file_path):
-            cli.delete(target_file_path)
-        cli.copy_from_local(filepath, target_file_path)
-        return target_file_path
-    except:
-        # print(traceback.format_exc())
-        logging.info(traceback.format_exc())
-        return ""
-
-def download_hdfs(local_path, ModelFileUrl):
-    try:
-        cli = HdfsClient(hosts='10.100.0.82:4008')
-        if cli.exists(ModelFileUrl):
-            cli.copy_to_local(ModelFileUrl, local_path)
-            return local_path
-        else:
-            return None
-    except:
-        # print(traceback.format_exc())
-        logging.info(traceback.format_exc())
-        return ""
+#
+# def upload_hdfs(filepath, target_file_path):
+#     try:
+#         cli = HdfsClient(hosts="bigdata-server-08:9870")
+#         if cli.exists(target_file_path):
+#             cli.delete(target_file_path)
+#         cli.copy_from_local(filepath, target_file_path)
+#         return target_file_path
+#     except:
+#         # print(traceback.format_exc())
+#         logging.info(traceback.format_exc())
+#         return ""
+#
+# def download_hdfs(local_path, ModelFileUrl):
+#     try:
+#         cli = HdfsClient(hosts='10.100.0.82:4008')
+#         if cli.exists(ModelFileUrl):
+#             cli.copy_to_local(ModelFileUrl, local_path)
+#             return local_path
+#         else:
+#             return None
+#     except:
+#         # print(traceback.format_exc())
+#         logging.info(traceback.format_exc())
+#         return ""
 
 def process_feats(data, tag_name):
     labels = np.array(data[tag_name].astype(np.int32)).reshape((-1,))
@@ -94,11 +94,65 @@ def lgb_cv(n_estimators, num_leaves, max_depth, learning_rate, reg_alpha, reg_la
     best_score = np.max(cv_res['auc-mean'])
     return best_score
 
-def train(input_params:Dict, upload_filepath_head):
+def train(input_params:Dict):
     """
     :param input_params: 输入配置参数
-    :param upload_filepath_head: 模型文件保存位置文件头
-    :return: 接口交互部分参数
+    {"taskid":52,
+                      "category":["蔬菜","水果"],
+                      "userData":
+                          {"is_consume_online":"",
+                           "is_new":"",
+                           "city":"",
+                           "sex":"sex",
+                           "consume_level":"",
+                           "yuliu_id":"",
+                           "tableName":"labelx.push_user",
+                           "dt":"dt",
+                           "recent_view_day":"recent_view_day",
+                           "province":"",
+                           "user_id":"user_id",
+                           "online_signup_time":"",
+                           "age":"age"},
+                      "trafficData":
+                          {"cart_remove":"",
+                           "cart_add":"",
+                           "click":"CLICK",
+                           "tableName":"labelx.push_traffic_behavior",
+                           "duration":"duration",
+                           "search":"",
+                           "exposure":"EXPOSURE",
+                           "card_add":"CART_ADD",
+                           "user_id":"user_id",
+                           "event_code":"event_code",
+                           "sku":"sku",
+                           "collect":"COLLECT",
+                           "event_time":"event_time",
+                           "browse":""},
+                      "orderData":
+                          {"user_id":"user_id",
+                           "order_time":"order_time",
+                           "sku":"sku",
+                           "order_id":"order_id",
+                           "sale_quantity":"",
+                           "sale_amount":"",
+                           "tableName":"labelx.push_order_behavior"},
+                      "goodsData":
+                          {"dt":"dt",
+                           "cate":"cate",
+                           "sku":"sku",
+                           "tableName":"labelx.push_goods"},
+                      "trainingScope":"过去60天",
+                      "forecastPeriod":"未来60天",
+                      "eventCode":
+                          {"event_code":
+                               {"search":"",
+                                "cart_remove":"",
+                                "exposure":"EXPOSURE",
+                                "cart_add":"",
+                                "click":"CLICK",
+                                "collect":"COLLECT",
+                                "browse":""}}}
+    :return:
     """
     global train_set
     try:
@@ -126,8 +180,8 @@ def train(input_params:Dict, upload_filepath_head):
                                     input_params['goodsData'],
                                     input_params['eventCode'][input_params['trafficData']['event_code']],
                                      None)
-        if len(dataset)==0:#可合并
-            return {'generateTime':"", "taskId":input_params['taskid'], 'auc':"", "fileSize":"", 'elapsed':0, "fileDownloadUrl":"-1"}
+        if len(dataset) == 0:#可合并
+            return
 
         # 暂时处理
         if len(dataset[dataset['label']==1]) == len(dataset):
@@ -136,7 +190,7 @@ def train(input_params:Dict, upload_filepath_head):
             dataset.loc[:len(dataset)//2,'label'] = 1
 
         if (len(dataset[dataset['label']==0]) == len(dataset)) or (len(dataset[dataset['label']==1]) == len(dataset)):
-            return {'generateTime':"", "taskId":input_params['taskid'], 'auc':"", "fileSize":"", 'elapsed':0, "fileDownloadUrl":"-1"}
+            return
         else:
             train_set, feats_train, labels_train, feats_test, labels_test = process_feats(dataset, 'label')
             lgb_opt = BayesianOptimization(
@@ -168,121 +222,121 @@ def train(input_params:Dict, upload_filepath_head):
 
             preds = best_lgb_model.predict_proba(feats_test)[:, 1]
             auc = roc_auc_score(labels_test, preds)
-#             print('The best model from Bayes optimization scores {:.5f} AUC ROC on the test set.'.format(auc))
+            print('The best model from Bayes optimization scores {:.5f} AUC ROC on the test set.'.format(auc))
 
             # store the model
             filepath = str(input_params['taskid'])+r".pkl"
+            print(filepath)
             pickle.dump(best_lgb_model, open(filepath, 'wb'))
             end = time.time()
-            cur_time = datetime.datetime.now()
+
 
 
             # upload model and parameters
-            model_target_file_path = os.path.join(upload_filepath_head, str(input_params['taskid'])+'.pkl')
-            upload_flag = upload_hdfs(filepath, model_target_file_path)
-            if upload_flag:
-                model_file_url = upload_flag
-                os.remove(filepath)
-            else:
-                model_file_url = '-1'
+            # model_target_file_path = os.path.join(upload_filepath_head, str(input_params['taskid'])+'.pkl')
+            # upload_flag = upload_hdfs(filepath, model_target_file_path)
+            # if upload_flag:
+            #     model_file_url = upload_flag
+            #     os.remove(filepath)
+            # else:
+            #     model_file_url = '-1'
 
 
 
-            res = {}
-            res['generateTime'] = datetime.datetime.strftime(cur_time, '%Y-%m-%d %H:%M:%S')
-            res['taskId'] = input_params['taskid']
-            res['auc'] = "%.2f%%" % (auc * 100)
-            res['fileSize'] = get_filesize(filepath)
-            res['elapsed'] = int(end - start)
-            res['fileDownloadUrl'] = model_file_url
-            return res
+            # res = {}
+            # res['generateTime'] = datetime.datetime.strftime(cur_time, '%Y-%m-%d %H:%M:%S')
+            # res['taskId'] = input_params['taskid']
+            # res['auc'] = "%.2f%%" % (auc * 100)
+            # res['fileSize'] = get_filesize(filepath)
+            # res['elapsed'] = int(end - start)
+            # res['fileDownloadUrl'] = model_file_url
+            return 'success'
     except:
         logging.error('Raise errors when response to platform',exc_info=1)
-        return {'generateTime':"", "taskId":input_params['taskid'], 'auc':"", "fileSize":"", 'elapsed':0, "fileDownloadUrl":"-1"}
-
-
-def predict_main(dataset: pd.DataFrame, model_path: str, targetLimit):
-    targetLimit = json.loads(targetLimit)
-    user_id = dataset.iloc[:, 1]
-    feats = dataset.iloc[:, 1:]
-    feats.fillna(value=0, inplace=True)
-    model = pickle.load(open(model_path, 'rb'))
-    prediction = model.predict_proba(feats)[:, 1]
-    res_total = pd.concat([user_id, pd.DataFrame(prediction, columns=['pred'], index=user_id.index)], axis=1)
-    # print(res_total)
-    res_fugou = res_total.sort_values(by='pred', ascending=False)
-    # print(res_fugou)
-    #     print(targetLimit)
-    if targetLimit['targetLimitType'] == 1:
-        return res_fugou.iloc[:targetLimit['targetLimitValue'], 0]
-    elif targetLimit['targetLimitType'] == 2:
-        return res_fugou[res_fugou['pred'] >= targetLimit['targetLimitValue'] / 100].iloc[:, 1]
-    else:
-        return res_fugou.iloc[:, 1]
-
-
-def predict(input_params: Dict,  upload_filepath_head):
-    try:
-        # Download model and parameters form hdfs
-        model_path = input_params['modelFileUrl']
-        params_train_path = model_path[:model_path.index('.pkl')] + r'.txt'
-        taskid = model_path[model_path.index('model') + 6:model_path.index('.pkl')]
-        model_tmp_local_path = 'tmp' + str(taskid) + r'.pkl'
-        params_tmp_local_path = 'tmp' + str(taskid) + r'.txt'
-        model_tmp_local_path = download_hdfs(model_tmp_local_path, model_path)
-        params_tmp_local_path = download_hdfs(params_tmp_local_path, params_train_path)
-        logging.info('加载模型和参数：')
-
-        with open(params_tmp_local_path, 'r') as file:
-            params_trained = file.readline()
-        params_trained = json.loads(params_trained)
-        logging.info(params_trained)
-
-        cate_list = []
-        for cateid in params_trained['category']:
-            cate = '"' + cateid + '"'
-            cate_list.append(cate)
-        catestr = "(" + ",".join(cate_list) + ")"
-
-        create_data = CreateDataset()
-        dataset = create_data.ConstructFeatures(params_trained['trainingScope'],
-                                                params_trained['forecastPeriod'],
-                                                catestr,
-                                                False,
-                                                params_trained['orderData']['tableName'],
-                                                params_trained['trafficData']['tableName'],
-                                                params_trained['userData']['tableName'],
-                                                params_trained['goodsData']['tableName'],
-                                                params_trained['orderData'],
-                                                params_trained['trafficData'],
-                                                params_trained['userData'],
-                                                params_trained['goodsData'],
-                                                params_trained['eventCode'][
-                                                    params_trained['trafficData']['event_code']],
-                                                input_params['where']
-                                                )
-
-        if len(dataset) == 0:
-            logging.info('Empty dataset for predicting')
-            return ''
-        else:
-            res = predict_main(dataset, model_tmp_local_path, input_params['targetLimit'])
-            #     print(res)
-            filepath =  str(input_params['crowdid']) + r'.csv'
-            res.to_csv(filepath, header=False, index=False)
-
-            # upload result to hdfs
-            res_target_path = os.path.join(upload_filepath_head, str(input_params['crowdid']) + '.csv')
-            upload_flag = upload_hdfs(filepath, res_target_path)
-            logging.info(upload_flag)
-            if upload_flag:
-                logging.info('Upload successfully!')
-                model_file_url = upload_flag
-                os.remove(model_tmp_local_path)
-                os.remove(params_tmp_local_path)
-            else:
-                model_file_url = '-1'
-            return model_file_url
-    except:
-        logging.error('Raise error when predicting', exc_info=1)
-        return '-1'
+        return
+#
+# def predict_main(dataset: pd.DataFrame, model_path: str, targetLimit):
+#     targetLimit = json.loads(targetLimit)
+#     user_id = dataset.iloc[:, 1]
+#     feats = dataset.iloc[:, 1:]
+#     feats.fillna(value=0, inplace=True)
+#     model = pickle.load(open(model_path, 'rb'))
+#     prediction = model.predict_proba(feats)[:, 1]
+#     res_total = pd.concat([user_id, pd.DataFrame(prediction, columns=['pred'], index=user_id.index)], axis=1)
+#     # print(res_total)
+#     res_fugou = res_total.sort_values(by='pred', ascending=False)
+#     # print(res_fugou)
+#     #     print(targetLimit)
+#     if targetLimit['targetLimitType'] == 1:
+#         return res_fugou.iloc[:targetLimit['targetLimitValue'], 0]
+#     elif targetLimit['targetLimitType'] == 2:
+#         return res_fugou[res_fugou['pred'] >= targetLimit['targetLimitValue'] / 100].iloc[:, 1]
+#     else:
+#         return res_fugou.iloc[:, 1]
+#
+#
+# def predict(input_params: Dict,  upload_filepath_head):
+#     try:
+#         # Download model and parameters form hdfs
+#         model_path = input_params['modelFileUrl']
+#         params_train_path = model_path[:model_path.index('.pkl')] + r'.txt'
+#         taskid = model_path[model_path.index('model') + 6:model_path.index('.pkl')]
+#         model_tmp_local_path = 'tmp' + str(taskid) + r'.pkl'
+#         params_tmp_local_path = 'tmp' + str(taskid) + r'.txt'
+#         model_tmp_local_path = download_hdfs(model_tmp_local_path, model_path)
+#         params_tmp_local_path = download_hdfs(params_tmp_local_path, params_train_path)
+#         logging.info('加载模型和参数：')
+#
+#         with open(params_tmp_local_path, 'r') as file:
+#             params_trained = file.readline()
+#         params_trained = json.loads(params_trained)
+#         logging.info(params_trained)
+#
+#         cate_list = []
+#         for cateid in params_trained['category']:
+#             cate = '"' + cateid + '"'
+#             cate_list.append(cate)
+#         catestr = "(" + ",".join(cate_list) + ")"
+#
+#         create_data = CreateDataset()
+#         dataset = create_data.ConstructFeatures(params_trained['trainingScope'],
+#                                                 params_trained['forecastPeriod'],
+#                                                 catestr,
+#                                                 False,
+#                                                 params_trained['orderData']['tableName'],
+#                                                 params_trained['trafficData']['tableName'],
+#                                                 params_trained['userData']['tableName'],
+#                                                 params_trained['goodsData']['tableName'],
+#                                                 params_trained['orderData'],
+#                                                 params_trained['trafficData'],
+#                                                 params_trained['userData'],
+#                                                 params_trained['goodsData'],
+#                                                 params_trained['eventCode'][
+#                                                     params_trained['trafficData']['event_code']],
+#                                                 input_params['where']
+#                                                 )
+#
+#         if len(dataset) == 0:
+#             logging.info('Empty dataset for predicting')
+#             return ''
+#         else:
+#             res = predict_main(dataset, model_tmp_local_path, input_params['targetLimit'])
+#             #     print(res)
+#             filepath =  str(input_params['crowdid']) + r'.csv'
+#             res.to_csv(filepath, header=False, index=False)
+#
+#             # upload result to hdfs
+#             res_target_path = os.path.join(upload_filepath_head, str(input_params['crowdid']) + '.csv')
+#             upload_flag = upload_hdfs(filepath, res_target_path)
+#             logging.info(upload_flag)
+#             if upload_flag:
+#                 logging.info('Upload successfully!')
+#                 model_file_url = upload_flag
+#                 os.remove(model_tmp_local_path)
+#                 os.remove(params_tmp_local_path)
+#             else:
+#                 model_file_url = '-1'
+#             return model_file_url
+#     except:
+#         logging.error('Raise error when predicting', exc_info=1)
+#         return '-1'
