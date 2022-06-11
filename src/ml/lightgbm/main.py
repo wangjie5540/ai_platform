@@ -42,7 +42,7 @@ def main():
     test_dataset_path = sys.argv[2]
     model_save_dir = sys.argv[3]
     label_col = sys.argv[4]
-    categorical_feature = sys.argv[5]
+    categorical_feature = sys.argv[5].strip().split(",")
 
     params = []
     for max_depth in [3, 4, 5]:
