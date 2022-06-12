@@ -3,6 +3,7 @@ from src.deeplearning.feature_column import SparseFeat, VarLenFeat, DenseFeat, B
 from src.utils.config_utils import get_configs_from_pipeline_file
 from src.deeplearning.data_processing import padding_data, parse_data
 import tensorflow as tf
+from src.deeplearning.deepFM.deepFM import deepfm
 
 
 def train(pipeline_config_path):
@@ -16,12 +17,12 @@ def train(pipeline_config_path):
     default_values = [x.default_val for x in data_config.input_fields]
     dtype_dict = {x.input_name: x.input_type for x in data_config.input_fields}
     dtype_map = {
-        0: 'INT32',
-        1: 'INT64',
-        2: 'STRING',
-        4: 'FLOAT',
-        5: 'DOUBLE',
-        6: 'BOOL'
+        0: 'int32',
+        1: 'int64',
+        2: 'string',
+        4: 'float64',
+        5: 'float64',
+        6: 'bool'
     }
     tf_type_map = {
         0: tf.int32,
@@ -31,7 +32,7 @@ def train(pipeline_config_path):
         5: tf.float32,
         6: tf.bool
     }
-    out_type = [tf_type_map[x.input_type] for x in data_config.input_fields]
+
     if pipeline_config.feature_configs:
         feature_configs = pipeline_config.feature_configs
     else:
@@ -42,14 +43,14 @@ def train(pipeline_config_path):
             feature_columns.append(SparseFeat(name=fc.input_names[0],
                                               vocab_size=fc.num_buckets,
                                               hash_size=fc.hash_bucket_size,
-                                              share_emb=fc.shared_names,
+                                              share_emb=fc.shared_names[0] if fc.shared_names else '',
                                               emb_dim=fc.embedding_dim,
                                               dtype=dtype_map[dtype_dict[fc.input_names[0]]]))
         elif fc.feature_type == pipeline_pb2.FeatureConfig.FeatureType.VarLenFeat and fc.input_names[0] in col_names:
             feature_columns.append(VarLenFeat(name=fc.input_names[0],
                                               vocab_size=fc.num_buckets,
                                               hash_size=fc.hash_bucket_size,
-                                              share_emb=fc.shared_names,
+                                              share_emb=fc.shared_names[0] if fc.shared_names else '',
                                               seq_multi_sep=fc.seq_multi_sep,
                                               weight_name=fc.weight_name,
                                               emb_dim=fc.embedding_dim,
@@ -61,27 +62,49 @@ def train(pipeline_config_path):
         elif fc.feature_type == pipeline_pb2.FeatureConfig.FeatureType.DenseFeat and fc.input_names[0] in col_names:
             feature_columns.append(DenseFeat(name=fc.input_names[0],
                                              dim=fc.embedding_dim,
-                                             share_emb=fc.shared_names,
+                                             share_emb=fc.shared_names[0] if fc.shared_names else '',
                                              dtype=dtype_map[dtype_dict[fc.input_names[0]]]
                                              ))
 
         elif fc.feature_type == pipeline_pb2.FeatureConfig.FeatureType.BucketFeat and fc.input_names[0] in col_names:
             feature_columns.append(BucketFeat(name=fc.input_names[0],
                                               boundaries=list(map(float, list(fc.boundaries))),
-                                              share_emb=fc.shared_names,
+                                              share_emb=fc.shared_names[0] if fc.shared_names else '',
                                               emb_dim=fc.embedding_dim,
                                               dtype=dtype_map[dtype_dict[fc.input_names[0]]]))
-    print(feature_columns)
 
     padding_shape, padding_value = padding_data(feature_columns)
 
+    batch_size = data_config.batch_size
+    prefetch_size = data_config.prefetch_size
+    shuffle_buffer_size = data_config.shuffle_buffer_size
+
     test_dataset = tf.data.TextLineDataset('D:/BaiduNetdiskDownload/rank_test_data.tsv', num_parallel_reads=4).skip(1)
-    test_data = test_dataset.map(lambda x: parse_data(x, col_names, feature_columns, default_values, field_delim, False),
+    test_data = test_dataset.map(lambda x: parse_data(x, col_names, feature_columns, default_values),
                                  num_parallel_calls=30).padded_batch(padded_shapes=padding_shape,
-                                                                                 padding_values=padding_value,
-                                                                                 batch_size=5)
+                                                                     padding_values=padding_value,
+                                                                     batch_size=1024)
     test_data = test_data.prefetch(tf.data.AUTOTUNE)
+    train_dataset = tf.data.TextLineDataset('D:/BaiduNetdiskDownload/rank_train_data.tsv', num_parallel_reads=20).skip(
+        1)
+    train_data = train_dataset.map(lambda x: parse_data(x, col_names, feature_columns, default_values),
+                                   num_parallel_calls=60).shuffle(shuffle_buffer_size).padded_batch(padded_shapes=padding_shape,
+                                                                                        padding_values=padding_value,
+                                                                                        batch_size=1024)
+    train_data = train_data.prefetch(tf.data.AUTOTUNE)
+
+    model_config = pipeline_config.model_cofig
+    deep_col_name = [x.feature_names for x in model_config.groups if x.group_name == 'deep']
+    wide_col_name = [x.feature_names for x in model_config.groups if x.group_name == 'wide']
+
+    model = deepfm(feature_columns, wide_col_name, deep_col_name, l2_reg=1e-4,
+                   dropout_rate=0.2)
+    lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(0.001, decay_steps=100000, decay_rate=0.8,
+                                                                 staircase=True)
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule),
+                  loss='binary_crossentropy', metrics=tf.metrics.AUC(name='auc'))
+    model.fit(train_data, epochs=10, validation_data=test_data, verbose=1)
 
 
 if __name__ == '__main__':
-    train('D:\SS-workspace\文档\deepfm.config')
+    train('path')

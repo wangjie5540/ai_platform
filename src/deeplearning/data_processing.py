@@ -8,6 +8,7 @@ def parse_data(line, col_names, feature_columns, record_defaults, field_delim='\
     parsed_data = dict(zip(col_names, csv_data))
     feature_dict = {}
     for feat_col in feature_columns:
+        print(feat_col.name)
         if isinstance(feat_col, VarLenFeat):
             if feat_col.weight_name:
                 kvpairs = tf.strings.split([parsed_data[feat_col.name]], ',').values[:feat_col.max_len]
@@ -30,6 +31,7 @@ def parse_data(line, col_names, feature_columns, record_defaults, field_delim='\
             feature_dict[feat_col.name] = parsed_data[feat_col.name]
 
         elif isinstance(feat_col, BucketFeat):
+
             bucket_num = bucketize(parsed_data[feat_col.name], feat_col.boundaries)
             feature_dict[feat_col.name] = bucket_num
 
@@ -64,8 +66,3 @@ def padding_data(feature_columns):
 
     return pad_shape, pad_value
 
-
-if __name__ == '__main__':
-    dataset = tf.data.TextLineDataset('./dataset/rank_train_data.tsv', num_parallel_reads=4).skip(1)
-    dataset = dataset.take(5).map(parse_data, num_parallel_calls=1)
-    print(list(dataset))
