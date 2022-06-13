@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from src.deeplearning.feature_column import DenseFeat, SparseFeat, VarLenFeat, BucketFeat
 from src.deeplearning.layers.layer import *
-from config.config import MASK_VALUE, DICT_CATEGORICAL
+
 
 
 def build_keras_inputs(feature_columns):

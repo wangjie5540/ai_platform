@@ -8,7 +8,6 @@ def parse_data(line, col_names, feature_columns, record_defaults, field_delim='\
     parsed_data = dict(zip(col_names, csv_data))
     feature_dict = {}
     for feat_col in feature_columns:
-        print(feat_col.name)
         if isinstance(feat_col, VarLenFeat):
             if feat_col.weight_name:
                 kvpairs = tf.strings.split([parsed_data[feat_col.name]], ',').values[:feat_col.max_len]
@@ -65,4 +64,3 @@ def padding_data(feature_columns):
     pad_value = (pad_value, 0)
 
     return pad_shape, pad_value
-
