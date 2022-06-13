@@ -75,3 +75,50 @@ def similarity_search_recall_op(user_vec_file, item_vec_file, output_file, topk,
                                  f"{IMAGE_NAME_HEADER}-mf" + f":{image_tag}",
                            command="python",
                            arguments=["main.py", user_vec_file, item_vec_file, output_file, topk])
+
+
+@mount_data_pv
+def item2vec_op(input_file, ouput_file, skip_gram=16, vec_size=16, image_tag="latest"):
+    '''
+    基于最近邻的向量召回策略
+    输入文件格式
+        jsonl {'user_id':xxx, 'items'}
+    输出文件格式
+        jsonl {'item_id':xxx, 'item_vec':xxx}
+
+    :param input_file: 输入文件
+    :param ouput_file: 输出文件
+
+    :param skip_gram: 模型参数
+    :param vec_size: 输出向量维度
+    :param image_tag: 组件版本
+    :return: deep_mf_op
+    '''
+    return dsl.ContainerOp(name="item2vec'",
+                           image=f"{AI_PLATFORM_IMAGE_REPO}"
+                                 f"{IMAGE_NAME_HEADER}-item2vec" + f":{image_tag}",
+                           command="python",
+                           arguments=["main.py", input_file, ouput_file, skip_gram, vec_size])
+
+
+@mount_data_pv
+def association_rule_mining_op(input_file, ouput_file, min_sup=1, min_conf=0.01, image_tag="latest"):
+    '''
+    关联规则挖掘 输出item之间的支持度和自信度
+    文件输入
+        jsonl {'user_id':xxx, 'items':xxx}
+    输出文件
+        jsonl {'item_id':[(xxx, confidence)]}
+    :param input_file:
+    :param ouput_file:
+    :param skip_gram:
+    :param skip_gram:
+    :param image_tag: 组件版本
+    :return:
+    '''
+
+    return dsl.ContainerOp(name="association_rule_mining'",
+                           image=f"{AI_PLATFORM_IMAGE_REPO}"
+                                 f"{IMAGE_NAME_HEADER}-association_rule_mining" + f":{image_tag}",
+                           command="python",
+                           arguments=["main.py", input_file, ouput_file, min_sup, min_conf])
