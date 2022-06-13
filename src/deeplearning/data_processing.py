@@ -3,14 +3,14 @@ from src.deeplearning.feature_column import VarLenFeat, SparseFeat, DenseFeat, B
 from tensorflow.python.ops.gen_math_ops import bucketize
 
 
-def parse_data(line, col_names, feature_columns, record_defaults, field_delim='\t', use_quote_delim=False):
+def parse_data(line, col_names, feature_columns, record_defaults, field_delim='\t', use_quote_delim=False, multi_sep=','):
     csv_data = tf.io.decode_csv(line, record_defaults, field_delim, use_quote_delim)
     parsed_data = dict(zip(col_names, csv_data))
     feature_dict = {}
     for feat_col in feature_columns:
         if isinstance(feat_col, VarLenFeat):
             if feat_col.weight_name:
-                kvpairs = tf.strings.split([parsed_data[feat_col.name]], ',').values[:feat_col.max_len]
+                kvpairs = tf.strings.split([parsed_data[feat_col.name]], multi_sep).values[:feat_col.max_len]
                 kvpairs = tf.strings.split(kvpairs, ':')
                 ids, val = tf.split(kvpairs, num_or_size_splits=2)
                 ids = tf.reshape(ids, shape=[-1])
@@ -20,7 +20,7 @@ def parse_data(line, col_names, feature_columns, record_defaults, field_delim='\
                 feature_dict[feat_col.name] = ids
                 feature_dict[feat_col.weight_name] = tf.strings.to_number(val, out_type='float32')
             else:
-                ids = tf.strings.split([parsed_data[feat_col.name]], ',').values[:feat_col.max_len]
+                ids = tf.strings.split([parsed_data[feat_col.name]], multi_sep).values[:feat_col.max_len]
                 ids = tf.reshape(ids, shape=[-1])
                 if feat_col.sub_dtype != 'string':
                     ids = tf.strings.to_number(ids, out_type=tf.int32)
