@@ -5,6 +5,7 @@ from src.deeplearning.data_processing import padding_data, parse_data
 from src.utils.format_transform import value_transform
 import tensorflow as tf
 from src.deeplearning.deepFM.deepFM import deepfm
+from src.deeplearning.feature_column import build_feature_columns
 
 
 def train(pipeline_config_path):
@@ -18,14 +19,7 @@ def train(pipeline_config_path):
     default_values = [[value_transform(x.default_val, x.input_type)] for x in data_config.input_fields]
 
     dtype_dict = {x.input_name: x.input_type for x in data_config.input_fields}
-    dtype_map = {
-        0: 'int32',
-        1: 'int64',
-        2: 'string',
-        4: 'float64',
-        5: 'float64',
-        6: 'bool'
-    }
+
     tf_type_map = {
         0: tf.int32,
         1: tf.int64,
@@ -39,42 +33,8 @@ def train(pipeline_config_path):
         feature_configs = pipeline_config.feature_configs
     else:
         feature_configs = pipeline_config.feature_config.features
-    feature_columns = []
-    for fc in feature_configs:
-        if fc.feature_type == pipeline_pb2.FeatureConfig.FeatureType.SparseFeat and fc.input_names[0] in col_names:
-            feature_columns.append(SparseFeat(name=fc.input_names[0],
-                                              vocab_size=fc.num_buckets,
-                                              hash_size=fc.hash_bucket_size,
-                                              share_emb=fc.shared_names[0] if fc.shared_names else '',
-                                              emb_dim=fc.embedding_dim,
-                                              dtype=dtype_map[dtype_dict[fc.input_names[0]]]))
-        elif fc.feature_type == pipeline_pb2.FeatureConfig.FeatureType.VarLenFeat and fc.input_names[0] in col_names:
-            feature_columns.append(VarLenFeat(name=fc.input_names[0],
-                                              vocab_size=fc.num_buckets,
-                                              hash_size=fc.hash_bucket_size,
-                                              share_emb=fc.shared_names[0] if fc.shared_names else '',
-                                              seq_multi_sep=fc.seq_multi_sep,
-                                              weight_name=fc.weight_name,
-                                              emb_dim=fc.embedding_dim,
-                                              max_len=fc.sequence_length,
-                                              combiner=fc.combiner,
-                                              dtype=dtype_map[dtype_dict[fc.input_names[0]]],
-                                              sub_dtype=dtype_map[fc.sub_field_type]
-                                              ))
-        elif fc.feature_type == pipeline_pb2.FeatureConfig.FeatureType.DenseFeat and fc.input_names[0] in col_names:
-            feature_columns.append(DenseFeat(name=fc.input_names[0],
-                                             dim=fc.embedding_dim,
-                                             share_emb=fc.shared_names[0] if fc.shared_names else '',
-                                             dtype=dtype_map[dtype_dict[fc.input_names[0]]]
-                                             ))
 
-        elif fc.feature_type == pipeline_pb2.FeatureConfig.FeatureType.BucketFeat and fc.input_names[0] in col_names:
-            feature_columns.append(BucketFeat(name=fc.input_names[0],
-                                              boundaries=list(map(float, list(fc.boundaries))),
-                                              share_emb=fc.shared_names[0] if fc.shared_names else '',
-                                              emb_dim=fc.embedding_dim,
-                                              dtype=dtype_map[dtype_dict[fc.input_names[0]]]))
-
+    feature_columns = build_feature_columns(feature_configs, dtype_dict)
 
     padding_shape, padding_value = padding_data(feature_columns)
     batch_size = data_config.batch_size
@@ -84,17 +44,18 @@ def train(pipeline_config_path):
     test_input_path = pipeline_config.test_input_path
     test_dataset = tf.data.TextLineDataset(test_input_path, num_parallel_reads=4).skip(1)
     test_data = test_dataset.map(lambda x: parse_data(x, col_names, feature_columns, default_values),
-                                 num_parallel_calls=30)\
+                                 num_parallel_calls=30) \
         .padded_batch(padded_shapes=padding_shape,
-                                                                     padding_values=padding_value,
-                                                                     batch_size=batch_size)
+                      padding_values=padding_value,
+                      batch_size=batch_size)
     test_data = test_data.prefetch(tf.data.AUTOTUNE)
     train_dataset = tf.data.TextLineDataset(train_input_path, num_parallel_reads=20).skip(
         1)
     train_data = train_dataset.map(lambda x: parse_data(x, col_names, feature_columns, default_values),
-                                   num_parallel_calls=60).shuffle(shuffle_buffer_size).padded_batch(padded_shapes=padding_shape,
-                                                                                        padding_values=padding_value,
-                                                                                        batch_size=batch_size)
+                                   num_parallel_calls=60).shuffle(shuffle_buffer_size).padded_batch(
+        padded_shapes=padding_shape,
+        padding_values=padding_value,
+        batch_size=batch_size)
     train_data = train_data.prefetch(tf.data.AUTOTUNE)
 
     model_config = pipeline_config.model_config

@@ -1,10 +1,12 @@
 import pandas as pd
 
 
-def soften(input_file, sep=',', soften_method='z-score', cols=None, thresh_max=None, thresh_min=None, percent_max=None, percent_min=None):
+def soften(input_file, output_file, sep=',', soften_method='z-score', cols=None, thresh_max=None, thresh_min=None, percent_max=None,
+           percent_min=None):
     """
     特征异常平滑
     @param input_file: 输入数据
+    @param output_file: 输出文件路径
     @param sep: 分隔符
     @param soften_method: 平滑方式(z-score, thresh, percent, box_plot)
     @param cols: list, 平滑列名
@@ -24,7 +26,7 @@ def soften(input_file, sep=',', soften_method='z-score', cols=None, thresh_max=N
         df[cols] = df[cols].apply(percent_soften, args=(percent_max, percent_min), axis=0)
     else:
         raise ValueError('请选择平滑方式')
-    return df
+    df.to_csv(output_file, sep=sep, index=False)
 
 
 def z_score_soften(series):
