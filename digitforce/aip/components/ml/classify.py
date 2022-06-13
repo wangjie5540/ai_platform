@@ -35,7 +35,7 @@ def lr_classify_op(train_dataset_path, test_dataset_path,
 
 
 @mount_data_pv
-def lr_classify_op(train_dataset_path, test_dataset_path,
+def lightgbm_classify_op(train_dataset_path, test_dataset_path,
                    model_save_dir,
                    label_col,
                    categorical_feature="",
