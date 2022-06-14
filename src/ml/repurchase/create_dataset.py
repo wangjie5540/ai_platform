@@ -4,7 +4,7 @@
 import datetime
 from typing import Dict
 from xmlrpc.client import Boolean
-from spark_env import SparkEnv
+from spark_env import SparkEnv, spark_read
 # import digitforce.aip.common.utils.spark_helper as SparkEnv
 import requests
 import sys
@@ -53,6 +53,7 @@ class CreateDataset:
                 '%Y-%m-%d')
             # print(cur_str)
             feature_dates, train_date, predict_date = get_time_params(cur_str, train_period, predict_period)
+            order_table, user_table, item_table, bh_table = 'order_table_tmp', 'user_table_tmp', 'item_table_tmp', 'bh_table_tmp'
             samples = get_samples_train(spark, order_table, odinfo, item_table, itinfo, cur_str, train_date, cat_list,
                                         predict_date)
             # print(samples)
@@ -96,6 +97,10 @@ def get_min_date_of_4_table(spark, user_table: str, order_table: str, item_table
     sql2 = '''select substr(max({0}),1,10) as od_max_date from {1} '''.format(odinfo['order_time'], order_table)
     sql3 = '''select max({0}) as it_max_date from {1} '''.format(itinfo['dt'], item_table)
     sql4 = '''select substr(max({0}),1,10) as bh_max_date from {1} '''.format(bhinfo['event_time'], bh_table)
+    spark_read(spark, user_table, 'user_table_tmp')
+    spark_read(spark, order_table, 'order_table_tmp')
+    spark_read(spark, item_table, 'item_table_tmp')
+    spark_read(spark, bh_table, 'bh_table_tmp')
     dt1 = spark.sql(sql1).toPandas()
     dt2 = spark.sql(sql2).toPandas()
     dt3 = spark.sql(sql3).toPandas()
