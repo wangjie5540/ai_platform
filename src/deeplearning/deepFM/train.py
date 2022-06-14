@@ -20,15 +20,6 @@ def train(pipeline_config_path):
 
     dtype_dict = {x.input_name: x.input_type for x in data_config.input_fields}
 
-    tf_type_map = {
-        0: tf.int32,
-        1: tf.int64,
-        2: tf.string,
-        4: tf.float32,
-        5: tf.float32,
-        6: tf.bool
-    }
-
     if pipeline_config.feature_configs:
         feature_configs = pipeline_config.feature_configs
     else:
