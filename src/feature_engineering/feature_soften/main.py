@@ -5,6 +5,7 @@ import argparse
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_file', type=str)
+    parser.add_argument('--output_file', type=str)
     parser.add_argument('--soften_method', type=str)
     parser.add_argument('--sep', type=str, help='the separator of columns')
     parser.add_argument('--cols', type=str, help='the columns to soften')
@@ -15,6 +16,7 @@ def main():
     args = parser.parse_args()
 
     input_file = args.input_file
+    output_file = args.output_file
     soften_method = args.soften_method
     sep = args.sep
     assert args.cols, 'there is no soften columns'
@@ -32,7 +34,7 @@ def main():
             raise ValueError('percent_max and percent_min must be required')
         percent_max = args.percent_max
         percent_min = args.percent_min
-    soften(input_file, sep, soften_method, cols, thresh_max, thresh_min, percent_max, percent_min)
+    soften(input_file, output_file, sep, soften_method, cols, thresh_max, thresh_min, percent_max, percent_min)
 
 
 if __name__ == '__main__':
