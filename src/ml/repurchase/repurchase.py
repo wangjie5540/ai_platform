@@ -13,9 +13,35 @@ import time
 import logging
 import traceback
 import warnings
+import pyhdfs
 warnings.filterwarnings("ignore")
 
 train_set = None
+
+def upload_hdfs(filepath, target_file_path):
+    try:
+        cli = pyhdfs.HdfsClient(hosts='bigdata-server-08:9870')
+        if cli.exists(target_file_path):
+            cli.delete(target_file_path)
+        cli.copy_from_local(filepath, target_file_path)
+        return target_file_path
+    except:
+        print(traceback.format_exc())
+        #             logging.info(traceback.format_exc())
+        return ""
+
+def download_hdfs(local_path, ModelFileUrl):
+    try:
+        cli = pyhdfs.HdfsClient(hosts='bigdata-server-08:9870', user_name='root')
+        if cli.exists(ModelFileUrl):
+            cli.copy_to_local(ModelFileUrl, local_path)
+            return local_path
+        else:
+            return None
+    except:
+        print(traceback.format_exc())
+        #             logging.info(traceback.format_exc())
+        return ""
 
 def process_feats(data, tag_name):
     labels = np.array(data[tag_name].astype(np.int32)).reshape((-1,))
@@ -63,7 +89,7 @@ def lgb_cv(n_estimators, num_leaves, max_depth, learning_rate, reg_alpha, reg_la
     best_score = np.max(cv_res['auc-mean'])
     return best_score
 
-def train(input_params:Dict):
+def train(input_dataset_filepath, taskId):
     """
     :param input_params: 输入配置参数
     {"taskid":52,
@@ -126,39 +152,42 @@ def train(input_params:Dict):
     global train_set
     try:
         start = time.time()
-        create_data = CreateDataset()
-        cate_list = []
-        for cateid in input_params['category']:
-            cate = '"'+cateid+'"'
-            cate_list.append(cate)
-        catestr = "("+",".join(cate_list)+")"
+        # create_data = CreateDataset()
+        # cate_list = []
+        # for cateid in input_params['category']:
+        #     cate = '"'+cateid+'"'
+        #     cate_list.append(cate)
+        # catestr = "("+",".join(cate_list)+")"
 
 
-        dataset = create_data.ConstructFeatures(
-                                    input_params['trainingScope'],
-                                    input_params['forecastPeriod'],
-                                    catestr,
-                                    True,
-                                    input_params['orderData']['tableName'],
-                                    input_params['trafficData']['tableName'],
-                                    input_params['userData']['tableName'],
-                                    input_params['goodsData']['tableName'],
-                                    input_params['orderData'],
-                                    input_params['trafficData'],
-                                    input_params['userData'],
-                                    input_params['goodsData'],
-                                    input_params['eventCode'][input_params['trafficData']['event_code']],
-                                     None)
-        if len(dataset) == 0:#可合并
-            return
+        # dataset = create_data.ConstructFeatures(
+        #                             input_params['trainingScope'],
+        #                             input_params['forecastPeriod'],
+        #                             catestr,
+        #                             True,
+        #                             input_params['orderData']['tableName'],
+        #                             input_params['trafficData']['tableName'],
+        #                             input_params['userData']['tableName'],
+        #                             input_params['goodsData']['tableName'],
+        #                             input_params['orderData'],
+        #                             input_params['trafficData'],
+        #                             input_params['userData'],
+        #                             input_params['goodsData'],
+        #                             input_params['eventCode'][input_params['trafficData']['event_code']],
+        #                              None)
+        # dataset.to_csv("dataset_fugou_test.csv", index=False)
+        # res_target_path = os.path.join('hdfs:///usr/algorithm/cd/fugou/result', 'dataset_fugou_test.csv')
+        # upload_flag = upload_hdfs("dataset_fugou_test.csv", res_target_path)
+        # print(upload_flag)
 
+        dataset = pd.read_csv(input_dataset_filepath)
         # 暂时处理
-        if len(dataset[dataset['label']==1]) == len(dataset):
-            dataset.loc[:len(dataset)//2,'label'] = 0
-        elif len(dataset[dataset['label']==0]) == len(dataset):
-            dataset.loc[:len(dataset)//2,'label'] = 1
-
-        if (len(dataset[dataset['label']==0]) == len(dataset)) or (len(dataset[dataset['label']==1]) == len(dataset)):
+        if len(dataset[dataset['label'] == 1]) == len(dataset):
+            dataset.loc[:len(dataset) // 2, 'label'] = 0
+        elif len(dataset[dataset['label'] == 0]) == len(dataset):
+            dataset.loc[:len(dataset) // 2, 'label'] = 1
+        print(dataset)
+        if (len(dataset) == 0) or (len(dataset[dataset['label']==0]) == len(dataset)) or (len(dataset[dataset['label']==1]) == len(dataset)):
             return
         else:
             train_set, feats_train, labels_train, feats_test, labels_test = process_feats(dataset, 'label')
@@ -194,7 +223,7 @@ def train(input_params:Dict):
             print('The best model from Bayes optimization scores {:.5f} AUC ROC on the test set.'.format(auc))
 
             # store the model
-            filepath = str(input_params['taskid'])+r".pkl"
+            filepath = str(taskId)+r".pkl"
             print(filepath)
             pickle.dump(best_lgb_model, open(filepath, 'wb'))
             end = time.time()
