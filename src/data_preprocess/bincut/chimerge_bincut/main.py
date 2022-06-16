@@ -3,7 +3,7 @@ from typing import List
 from scipy.stats import chi2
 import pandas as pd
 import numpy as np
-from digitforce.aip.common.logging_config import setup_console_log
+# from digitforce.aip.common.logging_config import setup_console_log
 import logging
 
 # 卡方分箱
@@ -97,7 +97,7 @@ def get_chimerge_bincut(data, var, target, max_group=None, chi_threshold=None):
     best_bincut.append(data[var].min() - 1)
     # 排序切分点
     best_bincut.sort()
-    logging.info(f'变量{var}的最终卡方切分点:{best_bincut}')
+    # logging.info(f'变量{var}的最终卡方切分点:{best_bincut}')
     return best_bincut
 
 def data_after_chimerge_bincut(data:pd.DataFrame, var_list: List[str], target: str, max_group_list: List[int], chi_threshold_list):
@@ -115,7 +115,7 @@ def data_after_chimerge_bincut(data:pd.DataFrame, var_list: List[str], target: s
     return data
 
 def main():
-    setup_console_log()
+    # setup_console_log()
     dataset_path = sys.argv[1]
     output_filepath = sys.argv[2]
     bins = [int(x) for x in sys.argv[3].split(',')]
