@@ -1,5 +1,5 @@
 import tensorflow as tf
-from src.deeplearning.feature_column import VarLenFeat, SparseFeat, DenseFeat, BucketFeat
+from src.deeplearning.feature_column.feature_column import VarLenFeat, SparseFeat, DenseFeat, BucketFeat
 from tensorflow.python.ops.gen_math_ops import bucketize
 
 

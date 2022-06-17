@@ -1,11 +1,9 @@
-from src.pbs import pipeline_pb2
-from src.deeplearning.feature_column import SparseFeat, VarLenFeat, DenseFeat, BucketFeat
 from src.utils.config_utils import get_configs_from_pipeline_file
 from src.deeplearning.data_processing import padding_data, parse_data
 from src.utils.format_transform import value_transform
 import tensorflow as tf
 from src.deeplearning.deepFM.deepFM import deepfm
-from src.deeplearning.feature_column import build_feature_columns
+from src.deeplearning.feature_column.feature_column import build_feature_columns
 
 
 def train(pipeline_config_path):

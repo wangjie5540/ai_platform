@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from src.deeplearning.feature_column import DenseFeat, SparseFeat, VarLenFeat, BucketFeat
+from src.deeplearning.feature_column.feature_column import DenseFeat, SparseFeat, VarLenFeat, BucketFeat
 from src.deeplearning.layers.layer import *
 
 
