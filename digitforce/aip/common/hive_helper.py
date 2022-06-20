@@ -41,9 +41,9 @@ class HiveClient:
         return df
 
     @_get_conn
-    def query_to_table(self, sql, table_name, dataset=None):
+    def query_to_table(self, sql, table_name, db=None):
         cursor = self.conn.cursor()
-        table_name = f"{dataset}.{table_name}" if dataset else table_name
+        table_name = f"{db}.{table_name}" if db else table_name
         _sql = f"CREATE TABLE {table_name} AS " \
                f"{sql}"
         cursor.execute(_sql)
