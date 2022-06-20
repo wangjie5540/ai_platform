@@ -39,7 +39,7 @@ def click_hot_op(user_show_and_action_table, output_file, image_tag="latest"):
     :param image_tag: 组件版本
     :return: op
     '''
-    return dsl.ContainerOp(name="ctr_hot",
+    return dsl.ContainerOp(name="click_hot",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"/src-recommend-hot-click_hot" + f":{image_tag}",
                            command="python",
