@@ -51,7 +51,7 @@ def deep_mf_op(input_file, item_embeding_file, user_embeding_file, image_tag="la
     :param image_tag: 组件版本
     :return: deep_mf_op
     '''
-    return dsl.ContainerOp(name="deep_mf'",
+    return dsl.ContainerOp(name="deep_mf",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"{IMAGE_NAME_HEADER}-mf" + f":{image_tag}",
                            command="python",
@@ -70,7 +70,7 @@ def similarity_search_recall_op(user_vec_file, item_vec_file, output_file, topk,
     :param image_tag: 组件版本
     :return: deep_mf_op
     '''
-    return dsl.ContainerOp(name="deep_mf'",
+    return dsl.ContainerOp(name="similarity_search_recall",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"{IMAGE_NAME_HEADER}-mf" + f":{image_tag}",
                            command="python",
@@ -78,11 +78,11 @@ def similarity_search_recall_op(user_vec_file, item_vec_file, output_file, topk,
 
 
 @mount_data_pv
-def item2vec_op(input_file, ouput_file, skip_gram=16, vec_size=16, image_tag="latest"):
+def item2vec_op(input_file, ouput_file, skip_gram=0, vec_size=16, image_tag="latest"):
     '''
     基于最近邻的向量召回策略
     输入文件格式
-        jsonl {'user_id':xxx, 'items'}
+        user_id, click_cnt, save_cnt, order_cnt
     输出文件格式
         jsonl {'item_id':xxx, 'item_vec':xxx}
 
@@ -94,7 +94,7 @@ def item2vec_op(input_file, ouput_file, skip_gram=16, vec_size=16, image_tag="la
     :param image_tag: 组件版本
     :return: deep_mf_op
     '''
-    return dsl.ContainerOp(name="item2vec'",
+    return dsl.ContainerOp(name="item2vec",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"{IMAGE_NAME_HEADER}-item2vec" + f":{image_tag}",
                            command="python",

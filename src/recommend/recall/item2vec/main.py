@@ -6,14 +6,30 @@ from gensim.models import word2vec
 
 def item2vec(input_file, ouput_file, skip_gram, vec_size):
     sentences = []
-    all_items = set()
     with open(input_file) as fi:
+        cur_user_id = None
+        sentence = []
         for line in fi:
-            json_obj = json.loads(line)
-            items = json_obj["items"]
-            items = [str(_) for _ in items]
-            sentences.append(items)
-            all_items.update(items)
+            vals = line.strip().split(",")
+            user_id = vals[0]
+            item_id = vals[1]
+            profile_id = int(vals[2])
+            click_cnt = vals[3]
+            save_cnt = vals[4]
+            order_cnt = vals[5]
+            event_timestamp = int(vals[6])
+            if user_id == "user_id":
+                continue
+            if cur_user_id is None:
+                cur_user_id = user_id
+            if user_id == cur_user_id:
+                if int(click_cnt) + int(save_cnt) + int(order_cnt) > 0:
+                    sentence.append(item_id)
+            else:
+                sentences.append(sentence)
+                sentence = [item_id]
+                cur_user_id = user_id
+
     wv_model = word2vec.Word2Vec(sentences, hs=1, sg=skip_gram, min_count=5, window=10, vector_size=vec_size,
                                  workers=4,
                                  negative=8)
