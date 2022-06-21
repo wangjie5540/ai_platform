@@ -1,0 +1,29 @@
+[price_elasticity]
+w = 7
+
+
+filter_func = "{'bound_sigma': (3, -3), 'bound_percentile': (0.99, 0.00)}"
+col_time = "dt"
+conn = 'and'
+sdate = '20200101'
+edate = '20220520'
+input_table = 'ai_dm.poc_data_test'
+output_table = 'ai_dm.poc_data_test_out'
+
+dict_rename = "{'site_code': 'shop_id', 'goods_code': 'goods_id', 'quantity': 'qty', 'paid_amount': 'sale_amt'}"
+
+
+order_table = 'ai_dm.ads_scm_goods_sales_log'
+filter_table = 'ai_dm_dev.io_daily_y_tmp'
+filter_table_col = ['shop_id','goods_id','th_y','dt']
+filter_table_col_y = 'th_y'
+col_key = ['shop_id','goods_id','dt']
+partition_key = ['goods_id', 'shop_id']
+
+shop_exp = 'site_code'
+goods_exp = 'goods_code'
+qty_exp = 'quantity'
+paid_amount = 'paid_amount'
+ori_dt = 'dt'
+col_qty = 'qty'
+col_sale_amt = 'sale_amt'
