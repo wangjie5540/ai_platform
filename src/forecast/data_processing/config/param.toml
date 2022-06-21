@@ -1,0 +1,12 @@
+[filter_p1]
+w = 90
+col_key = ['shop_id','goods_id']
+col_qty = 'qty'
+filter_func = "{'bound_sigma': (3, -3), 'bound_percentile': (0.99, 0.00)}"
+col_time = "sdt"
+conn = 'and'
+sdate = ''
+edate = ''
+input_table = 'ai_dm.poc_data_test'
+input_stock_table = 'ai_dm.poc_stock'
+output_table = 'ai_dm.poc_data_test_out'

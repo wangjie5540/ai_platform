@@ -1,0 +1,6 @@
+[sale_classify]
+sale_classify_key_cols=['shop_id','goods_id','y_type']#商品分类所用的主字段
+w=3
+threshold_count=1
+threshold_proportion=0.15
+sale_month_quantity=14
