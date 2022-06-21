@@ -23,7 +23,7 @@ def train(pipeline_config_path):
     else:
         feature_configs = pipeline_config.feature_config.features
 
-    feature_columns = build_feature_columns(feature_configs, dtype_dict)
+    feature_columns = build_feature_columns(feature_configs, dtype_dict, col_names)
 
     padding_shape, padding_value = padding_data(feature_columns)
     batch_size = data_config.batch_size

@@ -11,6 +11,7 @@ class SeqInputLayer(object):
         }
         wide_and_deep_dict = self.get_wide_deep_dict()
 
+
     def get_wide_deep_dict(self):
         wide_and_deep_dict = {}
         for group_name_config in self._feature_groups_config.values():
