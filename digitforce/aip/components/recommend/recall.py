@@ -6,7 +6,7 @@ IMAGE_NAME_HEADER = "/src-recommend-recall"
 
 @mount_data_pv
 def user_profile_recall_op(input_file, output_file, hot_csv_file, item_and_profile_map_file, image_tag="latest"):
-    '''
+    """
     按照用户兴趣召回
     输入 input_file
             jsonl {user_id: xxx, user_profiles: {profile_id:score, ...}}
@@ -22,7 +22,7 @@ def user_profile_recall_op(input_file, output_file, hot_csv_file, item_and_profi
     :param item_and_profile_map_file: item和profile的映射表
     :param image_tag: 组件版本
     :return: op
-    '''
+    """
     return dsl.ContainerOp(name="user_profile_recall",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"{IMAGE_NAME_HEADER}-user_profile" + f":{image_tag}",
@@ -32,7 +32,7 @@ def user_profile_recall_op(input_file, output_file, hot_csv_file, item_and_profi
 
 @mount_data_pv
 def deep_mf_op(input_file, item_embeding_file, user_embeding_file, image_tag="latest"):
-    '''
+    """
     用深度学习框架训练user_emb矩阵和item_emb矩阵
     训练样本格式：
         user_id, item_id, score 分隔符为 ','
@@ -50,7 +50,7 @@ def deep_mf_op(input_file, item_embeding_file, user_embeding_file, image_tag="la
     :param user_embeding_file: 用户向量保存路径
     :param image_tag: 组件版本
     :return: deep_mf_op
-    '''
+    """
     return dsl.ContainerOp(name="deep_mf",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"{IMAGE_NAME_HEADER}-mf" + f":{image_tag}",

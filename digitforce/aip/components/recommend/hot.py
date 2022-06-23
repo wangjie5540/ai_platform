@@ -26,7 +26,7 @@ def ctr_hot_op(user_show_and_action_table, output_file, image_tag="latest"):
 
 @mount_data_pv
 def click_hot_op(user_show_and_action_table, output_file, image_tag="latest"):
-    '''
+    """
     计算item的按照click_cnt排序的热门
 
     输入table必须包含字段:
@@ -38,7 +38,7 @@ def click_hot_op(user_show_and_action_table, output_file, image_tag="latest"):
     :param output_file: 热门排序文件
     :param image_tag: 组件版本
     :return: op
-    '''
+    """
     return dsl.ContainerOp(name="click_hot",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"/src-recommend-hot-click_hot" + f":{image_tag}",

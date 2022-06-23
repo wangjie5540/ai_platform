@@ -4,6 +4,7 @@ import kfp.dsl as dsl
 from digitforce.aip.components.preprocess import dataset
 from digitforce.aip.components.recommend import hot
 from digitforce.aip.components.recommend import recall
+from digitforce.aip.components.preprocess import sql
 
 name = "RecommendMultiRecallAndRank"
 description = ""
@@ -13,21 +14,40 @@ description = ""
     name=name,
     description=description,
 )
-def recommend_multi_recall_and_rank_pipeline(run_datetime_str):
+def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_data_end_date_str, run_datetime_str):
     # run_datetime_str = to_date_str(parse_date_str(run_datetime_str))
+    show_and_action_sql = f'''
+    SELECT user_id, 
+        sku AS item_id, 
+        1 AS show_cnt,
+        category_level_3 AS profile_id,
+        IF(event_code='CLICK', 1, 0) AS click_cnt,  
+        IF(event_code='CART_ADD', 1, 0) AS save_cnt,  
+        0 AS order_cnt,  
+        unix_timestamp(event_time) AS event_timestamp 
+         
+    FROM labelx.push_traffic_behavior 
+    WHERE dt <= '{train_data_end_date_str}' AND dt >= '{train_data_start_date_str}' 
+        AND event_code IN ('EXPOSURE','CLICK', 'CART_ADD')
+    
+    '''
+    user_show_and_action_table = f"aip.show_and_action_{run_datetime_str}"  # 必须包含 user_id, item_id,  click_cnt
+    show_and_action_table_maker = sql.hive_sql_executor(show_and_action_sql, user_show_and_action_table)
+
     # generate hot
-    user_show_and_action_table = ""  # 必须包含 user_id, item_id,  click_cnt
     ctr_hot_result = f"/data/recommend/hot/ctr/{run_datetime_str}.csv"  # 无头csv文件  item_id, ctr
-    ctr_hot = hot.ctr_hot_op(user_show_and_action_table, ctr_hot_result)  # 计算ctr热门
+    ctr_hot = hot.ctr_hot_op(user_show_and_action_table, ctr_hot_result).after(show_and_action_table_maker)  # 计算ctr热门
 
     click_hot_result = f"/data/recommend/hot/click_cnt/{run_datetime_str}.csv"
-    click_hot = hot.click_hot_op(user_show_and_action_table, click_hot_result)  # 计算点击热门
+    click_hot = hot.click_hot_op(user_show_and_action_table, click_hot_result).after(
+        show_and_action_table_maker)  # 计算点击热门
 
     # user_id,item_id,profile_id,click_cnt,save_cnt,order_cnt,event_timestamp
     user_action_csv_file = f"/data/recommend/user/action/{run_datetime_str}.csv"
     # item2vec
     item2vec_item_emb_jsonl_file = f"/data/recommend/recall/item_emb/item2vec/{run_datetime_str}.jsonl"
-    item2vec = recall.item2vec_op(user_action_csv_file, item2vec_item_emb_jsonl_file, vec_size=16)
+    item2vec = recall.item2vec_op(user_action_csv_file, item2vec_item_emb_jsonl_file, vec_size=16) \
+        .after(show_and_action_table_maker)
 
     # deep fm
     mf_train_dataset_csv_file = f"/data/recommend/dataset/mf/{run_datetime_str}.csv"
@@ -36,7 +56,8 @@ def recommend_multi_recall_and_rank_pipeline(run_datetime_str):
     deep_mf_dataset = dataset.generate_mf_train_dataset_op(
         user_action_csv_file, mf_train_dataset_csv_file,
         user_and_id_map_file, item_and_id_map_file,
-        names="user_id,item_id,profile_id,click_cnt,save_cnt,order_cnt,event_timestamp")
+        names="user_id,item_id,profile_id,click_cnt,save_cnt,order_cnt,event_timestamp") \
+        .after(show_and_action_table_maker)
     deep_mf_item_emb_jsonl_file = f"/data/recommend/recall/item_emb/deep_mf/{run_datetime_str}.jsonl"
     deep_mf_user_emb_jsonl_file = f"/data/recommend/recall/user_emb/deep_mf/{run_datetime_str}.jsonl"
     deep_mf = recall.deep_mf_op(mf_train_dataset_csv_file, deep_mf_item_emb_jsonl_file, deep_mf_user_emb_jsonl_file)
