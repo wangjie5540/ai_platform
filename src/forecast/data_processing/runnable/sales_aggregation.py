@@ -1,13 +1,23 @@
 # -*- coding: utf-8 -*-
-# @Time : 2022/05/26
+# @Time : 2022/05/23
 # @Author : Arvin
+# -*- coding:utf-8  -*-
 """
-无销量还原天级别销量还原
+Copyright (c) 2021-2022 北京数势云创科技有限公司 <http://www.digitforce.com>
+All rights reserved. Unauthorized reproduction and use are strictly prohibited
+include:
+大单过滤
 """
-from forecast.data_processing.sp.sp_data_adjust import no_sales_adjust
+from imp import reload
 
+import os
+import sys
+
+import forecast.data_processing.sp.sp_sales_agg
+from forecast.data_processing.sp.sp_sales_agg import sales_aggregation
 try:
-    import findspark #使用spark-submit 的cluster时要注释掉
+    import findspark  # 使用spark-submit 的cluster时要注释掉
+
     findspark.init()
 except:
     pass
@@ -22,17 +32,9 @@ def load_params():
     param_cur = {
         'mode_type': 'sp',
         'sdate': '20210101',
-        'edate': '20220101',
-        'col_openinv': 'opening_inv',
-        'col_endinv': 'ending_inv',
-        'col_key': ['shop_id', 'goods_id'],
-        'col_category': 'category4_code',
-        'col_time': 'dt',
-        'w':2,
-        'col_qty':'fill_sum_qty',
-        'join_key':['shop_id','goods_id','dt']
+        'edate': '20220101'
     }
-    f = TomlOperation(os.getcwd()+"/forecast/data_processing/config/param.toml")
+    f = TomlOperation(os.getcwd() + "/forecast/data_processing/config/param.toml")
     params_all = f.read_file()
     # 获取项目1配置参数
     params = params_all['filter_p1']
@@ -46,7 +48,7 @@ def parse_arguments():
     :return:
     """
     params = load_params()
-    parser = argparse.ArgumentParser(description='no_sales_adjust')
+    parser = argparse.ArgumentParser(description='sales agg')
     parser.add_argument('--param', default=params, help='arguments')
     parser.add_argument('--spark', default=spark, help='spark')
     args = parser.parse_args(args=[])
@@ -63,7 +65,7 @@ def run():
     args = parse_arguments()
     param = args.param
     spark = args.spark
-
+    print("args", args)
     logger_info.info(str(param))
     if 'mode_type' in param.keys():
         run_type = param['mode_type']
@@ -72,7 +74,7 @@ def run():
     try:
         if run_type == 'sp':  # spark版本
             logger_info.info("RUNNING···")
-            no_sales_adjust(spark, param)
+            sales_aggregation(spark, param)
         else:
             # pandas版本
             pass
@@ -82,6 +84,7 @@ def run():
         status = "ERROR"
         logger_info.info(traceback.format_exc())
     return status
+
 
 if __name__ == "__main__":
     run()

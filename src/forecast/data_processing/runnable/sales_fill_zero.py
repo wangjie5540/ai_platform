@@ -8,32 +8,40 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
 大单过滤
 """
+from imp import reload
 
-from data_process.sp.sp_data_adjust import sales_fill_zero
+import os
+import sys
+import forecast.data_processing.sp.sp_data_adjust
+from forecast.data_processing.sp.sp_data_adjust import sales_fill_zero
 
 try:
-    import findspark #使用spark-submit 的cluster时要注释掉
+    import findspark  # 使用spark-submit 的cluster时要注释掉
+
     findspark.init()
 except:
     pass
 import argparse
 import traceback
-from common.log import get_logger
-from common.toml_helper import TomlOperation
+from forecast.common.log import get_logger
+from forecast.common.toml_helper import TomlOperation
 
+
+# reload(sp.sp_sales_agg)
+# reload(sp.sp_data_adjust)
 
 def load_params():
     """运行run方法时"""
     param_cur = {
         'mode_type': 'sp',
-        'sdate': '20220101',
-        'edate': '20220501',
-        'col_key': ['shop_id', 'goods_id'],
+        'sdate': '20210101',
+        'edate': '20220201',
         'col_openinv': 'opening_inv',
-        'fill_value': 0
+        'col_qty': 'sum_qty',
+        'join_key': ['shop_id', 'goods_id', 'dt'],
+        'fill_value': 0.0
     }
-
-    f = TomlOperation("param.toml")
+    f = TomlOperation(os.getcwd() + "/forecast/data_processing/config/param.toml")
     params_all = f.read_file()
     # 获取项目1配置参数
     params = params_all['filter_p1']
@@ -47,10 +55,10 @@ def parse_arguments():
     :return:
     """
     params = load_params()
-    parser = argparse.ArgumentParser(description='big order filter')
+    parser = argparse.ArgumentParser(description='sales fill zero')
     parser.add_argument('--param', default=params, help='arguments')
-    parser.add_argument('--spark', default=None, help='spark')
-    args = parser.parse_args()
+    parser.add_argument('--spark', default=spark, help='spark')
+    args = parser.parse_args(args=[])
     return args
 
 
@@ -64,7 +72,7 @@ def run():
     args = parse_arguments()
     param = args.param
     spark = args.spark
-
+    print("args", args)
     logger_info.info(str(param))
     if 'mode_type' in param.keys():
         run_type = param['mode_type']
@@ -84,5 +92,8 @@ def run():
         logger_info.info(traceback.format_exc())
     return status
 
+
 if __name__ == "__main__":
+    #     f = TomlOperation("param.toml")
+    #     print(f.toml_file_path)
     run()
