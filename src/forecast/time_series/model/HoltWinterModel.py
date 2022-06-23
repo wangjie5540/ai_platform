@@ -30,7 +30,8 @@ class HoltWinterModel():
             "freq": None,
             "missing": "none",
             "dates": None
-        }.update(self.param)
+        }
+        param.update(self.param)
 
         self.model = ExponentialSmoothing(
             self.data,
@@ -55,12 +56,13 @@ class HoltWinterModel():
             "use_basinhopping": None,
             "initial_level": None,
             "initial_trend":None
-        }.update(self.param_fit)
+        }
+        param_fit.update(self.param_fit)
 
         self.model=self.model.fit(**param_fit)
         return self.model
         
-    def forcast(self,predict_len):
+    def forecast(self,predict_len):
         preds=self.model.forecast(predict_len)
         return preds
 
