@@ -1,0 +1,22 @@
+[filter_p1]
+w = 90
+col_key = ['shop_id','goods_id']
+col_qty = 'qty'
+filter_func = "{'bound_sigma': (3, -3), 'bound_percentile': (0.99, 0.00)}"
+agg_func = "{'sales_aggregation_by_day': 'dt'}"
+sales_feature_func = "{'col_gtz_agg_days': (['mean', 'sum'], [2, 3]),'col_agg_days': (['mean'], [2,7]),'col_gtz_count_days': (['days'], [3,7]),'col_hb_days': (['hb'], [2]),'col_tb_days': (['tb'], [2])}"
+col_time = "sdt"
+conn = 'and'
+sdate = ''
+edate = ''
+input_sales_table = 'ai_dm.ads_scm_goods_sales_log'
+input_stock_table = 'ai_dm.ads_scm_original_stock_snapshot'
+input_category_table = 'ai_dm.ads_scm_original_site_goods'
+outlier_order_table = 'ai_dm_dev.outlier_order_0620'
+qty_aggregation_table = "ai_dm_dev.qty_aggregation_0620"
+qty_aggregation_weekly_table = "ai_dm_dev.qty_aggregation_weekly_0620"
+fill_zero_table = "ai_dm_dev.fill_zero_0620"
+no_sales_adjust_table = "ai_dm_dev.no_sales_adjust_0620"
+sales_features_daily_table = "ai_dm_dev.sales_features_0620"
+shop_list = ['1004','1228']
+col_partitions = ['shop_id','dt']
