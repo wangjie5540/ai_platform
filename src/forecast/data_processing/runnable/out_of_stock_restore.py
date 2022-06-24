@@ -4,7 +4,7 @@
 """
 小时级缺货还原
 """
-from data_process.sp.sp_data_adjust import out_of_stock_adjust
+from forecast.data_process.sp.sp_data_adjust import out_of_stock_adjust
 
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
