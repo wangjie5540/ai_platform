@@ -5,6 +5,7 @@ from digitforce.aip.components.preprocess import dataset
 from digitforce.aip.components.recommend import hot
 from digitforce.aip.components.recommend import recall
 from digitforce.aip.components.preprocess import sql
+from digitforce.aip.components.source import hive
 
 name = "RecommendMultiRecallAndRank"
 description = ""
@@ -44,10 +45,18 @@ def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_da
 
     # user_id,item_id,profile_id,click_cnt,save_cnt,order_cnt,event_timestamp
     user_action_csv_file = f"/data/recommend/user/action/{run_datetime_str}.csv"
+    user_action_csv_sql = f'''
+    SELECT user_id, item_id, profile_id, click_cnt, save_cnt, order_cnt, event_timestamp 
+    FROM {user_show_and_action_table} 
+    WHERE click_cnt > 0 OR save_cnt > 0 OR order_cnt > 0 
+    '''
+    user_action_loader = hive.query_to_csv_op(user_action_csv_sql, user_action_csv_file)\
+                        .after(show_and_action_table_maker)
+
     # item2vec
     item2vec_item_emb_jsonl_file = f"/data/recommend/recall/item_emb/item2vec/{run_datetime_str}.jsonl"
     item2vec = recall.item2vec_op(user_action_csv_file, item2vec_item_emb_jsonl_file, vec_size=16) \
-        .after(show_and_action_table_maker)
+        .after(user_action_loader)
 
     # deep fm
     mf_train_dataset_csv_file = f"/data/recommend/dataset/mf/{run_datetime_str}.csv"
@@ -57,7 +66,7 @@ def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_da
         user_action_csv_file, mf_train_dataset_csv_file,
         user_and_id_map_file, item_and_id_map_file,
         names="user_id,item_id,profile_id,click_cnt,save_cnt,order_cnt,event_timestamp") \
-        .after(show_and_action_table_maker)
+        .after(user_action_loader)
     deep_mf_item_emb_jsonl_file = f"/data/recommend/recall/item_emb/deep_mf/{run_datetime_str}.jsonl"
     deep_mf_user_emb_jsonl_file = f"/data/recommend/recall/user_emb/deep_mf/{run_datetime_str}.jsonl"
     deep_mf = recall.deep_mf_op(mf_train_dataset_csv_file, deep_mf_item_emb_jsonl_file, deep_mf_user_emb_jsonl_file)
