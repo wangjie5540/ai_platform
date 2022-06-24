@@ -4,22 +4,22 @@
 # -*- coding: utf-8 -*-
 # @Time : 2021/12/25
 # @Author : Arvin
-from pyspark.sql import Window
-from pyspark.sql.functions import udf
-import pyspark.sql.functions as psf
-import pandas as pd
-import numpy as np
-from pyspark.sql.types import DoubleType
-from common.common_helper import days, date_filter_condition, read_table, save_table
+# from pyspark.sql import Window
+# from pyspark.sql.functions import udf
+# import pyspark.sql.functions as psf
+# import pandas as pd
+# import numpy as np
+# from pyspark.sql.types import DoubleType
+from forecast.common.common_helper import *
 
-from pyspark.sql.functions import sum, count, lit
+from pyspark.sql.functions import sum, count, lit,mean
 
 
 def zero_turn_nan(col_value):
     if not pd.isna(col_value) and col_value > 0:
         return col_value
     else:
-        return np.nan
+        return None
 
 
 def weekends_turn_nan(col_value, dayofweek):
@@ -174,43 +174,43 @@ def col_agg_weeks(sparkdf, col_key, col_qty, col_time, param):
     return sparkdf
 
 
-def build_sales_features_daily(param):
+def build_sales_features_daily(spark, param):
     """
     dict_agg_func:字段聚合字典
     col_qty:聚合的列
     col_time:时间戳字段
     """
-    spark = param['spark']
     col_key = param['col_key']
     sdate = param['sdate']
     edate = param['edate']
-    col_partition = param['col_partition']
+    col_time = param['col_time']
     col_qty = param['col_qty']
-    dict_agg_func = eval(param['dict_agg_func'])
-    input_table = param['input_table']
-    output_table = param['output_table']
-    sparkdf = read_table(spark, input_table)
+    dict_agg_func = eval(param['sales_feature_daily_func'])
+    input_table = param['no_sales_adjust_table']
+    output_table = param['sales_features_daily_table']
+    sparkdf = read_table(spark, input_table,sdt='N')
     for dict_key in dict_agg_func:
-        sparkdf = globals()[dict_key](sparkdf, col_key, col_qty, col_partition, dict_agg_func[dict_key])
-    save_table(sparkdf, output_table)
-    return sparkdf.filter(date_filter_condition(sdate, edate))
+        sparkdf = globals()[dict_key](sparkdf, col_key, col_qty, col_time, dict_agg_func[dict_key])
+    sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))    
+    save_table(spark,sparkdf, output_table)
+    return 'SUCCESS'
 
 
-def build_sales_features_weekly(param):
-    spark = param['spark']
+def build_sales_features_weekly(spark, param):
     col_key = param['col_key']
     sdate = param['sdate']
     edate = param['edate']
-    col_partition = param['col_partition']
+    col_time = param['col_time']
     col_qty = param['col_qty']
-    dict_agg_func = eval(param['dict_agg_func'])
-    input_table = param['input_table']
-    output_table = param['output_table']
+    dict_agg_func = eval(param['sales_feature_weekly_func'])
+    input_table = param['qty_aggregation_weekly_table']
+    output_table = param['sales_features_weekly_table']
     sparkdf = read_table(spark, input_table)
     for dict_key in dict_agg_func:
-        sparkdf = globals()[dict_key](sparkdf, col_key, col_qty, col_partition, dict_agg_func[dict_key])
-    save_table(sparkdf, output_table)
-    return sparkdf.filter(date_filter_condition(sdate, edate))
+        sparkdf = globals()[dict_key](sparkdf, col_key, col_qty, col_time, dict_agg_func[dict_key])
+    sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))    
+    save_table(spark,sparkdf, output_table)
+    return 'SUCCESS'
 
 
 # sparkdf = spark.sql("""select shop_id,goods_id,year,week,min(dt) as dt,sum(qty) qty from (select *,year(from_unixtime(unix_timestamp(cast(dt as string),'yyyyMMdd'),'yyyy-MM-dd')) year,weekofyear(from_unixtime(unix_timestamp(cast(dt as string),'yyyyMMdd'),'yyyy-MM-dd')) week   from ai_dm.poc_feat_y  ) t group by shop_id,goods_id,year,week""")

@@ -16,17 +16,14 @@ import forecast.data_processing.sp.sp_data_adjust
 from forecast.data_processing.sp.sp_data_adjust import sales_fill_zero
 
 try:
-    import findspark  # 使用spark-submit 的cluster时要注释掉
-
+    import findspark #使用spark-submit 的cluster时要注释掉
     findspark.init()
 except:
     pass
 import argparse
 import traceback
-from forecast.common.log import get_logger
-from forecast.common.toml_helper import TomlOperation
-
-
+from  forecast.common.log import get_logger
+from  forecast.common.toml_helper import TomlOperation
 # reload(sp.sp_sales_agg)
 # reload(sp.sp_data_adjust)
 
@@ -37,11 +34,11 @@ def load_params():
         'sdate': '20210101',
         'edate': '20220201',
         'col_openinv': 'opening_inv',
-        'col_qty': 'sum_qty',
-        'join_key': ['shop_id', 'goods_id', 'dt'],
+        'col_qty':'sum_qty',
+        'join_key':['shop_id','goods_id','dt'],
         'fill_value': 0.0
     }
-    f = TomlOperation(os.getcwd() + "/forecast/data_processing/config/param.toml")
+    f = TomlOperation(os.getcwd()+"/forecast/data_processing/config/param.toml")
     params_all = f.read_file()
     # 获取项目1配置参数
     params = params_all['filter_p1']
@@ -81,7 +78,7 @@ def run():
     try:
         if run_type == 'sp':  # spark版本
             logger_info.info("RUNNING···")
-            sales_fill_zero(spark, param)
+            sales_fill_zero(spark,param)
         else:
             # pandas版本
             pass
@@ -94,6 +91,7 @@ def run():
 
 
 if __name__ == "__main__":
-    #     f = TomlOperation("param.toml")
-    #     print(f.toml_file_path)
+    
+#     f = TomlOperation("param.toml")
+#     print(f.toml_file_path)
     run()

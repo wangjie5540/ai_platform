@@ -2,7 +2,7 @@
 # @Time : 2021/12/25
 # @Author : Arvin
 # 基于spark版
-from common.common_helper import *
+from forecast.common.common_helper import *
 
 
 oldtime = datetime.datetime.now()
@@ -193,7 +193,7 @@ def sales_clearance_filter(param):
     return sparkdf
 
 
-def big_order_filter(param):
+def big_order_filter(spark, param):
     """订单过滤
        col_key：主键
        filter_func:过滤函数
@@ -204,7 +204,6 @@ def big_order_filter(param):
        conn:函数之间关系
        col_time:时间戳字段
     """
-    spark = param['spark']
     col_key = param['col_key']
     w = param['w']
     sdate = param['sdate']
@@ -213,12 +212,14 @@ def big_order_filter(param):
     col_qty = param['col_qty']
     filter_func = eval(param['filter_func'])
     conn = param['conn']
-    input_table = param['input_table']
-    output_table = param['output_table']
-    sparkdf = read_table(spark, input_table)
-    sparkdf = sales_filter_by_bound(sparkdf, col_key, w, sdate, edate, col_time, col_qty, filter_func, conn)
-    save_table(sparkdf, output_table)
-    return sparkdf
+    input_table = param['input_sales_table']
+    output_table = param['outlier_order_table']
+    col_partitions = param['col_partitions']
+    shop_list = param['shop_list']
+    sparkdf = read_origin_sales_table(spark, input_table,shop_list=shop_list)
+    sparkdf = sales_filter_by_bound(sparkdf, col_key, w, sdate, edate, col_qty, filter_func, conn)
+    save_table(spark, sparkdf, output_table)
+    return "SUCCESS"
 
 
 def filter_by_bound(param):
@@ -280,3 +281,51 @@ def filter_by_label(param):
 #              "20210401", "sdt").show(10)
 # sales_clear_filter(sparkdf,col_key,col_label,filter_value,col_price,0.5,{'boud_percentile':(0.75, 0.00)},sdate,edate,30,conn)
 
+
+def sales_fill(qty_value, openinv_value, fill_value):
+    """销售填充:有库存无销售填充fill_value"""
+#     return qty_value
+    if (qty_value is None or pd.isna(qty_value)) and (openinv_value is not None or not pd.isna(openinv_value)) and openinv_value > fill_value:
+        return fill_value
+    else:
+        return qty_value
+
+
+def adjust_by_column(sales_sparkdf, stock_sparkdf, join_key, col_openinv, col_qty, sdate, edate, fill_value):
+    """销售补零 要不要把销售连续起来？"""
+   
+    sparkdf = stock_sparkdf.join(sales_sparkdf, on=join_key, how='left')
+    sparkdf = sparkdf.withColumn("fill_tmp", psf.lit(fill_value))
+#     print("wwww", sparkdf.show(10))
+    sales_fill_udf = udf(sales_fill, DoubleType())
+    sparkdf = sparkdf.withColumn("fill_{}".format(col_qty),sales_fill_udf(sparkdf[col_qty], sparkdf[col_openinv], sparkdf.fill_tmp))
+    print("dsdsddsdsd",sparkdf.show(10))
+    return sparkdf.filter(date_filter_condition(sdate, edate))
+                        
+
+def sales_fill_zero(spark,param):
+    """标签过滤
+          col_key：主键
+          filter_func:过滤函数
+          sdate:开始时间 '20210101'
+          edate:结束时间
+          col_qty:过滤字段
+          w:时间窗口
+          conn:函数之间关系
+          col_time:时间戳字段
+       """
+    print("wo zai sale filter")
+    join_key = param['join_key']
+    col_openinv = param['col_openinv']
+    col_qty = param['col_qty']
+    fill_value = param['fill_value']
+    sdate = param['sdate']
+    edate = param['edate']
+    input_sales_table = param['qty_aggregation_table']
+    input_stock_table = param['input_stock_table']
+    output_table = param['fill_zero_table']
+    sales_sparkdf = read_table(spark, input_sales_table)
+    stock_sparkdf = read_origin_stock_table(spark, input_stock_table)
+    sparkdf = adjust_by_column(sales_sparkdf, stock_sparkdf, join_key, col_openinv, col_qty, sdate, edate, fill_value)
+    save_table(spark,sparkdf, output_table)
+    return "SUCCESS"
