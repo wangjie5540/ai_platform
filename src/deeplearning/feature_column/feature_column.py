@@ -6,6 +6,7 @@ from tensorflow import feature_column
 from src.pbs import pipeline_pb2
 from src.pbs.pipeline_pb2 import WideOrDeep
 from src.utils.proto_utils import copy_obj
+from src.deeplearning.layers.utils import build_initializer
 
 
 SparseFeat = namedtuple('SparseFeat',
@@ -136,9 +137,9 @@ class FeatureColumnParser(object):
         self._wide_share_embed_columns = {
             embed_name: [] for embed_name in self._share_embed_names
         }
-
+        # TODO
         for config in self._feature_configs:
-
+            pass
 
     def parse_sparse_feature(self, config):
         hash_bucket_size = config.hash_bucket_size
@@ -161,6 +162,9 @@ class FeatureColumnParser(object):
         if self.is_deep(config):
             self._add_deep_embedding_column(fc, config)
 
+    #TODO
+    def parse_var_len_features(self, config):
+        pass
 
     def is_wide(self, config):
         feature_name = config.feature_name if config.HasField('feature_name') else config.input_name[0]
@@ -184,25 +188,45 @@ class FeatureColumnParser(object):
         else:
             initializer = None
             if config.HasField('initializer'):
-                initializer = hyperparams_builder.build_initializer(config.initializer)
+                initializer = build_initializer(config.initializer)
             wide_fc = feature_column.embedding_column(
                 fc,
                 self._wide_output_dim,
                 combiner='sum',
-                initializer=initializer,
-                partitioner=self._build_partitioner(config),
-                use_embedding_variable=self._use_embedding_variable or config.use_embedding_variable)
+                initializer=initializer)
         self._wide_columns[feature_name] = wide_fc
 
     def _add_deep_embedding_column(self, fc, config):
-        pass
+        feature_name = config.feature_name if config.HasField('feature_name') else config.input_name[0]
+        assert config.embedding_dim > 0, 'embedding_dim is not set for %s' % feature_name
+        if config.embedding_name in self._deep_share_embed_columns:
+            fc = self._add_shared_embedding_column(config.embedding_name, fc, deep=True)
+        else:
+            initializer = None
+            if config.HasField('initializer'):
+                initializer = build_initializer(config.initializer)
+            fc = feature_column.embedding_column(
+                fc,
+                config.embedding_dim,
+                combiner=config.combiner,
+                initializer=initializer
+            )
+        if config.feature_type != config.SequenceFeature:
+            self._deep_columns[feature_name] = fc
+        else:
+            if config.HasField('sequence_combiner'):
+                fc.sequence_combiner = config.sequence_combiner
+            self._sequence_columns[feature_name] = fc
 
     def _add_shared_embedding_column(self, embedding_name, fc, deep=False):
-        curr_id = len(self._deep_share_embed_columns)
+
         if deep:
+            curr_id = len(self._deep_share_embed_columns[embedding_name])
             self._deep_share_embed_columns[embedding_name].append(fc)
         else:
+            curr_id = len(self._wide_share_embed_columns[embedding_name])
             self._wide_share_embed_columns[embedding_name].append(fc)
+        return SharedEmbedding(embedding_name, curr_id, None)
 
 
 

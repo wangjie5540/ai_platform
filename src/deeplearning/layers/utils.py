@@ -157,3 +157,32 @@ def combine_dnn_inputs(sparse_value_list, dense_value_list):
         return Flatten()(concat_func(dense_value_list))
     else:
         raise Exception('inputs is empty: combine_dnn_inputs')
+
+
+def build_initializer(initializer):
+  """Build a tf initializer from config.
+
+  Args:
+    initializer: hyperparams_pb2.Hyperparams.regularizer proto.
+
+  Returns:
+    tf initializer.
+
+  Raises:
+    ValueError: On unknown initializer.
+  """
+  initializer_oneof = initializer.WhichOneof('initializer_oneof')
+  if initializer_oneof == 'truncated_normal_initializer':
+    return tf.truncated_normal_initializer(
+        mean=initializer.truncated_normal_initializer.mean,
+        stddev=initializer.truncated_normal_initializer.stddev)
+  if initializer_oneof == 'random_normal_initializer':
+    return tf.random_normal_initializer(
+        mean=initializer.random_normal_initializer.mean,
+        stddev=initializer.random_normal_initializer.stddev)
+  if initializer_oneof == 'glorot_normal_initializer':
+    return tf.glorot_normal_initializer()
+  if initializer_oneof == 'constant_initializer':
+    return tf.constant_initializer(
+        [x for x in initializer.constant_initializer.consts])
+  raise ValueError('Unknown initializer function: {}'.format(initializer_oneof))
