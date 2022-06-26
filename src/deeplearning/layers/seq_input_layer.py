@@ -2,7 +2,7 @@ import tensorflow as tf
 
 from src.pbs import pipeline_pb2
 
-
+# TODO
 class SeqInputLayer(object):
 
     def __init__(self, feature_config, feature_groups_config, use_embedding_variable=False):
@@ -10,7 +10,6 @@ class SeqInputLayer(object):
             x.group_name: x for x in feature_groups_config
         }
         wide_and_deep_dict = self.get_wide_deep_dict()
-
 
     def get_wide_deep_dict(self):
         wide_and_deep_dict = {}

@@ -1,5 +1,4 @@
 from src.deeplearning.feature_column.feature_group import FeatureGroup
-from seq_input_layer import SeqInputLayer
 
 
 class InputLayer(object):
@@ -25,9 +24,12 @@ class InputLayer(object):
         }
 
         self._seq_input_layer = None
-        if len(self._seq_feature_groups_config) > 0:
-            self._seq_input_layer = SeqInputLayer(
-                feature_configs,
-                self._seq_feature_groups_config,
-                use_embedding_variable=use_embedding_variable)
+        # TODO
+        # if len(self._seq_feature_groups_config) > 0:
+        #     self._seq_input_layer = SeqInputLayer(
+        #         feature_configs,
+        #         self._seq_feature_groups_config,
+        #         use_embedding_variable=use_embedding_variable)
+
+
 

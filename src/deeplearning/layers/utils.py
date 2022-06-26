@@ -3,7 +3,6 @@ from src.deeplearning.feature_column.feature_column import DenseFeat, SparseFeat
 from src.deeplearning.layers.layer import *
 
 
-
 def build_keras_inputs(feature_columns):
     """
     :param feature_columns:
@@ -27,24 +26,25 @@ def build_keras_inputs(feature_columns):
 
 
 def build_embedding_matrix(feature_columns, linear_dim=False):
-
     embedding_matrix = {}
     for feat_col in feature_columns:
         if isinstance(feat_col, (VarLenFeat, SparseFeat)):
             vocab_name = feat_col.share_emb if feat_col.share_emb else feat_col.name
             if vocab_name not in embedding_matrix:
-                vocab_size = feat_col.vocab_size+2 if feat_col.vocab_size else feat_col.hash_size
+                vocab_size = feat_col.vocab_size + 2 if feat_col.vocab_size else feat_col.hash_size
                 if not linear_dim:
                     # emb = Embedding(vocab_size, feat_col.emb_dim, embeddings_initializer=tf.keras.initializers.truncated_normal(mean=0,
                     #                                                                                                             stddev=0.001),
                     #                 embeddings_regularizer=tf.keras.regularizers.l2(0.001))
                     # emb.trainable = True
-                    emb = tf.Variable(initial_value=tf.random.truncated_normal((vocab_size, feat_col.emb_dim), mean=0, stddev=0.001,
-                                                                               dtype=tf.float32),
-                                      trainable=True, name=vocab_name+'embed')
+                    emb = tf.Variable(
+                        initial_value=tf.random.truncated_normal((vocab_size, feat_col.emb_dim), mean=0, stddev=0.001,
+                                                                 dtype=tf.float32),
+                        trainable=True, name=vocab_name + 'embed')
                 else:
-                    emb = tf.Variable(initial_value=tf.random.truncated_normal((vocab_size, 1), mean=0, stddev=0.001, dtype=tf.float32),
-                                      trainable=True, name=vocab_name+'embed_linear')
+                    emb = tf.Variable(initial_value=tf.random.truncated_normal((vocab_size, 1), mean=0, stddev=0.001,
+                                                                               dtype=tf.float32),
+                                      trainable=True, name=vocab_name + 'embed_linear')
                 embedding_matrix[vocab_name] = emb
         elif isinstance(feat_col, BucketFeat):
             vocab_name = feat_col.share_emb if feat_col.share_emb else feat_col.name
@@ -54,12 +54,14 @@ def build_embedding_matrix(feature_columns, linear_dim=False):
                     # emb = Embedding(vocab_size, feat_col.emb_dim, embeddings_initializer=tf.keras.initializers.truncated_normal(
                     #     mean=0, stddev=0.001), embeddings_regularizer=tf.keras.regularizers.l2(0.001))
                     # emb.trainable = True
-                    emb = tf.Variable(initial_value=tf.random.truncated_normal((vocab_size, feat_col.emb_dim), mean=0, stddev=0.001,
-                                                                               dtype=tf.float32),
-                                      trainable=True, name=vocab_name + 'embed')
+                    emb = tf.Variable(
+                        initial_value=tf.random.truncated_normal((vocab_size, feat_col.emb_dim), mean=0, stddev=0.001,
+                                                                 dtype=tf.float32),
+                        trainable=True, name=vocab_name + 'embed')
                 else:
-                    emb = tf.Variable(initial_value=tf.random.truncated_normal((vocab_size, 1), mean=0, stddev=0.001), trainable=True,
-                                      name=feat_col.name+'embed_linear')
+                    emb = tf.Variable(initial_value=tf.random.truncated_normal((vocab_size, 1), mean=0, stddev=0.001),
+                                      trainable=True,
+                                      name=feat_col.name + 'embed_linear')
 
                 embedding_matrix[vocab_name] = emb
     return embedding_matrix
@@ -72,9 +74,11 @@ def build_embedding_dict(feature_columns, linear=False):
         if isinstance(feat_col, VarLenFeat):
             vocab_name = feat_col.share_emb if feat_col.share_emb else feat_col.name
             if feat_col.weight_name:
-                embedding_dict[feat_col.name] = EmbeddingLookupSparse(embedding_matrix[vocab_name], has_weights=True, combiner=feat_col.combiner)
+                embedding_dict[feat_col.name] = EmbeddingLookupSparse(embedding_matrix[vocab_name], has_weights=True,
+                                                                      combiner=feat_col.combiner)
             else:
-                embedding_dict[feat_col.name] = EmbeddingLookupSparse(embedding_matrix[vocab_name], combiner=feat_col.combiner)
+                embedding_dict[feat_col.name] = EmbeddingLookupSparse(embedding_matrix[vocab_name],
+                                                                      combiner=feat_col.combiner)
 
         elif isinstance(feat_col, (SparseFeat, BucketFeat)):
             vocab_name = feat_col.share_emb if feat_col.share_emb else feat_col.name
@@ -160,29 +164,29 @@ def combine_dnn_inputs(sparse_value_list, dense_value_list):
 
 
 def build_initializer(initializer):
-  """Build a tf initializer from config.
+    """Build a tf initializer from config.
 
-  Args:
+    Args:
     initializer: hyperparams_pb2.Hyperparams.regularizer proto.
 
-  Returns:
+    Returns:
     tf initializer.
 
-  Raises:
+    Raises:
     ValueError: On unknown initializer.
-  """
-  initializer_oneof = initializer.WhichOneof('initializer_oneof')
-  if initializer_oneof == 'truncated_normal_initializer':
-    return tf.truncated_normal_initializer(
-        mean=initializer.truncated_normal_initializer.mean,
-        stddev=initializer.truncated_normal_initializer.stddev)
-  if initializer_oneof == 'random_normal_initializer':
-    return tf.random_normal_initializer(
-        mean=initializer.random_normal_initializer.mean,
-        stddev=initializer.random_normal_initializer.stddev)
-  if initializer_oneof == 'glorot_normal_initializer':
-    return tf.glorot_normal_initializer()
-  if initializer_oneof == 'constant_initializer':
-    return tf.constant_initializer(
-        [x for x in initializer.constant_initializer.consts])
-  raise ValueError('Unknown initializer function: {}'.format(initializer_oneof))
+    """
+    initializer_oneof = initializer.WhichOneof('initializer_oneof')
+    if initializer_oneof == 'truncated_normal_initializer':
+        return tf.keras.initializers.truncated_normal(
+            mean=initializer.truncated_normal_initializer.mean,
+            stddev=initializer.truncated_normal_initializer.stddev)
+    if initializer_oneof == 'random_normal_initializer':
+        return tf.random_normal_initializer(
+            mean=initializer.random_normal_initializer.mean,
+            stddev=initializer.random_normal_initializer.stddev)
+    if initializer_oneof == 'glorot_normal_initializer':
+        return tf.keras.initializers.glorot_normal()
+    if initializer_oneof == 'constant_initializer':
+        return tf.constant_initializer(
+            [x for x in initializer.constant_initializer.consts])
+    raise ValueError('Unknown initializer function: {}'.format(initializer_oneof))
