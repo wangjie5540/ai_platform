@@ -8,7 +8,7 @@ include:
 
 from statsmodels.tsa.ar_model import AutoReg
 
-class ARXModel():
+class ARModel():
     def __init__(self,data,lags,param,param_fit):
         self.data = data
         self.lags = lags
