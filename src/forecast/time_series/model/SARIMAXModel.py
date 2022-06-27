@@ -9,13 +9,14 @@ include:
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 class SARIMAXModel():
-    def __init__(self,data,param,param_fit):
+    def __init__(self,data,exog_data,param,param_fit):
         self.param = param
         self.param_fit = param_fit
         self.data = data
+        self.exog_data = exog_data
 
         param={
-            "exog": None,
+            "exog": self.exog_data,
             "order": (1, 0, 0),
             "seasonal_order": (0, 0, 0,0),
             "trend": None,
