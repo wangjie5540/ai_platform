@@ -27,6 +27,8 @@ class CrostonTSBModel():
         }
         param.update(self.param)
 
+        self.param = param
+
     def fit(self):
         arr_data = np.array(self.data)
         self.param["cols"] = len(arr_data)
