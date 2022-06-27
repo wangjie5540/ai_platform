@@ -5,7 +5,7 @@ import chinese_calendar as calendar
 import pandas as pd
 import numpy as np
 
-from common.common_helper import save_table
+from forecast.common.common_helper import save_table
 
 
 def get_holiday(dt):
@@ -153,18 +153,18 @@ def build_date_features(sdate, edate, col_dt='dt'):
     return feats.drop(['holiday', 'holiday_next_day'], axis=1)
 
 
-def bulid_date_daily_feature(param):
+def bulid_date_daily_feature(spark, param):
     """日粒度日期特征"""
-    spark = param['spark']
+ 
     col_list = param['col_list']
     ctype = param['ctype']
     sdate = param['sdate']
     edate = param['edate']
-    col_partition = param['col_partition']
-    feat_func = eval(param['feat_func'])
-    output_table = param['output_table']
+    col_time = param['col_time']
+    feat_func = eval(param['date_feature_daily_func'])
+    output_table = param['date_features_daily_table']
 
-    df = build_date_features(sdate, edate, col_partition)
+    df = build_date_features(sdate, edate, col_time)
     for key in feat_func:
         time_aggs = feat_func[key][0]
         ws = feat_func[key][1]
@@ -178,39 +178,42 @@ def bulid_date_daily_feature(param):
                     indexer = pd.api.indexers.FixedForwardWindowIndexer(window_size=w)
                     df[key + '_future_' + str(w)] = df[key].shift(-1).rolling(window=indexer, min_periods=0).agg(np.sum)
                     col_list.append(key + '_future_' + str(w))
-    df[col_partition] = df[col_partition].apply(lambda x: x.strftime('%Y%m%d'))
+    df[col_time] = df[col_time].apply(lambda x: x.strftime('%Y%m%d'))
     df = df[col_list]
+    for u in df.columns:
+        if df[u].dtype == bool:
+            df[u] = df[u].astype('int')
     if ctype == 'sp':
         df_values = df.values.tolist()
         df_columns = df.columns.tolist()
         sparkdf = spark.createDataFrame(df_values, df_columns)
-        save_table(sparkdf, output_table)
+        save_table(spark, sparkdf, output_table ,partition=["dt"])
         return sparkdf
     else:
         return df
 
 
-def build_date_weekly_feature(param):
+def build_date_weekly_feature(spark, param):
     """周粒度日期特征"""
-    spark = param['spark']
+ 
     col_key = param['col_key']
     ctype = param['ctype']
     sdate = param['sdate']
     edate = param['edate']
-    col_partition = param['col_partition']
-    agg_func = eval(param['agg_func'])
-    output_table = param['output_table']
-    df = build_date_features(sdate, edate, col_partition)
+    col_time = param['col_time']
+    agg_func = eval(param['date_feature_weekly_func'])
+    output_table = param['date_features_weekly_table']
+    df = build_date_features(sdate, edate, col_time)
     df = df.groupby(col_key).agg(agg_func).reset_index()
     for u in df.columns:
         if df[u].dtype == bool:
             df[u] = df[u].astype('int')
-    df[col_partition] = df[col_partition].apply(lambda x:x.strftime('%Y%m%d'))
+    df[col_time] = df[col_time].apply(lambda x:x.strftime('%Y%m%d'))
     if ctype == 'sp':
         df_values = df.values.tolist()
         df_columns = df.columns.tolist()
         sparkdf = spark.createDataFrame(df_values, df_columns)
-        save_table(sparkdf, output_table)
+        save_table(spark, sparkdf, output_table, partition=["dt"])
         return sparkdf
     else:
         return df

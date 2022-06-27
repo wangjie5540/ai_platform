@@ -1,9 +1,17 @@
 # -*- coding: utf-8 -*-
-# @Time : 2022/05/28
+# @Time : 2022/05/23
 # @Author : Arvin
-
-from forecast.feature_processing.sp.weather_features import build_weather_weekly_feature
-
+# -*- coding:utf-8  -*-
+"""
+Copyright (c) 2021-2022 北京数势云创科技有限公司 <http://www.digitforce.com>
+All rights reserved. Unauthorized reproduction and use are strictly prohibited
+include:
+大单过滤
+"""
+import os
+import sys
+import forecast.data_processing.sp.sp_sales_agg
+from forecast.data_processing.sp.sp_sales_agg import sales_aggregation
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
     findspark.init()
@@ -11,8 +19,8 @@ except:
     pass
 import argparse
 import traceback
-from forecast.common.log import get_logger
-from forecast.common.toml_helper import TomlOperation
+from  forecast.common.log import get_logger
+from  forecast.common.toml_helper import TomlOperation
 
 
 def load_params():
@@ -21,15 +29,16 @@ def load_params():
         'mode_type': 'sp',
         'sdate': '20210101',
         'edate': '20220101',
-        'weather_list':  ['aqi', 'hightemperature', 'hightemperature'],
-        'col_key':['province', 'city', 'district', 'week_dt','week'],
-        'join_key':['province', 'city', 'district']
+        'input_table':'ai_dm_dev.no_sales_adjust_0620',
+        'output_table':'ai_dm_dev.qty_aggregation_weekly_0620',
+        'agg_func':"{'sales_aggregation_by_week': 'dt'}",
+        'col_qty':'th_y',
+        'agg_type':'solar_week'
     }
-
-    f = TomlOperation(os.getcwd()+"/forecast/feature_processing/config/param.toml")
+    f = TomlOperation(os.getcwd()+"/forecast/data_processing/config/param.toml")
     params_all = f.read_file()
     # 获取项目1配置参数
-    params = params_all['feature_param']
+    params = params_all['filter_p1']
     params.update(param_cur)
     return params
 
@@ -40,7 +49,7 @@ def parse_arguments():
     :return:
     """
     params = load_params()
-    parser = argparse.ArgumentParser(description='bulid weekly weather features')
+    parser = argparse.ArgumentParser(description='sales agg')
     parser.add_argument('--param', default=params, help='arguments')
     parser.add_argument('--spark', default=spark, help='spark')
     args = parser.parse_args(args=[])
@@ -57,7 +66,7 @@ def run():
     args = parse_arguments()
     param = args.param
     spark = args.spark
-
+    print("args", args)
     logger_info.info(str(param))
     if 'mode_type' in param.keys():
         run_type = param['mode_type']
@@ -66,7 +75,7 @@ def run():
     try:
         if run_type == 'sp':  # spark版本
             logger_info.info("RUNNING···")
-            build_weather_weekly_feature(spark, param)
+            sales_aggregation(spark,param)
         else:
             # pandas版本
             pass

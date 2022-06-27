@@ -3,35 +3,21 @@
 Copyright (c) 2021-2022 北京数势云创科技有限公司 <http://www.digitforce.com>
 All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
-    获取日志
+    获取配置
 """
-
+import toml
 import os
-from logging.config import fileConfig
-import logging
-import configparser
+from zipfile import ZipFile
+import shutil
 
-def mkdir_floder_not_exist(filename):
+def get_config(file_path,section=None):
     """
-    如果文件夹不存在则创建
-    :param filename: 文件夹地址
-    :return:
+    获取配置
+    :param file_path: 配置文件地址
+    :param section: 关键字
+    :return: 配置结果，dict
     """
-    if os.path.exists(filename) == False:
-        os.makedirs(filename)
-
-def get_logger():
-    """
-    获取日志
-    :return:
-    """
-    cf= configparser.ConfigParser()
-#     file_path=os.path.abspath(os.path.dirname(__file__))
-#     file_config='config/logging.ini'
-    file_config="forecast/common/config/logging.ini"
-    cf.read(file_config,encoding='utf-8-sig')
-    file_path=cf['handler_fileHandler']['file_path']
-    mkdir_floder_not_exist(file_path)
-    fileConfig(file_config)
-    file_logger=logging.getLogger('file')
-    return file_logger
+    cfg=toml.load(file_path)
+    if section==None:
+        return cfg
+    return cfg[section]

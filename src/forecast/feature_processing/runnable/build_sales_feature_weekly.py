@@ -9,7 +9,7 @@ include:
 周销量特征
 """
 
-from feature_process.sp.sale_features import build_sales_features_weekly
+from forecast.feature_processing.sp.sale_features import build_sales_features_weekly
 
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
@@ -18,22 +18,22 @@ except:
     pass
 import argparse
 import traceback
-from common.log import get_logger
-from common.toml_helper import TomlOperation
+from forecast.common.log import get_logger
+from forecast.common.toml_helper import TomlOperation
 
 
 def load_params():
     """运行run方法时"""
     param_cur = {
         'mode_type': 'sp',
-        'sdate': '20220101',
-        'edate': '20220501',
-        'input_table': '',
-        'output_table': '',
-        'dict_agg_func': "{'col_agg_weeks':(['mean','sum'],[2,3,4])}"
+        'sdate': '20210101',
+        'edate': '20210501',
+        'col_time': 'dt',
+        'col_qty':'sum_th_y',
+
     }
 
-    f = TomlOperation("param.toml")
+    f = TomlOperation(os.getcwd()+"/forecast/feature_processing/config/param.toml")
     params_all = f.read_file()
     # 获取项目1配置参数
     params = params_all['feature_param']
@@ -49,8 +49,8 @@ def parse_arguments():
     params = load_params()
     parser = argparse.ArgumentParser(description='big order filter')
     parser.add_argument('--param', default=params, help='arguments')
-    parser.add_argument('--spark', default=None, help='spark')
-    args = parser.parse_args()
+    parser.add_argument('--spark', default=spark, help='spark')
+    args = parser.parse_args(args=[])
     return args
 
 

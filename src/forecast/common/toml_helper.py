@@ -4,14 +4,14 @@
 import toml
 import os
 
-BASE_DIR = os.path.abspath("../config/")
+# BASE_DIR = os.path.abspath("../config/")
 
 
 class TomlOperation:
 
     def __init__(self, file_name):
         self.file_name = file_name
-        self.toml_file_path = os.path.join(BASE_DIR, file_name)
+        self.toml_file_path = os.path.join(file_name)
 
     # def pop_file(self, key):
     #     dic = self.read_file()

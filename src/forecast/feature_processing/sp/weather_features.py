@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time : 2021/12/25
 # @Author : Arvin
-from common.common_helper import *
+from forecast.common.common_helper import *
 from pyspark.sql.functions import mean, max, min
 
 
@@ -59,44 +59,56 @@ def col_ptp_future_days(sparkdf, col_key, col_weather, col_time, param):
     return sparkdf
 
 
-def build_weather_daily_feature(param):
-    spark = param['spark']
+def build_weather_daily_feature(spark, param):
+    
     col_key = param['col_key']
     sdate = param['sdate']
     edate = param['edate']
     col_time = param['col_time']
     col_weather_list = param['col_weather_list']
     dict_agg_func = eval(param['dict_agg_func'])
-    input_table = param['input_table']
-    output_table = param['output_table']
-    sparkdf = read_table(spark, input_table)
+    input_site_table = param['input_site_table']
+    input_weather_table = param['input_weather_table']
+    output_table = param['weather_feature_daily_table']
+    shops = param['shop_list']
+    sparkdf_weather = read_origin_weather_table(spark,input_weather_table,sdate,edate)
+    sparkdf_site = read_origin_site_table(spark,input_site_table,shops)
     for col_weather in col_weather_list:
         for dict_key in dict_agg_func:
-            sparkdf = globals()[dict_key](sparkdf, col_key, col_weather, col_time, dict_agg_func[dict_key])
-    sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))
-    save_table(sparkdf, output_table)
-    return sparkdf
+            sparkdf_weather = globals()[dict_key](sparkdf_weather, col_key, col_weather, col_time, dict_agg_func[dict_key])
+    sparkdf_weather = sparkdf_weather.filter(date_filter_condition(sdate, edate))
+    sparkdf_weather = sparkdf_weather.join(sparkdf_site, on=col_key, how='inner')
+    save_table(spark, sparkdf_weather, output_table)
+    return 'SUCCESS'
 
 
-def build_weather_weekly_feature(param):
-    spark = param['spark']
+def build_weather_weekly_feature(spark, param):
+
     col_key = param['col_key']
+    join_key = param['join_key']
     sdate = param['sdate']
     edate = param['edate']
     col_weather_list = param['weather_list']
-    input_table = param['input_table']
-    output_table = param['output_table']
-    sparkdf = read_table(spark, input_table)
+    input_weather_table = param['input_weather_table']
+    input_site_table = param['input_site_table']
+    output_table = param['weather_feature_weekly_table']
+    shops = param['shop_list']
+    sparkdf_weather = read_origin_weather_table(spark, input_weather_table,sdate,edate)
+    sparkdf_site = read_origin_site_table(spark,input_site_table,shops)
     ff = lambda cond: psf.sum(psf.when(cond, 1).otherwise(0))
-    cond_sunny = (sparkdf['weatherfrom'] == '晴') & (sparkdf['weatherto'] == '晴')
-    sparkdf = sparkdf.groupby(col_key).agg(mean(col_weather_list[0]).alias("{0}_mean_w".format(col_weather_list[0])),
+    cond_sunny = (sparkdf_weather['weatherfrom'] == '晴') & (sparkdf_weather['weatherto'] == '晴')
+    sparkdf_weather = sparkdf_weather.groupby(col_key).agg(mean(col_weather_list[0]).alias("{0}_mean_w".format(col_weather_list[0])),
                                            max(col_weather_list[1]).alias("{0}_max_w".format(col_weather_list[1])),
                                            min(col_weather_list[2]).alias("{0}_min_w".format(col_weather_list[2])),
                                            ff(cond_sunny).alias("sunny_counts")
                                            )
-    sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))
-    save_table(sparkdf, output_table)
-    return sparkdf
+    
+    sparkdf_weather = sparkdf_weather.withColumnRenamed("week_dt", "dt")
+    sparkdf_weather = sparkdf_weather.filter(date_filter_condition(sdate, edate))
+    sparkdf_weather = sparkdf_weather.join(sparkdf_site, on=join_key, how='inner')
+    
+    save_table(spark, sparkdf_weather, output_table)
+    return 'SUCCESS'
 
 
 # sparkdf = spark.sql("""select *,to_unix_timestamp(recordtime,'yyyy-MM-dd') sdt,replace(recordtime,'-','') dt from ai_dm.lbs_weather_history_partition where recordtime>='2021-01-01' and recordtime<='2021-12-31'""")
