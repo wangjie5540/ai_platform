@@ -13,7 +13,7 @@ class SARIMAXModel():
         self.param = param
         self.param_fit = param_fit
         self.data = data
-        self.exog_data = exog_data
+        self.exog_data = exog_data #区别于sarima模型
 
         param={
             "exog": self.exog_data,
