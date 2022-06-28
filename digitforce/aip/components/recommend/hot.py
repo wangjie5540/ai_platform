@@ -10,7 +10,7 @@ def ctr_hot_op(user_show_and_action_table, output_file, image_tag="latest"):
     输入table必须包含字段:
         user_id, item_id,  click_cnt
     输出文件格式:
-        item_id score 分隔符为 ,
+        无头csv文件 item_id score 分隔符为 ,
 
     :param user_show_and_action_table: 行为表
     :param output_file: 热门排序文件
@@ -32,7 +32,7 @@ def click_hot_op(user_show_and_action_table, output_file, image_tag="latest"):
     输入table必须包含字段:
         user_id, item_id,  click_cnt
     输出文件格式:
-        item_id score 分隔符为 ,
+        无头csv文件 item_id score 分隔符为 ,
 
     :param user_show_and_action_table: 行为表
     :param output_file: 热门排序文件

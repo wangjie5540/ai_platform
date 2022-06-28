@@ -3,6 +3,8 @@ import time
 
 import redis
 
+from digitforce.aip.common.config.bigdata_config import REDIS_HOST, REDIS_PORT
+
 
 class RedisClient(object):
 
@@ -113,6 +115,7 @@ class RedisClient(object):
         self.get_redis_obj().expire(key, expire_time)
 
 
+df_redis_cli = RedisClient(host=REDIS_HOST, port=REDIS_PORT)
 if __name__ == '__main__':
-    redis_cli = RedisClient("172.21.32.143")
-    print(redis_cli.get_redis_string("test"))
+    df_redis_cli = RedisClient("172.21.32.143")
+    print(df_redis_cli.get_redis_string("test"))

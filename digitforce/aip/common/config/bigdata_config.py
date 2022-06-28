@@ -7,3 +7,7 @@ HIVE_PORT = dg_config_factory.get_config_value("HIVE_PORT")
 # hdfs config
 HDFS_HOST = dg_config_factory.get_config_value("HDFS_HOST")
 HDFS_PORT = dg_config_factory.get_config_value("HDFS_PORT")
+
+# redis config
+REDIS_HOST = dg_config_factory.get_config_value("REDIS_HOST")
+REDIS_PORT = dg_config_factory.get_config_value("REDIS_PORT")
