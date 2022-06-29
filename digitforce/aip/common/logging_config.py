@@ -64,7 +64,7 @@ def setup_logging(info_log_file=None, error_log_file=None, info_log_file_level="
     if error_log_file:
         dirname = os.path.dirname(error_log_file)
         if dirname and not os.path.exists(dirname):
-            os.system(f"mkdir -p {dirname}")
+            os.mkdir(dirname)
         log_config_dict["root"]["handlers"].append("error_file_handler")
         log_config_dict["handlers"]["error_file_handler"]["filename"] = error_log_file
     logging.config.dictConfig(log_config_dict)
@@ -75,4 +75,4 @@ def setup_console_log(level=logging.INFO):
                         level=level)
 
 
-
+setup_console_log()

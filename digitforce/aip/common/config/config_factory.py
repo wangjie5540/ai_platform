@@ -23,7 +23,7 @@ class ConfigFactory:
 
     def read_config(self, config_path):
         if not os.path.exists(config_path) or config_path is None:
-            logging.warning(f"the config file is not exists...{config_path}")
+            logging.info(f"the config file is not exists...{config_path}")
             return
         with open(config_path) as fi:
             if config_path.endswith(".json"):

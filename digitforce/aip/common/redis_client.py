@@ -47,6 +47,14 @@ class RedisClient(object):
         self.get_redis_obj().rpush(key, *values)
         self.get_redis_obj().expire(key, int(expire_time))
 
+    def batch_update_redis_list(self, kv_map, expire_time=30 * 24 * 3600):
+        pipeline = self.get_redis_obj().pipeline()
+        for k, v in kv_map.items():
+            pipeline.delete(k)
+            pipeline.rpush(k, *v)
+            pipeline.expire(k, expire_time)
+        pipeline.execute()
+
     def get_redis_list(self, key: str):
         pipeline = self.get_redis_obj().pipeline()
         pipeline.lrange(key, 0, -1)
@@ -116,6 +124,7 @@ class RedisClient(object):
 
 
 df_redis_cli = RedisClient(host=REDIS_HOST, port=REDIS_PORT)
+
 if __name__ == '__main__':
     df_redis_cli = RedisClient("172.21.32.143")
     print(df_redis_cli.get_redis_string("test"))
