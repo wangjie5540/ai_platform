@@ -8,11 +8,11 @@ include:
 from statsmodels.tsa.arima.model import ARIMA
 
 class ARIMAXModel():
-    def __init__(self,data,exog_data,param,param_fit):
+    def __init__(self,data,param,param_fit):
         self.data = data
         self.param = param
         self.param_fit = param_fit
-        self.exog_data = exog_data #区分与ARIMAX模型
+        self.exog_data = data #区分与ARIMAX模型
 
         param = {
             "exog": self.exog_data,
