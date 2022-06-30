@@ -9,16 +9,17 @@ include:
 from statsmodels.tsa.ar_model import AutoReg
 
 class ARXModel():
-    def __init__(self,data,exog_data,lags,param,param_fit):
+    def __init__(self,data,param,param_fit):
         self.data = data
-        self.lags = lags
+        # self.lags = lags
         self.param = param
         self.param_fit = param_fit
-        self.exog_data = exog_data #区分与AR模型
+        self.exog_data = data #区分与AR模型
 
 
         param={
             "trend": 'c',
+            "lags":None,
             "seasonal": False,
             "exog": self.exog_data,
             "hold_back": None,
