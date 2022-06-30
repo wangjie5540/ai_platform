@@ -17,7 +17,7 @@ import argparse
 import traceback
 file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
 sys.path.append(file_path)#解决不同位置调用依赖包路径问题
-from time_series.sp.predict_sp import predict_sp
+from time_series.sp.predict_for_time_series_sp import predict_sp
 from common.log import get_logger
 
 def time_series_predict(param,spark=None):

@@ -17,7 +17,7 @@ import traceback
 file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
 sys.path.append(file_path)
 import argparse
-from time_series.sp.back_test_sp import back_test_sp
+from time_series.sp.backup_test_for_time_series_sp import back_test_sp
 from common.log import get_logger
 
 def time_series_back_test(param,spark=None):
