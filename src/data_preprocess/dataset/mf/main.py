@@ -9,7 +9,8 @@ def main():
     output_file = sys.argv[2]
     user_and_id_map_file = sys.argv[3]
     item_and_id_map_file = sys.argv[4]
-    names = sys.argv[5].split(",")
+    names_str = sys.argv[5].strip()
+    names = names_str.split(",") if names_str else None
     generate_train_data(input_file, output_file, user_and_id_map_file, item_and_id_map_file, names)
 
 

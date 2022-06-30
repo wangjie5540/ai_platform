@@ -2,6 +2,7 @@ from digitforce.aip.common.constants.global_constant import AI_PLATFORM_IMAGE_RE
 from digitforce.aip.components.op_decorator import *
 
 
+@mount_data_pv
 def hive_sql_executor(sql, table_name, image_tag="latest"):
     """
         执行hive sql 并将结果存入 指定的表中

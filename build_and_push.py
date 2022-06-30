@@ -68,7 +68,15 @@ def find_main_file(one_dir, result):
 
 def main():
     setup_console_log()
-    for _dir in ["src/recommend", "src/data_preprocess", "src/source", "src/test", "src/deeplearning"]:
+    for _dir in [
+        "src/recommend/recall/item2vec",
+        "src/recommend/recall/mf",
+        "src/recommend/recall/similarity_search",
+        # "src/data_preprocess",
+        # "src/source",
+        # "src/test",
+        # "src/deeplearning",
+    ]:
         result = []
         find_main_file(_dir, result)
         for _ in result:

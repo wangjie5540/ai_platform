@@ -59,26 +59,32 @@ def deep_mf_op(input_file, item_embeding_file, user_embeding_file, image_tag="la
 
 
 @mount_data_pv
-def similarity_search_recall_op(user_vec_file, item_vec_file, output_file, topk, image_tag="latest"):
+def similarity_search_recall_op(user_vec_file, item_vec_file, output_file, topk,
+                                user_and_id_map_file="",
+                                item_and_id_map_file="", image_tag="latest"):
     """
     基于最近邻的向量召回策略
-
+    输出文件
+        jsonl {'user_id': xxx, 'recall_item_ids':[xxx, xxx]}
     :param user_vec_file: 用户向量
     :param item_vec_file: item向量
     :param output_file: 召回结果
     :param topk: 召回数量
+    :param user_and_id_map_file: user_id和id 映射表
+    :param item_and_id_map_file: item_id和id 映射表
     :param image_tag: 组件版本
     :return: deep_mf_op
     """
     return dsl.ContainerOp(name="similarity_search_recall",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
-                                 f"{IMAGE_NAME_HEADER}-mf" + f":{image_tag}",
+                                 f"{IMAGE_NAME_HEADER}-similarity_search" + f":{image_tag}",
                            command="python",
-                           arguments=["main.py", user_vec_file, item_vec_file, output_file, topk])
+                           arguments=["main.py", user_vec_file, item_vec_file, output_file, topk,
+                                      user_and_id_map_file, item_and_id_map_file])
 
 
 @mount_data_pv
-def item2vec_op(input_file, output_file, skip_gram=0, vec_size=16, image_tag="latest"):
+def item2vec_op(input_file, output_file, skip_gram=0, vec_size=16, recall_result_file=None, image_tag="latest"):
     """
     基于最近邻的向量召回策略
     输入文件格式
@@ -98,7 +104,7 @@ def item2vec_op(input_file, output_file, skip_gram=0, vec_size=16, image_tag="la
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"{IMAGE_NAME_HEADER}-item2vec" + f":{image_tag}",
                            command="python",
-                           arguments=["main.py", input_file, output_file, skip_gram, vec_size])
+                           arguments=["main.py", input_file, output_file, skip_gram, vec_size, recall_result_file])
 
 
 @mount_data_pv
@@ -111,8 +117,8 @@ def association_rule_mining_op(input_file, output_file, min_sup=1, min_conf=0.01
         jsonl {'item_id':[(xxx, confidence)]}
     :param input_file:
     :param output_file:
-    :param skip_gram:
-    :param skip_gram:
+    :param min_sup:
+    :param min_conf:
     :param image_tag: 组件版本
     :return:
     """
@@ -134,8 +140,8 @@ def upload_recall_result_op(recall_result_file, redis_key_header, image_tag="lat
     :param redis_key_header: 召回结果保存的redis key的前缀
     :param image_tag: 组件版本
     """
-    return dsl.ContainerOp(name="update_user_recall_result'",
+    return dsl.ContainerOp(name="recall_result_to_redis",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
-                                 f"{IMAGE_NAME_HEADER}-association_rule_mining" + f":{image_tag}",
+                                 f"{IMAGE_NAME_HEADER}-recall_result_to_redis" + f":{image_tag}",
                            command="python",
                            arguments=["main.py", recall_result_file, redis_key_header])

@@ -19,7 +19,7 @@ def generate_mf_train_dataset_op(input_file, output_file, user_and_id_map_file, 
     """
     return dsl.ContainerOp(name="mf-data_generator",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
-                                 f"/src-data_prepocess-dataset-mf"
+                                 f"/src-data_preprocess-dataset-mf"
                                  f":{image_tag}",
                            command="python",
                            arguments=["main.py", input_file, output_file, user_and_id_map_file, item_and_id_map_file,
