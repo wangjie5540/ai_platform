@@ -9,11 +9,11 @@ include:
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 class SARIMAXModel():
-    def __init__(self,data,exog_data,param,param_fit):
+    def __init__(self,data,param,param_fit):
         self.param = param
         self.param_fit = param_fit
         self.data = data
-        self.exog_data = exog_data #区别于sarima模型
+        self.exog_data = data #区别于sarima模型
 
         param={
             "exog": self.exog_data,
