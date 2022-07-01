@@ -1,0 +1,11 @@
+[default]
+newProdSafetyStockCoef = {"保质期"={">180" = 5.0, "90-180" = 3.0}, "售卖期"= {"10-30"= 2.0,"2-10" = 0.5,"1" = 0.3}}
+residualSafetyStockT = 0.3
+residualSafetyStockBoundCoef=5.0
+grossDemand = "max(min(销量期望+毛需求_安全库存,需求下限), 最小陈列量)"
+alias = {"最小陈列量"="minDisplayRequire","dms"="dms","展望期天数"="Days","销量期望"="Sales","服务水平"="serviceLevel", "最小服务水平"="minServiceLevel","日销量"="dms","展望期天数方差"="periodDaysVariance","样本数量"="sampleNum","方差估计"="EstimateVariance","过去7天日均销"="last7DaysAvgSales","过去30天日均销"="last30DaysAvgSales","未来7天预测日均销"="in7DaysAvgSales","当前库存"="stock","调拨在途"="transferStock","补货在途"="replQInTransit","过去30天销量"="history30DaysSales","保质期"="warrantyPeriods","可售期"="salesPeriod","补货单位"="unit","最小起订量"="minOrderQ","展望期A天数"= "periodADays","缺货门槛"="minInStock","子节点库存和"="nodeStock", "安全库存限制系数"="residualSafetySotckBoundCoef","补货阈值"="residualSafetyStockT","新品安全库存参数"="newProdSafetyStockCoef"}
+periodReplStrategy = "缺货不补"
+multiStagedSupplementStrategy=true
+middleResMap = {"安全库存"="毛需求_安全库存"}
+reAllocateStrategy = "priority"
+orderableDatesOrder = [6,5,4,3,2,1,0]
