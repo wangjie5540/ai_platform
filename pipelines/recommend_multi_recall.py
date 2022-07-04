@@ -67,7 +67,7 @@ def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_da
     item2vec.container.set_image_pull_policy("Always")
 
     item2vec_recall_to_redis = recall.upload_recall_result_op(item2vec_recall_result_jsonl_file,
-                                                              "AIP_RC_RECALL_item2vec__").after(item2vec)
+                                                              "AIP_RC_RECALL_item2vec__item2vec__").after(item2vec)
     item2vec_recall_to_redis.container.set_image_pull_policy("Always")
 
     # deep fm
@@ -94,7 +94,7 @@ def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_da
                                                         item_and_id_map_file).after(deep_mf)
     deep_mf_recall.container.set_image_pull_policy("Always")
     deep_mf_recall_to_redis = recall.upload_recall_result_op(deep_mf_recall_result_jsonl_file,
-                                                             "AIP_RC_RECALL_deep_mf__").after(deep_mf_recall)
+                                                             "AIP_RC_RECALL_deep_mf__deep_mf__").after(deep_mf_recall)
     deep_mf_recall_to_redis.container.set_image_pull_policy("Always")
 
 

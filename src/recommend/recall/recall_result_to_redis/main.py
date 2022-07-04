@@ -13,10 +13,12 @@ def upload_recall_result(redis_key_header, recall_result_file):
         t0 = time.time()
         for line in fi:
             json_obj = json.loads(line)
+            logging.info(f"DEBUG {json_obj}")
             user_id = json_obj.get("user_id", None)
             item_ids = json_obj.get("recall_item_ids", [])
             item_ids = [str(_) for _ in item_ids]
             if user_id and item_ids:
+                logging.info(f"DEBUG: {redis_key_header + user_id, item_ids}")
                 batch.append((redis_key_header + user_id, item_ids))
                 cnt += 1
             if len(batch) % 100 == 0:
@@ -24,6 +26,10 @@ def upload_recall_result(redis_key_header, recall_result_file):
                 df_redis_cli.batch_update_redis_list(kv_map)
                 batch = []
                 logging.info(f"update user recall result cnt:{cnt} time spend:{time.time() - t0}")
+    if batch:
+        kv_map = dict(batch)
+        df_redis_cli.batch_update_redis_list(kv_map)
+        logging.info(f"update user recall result cnt:{cnt} time spend:{time.time() - t0}")
 
 
 def main():
@@ -34,6 +40,7 @@ def main():
     logging.info(f"begin upload recall result to redis.."
                  f"recall result file:{recall_result_file}")
     upload_recall_result(redis_key_header, recall_result_file)
+    logging.info(f"finish...")
 
 
 if __name__ == '__main__':
