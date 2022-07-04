@@ -30,7 +30,7 @@ class ARXModel():
         }
         param.update(self.param)
 
-        self.model = AutoReg(self.data,self.lags,**param)
+        self.model = AutoReg(self.data,**param)
 
 
     def fit(self):
