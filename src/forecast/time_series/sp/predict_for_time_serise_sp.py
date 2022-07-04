@@ -10,6 +10,7 @@ import os
 import sys
 import traceback
 
+import numpy as np
 import pandas as pd
 file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../'))
 sys.path.append(file_path)#解决不同位置调用依赖包路径问题
@@ -57,40 +58,45 @@ def model_predict(key_value,data,method,key_cols,param,forcast_start_date,predic
     model_include=True
     data_tmp=data[data[time_col]<forcast_start_date]#日期小于预测日期
     data_tmp=data_tmp.sort_values(by=time_col,ascending=True)#进行排序
-    if str(method).lower()=='es':
-        data_tmp=data_tmp['y']#只取y列
-        ts_model=ESModel(data_tmp,param=method_param)
-    elif str(method).lower()=='holt-winter':
-        ts_model = HoltWinterModel(data_tmp, param=method_param["param"],param_fit=method_param["param_fit"])
+    data_tmp = np.array(data_tmp['y'])
+    if str(method).lower() == 'es':
+        # data_tmp=data_tmp['y']#只取y列
+        ts_model = ESModel.ESModel(data_tmp, param=method_param)
+    elif str(method).lower() == 'holt-winter':
+        ts_model = HoltWinterModel.HoltWinterModel(data_tmp, param=method_param["param"],param_fit=method_param["param_fit"])
     elif str(method).lower() == 'holt':
-        ts_model = HoltModel(data_tmp,param=method_param["param"],param_fit=method_param["param_fit"])
+        ts_model = HoltModel.HoltModel(data_tmp, param=method_param["param"], param_fit=method_param["param_fit"])
     elif str(method).lower() == 'ar':
-        ts_model = ARModel(data_tmp,param=method_param["param"],param_fit=method_param["param_fit"])
+        params = method_param['param']
+        params_fit = method_param['param_fit']
+        ts_model = ARModel.ARModel(data_tmp, param=params, param_fit=params_fit)
     elif str(method).lower() == 'ma':
-        ts_model = MAModel(data_tmp,param=method_param["param"],param_fit=method_param["param_fit"])
+        ts_model = MAModel.MAModel(data_tmp, param=method_param["param"], param_fit=method_param["param_fit"])
     elif str(method).lower() == 'arx':
-        ts_model = ARXModel(data_tmp,param=method_param["param"],param_fit=method_param["param_fit"])
+        ts_model = ARXModel.ARXModel(data_tmp, param=method_param["param"], param_fit=method_param["param_fit"])
     elif str(method).lower() == 'arima':
-        ts_model = Stats_ARIMAModel(data_tmp,param=method_param["param"],param_fit=method_param["param_fit"])
+        ts_model = Stats_ARIMAModel.ARIMAModel(data_tmp, param=method_param["param"],param_fit=method_param["param_fit"])
     elif str(method).lower() == 'arimax':
-        ts_model = ARIMAXModel(data_tmp,param=method_param["param"],param_fit=method_param["param_fit"])
+        ts_model = ARIMAXModel.ARIMAXModel(data_tmp, param=method_param["param"], param_fit=method_param["param_fit"])
     elif str(method).lower() == 'sarima':
-        ts_model = SARIMAModel(data_tmp,param=method_param["param"],param_fit=method_param["param_fit"])
+        ts_model = SARIMAModel.SARIMAModel(data_tmp, param=method_param["param"], param_fit=method_param["param_fit"])
     elif str(method).lower() == 'sarimax':
-        ts_model = SARIMAXModel(data_tmp,param=method_param["param"],param_fit=method_param["param_fit"])
+        ts_model = SARIMAXModel.SARIMAXModel(data_tmp, param=method_param["param"], param_fit=method_param["param_fit"])
     elif str(method).lower() == 'ses':
-        ts_model = SESModel(data_tmp,param=method_param["param"],param_fit=method_param["param_fit"])
+        ts_model = SESModel.SESModel(data_tmp, param=method_param["param"], param_fit=method_param["param_fit"])
     elif str(method).lower() == 'croston':
-        ts_model = CrostonModel(data_tmp,param=method_param["param"])
+        ts_model = CrostonModel.CrostonModel(data_tmp, param=method_param["param"])
     elif str(method).lower() == 'crostontsb':
-        ts_model = CrostonTSBModel(data_tmp,param=method_param["param"])
+        ts_model = CrostonTSBModel.CrostonTSBModel(data_tmp, param=method_param["param"])
     elif str(method).lower() == 'stl':
-        ts_model = STLModel(data_tmp,param=method_param["param"],param_fit=method_param["param_fit"])
+        ts_model = STLModel.STLModel(data_tmp, param=method_param["param"], param_fit=method_param["param_fit"])
     elif str(method).lower() == 'theta':
-        ts_model = ThetaModel(data_tmp,param=method_param["param"],param_fit=method_param["param_fit"])
+        ts_model = ThetaModel.ThetaModels(data_tmp, param=method_param["param"], param_fit=method_param["param_fit"])
+    elif str(method).lower() == 'stlf':
+        ts_model = STLForecastModel.STLFModel(data_tmp, param=method_param["param"],param_fit=method_param["param_fit"])
     else:
-        ts_model=None
-        model_include=False
+        ts_model = None
+        model_include = False
 
     if model_include==True:
         ts_model.fit()
