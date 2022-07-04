@@ -97,7 +97,10 @@ def model_predict(key_value,data,method,key_cols,param,forcast_start_date,predic
         preds=ts_model.forcast(predict_len)
         result_df=pd.DataFrame()
         result_df['pred_time']=[i for i in range(1,predict_len+1)]
-        result_df['y_pred']=preds
+        if str(method).lower() == 'croston' or str(method).lower() == 'crostontsb':
+            result_df['y_pred'] = preds['forecast']
+        else:
+            result_df['y_pred'] = preds
         result_df['time_type']=time_type
         data_result=predict_result_handle(result_df,key_value,key_cols,mode_type,save_table_cols)#对结果进行处理
     else:
