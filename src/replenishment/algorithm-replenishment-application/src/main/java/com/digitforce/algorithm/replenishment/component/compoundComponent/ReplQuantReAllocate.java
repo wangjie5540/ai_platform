@@ -7,9 +7,7 @@ import com.digitforce.algorithm.replenishment.component.Component;
 import com.digitforce.algorithm.replenishment.util.ParseReplConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
 
-import javax.print.attribute.standard.PresentationDirection;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -62,29 +60,4 @@ public class ReplQuantReAllocate {
         this.components = components;
     }
 
-    //    public List<ReplResult> checkAndReallocate() {
-//        Set<String> skuSet = results.stream().map(e->e.getGoodsId()).distinct().collect(Collectors.toSet());
-//        for (String sku:skuSet) {
-//            double skuReplQuant = results.stream().filter(e->e.getGoodsId().equals(sku)).mapToDouble(ee->ee.getReplQuant()).sum();
-//            double parentStock = parentNodeStock.getOrDefault(sku, 0.0);
-//            // 补货量>父节点
-//            if (skuReplQuant > parentStock) {
-//                // 重新分配;
-//                components.entrySet().stream().filter(e->e.getKey().contains(sku)).collect(Collectors.toSet());
-//            }
-//
-//
-//        }
-//
-////        Map<String, Double> skuReplQuant = results.stream().collect(Collectors.groupingBy(c -> c.getGoodsId(), Collectors.summingDouble(ReplResult::getReplQuant)));
-////        for (Map.Entry<String, Double> entry:skuReplQuant.entrySet()) {
-////            String skuId = entry.getKey();
-////            double totalQuant = entry.getValue();
-////            double parentStock = parentNodeStock.getOrDefault(skuId, 0.0);
-////            // 补货量 > 父节点库存
-////            if (totalQuant - parentStock > 0) {
-////
-////            }
-////        }
-//    }
 }

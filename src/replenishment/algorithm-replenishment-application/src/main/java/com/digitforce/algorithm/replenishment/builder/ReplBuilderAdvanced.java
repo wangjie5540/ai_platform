@@ -60,7 +60,6 @@ public class ReplBuilderAdvanced {
      * @return
      */
     public Component periodBuild( ReplRequest request, String period, double serviceLevel) {
-//        this.request = request;
         this.period = period;
         this.serviceLevel = serviceLevel;
         Component safetyStock = buildSafetyStock(request, serviceLevel);
@@ -68,17 +67,18 @@ public class ReplBuilderAdvanced {
         Component validStock  = buildStock(request);
         Component basicReplQuant = new BasicReplQuant();
 
-        // 多级补货且为残差安全库存模型，且展望期A阶段
-        if (replProcess == ReplProcessConsts.multiStagedRepl && request.getPeriodAEstimateVariance() != 0.0 && !period.contains("B") &&
+        // 多级补货且配置有补充策略，且有子分支
+        if (replProcess == ReplProcessConsts.multiStagedRepl && !period.contains("B") && supplenmentStrategyFlag &&
                 (request.getBranchRequests() != null && !request.getBranchRequests().isEmpty())) {
             basicReplQuant.setExpression("max(max(毛需求 - 有效库存,需求上限), EOQ)");
+            // 构建需求上限
             Component supplementBound = buildbasicReplBound(request, serviceLevel);
             basicReplQuant.addSubComponent(supplementBound);
         }
         grossDemand.addSubComponent(safetyStock);
         basicReplQuant.addSubComponent(grossDemand);
         basicReplQuant.addSubComponent(validStock);
-        // TODO:basicReplQuant.setStage( serviceLevel + "_" + period);
+
         basicReplQuant.setStage( period);
 
         double replOrNotFlag = period.contains("A") ? 1.0:0.0;
@@ -183,7 +183,7 @@ public class ReplBuilderAdvanced {
 
         grossDemand = new ParseValueByAlias(alias, request, period, modelParam).parseValueByAlias(grossDemand);
 
-//         TODO 要不要加
+//         TODO review
         setGrossDemandVariable(request, grossDemand);
         return grossDemand;
     }

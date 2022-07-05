@@ -39,7 +39,7 @@ public class MultiStagedReplNewTest {
         request0.setIn7DaysAvgSales(6.0);
         request0.setMinOrderQ(40.0);
         request0.setUnit(10.0);
-        request0.setPercentile(0.3);
+//        request0.setPercentile(0.3);
         List<Double> historySales = new ArrayList(Arrays.asList(20.0,22.0,23.0,25.0,22.0,26.0,27.0,29.0,30.0));
         request0.setHistory30DaysSales(historySales);
         request0.setHistory30DaysSalesLength(historySales.size());
