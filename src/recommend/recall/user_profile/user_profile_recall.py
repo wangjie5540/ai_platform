@@ -14,10 +14,9 @@ def user_profile_random_recall(user_profiles, profile_id_and_hot_item_map, recal
     '''
     sum_score = sum(user_profiles.values())
     recall_item_ids = []
-    for cid, score in user_profiles.items():
-        cid = int(cid)
+    for profile_id, score in user_profiles.items():
         sampling_cnt = int(score / sum_score * recall_cnt) + 1
-        _products = profile_id_and_hot_item_map.get(cid, [])
+        _products = profile_id_and_hot_item_map.get(profile_id, [])
         sampling_cnt = min((len(_products), sampling_cnt))
         if sampling_cnt:
             _result = _products[:sampling_cnt]
@@ -34,7 +33,7 @@ def offline_recall(input_file, output_file, profile_and_hot_item_file):
         for line in fi:
             if line:
                 json_obj = json.loads(line)
-                profile_id = int(json_obj["profile_id"])
+                profile_id = json_obj["profile_id"]
                 hot_item_ids = json_obj["hot_item_ids"]
                 profile_and_hot_item_ids[profile_id] = hot_item_ids
     fo = open(output_file, "w")

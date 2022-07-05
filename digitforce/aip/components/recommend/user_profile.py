@@ -4,7 +4,7 @@ from digitforce.aip.components.op_decorator import *
 
 @mount_data_pv
 def user_profile_calculator_op(input_file, user_profile_file, image_tag="latest"):
-    '''
+    """
     根据用户的行为计算用户在不同兴趣上的得分
     **用户行为需要按照user_id排序**
     输入文件格式:
@@ -16,7 +16,7 @@ def user_profile_calculator_op(input_file, user_profile_file, image_tag="latest"
     :param user_profile_file: 用户兴趣得分分布
     :param image_tag: 组件版本
     :return: user_profile_calculator_op
-    '''
+    """
     return dsl.ContainerOp(name="user_profile_calculator",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"/src-recommend-user_profile" + f":{image_tag}",

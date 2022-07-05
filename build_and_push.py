@@ -2,6 +2,8 @@
 import logging
 import os
 
+from digitforce.aip.common.logging_config import setup_console_log
+
 
 def get_dockerfile_content(image_dir, bottom_image_name=None):
     if bottom_image_name is None:
@@ -65,7 +67,17 @@ def find_main_file(one_dir, result):
 
 
 def main():
-    for _dir in ["src/recommend", "src/data_preprocess", "src/source", "src/test", "src/deeplearning"]:
+    setup_console_log()
+    for _dir in [
+        "src/recommend/recall/recall_result_to_redis",
+        # "src/recommend/recall/mf",
+        # "src/recommend/recall/similarity_search",
+        # "src/recommend/recall",
+        # "src/data_preprocess",
+        # "src/source",
+        # "src/test",
+        # "src/deeplearning",
+    ]:
         result = []
         find_main_file(_dir, result)
         for _ in result:

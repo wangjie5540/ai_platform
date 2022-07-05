@@ -110,7 +110,7 @@ def calculate_user_profile(input_file, output_file):
             vals = line.strip().split(",")
             user_id = vals[0]
             item_id = vals[1]
-            profile_id = int(vals[2])
+            profile_id = vals[2]
             click_cnt = vals[3]
             save_cnt = vals[4]
             order_cnt = vals[5]
