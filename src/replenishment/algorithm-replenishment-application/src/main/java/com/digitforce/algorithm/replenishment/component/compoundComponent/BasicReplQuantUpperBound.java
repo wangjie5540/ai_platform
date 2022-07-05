@@ -5,7 +5,9 @@ import com.digitforce.algorithm.replenishment.component.Component;
 
 import java.util.List;
 
-
+/**
+ * 计算多级补货每个分支下的补货量之和
+ */
 public class BasicReplQuantUpperBound extends BasicReplQuant {
     String name = "需求上限";
 

@@ -44,12 +44,8 @@ public class DataPreprocess {
         for (Map.Entry<String, List<String>> entry:replGoodsList.entrySet()) {
             String shopId = entry.getKey().split(",")[0];
             String goodsId = entry.getKey().split(",")[1];
-//            log.info("goodsId:{}", goodsId);
 
-            long time0 = System.currentTimeMillis();
             List<String> subShopList = entry.getValue().stream().map(e->e.substring(0, 4)).collect(Collectors.toList());
-            long time1 = System.currentTimeMillis();
-//            log.info("filter:{}毫秒", ( time1 - time0));
 
             // 现在只有门店级别的requests
             List<ReplRequest> subRequests = requests.stream().filter(e->e.getSkuId().equals(goodsId) && subShopList.contains(e.getShopId())).collect(Collectors.toList());
@@ -65,21 +61,11 @@ public class DataPreprocess {
 
     private ReplRequest generateParentRequest(List<ReplRequest> subRequests, List<ReplRequest> subNodeRequests, Map<String, Object> dataMap, String goodsId, String shopId, int level) {
         ReplRequest node = initialParentRequest(subRequests.get(0), goodsId, shopId, level);
-        // mock数据方法
-//        long time2 = System.currentTimeMillis();
         node = generateMockData(node, subRequests, true);
-//        long time3 = System.currentTimeMillis();
-//        log.info("模拟数据:{}毫秒", ( time3 - time2));
         // 门店数据加和
         node = processShopProperty(node, subRequests);
-//        long time4 = System.currentTimeMillis();
-//        log.info("门店数据加和:{}毫秒", ( time4 - time3));
-//        // 所有子节点加和
-//        node = processSubNodeProperty(node, subNodeRequests);
         // 读取数据
         node = addValueFromData(node, dataMap);
-//        long time5 = System.currentTimeMillis();
-//        log.info("读取属性值:{}毫秒", ( time5 - time4));
         return node;
     }
 

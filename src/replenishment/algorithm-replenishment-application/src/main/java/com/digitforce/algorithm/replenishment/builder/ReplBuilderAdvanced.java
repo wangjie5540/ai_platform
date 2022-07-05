@@ -11,7 +11,6 @@ import com.digitforce.algorithm.replenishment.util.ParseReplConfig;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,19 +60,19 @@ public class ReplBuilderAdvanced {
      * @return
      */
     public Component periodBuild( ReplRequest request, String period, double serviceLevel) {
-        this.request = request;
+//        this.request = request;
         this.period = period;
         this.serviceLevel = serviceLevel;
-        Component safetyStock = buildSafetyStock(serviceLevel);
-        Component grossDemand = buildGrossDemand();
-        Component validStock  = buildStock();
+        Component safetyStock = buildSafetyStock(request, serviceLevel);
+        Component grossDemand = buildGrossDemand(request);
+        Component validStock  = buildStock(request);
         Component basicReplQuant = new BasicReplQuant();
 
         // 多级补货且为残差安全库存模型，且展望期A阶段
         if (replProcess == ReplProcessConsts.multiStagedRepl && request.getPeriodAEstimateVariance() != 0.0 && !period.contains("B") &&
                 (request.getBranchRequests() != null && !request.getBranchRequests().isEmpty())) {
             basicReplQuant.setExpression("max(max(毛需求 - 有效库存,需求上限), EOQ)");
-            Component supplementBound = buildbasicReplBound(serviceLevel);
+            Component supplementBound = buildbasicReplBound(request, serviceLevel);
             basicReplQuant.addSubComponent(supplementBound);
         }
         grossDemand.addSubComponent(safetyStock);
@@ -99,6 +98,8 @@ public class ReplBuilderAdvanced {
 
         Component periodNetDemand = new PeriodNetDemand();
         periodNetDemand.addSubComponent(periodAComponent);
+        // TODO:review
+        periodNetDemand.setExpression("max(展望期A净需求, 0)");
         if ("缺货不补".equals(periodStrategy)) {
             Component periodBComponent = periodBuild(replRequest, "展望期B", serviceLevel);
             periodBComponent.setName("展望期B净需求");
@@ -131,7 +132,7 @@ public class ReplBuilderAdvanced {
      *
      * @return
      */
-    private Component buildSafetyStock(double serviceLevel) {
+    private Component buildSafetyStock(ReplRequest request, double serviceLevel) {
         Component safetyStock;
         Component safetyStockBound = null;
 
@@ -170,12 +171,8 @@ public class ReplBuilderAdvanced {
         return  safetyStock;
     }
 
-    //    用户可以配置的项目参数：
-//    安全排面量合理性阈值
-    private Component buildGrossDemand() {
-        //"Max(Min(销量期望+安全库存+附加需求, 需求下限), 需求上限)"
-        //配置毛需求公式："Max(Min(销量期望+安全库存+附加需求, 需求下限), 安全排面量)"
-        //或者配置 需求上限：安全排面量
+
+    private Component buildGrossDemand(ReplRequest request) {
         String expression = ParseReplConfig.parseString(ParseReplConfig.grossDemandKey);
         Component grossDemand;
         // 如果配置了毛需求公式，则读取配置
@@ -187,12 +184,12 @@ public class ReplBuilderAdvanced {
         grossDemand = new ParseValueByAlias(alias, request, period, modelParam).parseValueByAlias(grossDemand);
 
 //         TODO 要不要加
-        setGrossDemandVariable(grossDemand);
+        setGrossDemandVariable(request, grossDemand);
         return grossDemand;
     }
 
 
-    private void setGrossDemandVariable(Component grossDemand) {
+    private void setGrossDemandVariable(ReplRequest request, Component grossDemand) {
         if (request.getIsShortWarranty()) {
             grossDemand.setVariable("需求下限", request.getLast30DaysAvgSales() * request.getPeriodADays());
         } else if (request.getPercentile() != 0) {
@@ -204,7 +201,7 @@ public class ReplBuilderAdvanced {
      *
      * @return
      */
-    private Component buildStock() {
+    private Component buildStock(ReplRequest request) {
         Component validStock;
         // 单级补货
         if (replProcess == ReplProcessConsts.singleStagedRepl) {
@@ -215,12 +212,12 @@ public class ReplBuilderAdvanced {
 
         }
         if (period.contains("A")) {
-           validStock = new ParseValueByAlias(alias, request, period, modelParam).parseValueByAlias(validStock);
-           // 日清
-           if (request.getSalesPeriod() == 1.0) {
-               validStock.setVariable("当前库存", 0.0);
-               validStock.setVariable("调拨在途", 0.0);
-           }
+            validStock = new ParseValueByAlias(alias, request, period, modelParam).parseValueByAlias(validStock);
+            // 日清
+            if (request.getSalesPeriod() == 1.0) {
+                validStock.setVariable("当前库存", 0.0);
+                validStock.setVariable("调拨在途", 0.0);
+            }
         }
 
         return validStock;
@@ -270,8 +267,8 @@ public class ReplBuilderAdvanced {
      *
      * @return
      */
-    private Component buildbasicReplBound(double serviceLevel) {
-        Component validStock = buildStock();
+    private Component buildbasicReplBound(ReplRequest request, double serviceLevel) {
+        Component validStock = buildStock(request);
         Component basicReplBound = new BasicReplQuantUpperBound();
         Map<String, Object> parameters = new HashMap<>();
         List<Component> components = residualSupplementElementNew( serviceLevel);
