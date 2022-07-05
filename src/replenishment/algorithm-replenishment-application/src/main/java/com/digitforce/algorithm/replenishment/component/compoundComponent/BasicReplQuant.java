@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BasicReplQuant extends Component {
     String name = "期望订货量";
-//    String expression = "max(max(毛需求 - 有效库存, 需求上限), EOQ)";
+
     String expression = "max(毛需求 - 有效库存, EOQ)";
     @Override
     protected void setDefaultVariables() {

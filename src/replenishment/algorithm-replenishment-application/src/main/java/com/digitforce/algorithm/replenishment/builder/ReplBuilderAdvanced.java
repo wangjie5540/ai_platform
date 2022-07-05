@@ -68,7 +68,7 @@ public class ReplBuilderAdvanced {
         Component basicReplQuant = new BasicReplQuant();
 
         // 多级补货且配置有补充策略，且有子分支
-        if (replProcess == ReplProcessConsts.multiStagedRepl && !period.contains("B") && supplenmentStrategyFlag &&
+        if (replProcess.equals(ReplProcessConsts.multiStagedRepl) && !period.contains("B") && supplenmentStrategyFlag &&
                 (request.getBranchRequests() != null && !request.getBranchRequests().isEmpty())) {
             basicReplQuant.setExpression("max(max(毛需求 - 有效库存,需求上限), EOQ)");
             // 构建需求上限
@@ -98,7 +98,7 @@ public class ReplBuilderAdvanced {
 
         Component periodNetDemand = new PeriodNetDemand();
         periodNetDemand.addSubComponent(periodAComponent);
-        // TODO:review
+
         periodNetDemand.setExpression("max(展望期A净需求, 0)");
         if ("缺货不补".equals(periodStrategy)) {
             Component periodBComponent = periodBuild(replRequest, "展望期B", serviceLevel);
@@ -143,7 +143,7 @@ public class ReplBuilderAdvanced {
             safetyStock.setVariable("服务水平", serviceLevel);
 
             // 单级补货
-            if (replProcess == ReplProcessConsts.singleStagedRepl || (request.getBranchRequests() == null && !request.getBranchRequests().isEmpty())) {
+            if (replProcess.equals(ReplProcessConsts.singleStagedRepl) || (request.getBranchRequests() == null && !request.getBranchRequests().isEmpty())) {
                 safetyStockBound = new SafetyStockBound();
                 safetyStockBound = new ParseValueByAlias(alias, request, period, modelParam).parseValueByAlias(safetyStockBound);
                 safetyStockBound.setVariable("展望期天数", request.getPeriodADays());
@@ -183,7 +183,6 @@ public class ReplBuilderAdvanced {
 
         grossDemand = new ParseValueByAlias(alias, request, period, modelParam).parseValueByAlias(grossDemand);
 
-//         TODO review
         setGrossDemandVariable(request, grossDemand);
         return grossDemand;
     }
@@ -204,7 +203,7 @@ public class ReplBuilderAdvanced {
     private Component buildStock(ReplRequest request) {
         Component validStock;
         // 单级补货
-        if (replProcess == ReplProcessConsts.singleStagedRepl) {
+        if (replProcess.equals(ReplProcessConsts.singleStagedRepl)) {
             validStock = new ValidStock();
         } else {
             // 多级补货
