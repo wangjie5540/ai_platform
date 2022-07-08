@@ -17,7 +17,7 @@ sys.path.append(file_path)#解决不同位置调用依赖包路径问题
 from common.config import get_config
 from zipfile import ZipFile
 import shutil
-from common.data_helper import update_param_default
+from common.data_helper import *
 from common.spark import spark_init
 from time_series.sp.data_prepare_for_time_series import *
 from time_series.model import *
@@ -50,12 +50,13 @@ def model_predict(key_value,data,method,key_cols,param,forcast_start_date,predic
     method_param_all=param['method_param_all']
     time_col=param['time_col']
     time_type=param['time_type']
-    save_table_cols=param['save_table_cols']
+    save_table_cols=param['default']['save_table_cols']
     try:
         method_param=method_param_all[method]
     except:
         method_param={}
     model_include=True
+    data = row_transform_to_dataFrame(data)
     data_tmp=data[data[time_col]<forcast_start_date]#日期小于预测日期
     data_tmp=data_tmp.sort_values(by=time_col,ascending=True)#进行排序
     data_tmp = np.array(data_tmp['y'])
@@ -218,7 +219,7 @@ def predict_sp(param,spark):
     #所需参数
     key_cols=param['key_cols']
     apply_model_index=param['apply_model_index']
-    forcast_start_date=param['forcast_start_date']
+    forcast_start_date=param['forecast_start_date']
     predict_len=param['predict_len']
     result_processing_param=param['result_processing_param']
 

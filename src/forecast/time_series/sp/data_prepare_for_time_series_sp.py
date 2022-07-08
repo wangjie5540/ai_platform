@@ -56,7 +56,7 @@ from pyspark.sql.functions import max
 #检验数据的连续性，如果不连续则补齐
 def data_precess(df,predict_start):
     df['dt'] = df['dt'].apply(lambda x:pd.to_datetime(x))
-    ts = pd.DataFrame(pd.date_range(start=df.dt.min(),end=df.dt.max()),colunms=['dt'])
+    ts = pd.DataFrame(pd.date_range(start=df.dt.min(),end=df.dt.max()),columns=['dt'])
     ts = ts.merge(df,on='dt',how='left')
 
     last_day = pd.to_datetime(predict_start) - pd.Timedelta(days=1)
