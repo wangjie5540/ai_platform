@@ -11,10 +11,14 @@ from torch.optim import Adam
 
 class MfModel(nn.Module):
 
-    def __init__(self):
+    def __init__(self, user_emb_size=None, item_emb_size=None):
         super(MfModel, self).__init__()
-        self.user_emb = nn.Embedding(num_embeddings=90000, embedding_dim=32)
-        self.item_emb = nn.Embedding(num_embeddings=90000, embedding_dim=32)
+        if not user_emb_size:
+            user_emb_size = 90000
+        if not item_emb_size:
+            item_emb_size = 90000
+        self.user_emb = nn.Embedding(num_embeddings=user_emb_size, embedding_dim=32)
+        self.item_emb = nn.Embedding(num_embeddings=item_emb_size, embedding_dim=32)
         self.droupout = nn.Dropout(p=0.5)
         self.dis_func = nn.CosineSimilarity()
         self.sigmoid_times = torch.from_numpy(np.array(6, dtype=np.float64))
@@ -30,15 +34,8 @@ class MfModel(nn.Module):
         return F.binary_cross_entropy_with_logits(dis, label, label_weight)
 
 
-def train(input_file, num_epochs):
-    mf_model = MfModel()
-    optimizer = Adam(mf_model.parameters(), lr=0.01, weight_decay=0.000001)
-    batch_size = 2048
-
-    # Define your execution device
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    # Convert model parameters and buffers to CPU or Cuda
-    mf_model.to(device)
+def train(input_file, num_epochs, user_emb_size=None, item_emb_size=None):
+    logging.info(f"begin train DeepMF model...")
     with open(input_file) as fi:
         lines = [_ for _ in fi]
     examples = []
@@ -49,6 +46,20 @@ def train(input_file, num_epochs):
             item_id = int(vals[1])
             label = int(vals[2])
             examples.append((user_id, item_id, label))
+    if not user_emb_size:
+        user_emb_size = len(set([_[0] for _ in examples])) + 1
+    if not item_emb_size:
+        item_emb_size = len(set([_[1] for _ in examples])) + 1
+
+    mf_model = MfModel(user_emb_size, item_emb_size)
+    optimizer = Adam(mf_model.parameters(), lr=0.01, weight_decay=0.000001)
+    batch_size = 2048
+
+    # Define your execution device
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    # Convert model parameters and buffers to CPU or Cuda
+    mf_model.to(device)
+
     logging.info(f"The model will be running on {device} device")
     for epoch in range(num_epochs):  # loop over the dataset multiple times
         random.shuffle(examples)
@@ -102,6 +113,3 @@ def train(input_file, num_epochs):
 
         # we want to save the model if the accuracy is the best
     return mf_model
-
-
-

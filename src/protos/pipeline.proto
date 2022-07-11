@@ -1,0 +1,1085 @@
+syntax = "proto2";
+package protos;
+
+//import "train.proto";
+//import "eval.proto";
+//import "export.proto";
+//import "dataset.proto";
+//import "feature_config.proto";
+//import "model.proto";
+//import "hive_config.proto";
+
+//the pipeline_config, including all sub configs
+
+// eval_config
+message AUC {
+    optional uint32 num_thresholds = 1 [default = 200];
+}
+
+message RecallAtTopK {
+    optional uint32 topk = 1 [default = 5];
+}
+
+message AvgPrecisionAtTopK {
+    optional uint32 topk = 1 [default = 5];
+}
+
+message MeanAbsoluteError {
+}
+
+message MeanSquaredError {
+}
+
+message Accuracy {
+}
+
+message Precision {
+}
+
+message Recall {
+}
+
+message Max_F1 {
+}
+
+message RootMeanSquaredError {
+}
+
+message GAUC {
+    // uid field name
+    required string uid_field = 1;
+    // reduction method for auc of different users
+    // * "mean": simple mean of different users
+    // * "mean_by_sample_num": weighted mean with sample num of different users
+    // * "mean_by_positive_num": weighted mean with positive sample num of different users
+    optional string reduction = 2 [default='mean'];
+}
+
+message SessionAUC {
+    // session id field name
+    required string session_id_field = 1;
+    // reduction: reduction method for auc of different sessions
+    // * "mean": simple mean of different sessions
+    // * "mean_by_sample_num": weighted mean with sample num of different sessions
+    // * "mean_by_positive_num": weighted mean with positive sample num of different sessions
+    optional string reduction = 2 [default='mean'];
+}
+
+message EvalMetrics {
+    oneof metric {
+        AUC auc = 1;
+        RecallAtTopK recall_at_topk = 2;
+        MeanAbsoluteError mean_absolute_error = 3;
+        MeanSquaredError mean_squared_error = 4;
+        Accuracy accuracy = 5;
+        Max_F1 max_f1 = 6;
+        RootMeanSquaredError root_mean_squared_error = 7;
+        GAUC gauc = 8;
+        SessionAUC session_auc = 9;
+        Recall recall = 10;
+        Precision precision = 11;
+        AvgPrecisionAtTopK precision_at_topk = 12;
+    }
+}
+
+// Message for configuring EasyRecModel evaluation jobs (eval.py).
+message EvalConfig {
+    // Number of examples to process of evaluation.
+    optional uint32 num_examples = 1 [default = 0];
+
+    // How often to run evaluation.
+    optional uint32 eval_interval_secs = 2 [default = 300];
+
+    // Maximum number of times to run evaluation. If set to 0, will run forever.
+    optional uint32 max_evals = 3 [default = 0];
+
+    // Whether the TensorFlow graph used for evaluation should be saved to disk.
+    optional bool save_graph = 4 [default = false];
+
+    // Type of metrics to use for evaluation.
+    // possible values:
+    repeated EvalMetrics metrics_set = 5;
+
+    // Evaluation online with batch forward data of training
+    optional bool eval_online = 6 [default = false];
+}
+
+// dnn config
+message DNN {
+    // hidden units for each layer
+    repeated uint32 hidden_units = 1;
+    // ratio of dropout
+    repeated float dropout_ratio = 2;
+    // activation function
+    optional string activation = 3 [default = 'tf.nn.relu'];
+    // use batch normalization
+    optional bool use_bn = 4 [default = true];
+}
+
+// dataset config
+// Weighted Random Sampling ItemID not in Batch
+message NegativeSampler {
+    // sample data path
+    // itemid weight attrs
+    required string input_path = 1;
+    // number of negative sample
+    required uint32 num_sample = 2;
+    // field names of attrs in train data or eval data
+    repeated string attr_fields = 3;
+    // field name of item_id in train data or eval data
+    required string item_id_field = 4;
+
+    optional string attr_delimiter = 5 [default=":"];
+
+    optional uint32 num_eval_sample = 6 [default=0];
+}
+
+message NegativeSamplerInMemory {
+    // sample data path
+    // itemid weight attrs
+    required string input_path = 1;
+    // number of negative sample
+    required uint32 num_sample = 2;
+    // field names of attrs in train data or eval data
+    repeated string attr_fields = 3;
+    // field name of item_id in train data or eval data
+    required string item_id_field = 4;
+
+    optional string attr_delimiter = 5 [default=":"];
+
+    optional uint32 num_eval_sample = 6 [default=0];
+}
+
+// Weighted Random Sampling ItemID not with Edge
+message NegativeSamplerV2 {
+    // user data path
+    // userid weight
+    required string user_input_path = 1;
+    // item data path
+    // itemid weight attrs
+    required string item_input_path = 2;
+    // positive edge path
+    // userid itemid weight
+    required string pos_edge_input_path = 3;
+    // number of negative sample
+    required uint32 num_sample = 4;
+    // field names of attrs in train data or eval data
+    repeated string attr_fields = 5;
+    // field name of item_id in train data or eval data
+    required string item_id_field = 6;
+    // field name of user_id in train data or eval data
+    required string user_id_field = 7;
+
+    optional string attr_delimiter = 8 [default=":"];
+
+    optional uint32 num_eval_sample = 9 [default=0];
+}
+
+// Weighted Random Sampling ItemID not in Batch and Sampling Hard Edge
+message HardNegativeSampler {
+    // user data path
+    // userid weight
+    required string user_input_path = 1;
+    // item data path
+    // itemid weight attrs
+    required string item_input_path = 2;
+    // hard negative edge path
+    // userid itemid weight
+    required string hard_neg_edge_input_path = 3;
+    // number of negative sample
+    required uint32 num_sample = 4;
+    // max number of hard negative sample
+    required uint32 num_hard_sample = 5;
+    // field names of attrs in train data or eval data
+    repeated string attr_fields = 6;
+    // field name of item_id in train data or eval data
+    required string item_id_field = 7;
+    // field name of user_id in train data or eval data
+    required string user_id_field = 8;
+
+    optional string attr_delimiter = 9 [default=":"];
+
+    optional uint32 num_eval_sample = 10 [default=0];
+}
+
+// Weighted Random Sampling ItemID not with Edge and Sampling Hard Edge
+message HardNegativeSamplerV2 {
+    // user data path
+    // userid weight
+    required string user_input_path = 1;
+    // item data path
+    // itemid weight attrs
+    required string item_input_path = 2;
+    // positive edge path
+    // userid itemid weight
+    required string pos_edge_input_path = 3;
+    // hard negative edge path
+    // userid itemid weight
+    required string hard_neg_edge_input_path = 4;
+    // number of negative sample
+    required uint32 num_sample = 5;
+    // max number of hard negative sample
+    required uint32 num_hard_sample = 6;
+    // field names of attrs in train data or eval data
+    repeated string attr_fields = 7;
+    // field name of item_id in train data or eval data
+    required string item_id_field = 8;
+    // field name of user_id in train data or eval data
+    required string user_id_field = 9;
+
+    optional string attr_delimiter = 10 [default=":"];
+
+    optional uint32 num_eval_sample = 11 [default=0];
+}
+
+message DatasetConfig {
+    // mini batch size to use for training and evaluation.
+    optional uint32 batch_size = 1 [default = 32];
+
+    enum FieldType {
+        INT32 = 0;
+        INT64 = 1;
+        STRING = 2;
+        FLOAT = 4;
+        DOUBLE = 5;
+        BOOL = 6;
+    }
+
+    message Field {
+        required string input_name = 1;
+        required FieldType input_type = 2 [default = STRING];
+        optional string default_val = 3;
+        optional uint32 input_dim = 4 [default=1];
+        optional uint32 input_shape = 5 [default = 1];
+    }
+
+    // set auto_expand_input_fields to true to
+    // auto_expand field[1-21] to field1, field2, ..., field21
+    optional bool auto_expand_input_fields = 3 [default = false];
+
+    // label fields, normally only one field is used.
+    // For multiple target models such as MMOE
+    // multiple label_fields will be set.
+    repeated string label_fields = 4;
+
+    // label separator
+    repeated string label_sep = 41;
+
+    // label dimensions which need to be set when there
+    // are labels have dimension > 1
+    repeated uint32 label_dim = 42;
+
+    // whether to shuffle data
+    optional bool shuffle = 5 [default = true];
+
+    // shufffle buffer for better performance, even shuffle buffer is set,
+    // it is suggested to do full data shuffle before training
+    // especially when the performance of models is not good.
+    optional int32 shuffle_buffer_size = 11 [default = 32];
+
+    // The number of times a data source is read. If set to zero, the data source
+    // will be reused indefinitely.
+    optional uint32 num_epochs = 6 [default = 0];
+
+    // Number of decoded batches to prefetch.
+    optional uint32 prefetch_size = 7 [default = 32];
+
+    // shard dataset to 1/num_workers in distribute mode
+    // this param is not used anymore
+    optional bool shard = 801 [default = false];
+
+    // shard by file, not by sample, valid only for CSVInput
+    optional bool file_shard = 802 [default = false];
+
+    enum InputType {
+        // csv format input, could be used in local or hdfs
+        // support .gz compression(but not .tar.gz files)
+        CSVInput = 10;
+        // @Depreciated
+        CSVInputV2 = 11;
+        // extended csv format, allow quote in fields
+        CSVInputEx = 12;
+        // @Depreciated, has memory leak problem
+        OdpsInput = 2;
+        // odps input, used on pai
+        OdpsInputV2 = 3;
+        DataHubInput = 15;
+        OdpsInputV3 = 9;
+        RTPInput = 4;
+        RTPInputV2 = 5;
+        OdpsRTPInput = 601;
+        OdpsRTPInputV2 = 602;
+        TFRecordInput = 7;
+        BatchTFRecordInput = 14;
+        // for the purpose to debug performance bottleneck of
+        // input pipelines
+        DummyInput = 8;
+        KafkaInput = 13;
+        HiveInput = 16;
+        CriteoInput = 1001;
+    }
+    required InputType input_type = 10;
+
+    // separator of column features, only used for CSVInput*
+    // not used in OdpsInput*
+    // binary separators are supported:
+    //   CTRL+A could be set as '\001'
+    //   CTRL+B could be set as '\002'
+    //   CTRL+C could be set as '\003'
+    // for RTPInput and OdpsRTPInput it is usually set
+    // to '\002'
+    optional string separator = 12 [default = ','];
+
+    // parallel preproces of raw data, avoid using too small
+    // or too large numbers(suggested be to small than
+    // number of the cores)
+    optional uint32 num_parallel_calls = 13 [default = 8];
+
+    // only used for OdpsInput/OdpsInputV2/OdpsRTPInput, comma separated
+    // for RTPInput, selected_cols use indices as column names
+    //  such as '1,2,4', where 1,2 are label columns, and
+    //  4 is the feature column, column 0,3 are not used,
+    optional string selected_cols = 14 [default = ''];
+
+    // selected col types, only used for OdpsInput/OdpsInputV2
+    // to avoid error setting of data types
+    optional string selected_col_types = 15 [default = ''];
+
+    // the input fields must be the same number and in the
+    // same order as data in csv files or odps tables
+    repeated Field input_fields = 16;
+
+    // for RTPInput only
+    optional string rtp_separator = 17 [default = ';'];
+
+    // ignore some data errors
+    // it is not suggested to set this parameter
+    optional bool ignore_error = 18 [default=false];
+
+    // whether to use pai global shuffle queue, only for OdpsInput,
+    // OdpsInputV2, OdpsRTPInputV2
+    optional bool pai_worker_queue = 19 [default = false];
+    optional int32 pai_worker_slice_num = 20 [default = 100];
+
+    // if true, one worker will duplicate the data of the chief node
+    // and undertake the gradient computation of the chief node
+    optional bool chief_redundant = 21 [default = false];
+
+    // input field for sample weight
+    optional string sample_weight = 22;
+    // the compression type of tfrecord
+    optional string data_compression_type = 23 [default = ''];
+
+    // n data for one feature in tfrecord
+    optional uint32 n_data_batch_tfrecord = 24;
+
+    // for csv files, may optionally with an header
+    // in that case, input_name must match header name,
+    // and the number and the order of input_fields
+    // may not be the same as that in csv files.
+    optional bool with_header = 25 [default = false];
+
+    oneof sampler {
+        NegativeSampler negative_sampler = 101;
+        NegativeSamplerV2 negative_sampler_v2 = 102;
+        HardNegativeSampler hard_negative_sampler = 103;
+        HardNegativeSamplerV2 hard_negative_sampler_v2 = 104;
+        NegativeSamplerInMemory negative_sampler_in_memory = 105;
+    }
+    optional uint32 eval_batch_size = 1001 [default = 4096];
+
+
+}
+
+//----------------------------------------------export_config----------------------------------
+
+message MultiValueFields {
+    repeated string input_name = 1;
+}
+
+// Message for configuring exporting models.
+message ExportConfig {
+    // batch size used for exported model, -1 indicates batch_size is None
+    // which is only supported by classification model right now, while
+    // other models support static batch_size
+    optional int32 batch_size = 1 [default = -1];
+
+    // type of exporter [final | latest | best | none] when train_and_evaluation
+    // final: performs a single export in the end of training
+    // latest: regularly exports the serving graph and checkpoints
+    // latest: export the best model according to best_exporter_metric
+    // none: do not perform export
+    optional string exporter_type = 2 [default = 'final'];
+
+    // the metric used to determine the best checkpoint
+    optional string best_exporter_metric = 4 [default = 'auc'];
+    // metric value the bigger the best
+    optional bool metric_bigger = 5 [default = true];
+    // enable early stop
+    optional bool enable_early_stop = 6 [default=false];
+    // custom early stop function, format:
+    //    early_stop_func(eval_results, early_stop_params)
+    // return True if should stop
+    optional string early_stop_func = 601;
+    // custom early stop parameters
+    optional string early_stop_params = 602;
+    // early stop max check steps
+    optional int32 max_check_steps = 7 [default=10000];
+
+    // each feature has a placeholder
+    optional bool multi_placeholder = 8 [default = true];
+
+    // export to keep, only for exporter_type in [best, latest]
+    optional int32 exports_to_keep = 9 [default = 1];
+
+    // multi value field list
+    optional MultiValueFields multi_value_fields = 10;
+    // is placeholder named by input
+    optional bool placeholder_named_by_input = 11 [default = false];
+
+    // filter out inputs, only keep effective ones
+    optional bool filter_inputs = 12 [default = true];
+
+    // export the original feature values as string
+    optional bool export_features = 13 [default = false];
+
+    // export the outputs required by RTP
+    optional bool export_rtp_outputs = 14 [default = false];
+}
+
+// --------------------------------------hive_config-----------------------
+message HiveConfig {
+  // hive master's ip
+  required string host = 1;
+
+  // hive port
+  required uint32 port = 2 [default = 10000];
+
+  // hive username
+  required string username = 3;
+
+  // hive database
+  required string database = 4 [default = 'default'];
+
+  required string table_name = 5;
+
+  required string hash_fields = 6;
+
+  optional uint32 limit_num = 7 [default = 0];
+
+  required uint32 fetch_size = 8 [default = 512];
+
+}
+
+
+// ---------------------------------------hyperparams_config-------------------------
+// Proto with one-of field for regularizers.
+message Regularizer {
+    oneof regularizer_oneof {
+        L1Regularizer l1_regularizer = 1;
+        L2Regularizer l2_regularizer = 2;
+        L1L2Regularizer l1_l2_regularizer = 3;
+    }
+}
+
+// Configuration proto for L1 Regularizer.
+message L1Regularizer {
+    optional float scale = 1 [default = 1.0];
+}
+
+// Configuration proto for L2 Regularizer.
+message L2Regularizer {
+    optional float scale = 1 [default = 1.0];
+}
+
+// Configuration proto for L2 Regularizer.
+message L1L2Regularizer {
+    optional float scale_l1 = 1 [default = 1.0];
+    optional float scale_l2 = 2 [default = 1.0];
+}
+
+// Proto with one-of field for initializers.
+message Initializer {
+    oneof initializer_oneof {
+        TruncatedNormalInitializer truncated_normal_initializer = 1;
+        RandomNormalInitializer random_normal_initializer = 2;
+        GlorotNormalInitializer glorot_normal_initializer = 3;
+        ConstantInitializer constant_initializer = 4;
+    }
+}
+
+// Configuration proto for truncated normal initializer. See
+// https://www.tensorflow.org/api_docs/python/tf/truncated_normal_initializer
+message TruncatedNormalInitializer {
+    optional float mean = 1 [default = 0.0];
+    optional float stddev = 2 [default = 1.0];
+}
+
+// Configuration proto for random normal initializer. See
+// https://www.tensorflow.org/api_docs/python/tf/random_normal_initializer
+message RandomNormalInitializer {
+    optional float mean = 1 [default = 0.0];
+    optional float stddev = 2 [default = 1.0];
+}
+
+message GlorotNormalInitializer {
+}
+
+message ConstantInitializer {
+  repeated float consts = 1;
+}
+
+
+// ------------------------------loss_config-------------------
+enum LossType {
+    CLASSIFICATION = 0;
+    L2_LOSS = 1;
+    SIGMOID_L2_LOSS = 2;
+    // crossentropy loss/log loss
+    CROSS_ENTROPY_LOSS = 3;
+    SOFTMAX_CROSS_ENTROPY = 4;
+    CIRCLE_LOSS = 5;
+    MULTI_SIMILARITY_LOSS = 6;
+    SOFTMAX_CROSS_ENTROPY_WITH_NEGATIVE_MINING = 7;
+    PAIR_WISE_LOSS = 8;
+    F1_REWEIGHTED_LOSS = 9;
+}
+
+message Loss {
+  required LossType loss_type = 1;
+  required float weight = 2 [default = 1.0];
+};
+
+message SoftmaxCrossEntropyWithNegativeMining {
+  required uint32 num_negative_samples = 1;
+  required float margin = 2 [default = 0];
+  required float gamma = 3 [default = 1];
+  required float coefficient_of_support_vector = 4 [default = 1];
+}
+
+message CircleLoss {
+  required float margin = 1 [default = 0.25];
+  required float gamma = 2 [default = 32];
+}
+
+message MultiSimilarityLoss {
+  required float alpha = 1 [default = 2];
+  required float beta = 2 [default = 50];
+  required float lamb = 3 [default = 1];
+  required float eps = 4 [default = 0.1];
+}
+
+message F1ReweighedLoss {
+  required float f1_beta_square = 1 [default = 1.0];
+  required float label_smoothing = 2 [default = 0];
+}
+
+// -------------------------------optimizer.config------------------
+message Optimizer {
+  oneof optimizer {
+    RMSPropOptimizer rms_prop_optimizer = 101;
+    MomentumOptimizer momentum_optimizer = 102;
+    AdamOptimizer adam_optimizer = 103;
+    MomentumWOptimizer momentumw_optimizer = 104;
+    AdamWOptimizer adamw_optimizer = 105;
+    AdamAsyncOptimizer adam_async_optimizer = 106;
+    AdagradOptimizer adagrad_optimizer = 107;
+    FtrlOptimizer ftrl_optimizer = 108;
+    AdamAsyncWOptimizer adam_asyncw_optimizer = 109;
+  }
+  optional bool use_moving_average = 5 [default = false];
+  optional float moving_average_decay = 6 [default = 0.9999];
+  optional float embedding_learning_rate_multiplier = 7;
+}
+
+// Configuration message for the RMSPropOptimizer
+// See: https://www.tensorflow.org/api_docs/python/tf/train/RMSPropOptimizer
+message RMSPropOptimizer {
+    optional LearningRate learning_rate = 1;
+    optional float momentum_optimizer_value = 2 [default = 0.9];
+    optional float decay = 3 [default = 0.9];
+    optional float epsilon = 4 [default = 1.0];
+}
+
+// Configuration message for the MomentumOptimizer
+// See: https://www.tensorflow.org/api_docs/python/tf/train/MomentumOptimizer
+message MomentumOptimizer {
+    optional LearningRate learning_rate = 1;
+    optional float momentum_optimizer_value = 2 [default = 0.9];
+}
+
+// Configuration message for the AdamOptimizer
+// See: https://www.tensorflow.org/api_docs/python/tf/train/AdamOptimizer
+message AdamOptimizer {
+    optional LearningRate learning_rate = 1;
+    optional float beta1 = 3 [default = 0.9];
+    optional float beta2 = 4 [default = 0.999];
+}
+
+message MomentumWOptimizer {
+  optional LearningRate learning_rate = 1;
+  optional float weight_decay = 2 [default = 1e-6];
+  optional float momentum_optimizer_value = 3 [default = 0.9];
+}
+
+message AdamWOptimizer {
+  optional LearningRate learning_rate = 1;
+  optional float weight_decay = 2 [default = 1e-6];
+  optional float beta1 = 3 [default = 0.9];
+  optional float beta2 = 4 [default = 0.999];
+}
+
+message AdamAsyncWOptimizer {
+  optional LearningRate learning_rate = 1;
+  optional float weight_decay = 2 [default = 1e-6];
+  optional float beta1 = 3 [default = 0.9];
+  optional float beta2 = 4 [default = 0.999];
+}
+
+// Configuration message for the AdagradOptimizer
+// See: https://www.tensorflow.org/api_docs/python/tf/train/AdagradOptimizer
+message AdagradOptimizer {
+    optional LearningRate learning_rate = 1;
+}
+
+// Only available on pai-tf, which has better performance than AdamOptimizer
+message AdamAsyncOptimizer {
+  optional LearningRate learning_rate = 1;
+  optional float beta1 = 3 [default = 0.9];
+  optional float beta2 = 4 [default = 0.999];
+}
+
+message FtrlOptimizer {
+  // optional float learning_rate = 1 [default=1e-4];
+  optional LearningRate learning_rate = 1;
+  optional float learning_rate_power = 2 [default=-0.5];
+  optional float initial_accumulator_value = 3 [default=0.1];
+  optional float l1_reg = 4 [default=0.0];
+  optional float l2_reg = 5 [default=0.0];
+  optional float l2_shrinkage_reg = 6 [default=0.0];
+}
+
+
+// Configuration message for optimizer learning rate.
+message LearningRate {
+    oneof learning_rate {
+        ConstantLearningRate constant_learning_rate = 1;
+        ExponentialDecayLearningRate exponential_decay_learning_rate = 2;
+        ManualStepLearningRate manual_step_learning_rate = 3;
+        CosineDecayLearningRate cosine_decay_learning_rate = 4;
+        PolyDecayLearningRate poly_decay_learning_rate = 5;
+        TransformerLearningRate transformer_learning_rate = 6;
+    }
+}
+
+// Configuration message for a constant learning rate.
+message ConstantLearningRate {
+    optional float learning_rate = 1 [default = 0.002];
+}
+
+// Configuration message for an exponentially decaying learning rate.
+// See https://www.tensorflow.org/versions/master/api_docs/python/train/ \
+//     decaying_the_learning_rate#exponential_decay
+message ExponentialDecayLearningRate {
+    optional float initial_learning_rate = 1 [default = 0.002];
+    optional uint32 decay_steps = 2 [default = 4000000];
+    optional float decay_factor = 3 [default = 0.95];
+    optional bool staircase = 4 [default = true];
+    optional float burnin_learning_rate = 5 [default = 0.0];
+    optional uint32 burnin_steps = 6 [default = 0];
+    optional float min_learning_rate = 7 [default = 0.0];
+}
+
+// Configuration message for a manually defined learning rate schedule.
+message ManualStepLearningRate {
+    optional float initial_learning_rate = 1 [default = 0.002];
+    message LearningRateSchedule {
+        optional uint32 step = 1;
+        optional float learning_rate = 2 [default = 0.002];
+    }
+    repeated LearningRateSchedule schedule = 2;
+
+    // Whether to linearly interpolate learning rates for steps in
+    // [0, schedule[0].step].
+    optional bool warmup = 3 [default = false];
+}
+
+// Configuration message for a cosine decaying learning rate as defined in
+// utils/learning_schedules.py
+message CosineDecayLearningRate {
+    optional float learning_rate_base = 1 [default = 0.002];
+    optional uint32 total_steps = 2 [default = 4000000];
+    optional float warmup_learning_rate = 3 [default = 0.0002];
+    optional uint32 warmup_steps = 4 [default = 10000];
+    optional uint32 hold_base_rate_steps = 5 [default = 0];
+}
+
+// Configuration message for a poly decaying learning rate.
+// See https://www.tensorflow.org/api_docs/python/tf/train/polynomial_decay.
+message PolyDecayLearningRate {
+    required float learning_rate_base = 1;
+    required int64 total_steps = 2;
+    required float power = 3;
+    optional float end_learning_rate = 4 [default = 0];
+}
+
+message TransformerLearningRate {
+    required float learning_rate_base = 1;
+    required int32 hidden_size = 2;
+    required int32 warmup_steps = 3;
+    optional float step_scaling_rate = 4 [default = 1.0];
+}
+
+// ------------------------------------------------train.config------------------------
+enum DistributionStrategy {
+    // use old SyncReplicasOptimizer for ParameterServer training
+    NoStrategy = 0;
+    // PSStrategy with multiple gpus on one node could not work
+    // on pai-tf, could only work on TF >=1.15
+    PSStrategy = 1;
+    // could only work on PaiTF or TF >=1.15
+    // single worker multiple gpu mode
+    MirroredStrategy = 2;
+    // Depreciated
+    CollectiveAllReduceStrategy = 3;
+    // currently not working good
+    ExascaleStrategy = 4;
+    // multi worker multi gpu mode
+    // see tf.distribute.experimental.MultiWorkerMirroredStrategy
+    MultiWorkerMirroredStrategy = 5;
+}
+
+// Next id: 25
+message TrainConfig {
+    /* optimizer options */
+    repeated Optimizer optimizer_config = 1;
+
+    // If greater than 0, clips gradients by this value.
+    optional float gradient_clipping_by_norm = 2 [default = 0.0];
+
+    // Number of steps to train the models: if 0, will train the model
+    // indefinitely.
+    optional uint32 num_steps = 5 [default = 0];
+
+    /* options related checkpoint save and restore
+       NOTE: there are some options which are set in tf.estimator.RunConfig */
+    // Checkpoint to restore variables from.
+    optional string fine_tune_checkpoint = 6 [default = ""];
+
+    optional string fine_tune_ckpt_var_map = 8 [default = ""];
+
+    /* The following fields are for distributed training */
+    // Whether to synchronize replicas during training.
+    // In case so, build a SyncReplicateOptimizer
+    optional bool sync_replicas = 9 [default = true];
+
+    // only take effect on pai-tf when sync_replicas is set,
+    // options are:
+    //     raw, hash, multi_map, list, parallel
+    // in general, multi_map runs faster than other options.
+    optional string sparse_accumulator_type = 901 [default='multi_map'];
+
+    // Number of training steps between replica startup.
+    // This flag must be set to 0 if sync_replicas is set to true.
+    optional float startup_delay_steps = 10 [default = 15];
+
+    // Step interval for saving checkpoint
+    optional uint32 save_checkpoints_steps = 141 [default = 1000];
+
+    // Seconds interval for saving checkpoint
+    optional uint32 save_checkpoints_secs = 142;
+
+    // Max checkpoints to keep
+    optional uint32 keep_checkpoint_max = 143 [default = 10];
+
+    // Save summaries every this many steps.
+    optional uint32 save_summary_steps = 16 [default = 1000];
+
+    // The frequency global step/sec and the loss will be logged during training.
+    optional uint32 log_step_count_steps = 17 [default = 10];
+
+    // profiling or not
+    optional bool is_profiling = 18 [default = false];
+
+    // if variable shape is incompatible, clip or pad variables in checkpoint
+    optional bool force_restore_shape_compatible = 19 [default = false];
+
+    // DistributionStrategy, available values are 'mirrored' and 'collective' and 'ess'
+    // - mirrored: MirroredStrategy, single machine and multiple devices;
+    // - collective: CollectiveAllReduceStrategy, multiple machines and multiple devices.
+    optional DistributionStrategy train_distribute = 20 [default = NoStrategy];
+
+    // Number of gpus per machine
+    optional int32 num_gpus_per_worker = 21 [default = 1];
+
+    // summary model variables or not
+    optional bool summary_model_vars = 23 [default = false];
+
+    // distribute training protocol [grpc++ | star_server]
+    // grpc++: https://help.aliyun.com/document_detail/173157.html?spm=5176.10695662.1996646101.searchclickresult.3ebf450evuaPT3
+    // star_server: https://help.aliyun.com/document_detail/173154.html?spm=a2c4g.11186623.6.627.39ad7e3342KOX4
+    optional string protocol = 25;
+
+    // inter_op_parallelism_threads
+    optional int32 inter_op_parallelism_threads = 26 [default = 0];
+
+    // intra_op_parallelism_threads
+    optional int32 intra_op_parallelism_threads = 27 [default = 0];
+
+    // tensor fusion on PAI-TF
+    optional bool tensor_fuse = 28 [default = false];
+
+    // write graph into graph.pbtxt and summary or not
+    optional bool write_graph = 29 [default = true];
+
+    // match variable patterns to freeze
+    repeated string freeze_gradient = 30;
+}
+
+// ---------------------------------feature.config-----------------------
+enum WideOrDeep {
+    DEEP = 0;
+    WIDE = 1;
+    WIDE_AND_DEEP = 2;
+}
+
+message AttentionCombiner {
+}
+
+message MultiHeadAttentionCombiner {
+}
+
+message TextCnnCombiner {
+    repeated uint32 filter_sizes = 1;
+    repeated uint32 num_filters = 2;
+}
+
+message SequenceCombiner {
+    oneof combiner {
+        AttentionCombiner attention = 1;
+        MultiHeadAttentionCombiner multi_head_attention = 2;
+        TextCnnCombiner text_cnn = 3;
+    }
+}
+
+message FeatureConfig {
+    enum FeatureType {
+        SparseFeat = 0;
+        VarLenFeat = 1;
+        DenseFeat = 2;
+        BucketFeat = 3;
+    }
+
+    enum FieldType {
+        INT32 = 0;
+        INT64 = 1;
+        STRING = 2;
+        FLOAT = 4;
+        DOUBLE = 5;
+        BOOL = 6;
+    }
+
+    optional string feature_name = 1;
+
+    // input field names: must be included in DatasetConfig.input_fields
+    repeated string input_names = 2;
+    required FeatureType feature_type = 3 [default = SparseFeat];
+    optional string embedding_name = 4 [default = ''];
+    optional uint32 embedding_dim = 5 [default = 0];
+
+    optional uint64 hash_bucket_size = 6 [default = 0];
+    // for categorical_column_with_identity
+    optional uint64 num_buckets = 7 [default = 0];
+
+    // only for raw features
+    repeated double boundaries = 8;
+
+    // separator with in features
+    optional string separator = 9 [default = '|'];
+
+    // delimeter to separator key from value
+    optional string kv_separator = 10;
+
+    // delimeter to separate sequence multi-values
+    optional string seq_multi_sep = 101;
+
+    optional string vocab_file = 11;
+    repeated string vocab_list = 12;
+
+    // many other field share this config
+    repeated string shared_names = 16;
+
+    // lookup max select element number, default 10
+    optional int32 lookup_max_sel_elem_num = 17 [default = 10];
+
+    // max_partitions
+    optional int32 max_partitions = 18 [default = 1];
+
+    // combiner
+    optional string combiner = 19 [default = 'mean'];
+
+    // embedding initializer
+    optional Initializer initializer = 20;
+
+    // number of digits kept after dot in format float/double to string
+    // scientific format is not used.
+    // in default it is not allowed to convert float/double to string
+    optional int32 precision = 21 [default = -1];
+
+    // normalize raw feature to [0-1]
+    optional double min_val = 22 [default=0.0];
+    optional double max_val = 23 [default=0.0];
+
+    // raw feature of multiple dimensions
+    optional uint32 raw_input_dim = 24 [default=1];
+
+    // sequence feature combiner
+    optional SequenceCombiner sequence_combiner = 25;
+
+    // sub feature type for sequence feature
+    optional FeatureType sub_feature_type = 26 [default = SparseFeat];
+
+    // sequence length
+    optional uint32 sequence_length = 27 [default = 1];
+
+    // for expr feature
+    optional string expression = 30;
+
+    // use embedding variables
+    optional bool use_embedding_variable = 31 [default=false];
+
+    // sub_field_type
+    optional FieldType sub_field_type = 32 [default=STRING];
+
+    // weight_name
+    optional string weight_name = 33;
+}
+
+message FeatureConfigV2 {
+    repeated FeatureConfig features = 1 ;
+}
+
+message FeatureGroupConfig {
+    optional string group_name = 1;
+    repeated string feature_names = 2;
+
+    optional WideOrDeep wide_deep = 3 [default = DEEP];
+    repeated SeqAttGroupConfig sequence_features = 4;
+}
+
+message SeqAttMap {
+    repeated string key = 1;
+    repeated string hist_seq = 2;
+}
+
+message SeqAttGroupConfig {
+    optional string group_name = 1;
+    repeated SeqAttMap seq_att_map = 2;
+    optional bool tf_summary = 3 [default = false];
+    optional DNN seq_dnn = 4;
+    optional bool allow_key_search = 5 [default = false];
+}
+
+// -------------------------------------deepfm---------------------
+message DeepFM {
+    required DNN dnn = 1;
+    optional DNN final_dnn = 2;
+    optional uint32 wide_output_dim = 3 [default = 1];
+    // deprecated
+    optional float wide_regularization = 4 [default = 1e-4];
+    // deprecated
+    optional float dense_regularization = 5 [default = 1e-4];
+    optional float l2_regularization = 6 [default = 1e-4];
+}
+
+// ---------------------------------------model.config----------------------
+// for input performance test
+message DummyModel {
+
+}
+
+// for knowledge distillation
+message KD {
+  optional string loss_name = 10;
+  required string pred_name = 11;
+  // default to be logits
+  optional bool pred_is_logits = 12 [default=true];
+  // for CROSS_ENTROPY_LOSS, soft_label must be logits instead of probs
+  required string soft_label_name = 21;
+  // default to be logits
+  optional bool label_is_logits = 22 [default=true];
+  // currently only support CROSS_ENTROPY_LOSS and L2_LOSS
+  required LossType loss_type = 3;
+  optional float loss_weight = 4 [default=1.0];
+  // only for loss_type == CROSS_ENTROPY_LOSS
+  optional float temperature = 5 [default=1.0];
+
+}
+
+message Model {
+    required string model_class = 1;
+
+    // actually input layers, each layer produce a group of feature
+    repeated FeatureGroupConfig feature_groups = 2;
+
+    // model parameters
+    oneof model {
+        DummyModel dummy = 101;
+        DeepFM deepfm = 103;
+
+    }
+    repeated SeqAttGroupConfig seq_att_groups = 7;
+    // implemented in easy_rec/python/model/easy_rec_estimator
+    // add regularization to all variables with "embedding_weights:"
+    // in name
+    optional float embedding_regularization = 8 [default = 0.0];
+
+    optional LossType loss_type = 9 [default = CLASSIFICATION];
+
+    optional uint32 num_class = 10 [default = 1];
+
+    optional bool use_embedding_variable = 11 [default=false];
+
+    repeated KD kd = 12;
+
+    // filter variables matching any pattern in restore_filters
+    // common filters are Adam, Momentum, etc.
+    repeated string restore_filters = 13;
+
+//    optional VariationalDropoutLayer variational_dropout = 14;
+
+    repeated Loss losses = 15;
+
+    optional F1ReweighedLoss f1_reweight_loss = 16;
+}
+
+
+message RecConfig {
+  oneof train_path {
+      string train_input_path = 1;
+      HiveConfig hive_train_input = 101;
+  }
+  oneof eval_path {
+      string eval_input_path = 3;
+      HiveConfig hive_eval_input= 201;
+  }
+  required string model_dir = 5;
+
+  //train config, including optimizer, weight decay, num_steps and so on
+  optional TrainConfig train_config = 6;
+
+  optional EvalConfig eval_config = 7;
+
+  optional DatasetConfig data_config = 8;
+
+  //for compatibility
+  repeated FeatureConfig feature_configs = 9;
+  optional FeatureConfigV2 feature_config = 10;
+
+  // recommendation model config
+  required Model model_config = 14;
+
+  optional ExportConfig export_config = 15;
+
+}
+
