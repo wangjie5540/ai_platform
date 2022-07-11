@@ -5,7 +5,7 @@ import os
 
 def get_dockerfile_content(image_dir, bottom_image_name=None):
     if bottom_image_name is None:
-        bottom_image_name = "digit-force-docker.pkg.coding.net/ai-platform/base-images/miniconda3-base:latest"
+        bottom_image_name = "FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/spark-client-cdh:latest"
     return f'''FROM {bottom_image_name}
 
 ARG PROJECT_DIR=/app/digit-force-kubeflow-pipeline-component-image
@@ -22,7 +22,7 @@ COPY ./digitforce/aip/__init__.py $PROJECT_DIR/digitforce/aip/__init__.py
 COPY ./digitforce/aip/common $PROJECT_DIR/digitforce/aip/common
 COPY ./digitforce/aip/cgf $PROJECT_DIR/digitforce/aip/cgf
 
-COPY {image_dir}/*py $PROJECT_DIR/
+COPY {image_dir}  $PROJECT_DIR/forecast
 
 '''
 
@@ -65,12 +65,8 @@ def find_main_file(one_dir, result):
 
 
 def main():
-    # for _dir in ["src/recommend", "src/data_preprocess", "src/source", "src/test", "src/deeplearning"]:
-    for _dir in ["src/test"]:
-        result = []
-        find_main_file(_dir, result)
-        for _ in result:
-            generate_docker_file(_)
+    _dir = "src/forecast"
+    generate_docker_file(_dir)
 
 
 if __name__ == '__main__':
