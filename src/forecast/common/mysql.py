@@ -9,11 +9,11 @@ import os
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
 import sys
-file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))#兼顾spark-submit方式
-sys.path.append(file_path)
+# file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))#兼顾spark-submit方式
+# sys.path.append(file_path)
 from zipfile import ZipFile
 import shutil
-from common_helper.config import get_config
+from forecast.common.config import get_config
 import pymysql
 import pandas as pd
 
@@ -22,7 +22,7 @@ def connect_mysql():
     主要是一些链接mysql的信息
     :return:
     """
-    file_tmp ="/common/config/"
+    file_tmp =os.getcwd()+"/forecast/common/config/"
     environment=file_tmp+r'environment.toml'
     if os.path.exists(file_path):#如果压缩文件存在，是为了兼顾spark_submit形式
         try:

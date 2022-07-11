@@ -291,7 +291,6 @@ def out_of_stock_adjust(spark, param):
        col_out_stock_time:缺货时段
        col_partition:分区字段
     """
-    spark = param['spark']
     col_key = param['col_key']
     col_qty = param['col_qty']
     col_hour = param['col_hour']

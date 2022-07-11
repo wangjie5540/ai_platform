@@ -222,7 +222,7 @@ def big_order_filter(spark, param):
     return "SUCCESS"
 
 
-def filter_by_bound(param):
+def filter_by_bound(spark, param):
     """阈值过滤
           col_key：主键
           filter_func:过滤函数
@@ -233,7 +233,6 @@ def filter_by_bound(param):
           conn:函数之间关系
           col_time:时间戳字段
        """
-    spark = param['spark']
     col_key = param['col_key']
     w = param['w']
     sdate = param['sdate']
@@ -247,7 +246,7 @@ def filter_by_bound(param):
     sparkdf = read_table(spark, input_table)
     sparkdf = sales_filter_by_bound(sparkdf, col_key, w, sdate, edate, col_time, col_qty, filter_func, conn)
     save_table(sparkdf, output_table)
-    return sparkdf
+    return 'SUCCESS'
 
 
 def filter_by_label(param):

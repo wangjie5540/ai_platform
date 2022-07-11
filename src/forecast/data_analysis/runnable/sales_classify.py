@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
-# @Time : 2022/05/26
+# @Time : 2022/07/05
 # @Author : Arvin
+# -*- coding:utf-8  -*-
 """
-小时级缺货还原
+Copyright (c) 2021-2022 北京数势云创科技有限公司 <http://www.digitforce.com>
+All rights reserved. Unauthorized reproduction and use are strictly prohibited
+include:
+大单过滤
 """
-from forecast.data_process.sp.sp_data_adjust import out_of_stock_adjust
+import os
+from forecast.data_analysis.sp.sales_classify_sp import sales_classify
 
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
@@ -13,28 +18,21 @@ except:
     pass
 import argparse
 import traceback
-from common.log import get_logger
-from common.toml_helper import TomlOperation
+from forecast.common.log import get_logger
+from forecast.common.toml_helper import TomlOperation
 
 
 def load_params():
     """运行run方法时"""
     param_cur = {
         'mode_type': 'sp',
-        'sdate': '20220101',
-        'edate': '20220501',
-        'col_hour': 'pay_hour',
-        'col_category': 'category4_code',
-        'col_out_stock_time': 'out_stock_time ',
-        'col_partition': 'dt',
-        'w': 7,
-        'input_table': '',
-        'output_table': ''
+        'sdate': '20210101',
+        'edate': '20220101'
     }
-    f = TomlOperation("param.toml")
+    f = TomlOperation(os.getcwd()+"/forecast/data_analysis/config/param.toml")
     params_all = f.read_file()
     # 获取项目1配置参数
-    params = params_all['filter_p1']
+    params = params_all['params']
     params.update(param_cur)
     return params
 
@@ -45,10 +43,10 @@ def parse_arguments():
     :return:
     """
     params = load_params()
-    parser = argparse.ArgumentParser(description='big order filter')
+    parser = argparse.ArgumentParser(description='sales classify')
     parser.add_argument('--param', default=params, help='arguments')
-    parser.add_argument('--spark', default=None, help='spark')
-    args = parser.parse_args()
+    parser.add_argument('--spark', default=spark, help='spark')
+    args = parser.parse_args(args=[])
     return args
 
 
@@ -62,7 +60,7 @@ def run():
     args = parse_arguments()
     param = args.param
     spark = args.spark
-
+    print("args", args)
     logger_info.info(str(param))
     if 'mode_type' in param.keys():
         run_type = param['mode_type']
@@ -71,7 +69,7 @@ def run():
     try:
         if run_type == 'sp':  # spark版本
             logger_info.info("RUNNING···")
-            out_of_stock_adjust(spark, param)
+            sales_classify(spark, param)
         else:
             # pandas版本
             pass

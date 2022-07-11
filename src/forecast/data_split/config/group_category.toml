@@ -1,4 +1,0 @@
-[lightgbm]
-same_amount={'amount':100,'partition_col':[]}
-bound={'storage_life':[10,30,50],'sale_days':[40,90,10]}
-label=['shop_id','sale_classify']
