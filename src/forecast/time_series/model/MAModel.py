@@ -8,12 +8,12 @@ include:
 from statsmodels.tsa.arima.model import ARIMA
 
 class MAModel():
-    def __init__(self,data,param,param_fit,q):
+    def __init__(self,data,param,param_fit):
         self.data = data
         self.param = param
         self.param_fit = param_fit
         self.p = 0 #设置为0，区分与arima ar模型
-        self.q = q #ma模型参数
+        self.q = 1 #ma模型参数
 
         param = {
             "exog": None,

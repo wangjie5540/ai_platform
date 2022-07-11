@@ -9,14 +9,14 @@ include:
 from statsmodels.tsa.ar_model import AutoReg
 
 class ARModel():
-    def __init__(self,data,lags,param,param_fit):
+    def __init__(self,data,param,param_fit):
         self.data = data
-        self.lags = lags
         self.param = param
         self.param_fit = param_fit
 
         param={
             "trend": 'c',
+            'lags':None,
             "seasonal": False,
             "exog": None,
             "hold_back": None,
@@ -27,7 +27,7 @@ class ARModel():
         }
         param.update(self.param)
 
-        self.model = AutoReg(self.data,self.lags,**param)
+        self.model = AutoReg(self.data,**param)
 
 
     def fit(self):

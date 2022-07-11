@@ -3,41 +3,39 @@
 Copyright (c) 2021-2022 北京数势云创科技有限公司 <http://www.digitforce.com>
 All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
-    SimpleExpSmoothing
+    STLforecast
 """
 
-from statsmodels.tsa.ar_model import AutoReg
+from statsmodels.tsa.api import STLForecast
 
-class ARXModel():
+class STLFModel():
     def __init__(self,data,param,param_fit):
         self.data = data
-        # self.lags = lags
         self.param = param
         self.param_fit = param_fit
-        self.exog_data = data #区分与AR模型
 
-
-        param={
-            "trend": 'c',
-            "lags":None,
-            "seasonal": False,
-            "exog": self.exog_data,
-            "hold_back": None,
+        param = {
+            "model":"ARIMA",
             "period": None,
-            "missing":'none',
-            "deterministic": None,
-            "old_names": False
+            "seasonal": 7,
+            "trend": None,
+            "low_pass": None,
+            "seasonal_deg": 1,
+            "trend_deg": 1,
+            "low_pass_deg": 1,
+            "robust": False,
+            "seasonal_jump": 1,
+            "trend_jump": 1,
+            "low_pass_jump": 1
         }
         param.update(self.param)
 
-        self.model = AutoReg(self.data,**param)
-
+        self.model = STLForecast(self.data,**param)
 
     def fit(self):
-        param_fit = {
-            "cov_type": 'nonrobust',
-            "cov_kwds": None,
-            "use_t": False
+        param_fit={
+            "inner_iter": None,
+            "outer_iter": None
         }
         param_fit.update(self.param_fit)
 
@@ -48,9 +46,3 @@ class ARXModel():
     def forecast(self,predict_len):
         pred = self.model.forecast(predict_len)
         return pred
-
-
-
-
-
-

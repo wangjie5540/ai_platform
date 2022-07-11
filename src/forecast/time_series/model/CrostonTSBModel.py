@@ -23,7 +23,8 @@ class CrostonTSBModel():
             "a":None,
             "p":None,
             "f":None,
-            "cols":None
+            "cols":None,
+            "time_type":'day'
         }
         param.update(self.param)
 
@@ -48,12 +49,14 @@ class CrostonTSBModel():
             self.param["f"][t+1] = self.param["p"][t+1]*self.param["a"][t+1]
 
     def forecast(self,predict_period):
+        time_type_with_add_day={"day":1,"week":7,"month":30,"season":90,"year":365}
         self.param["a"][self.param["cols"]+1:self.param["cols"]+self.param["extra_periods"]] = self.param["a"][self.param["cols"]]
         self.param["p"][self.param["cols"]+1:self.param["cols"]+self.param["extra_periods"]] = self.param["p"][self.param["cols"]]
         self.param["f"][self.param["cols"]+1:self.param["cols"]+self.param["extra_periods"]] = self.param["f"][self.param["cols"]]
         self.param["f"] = self.param["f"][-7:]
         self.param["f"] = pd.DataFrame(self.param["f"].reshape(7,1),columns=['forecast'])
-        dt = pd.DataFrame(pd.date_range(start=self.param["curDate"]+datetime.timedelta(days=1),periods=predict_period),columns=["dt"])
+        add_days = time_type_with_add_day[self.param["time_type"]]
+        dt = pd.DataFrame(pd.date_range(start=datetime.datetime.strptime(self.param["curDate"],'%Y%m%d')+datetime.timedelta(days=add_days),periods=predict_period),columns=["dt"])
         df = dt.join(self.param["f"])
         return df
 

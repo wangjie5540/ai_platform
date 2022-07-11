@@ -8,7 +8,7 @@ include:
 
 from statsmodels.tsa.forecasting.theta import ThetaModel
 
-class Theta_Model():
+class ThetaModels():
     def __init__(self,data,param,param_fit):
         self.data = data
         self.param = param
@@ -36,6 +36,10 @@ class Theta_Model():
         self.model = self.model.fit(**param_fit)
 
         return self.model
+
+    def forecast(self, step, theta):
+        pred = self.model.forecast(step, theta)
+        return pred
 
 
 
