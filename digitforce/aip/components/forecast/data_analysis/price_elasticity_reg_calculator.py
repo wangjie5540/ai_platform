@@ -30,6 +30,6 @@ def price_elasticity_trans_op(sales, sep, keys, factor, y, p, output_file, metho
                  ]
     return dsl.ContainerOp(name="price_elasticity_reg",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
-                                 f"/src-forecast-data_analysis-runnable-price_elasticity" + f":{image_tag}",
+                                 f"/src-forecast-data_analysis" + f":{image_tag}",
                            command="python",
                            arguments=arguments)

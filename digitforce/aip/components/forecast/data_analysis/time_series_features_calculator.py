@@ -26,6 +26,6 @@ def time_series_features_op(sales, keys, features, ts_col, sales_col, output_fil
                  ]
     return dsl.ContainerOp(name="time_series_features",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
-                                 f"/src-forecast-data_analysis-runnable-time_series_features" + f":{image_tag}",
+                                 f"/src-forecast-data_analysis" + f":{image_tag}",
                            command="python",
                            arguments=arguments)
