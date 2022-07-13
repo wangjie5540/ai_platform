@@ -34,6 +34,6 @@ def price_elasticity_trans_op(goods_similarity, price_elasticity, pe_col, simila
                  ]
     return dsl.ContainerOp(name="price_elasticity_trans",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
-                                 f"/src-forecast-data_analysis" + f":{image_tag}",
+                                 f"/src-forecast-image" + f":{image_tag}",
                            command="python",
                            arguments=arguments)

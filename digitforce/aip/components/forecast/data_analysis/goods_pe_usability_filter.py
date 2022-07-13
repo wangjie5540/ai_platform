@@ -34,6 +34,6 @@ def goods_pe_usability_op(goods, price_elasticity, r2_col, pe_col, keys, pe_thre
                  ]
     return dsl.ContainerOp(name="goods_pe_usability",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
-                                 f"/src-forecast-data_analysis" + f":{image_tag}",
+                                 f"/src-forecast-image" + f":{image_tag}",
                            command="python",
                            arguments=arguments)

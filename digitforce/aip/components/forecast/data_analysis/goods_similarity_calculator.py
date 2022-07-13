@@ -24,6 +24,6 @@ def goods_similarity_catg_op(goods_A, goods_B, keys, catg_sv, output_file, image
                  ]
     return dsl.ContainerOp(name="goods_similarity_catg",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
-                                 f"/src-forecast-data_analysis" + f":{image_tag}",
+                                 f"/src-forecast-image" + f":{image_tag}",
                            command="python",
                            arguments=arguments)
