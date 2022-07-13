@@ -21,6 +21,8 @@ def run():
     parser.add_argument('-rc', '--r2_col', type=str, default="r2", help='input goods of fit col ')
     parser.add_argument('-pc', '--pe_col', type=str, default="pe", help='input goods price elasticity col ')
     parser.add_argument('-k', '--keys', type=ast.literal_eval, default=['shopid', 'goodsid'], help='input group keys')
+    parser.add_argument('-pt', '--pe_threshold', type=float, default=-1, help='input goods pe threshold ')
+    parser.add_argument('-rt', '--r2_threshold', type=float, default=0.5, help='input goods pe regression r2 threshold ')
 
     parser.add_argument('-ope', '--output_pe', type=str, default="pe_usable.csv", help='output pe filename')
     parser.add_argument('-ogu', '--output_goods_usable', type=str, default="pe_usable.csv", help='output pe usable '
@@ -31,7 +33,7 @@ def run():
     args = parser.parse_args()
     goods = pd.read_csv(args.goods)
     pe = pd.read_csv(args.price_elasticity)
-    pe_usable = usability.comp_category_similarity(pe, pc=args.pe_col, rc=args.r2col, pt=-1, rt=0.5)
+    pe_usable = usability.comp_category_similarity(pe, pc=args.pe_col, rc=args.r2col, pt=args.pe_threshold, rt=args.r2_threshold)
     pe_usable.to_csv(args.output_pe, index=False)
     goods_usable = goods.merge(pe_usable, on=args.keys, how='inner')
     goods_usable[goods.columns].to_csv(args.output_goods_usable, index=False)

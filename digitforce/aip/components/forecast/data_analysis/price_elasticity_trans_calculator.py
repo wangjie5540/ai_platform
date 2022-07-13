@@ -4,7 +4,7 @@ from digitforce.aip.components.op_decorator import *
 
 
 @mount_data_pv
-def price_elasticity_trans_op(goods_similarity, price_elasticity, pe_col, similarity_col, similarity_threshold, keys, sim_keys, B_sign='_B', method="trans", image_tag="latest"):
+def price_elasticity_trans_op(goods_similarity, price_elasticity, pe_col, similarity_col, similarity_threshold, keys, sim_keys, output_file, B_sign='_B', method="trans", image_tag="latest"):
     '''
     price_elasticity_trans基于商品相似度的价格弹性迁移计算
     :param goods_similarity: 商品相似度
@@ -16,10 +16,11 @@ def price_elasticity_trans_op(goods_similarity, price_elasticity, pe_col, simila
     :param sim_keys: 价格弹性计算方法
     :param B_sign: 价格弹性计算结果输出文件
     :param method: 价格弹性计算方法，迁移模型参数为trans
+    :param output_file: 价格弹性计算结果输出文件
     :param image_tag: 组件版本
     :return: op
     '''
-    arguments = ["main.py",
+    arguments = ["price_elasticity.py",
                  "--goods_similarity", goods_similarity,
                  "--price_elasticity", price_elasticity,
                  "--pe_col", pe_col,
@@ -28,9 +29,10 @@ def price_elasticity_trans_op(goods_similarity, price_elasticity, pe_col, simila
                  "--keys", keys,
                  "--sim_keys", sim_keys,
                  "--B_sign", B_sign,
+                 "--output_file", output_file,
                  "--method", method
                  ]
-    return dsl.ContainerOp(name="price_elasticity_reg",
+    return dsl.ContainerOp(name="price_elasticity_trans",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"/src-forecast-data_analysis-runnable-price_elasticity" + f":{image_tag}",
                            command="python",
