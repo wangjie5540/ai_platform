@@ -10,7 +10,7 @@ import pandas as pd
 from pyspark.sql.types import Row
 
 from forecast.common.log import get_logger
-logger_info=get_logger()#日志
+# logger_info=get_logger()#日志
 
 def dict_key_lower(param):
     """
@@ -43,10 +43,11 @@ def update_param_default(param,default_conf):
                 param[key].update(value)
             if key not in param.keys():
                 param[key]=value
-        logger_info.info('update_param_default success')
+        # logger_info.info('update_param_default success')
     except Exception as e:
         param={}
-        logger_info.info(traceback.format_exc())
+        # logger_info.info(traceback.format_exc())
+        print("===================== update_param",traceback.format_exc())
     return param
 
 def row_transform_to_dataFrame(data):

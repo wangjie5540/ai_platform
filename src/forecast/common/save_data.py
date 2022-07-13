@@ -35,13 +35,15 @@ def write_to_hive(spark,data,partition,table_name,mode_type):
     :param mode_type: 方式：overwrite、append
     :return:
     """
-    if is_exist_table(spark,table_name) != "":  # 表示表存在
-        data.write.mode(mode_type).insertInto(table_name, True)  # 表示覆盖分区
-    else:
-        if partition!=[]:
-            data.write.partitionBy(partition).mode(mode_type).saveAsTable(table_name)
+    if data is not None:
+        if is_exist_table(spark,table_name) != "":  # 表示表存在
+            data.write.mode(mode_type).insertInto(table_name, True)  # 表示覆盖分区
         else:
-            data.write.mode(mode_type).saveAsTable(table_name)
+            if partition!=[]:
+                data.write.partitionBy(partition).mode(mode_type).saveAsTable(table_name)
+            else:
+                data.write.mode(mode_type).saveAsTable(table_name)
+
 
 def write_to_csv(location,repartition,encoding,header,file_path,data,mode_type):
     """

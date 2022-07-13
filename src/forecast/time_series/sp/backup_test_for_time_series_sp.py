@@ -10,14 +10,14 @@ import os
 import sys
 import traceback
 
-file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../'))
-sys.path.append(file_path)#解决不同位置调用依赖包路径问题
-from common.date_helper import date_add_str
-from time_series.sp.predict_for_time_series_sp import method_called_predict_sp,get_default_conf
-from common.data_helper import update_param_default
-from common.spark import spark_init
-from time_series.sp.data_prepare_for_time_series import *
-from common.save_data import write_to_hive
+# file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../'))
+# sys.path.append(file_path)#解决不同位置调用依赖包路径问题
+from forecast.common.date_helper import date_add_str
+from forecast.time_series.sp.predict_for_time_series_sp import method_called_predict_sp,get_default_conf
+from forecast.common.data_helper import update_param_default
+from forecast.common.spark import spark_init
+from forecast.time_series.sp.data_prepare_for_time_series import *
+from forecast.common.save_data import write_to_hive
 
 
 def method_called_back_sp(data,key_cols,apply_model_index,param,forcast_start_date,predict_len,step_len,assist_param):

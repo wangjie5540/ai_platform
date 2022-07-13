@@ -26,8 +26,6 @@ def get_logger():
     :return: 
     """
     cf= configparser.ConfigParser()
-#     file_path=os.path.abspath(os.path.dirname(__file__))
-#     file_config='config/logging.ini'
     file_config="forecast/common/config/logging.ini"
     cf.read(file_config,encoding='utf-8-sig')
     file_path=cf['handler_fileHandler']['file_path']
