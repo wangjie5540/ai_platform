@@ -17,7 +17,6 @@ def run():
     # 解析输入参数
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--sales', type=str, default="sales.csv", help='input goods sales')
-    parser.add_argument('-gb', '--goods_B', type=str, default="goods_B_info.csv", help='input goods B info')
     parser.add_argument('-k', '--keys', type=ast.literal_eval, default=['shopid', 'goodsid'], help='input group keys')
     parser.add_argument('-f', '--features', type=ast.literal_eval, default=None, help='input time series features')
     parser.add_argument('-t', '--ts_col', type=ast.literal_eval, default=None, help='input time series columns')

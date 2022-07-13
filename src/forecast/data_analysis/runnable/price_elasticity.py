@@ -34,6 +34,7 @@ def run():
     parser.add_argument('-sk', '--sim_keys', type=ast.literal_eval, default=['goods_id'], help='input goods similar keys')
     parser.add_argument('-pc', '--pe_col', type=str, default="pe", help='input goods price elasticity col ')
     parser.add_argument('-sc', '--similarity_col', type=str, default="similarity", help='input goods similarity col ')
+    parser.add_argument('-st', '--similarity_threshold', type=float, default=0.5, help='input goods similarity threshold ')
     parser.add_argument('-rc', '--r2_col', type=str, default="r2", help='input goods of fit col ')
     args = parser.parse_args()
     m = args.method
@@ -42,7 +43,7 @@ def run():
         pe_reg = pd.read_csv(args.price_elasticity)
 
         goods_pe = pe.compute_pe_by_transfer_model(sim, pe_reg, pe_sign=args.pe_col, s=args.similarity_col,
-                                                   r=args.r2_col, st=0.5, pt=-1, rt=0.1, keys=None, sk=None, B_sign='_B')
+                                                   st=args.similarity_threshold, keys=args.keys, sk=args.sim_keys, B_sign='_B')
     else:
         sales = pd.read_csv(args.sales, args.sep)
         goods_pe = pe.compute_price_elasticity(sales, x_factor=args.factor, keys=args.keys, y=args.y, p=args.p,
