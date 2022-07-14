@@ -8,8 +8,8 @@ def chimerge_bincut_op(input_file, output_file, bins, vars, target,
     对连续值型变量进行卡方分箱，返回分箱完成后的数据
     :param input_file: 输入数据文件的位置
     :param output_file: 输出数据的位置
-    :param bins: 每个变量对应的最大分箱数量
-    :param vars: 需要分箱的变量
+    :param bins: 变量对应的最大分箱数量
+    :param vars: 需要分箱的变量名
     :param target: 目标列Y的列名
     :param image_tag:
     :return:
