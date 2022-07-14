@@ -9,7 +9,7 @@ def chimerge_bincut_op(input_file, output_file, bins, vars, target,
     :param input_file: 输入数据文件的位置
     :param output_file: 输出数据的位置
     :param bins: 变量对应的最大分箱数量
-    :param vars: 需要分箱的变量名
+    :param vars: 需要分箱的变量名列表
     :param target: 目标列Y的列名
     :param image_tag:
     :return:
