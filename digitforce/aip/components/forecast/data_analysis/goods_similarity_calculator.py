@@ -4,7 +4,7 @@ from digitforce.aip.components.op_decorator import *
 
 
 @mount_data_pv
-def goods_similarity_catg_op(goods_A, goods_B, keys, catg_sv, output_file, image_tag="latest"):
+def goods_similarity_catg_op(goods_A, goods_B, output_file, keys, catg_sv, image_tag="latest"):
     '''
     goods_similarity_catg基于商品品类计算两组商品相似度
     :param goods_A: A组商品信息

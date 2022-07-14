@@ -4,7 +4,8 @@ from digitforce.aip.components.op_decorator import *
 
 
 @mount_data_pv
-def goods_pe_usability_op(goods, price_elasticity, r2_col, pe_col, keys, pe_threshold, r2_threshold, output_pe, output_goods_usable, output_goods_unusable, image_tag="latest"):
+def goods_pe_usability_op(goods, price_elasticity, output_pe, output_goods_usable, output_goods_unusable, r2_col,
+                          pe_col, keys, pe_threshold, r2_threshold, image_tag="latest"):
     '''
     goods_pe_usability：根据给定价格弹性及拟合优度阈值，筛选可用的商品价格弹性
     :param goods: 商品信息

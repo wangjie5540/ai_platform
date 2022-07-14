@@ -4,7 +4,7 @@ from digitforce.aip.components.op_decorator import *
 
 
 @mount_data_pv
-def price_elasticity_trans_op(goods_similarity, price_elasticity, pe_col, similarity_col, similarity_threshold, keys, sim_keys, output_file, B_sign='_B', method="trans", image_tag="latest"):
+def price_elasticity_trans_op(goods_similarity, price_elasticity, output_file, pe_col, similarity_col, similarity_threshold, keys, sim_keys, B_sign='_B', method="trans", image_tag="latest"):
     '''
     price_elasticity_trans基于商品相似度的价格弹性迁移计算
     :param goods_similarity: 商品相似度

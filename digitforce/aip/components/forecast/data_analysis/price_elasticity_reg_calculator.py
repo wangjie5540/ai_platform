@@ -4,9 +4,9 @@ from digitforce.aip.components.op_decorator import *
 
 
 @mount_data_pv
-def price_elasticity_trans_op(sales, sep, keys, factor, y, p, output_file, method="log-log", image_tag="latest"):
+def price_elasticity_reg_op(sales, output_file, keys, y, p, sep=',', factor=None, method="log-log", image_tag="latest"):
     '''
-    price_elasticity_trans基于商品历史销量的价格弹性计算
+    price_elasticity_reg基于商品历史销量的价格弹性计算
     :param sales: 商品历史销量
     :param sep: csv文件数据分隔符
     :param keys: 商品区分主键
