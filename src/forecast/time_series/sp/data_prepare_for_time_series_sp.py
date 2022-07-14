@@ -120,7 +120,10 @@ def data_prepared_for_model(spark,param):
         data_feat_y = data_feat_y.filter((data_feat_y[dt] >= sdate) & (data_feat_y[dt]<= edate))
         data_result=data_feat_y.join(data_sku_grouping, on=sample_join_key, how='inner')
         logger_info.info("sample_select_sp 成功")
-
+        if param['time_type'] == 'day':
+            data_result = data_precess(data_result,predict_start)
+        else:
+            pass
         parititions = param['time_col']
         prepare_data_table = param['prepare_data_table']
         save_table(spark, data_result, prepare_data_table, partition=parititions)
