@@ -10,6 +10,7 @@ import pandas as pd
 from forecast.common.log import get_logger
 from forecast.common.date_helper import date_add_str
 from pyspark.sql.functions import max
+from forecast.common.common_helper import *
 
 # #后续优化：check对周和月的支持 PS：在param的设置
 # def data_prepare(spark,param):
@@ -88,6 +89,7 @@ def data_precess(df,predict_start):
 
 #时序模型数据准备
 def data_prepared_for_model(spark,param):
+    status = True
     logger_info = get_logger()
     table_sku_grouping = param['table_sku_group']
     ts_model_list = param['ts_model_list']
@@ -117,16 +119,20 @@ def data_prepared_for_model(spark,param):
             sdate=date_add_str(edate,-365)#默认一年
         data_feat_y = data_feat_y.filter((data_feat_y[dt] >= sdate) & (data_feat_y[dt]<= edate))
         data_result=data_feat_y.join(data_sku_grouping, on=sample_join_key, how='inner')
-
         logger_info.info("sample_select_sp 成功")
-        # data_result = data_precess(data_result,predict_start)
+
+        parititions = param['time_col']
+        prepare_data_table = param['prepare_data_table']
+        save_table(spark, data_result, prepare_data_table, paritition=parititions)
+
         logger_info.info("数据准备完成！")
     except Exception as e:
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>...data prepare",e)
-        data_result=None
+        status = False
         logger_info.info(traceback.format_exc())
-    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>data_result",data_result.show(10))
-    return data_result
+
+
+    return status
 
 
 

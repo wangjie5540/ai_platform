@@ -20,6 +20,48 @@ sys.path.append(file_path)#解决不同位置调用依赖包路径问题
 from time_series.sp.predict_for_time_series_sp import predict_sp
 from common.log import get_logger
 
+import os
+import findspark
+findspark.init()
+from pyspark.sql import SparkSession
+
+def spark_init():
+    """
+    初始化特征
+    :return:
+    """
+    os.environ["PYSPARK_DRIVER_PYTHON"]="/data/ibs/anaconda3/bin/python"
+    os.environ['PYSPARK_PYTHON']="/data/ibs/anaconda3/bin/python"
+    spark=SparkSession.builder \
+        .appName("model_test").master('yarn') \
+        .config("spark.executor.instances", "50") \
+        .config("spark.executor.memory", "4g") \
+        .config("spark.executor.cores", "4") \
+        .config("spark.driver.memory", "8g") \
+        .config("spark.driver.maxResultSize", "6g") \
+        .config("spark.default.parallelism", "600") \
+        .config("spark.network.timeout", "240s") \
+        .config("spark.sql.adaptive.enabled", "true") \
+        .config("spark.sql.adaptive.join.enabled", "true") \
+        .config("spark.sql.adaptive.shuffle.targetPostShuffleInputSize", "128000000") \
+        .config("spark.dynamicAllocation.enabled", "true") \
+        .config("spark.dynamicAllocation.minExecutors", "1") \
+        .config("spark.shuffle.service.enabled", "true") \
+        .config("spark.sql.sources.partitionOverwriteMode", "dynamic") \
+        .config("hive.exec.dynamici.partition", True) \
+        .config("hive.exec.dynamic.partition.mode", "nonstrict") \
+        .config("hive.exec.max.dynamic.partitions", "10000") \
+        .enableHiveSupport().getOrCreate()
+    spark.sql("set hive.exec.dynamic.partitions=true")
+    spark.sql("set hive.exec.max.dynamic.partitions=2048")
+    spark.sql("set hive.exec.dynamic.partition.mode=nonstrict")
+    spark.sql("use ai_dm_dev")
+    sc = spark.sparkContext
+    zip_path = './forecast.zip'
+    sc.addPyFile(zip_path)
+    return spark
+
+
 def time_series_predict(param,spark=None):
     """
     #时序模型预测
@@ -437,21 +479,26 @@ def param_default():
         'ts_model_list': ['holt-winter'],
         'y_type_list': ['c'],
         'mode_type': 'sp',
-        'forcast_start_date': '20211009',
+        'forcast_start_date': '20211212',
         'predict_len': 14,
         'key_list': ['shop_id', 'goods_id', 'y_type', 'apply_model'],
-        'apply_model_index': 3,
-        'step_len': 5,
+        'apply_model_index': 2,
+        'step_len': 1,
         'mode_type': 'sp',
         'purpose': 'predict',
         'time_col': 'dt',
+        'col_qty': 'th_y',
         'time_type': 'day',
         'cols_feat_y': ['shop_id', 'goods_id', 'th_y', 'dt'],
         'sdate': '20210101',
         'edate': '20211211',
+        'apply_model': 'apply_model',
+        'partitions': ['shop_id', 'apply_model'],
         'key_cols': ['shop_id', 'goods_id', 'apply_model'],
         'feat_y': 'ai_dm_dev.no_sales_adjust_0620',
         'table_sku_group': 'ai_dm_dev.model_selection_grouping_table_0620',
+        'output_table': 'ai_dm_dev.model_predict_result',
+        'prepare_data_table':'ai_dm_dev.prepare_data_result',
         'method_param_all': {
             'holt-winter': {
                 'param': {
@@ -466,7 +513,7 @@ def param_default():
                     "use_boxcox": False,
                     "bounds": None,
                     "freq": None,
-                    "missing": "none",
+                    "missing": "missing",
                     "dates": None
                 }
             }
