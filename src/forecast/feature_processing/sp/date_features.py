@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Time : 2021/12/25
 # @Author : Arvin
-import chinese_calendar as calendar
-import pandas as pd
-import numpy as np
 
-from forecast.common.common_helper import save_table
+from forecast.common.common_helper import *
 
 
 def get_holiday(dt):
@@ -132,6 +129,8 @@ def build_date_features(sdate, edate, col_dt='dt'):
     feats['year'] = feats.apply(lambda x: x.year - 1 if (x.week >= 50) & (x['dt'].month < 2) else x.year, axis=1)
     feats['year'] = feats.apply(lambda x: x.year + 1 if (x.week < 2) & (x['dt'].month > 11) else x.year, axis=1)
     feats['week_day'] = feats.dt.dt.weekday
+    feats['month_dt'] = feats.dt.apply(lambda x: (datetime.date(year=x.year, month=x.month, day=1)).strftime("%Y%m%d"))
+    feats['week_dt'] = feats.dt.apply(lambda x: (x - datetime.timedelta(days=x.weekday())).strftime("%Y%m%d"))
     feats['is_weekend'] = feats.week_day > 4
     feats['is_holiday'] = feats.dt.apply(lambda x: get_holiday(x)[0])
     feats['is_workday'] = ~feats.is_holiday
@@ -155,7 +154,7 @@ def build_date_features(sdate, edate, col_dt='dt'):
 
 def bulid_date_daily_feature(spark, param):
     """日粒度日期特征"""
- 
+
     col_list = param['col_list']
     ctype = param['ctype']
     sdate = param['sdate']
@@ -187,7 +186,7 @@ def bulid_date_daily_feature(spark, param):
         df_values = df.values.tolist()
         df_columns = df.columns.tolist()
         sparkdf = spark.createDataFrame(df_values, df_columns)
-        save_table(spark, sparkdf, output_table ,partition=["dt"])
+        save_table(spark, sparkdf, output_table, partition=["dt"])
         return sparkdf
     else:
         return df
@@ -195,7 +194,7 @@ def bulid_date_daily_feature(spark, param):
 
 def build_date_weekly_feature(spark, param):
     """周粒度日期特征"""
- 
+
     col_key = param['col_key']
     ctype = param['ctype']
     sdate = param['sdate']
@@ -208,7 +207,33 @@ def build_date_weekly_feature(spark, param):
     for u in df.columns:
         if df[u].dtype == bool:
             df[u] = df[u].astype('int')
-    df[col_time] = df[col_time].apply(lambda x:x.strftime('%Y%m%d'))
+    df[col_time] = df[col_time].apply(lambda x: x.strftime('%Y%m%d'))
+    if ctype == 'sp':
+        df_values = df.values.tolist()
+        df_columns = df.columns.tolist()
+        sparkdf = spark.createDataFrame(df_values, df_columns)
+        save_table(spark, sparkdf, output_table, partition=["dt"])
+        return sparkdf
+    else:
+        return df
+
+
+def build_date_monthly_feature(spark, param):
+    """周粒度日期特征"""
+
+    col_key = param['col_key']
+    ctype = param['ctype']
+    sdate = param['sdate']
+    edate = param['edate']
+    col_time = param['col_time']
+    agg_func = eval(param['date_feature_monthly_func'])
+    output_table = param['date_features_monthly_table']
+    df = build_date_features(sdate, edate, col_time)
+    df = df.groupby(col_key).agg(agg_func).reset_index()
+    for u in df.columns:
+        if df[u].dtype == bool:
+            df[u] = df[u].astype('int')
+    df[col_time] = df[col_time].apply(lambda x: x.strftime('%Y%m%d'))
     if ctype == 'sp':
         df_values = df.values.tolist()
         df_columns = df.columns.tolist()

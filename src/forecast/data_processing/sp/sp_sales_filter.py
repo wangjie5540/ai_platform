@@ -3,7 +3,7 @@
 # @Author : Arvin
 # 基于spark版
 from forecast.common.common_helper import *
-
+from forecast.data_processing.sp.sp_data_adjust import adjust_by_bound
 
 oldtime = datetime.datetime.now()
 # sparkdf = spark.sql("""
@@ -92,6 +92,29 @@ def boxcox_tranform(sparkdf, col_qty, col_boxcox, sdate, edate):
     """coxbox变换"""
     sparkdf = bound_boxcox(sparkdf, col_qty, col_boxcox)
     return sparkdf.filter(date_filter_condition(sdate, edate))
+
+
+def sales_filter_by_boxcox(spark, param):
+    col_key = param['col_key']
+    col_qty = param['col_qty']
+    w_boxcox = param['w_boxcox']
+    w_replace = param['w_replace']
+    sdate = param['sdate']
+    edate = param['edate']
+    func_dict_boxcox =  param['func_dict_boxcox']
+    replace_func_boxcox = param['replace_func_boxcox']
+    conn = param['conn']
+    col_time = param['col_time']
+    input_table = param['no_sales_adjust_table']
+    output_table = param['sales_boxcox_table']
+    col_boxcox = param['col_boxcox']
+    sparkdf = read_table(spark, input_table, sdt='N')
+    sparkdf = boxcox_tranform(sparkdf, col_qty, col_boxcox, sdate, edate)
+    sparkdf = adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, func_dict_boxcox, sdate, edate, replace_func_boxcox,
+                          w_boxcox, w_replace, conn, col_time)
+    save_table(sparkdf, output_table)
+    return 'SUCCESS'
+
 
 
 def sales_filter_by_bound(sparkdf, key, w, sdate, edate, col_qty, func_dict, conn='and', col_time='sdt'):

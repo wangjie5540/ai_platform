@@ -18,5 +18,11 @@ qty_aggregation_weekly_table = "ai_dm_dev.qty_aggregation_weekly_0620"
 fill_zero_table = "ai_dm_dev.fill_zero_0620"
 no_sales_adjust_table = "ai_dm_dev.no_sales_adjust_0620"
 sales_features_daily_table = "ai_dm_dev.sales_features_0620"
+sales_boxcox_table = "ai_dm_dev.sales_boxcox_0620"
 shop_list = ['1004','1228']
 col_partitions = ['shop_id','dt']
+func_dict_boxcox = "{'bound_sigma': (3, -3)}"
+replace_func_boxcox = "{'bound_mean': (1, 1)}"
+w_boxcox = 90
+w_replace = 14
+

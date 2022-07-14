@@ -3,7 +3,7 @@
 # @Author : Arvin
 
 from forecast.feature_processing.sp.weather_features import build_weather_daily_feature
-
+import os
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
     findspark.init()

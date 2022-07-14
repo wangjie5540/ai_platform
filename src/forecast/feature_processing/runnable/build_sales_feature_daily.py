@@ -10,7 +10,7 @@ include:
 """
 
 from forecast.feature_processing.sp.sale_features import build_sales_features_daily
-
+import os
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
     findspark.init()

@@ -3,7 +3,7 @@
 # @Author : Arvin
 
 from forecast.feature_processing.sp.weather_features import build_weather_weekly_feature
-
+import os
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
     findspark.init()
@@ -22,7 +22,7 @@ def load_params():
         'sdate': '20210101',
         'edate': '20220101',
         'weather_list':  ['aqi', 'hightemperature', 'hightemperature'],
-        'col_key':['province', 'city', 'district', 'week_dt','week'],
+        'col_key': ['province', 'city', 'district', 'week_dt', 'week'],
         'join_key':['province', 'city', 'district']
     }
 

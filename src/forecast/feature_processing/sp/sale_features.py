@@ -174,6 +174,15 @@ def col_agg_weeks(sparkdf, col_key, col_qty, col_time, param):
     return sparkdf
 
 
+def col_agg_last_month(sparkdf, col_key, col_qty, col_time, param):
+    """过去第N月col_qty的agg"""
+    for w in param:
+        window = Window.orderBy(col_time).partitionBy(col_key)
+        #lead是第二行平移到第一行，lag是第一行平移到第二行，结合实际需求进行选择。
+        sparkdf = sparkdf.withColumn('last_{0}_{1}m'.format(col_qty, w), lag(psf.col(col_qty), w).over(window))
+    return sparkdf
+
+
 def build_sales_features_daily(spark, param):
     """
     dict_agg_func:字段聚合字典
@@ -210,6 +219,23 @@ def build_sales_features_weekly(spark, param):
         sparkdf = globals()[dict_key](sparkdf, col_key, col_qty, col_time, dict_agg_func[dict_key])
     sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))    
     save_table(spark,sparkdf, output_table)
+    return 'SUCCESS'
+
+
+def build_sales_features_monthly(spark, param):
+    col_key = param['col_key']
+    sdate = param['sdate']
+    edate = param['edate']
+    col_time = param['col_time']
+    col_qty = param['col_qty']
+    dict_agg_func = eval(param['sales_feature_monthly_func'])
+    input_table = param['qty_aggregation_monthly_table']
+    output_table = param['sales_features_monthly_table']
+    sparkdf = read_table(spark, input_table)
+    for dict_key in dict_agg_func:
+        sparkdf = globals()[dict_key](sparkdf, col_key, col_qty, col_time, dict_agg_func[dict_key])
+    sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))
+    save_table(spark, sparkdf, output_table)
     return 'SUCCESS'
 
 
