@@ -123,7 +123,7 @@ def data_prepared_for_model(spark,param):
 
         parititions = param['time_col']
         prepare_data_table = param['prepare_data_table']
-        save_table(spark, data_result, prepare_data_table, paritition=parititions)
+        save_table(spark, data_result, prepare_data_table, partition=parititions)
 
         logger_info.info("数据准备完成！")
     except Exception as e:

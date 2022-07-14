@@ -117,7 +117,7 @@ def model_predict(key_value,data,method,key_cols,param,forcast_start_date,predic
 
     result_df=pd.DataFrame()
     if model_include==True:
-        preds=ts_model.forcast(predict_len)
+        preds=ts_model.forecast(predict_len)
         dict_month = {'datetime': preds.index, 'y': preds.values}
         df_month = pd.DataFrame(dict_month)
         if str(method).lower() == 'croston' or str(method).lower() == 'crostontsb':
@@ -203,8 +203,7 @@ def method_called_predict_sp(spark,param):
     forecast_start_date = param['forecast_start_date']
     predict_len = param['predict_len']
     col_qty = param['col_qty']
-    output_table = param['output_table']
-    partitions = param['partitions']
+
     prepare_data_table = param['prepare_data_table']
     print(key_cols, apply_model_index, forecast_start_date, predict_len, col_qty)
     if predict_len<=0:
@@ -215,8 +214,8 @@ def method_called_predict_sp(spark,param):
     spark_df = spark.sql(sqls)
     data_result=spark_df.rdd.map(lambda g:(key_process(g,key_cols),g)).groupByKey(). \
         flatMap(lambda x:model_predict(x[0],x[1],param,key_cols,param,forecast_start_date, predict_len,'sp')).filter(lambda h: h is not None).toDF()
-    save_table(spark,data_result,output_table,partition=partitions)
-    return "SUCCESS"
+    # save_table(spark,data_result,output_table,partition=partitions)
+    return data_result
 
 def date_add_str(date_str,step_len,time_type='day'):
     """
@@ -252,7 +251,11 @@ def predict_sp(param,spark):
     prepare_success = data_prepared_for_model(spark,param)
     status = False
     if prepare_success:
-        status = method_called_predict_sp(spark,param)
+        output_table = param['output_table']
+        partitions = param['partitions']
+        preds = method_called_predict_sp(spark,param)
+        save_table(spark,preds,output_table,partition=partitions)
+        status = "SUCCESS"
 
     return status
 
