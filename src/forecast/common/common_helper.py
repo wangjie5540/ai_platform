@@ -6,7 +6,7 @@ import numpy as np
 from pyspark.sql import Row
 import pyspark.sql.functions as psf
 from pyspark.sql import Window
-from pyspark.sql.functions import udf, pandas_udf, PandasUDFType, lit, concat_ws
+from pyspark.sql.functions import udf, pandas_udf, PandasUDFType, lit, concat_ws, lead, lag
 from scipy import stats
 from pyspark.ml.feature import Bucketizer
 from pyspark.sql.types import FloatType, IntegerType, StringType, DoubleType, StructType, StructField
@@ -14,7 +14,7 @@ from forecast.common.mysql import get_data_from_mysql
 from functools import reduce
 import portion as P
 import datetime
-
+import chinese_calendar as calendar
 
 def date_filter_condition(sdate, edate):
     """
@@ -184,7 +184,7 @@ def read_origin_stock_table(spark, table_name, sdt='Y', dt="dt", shop_list=[]):
     return sparkdf
 
     
-def read_origin_sales_table(spark, table_name, sdt='Y', dt="dt",shop_list=[]):
+def read_origin_sales_table(spark, table_name, sdt='Y', dt="dt", shop_list=[]):
     """dt:分区字段
        sdt:时间戳字段
     """
@@ -193,7 +193,7 @@ def read_origin_sales_table(spark, table_name, sdt='Y', dt="dt",shop_list=[]):
         filter_str = " and site_code in {0}".format(tuple_self(shop_list))
     sparkdf = spark.sql("""select goods_code as goods_id,order_id,quantity as qty,substring(data_date,12,2) as pay_hour,
                            sales_price,  to_unix_timestamp(dt,'yyyyMMdd') as  sdt,site_code as shop_id,dt from 
-                           {0} where 	site_code<>'site_code' {1} """.format(table_name,filter_str))
+                           {0} where 	site_code<>'site_code' {1} and quantity>0""".format(table_name, filter_str))
     if sdt == 'N':
         sparkdf = sparkdf.withColumn("sdt", psf.unix_timestamp(psf.to_timestamp(psf.col(dt), 'yyyyMMdd'),
                                                                "format='yyyy-MM-dd"))
@@ -203,7 +203,8 @@ def read_origin_sales_table(spark, table_name, sdt='Y', dt="dt",shop_list=[]):
 def read_origin_weather_table(spark,table_name,sdate,edate):
     sparkdf = spark.sql("""select *,to_unix_timestamp(recordtime,'yyyy-MM-dd') sdt,replace(recordtime,'-','') dt,
                    from_unixtime(to_unix_timestamp(date_add(recordtime,1 - case when dayofweek(recordtime) = 1 then 7 
-                   else dayofweek(recordtime) - 1 end),'yyyy-MM-dd'),'yyyyMMdd') week_dt,weekofyear(recordtime) week   from   {0} 
+                   else dayofweek(recordtime) - 1 end),'yyyy-MM-dd'),'yyyyMMdd') week_dt,weekofyear(recordtime) week,
+                   from_unixtime(to_unix_timestamp(trunc(recordtime,'MM'),'yyyy-MM-dd'),'yyyyMMdd') month_dt from   {0} 
                   """.format(table_name))
     sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))
     return sparkdf

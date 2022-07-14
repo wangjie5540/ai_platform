@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
-# @Time : 2022/05/27
+# @Time : 2022/05/28
 # @Author : Arvin
-# -*- coding:utf-8  -*-
-"""
-Copyright (c) 2021-2022 北京数势云创科技有限公司 <http://www.digitforce.com>
-All rights reserved. Unauthorized reproduction and use are strictly prohibited
-include:日期特征-天
-"""
 
-from forecast.feature_processing.sp.date_features import build_date_weekly_feature
+from forecast.feature_processing.sp.weather_features import build_weather_monthly_feature
 import os
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
@@ -27,10 +21,11 @@ def load_params():
         'mode_type': 'sp',
         'sdate': '20210101',
         'edate': '20220101',
-        'col_key': ['week_dt'],
-        'ctype': 'sp',
-        'col_time': 'dt'
+        'weather_list':  ['aqi', 'hightemperature', 'hightemperature'],
+        'col_key': ['province', 'city', 'district', 'month_dt'],
+        'join_key': ['province', 'city', 'district']
     }
+
     f = TomlOperation(os.getcwd()+"/forecast/feature_processing/config/param.toml")
     params_all = f.read_file()
     # 获取项目1配置参数
@@ -45,7 +40,7 @@ def parse_arguments():
     :return:
     """
     params = load_params()
-    parser = argparse.ArgumentParser(description='build date weekly features')
+    parser = argparse.ArgumentParser(description='bulid monthly weather features')
     parser.add_argument('--param', default=params, help='arguments')
     parser.add_argument('--spark', default=spark, help='spark')
     args = parser.parse_args(args=[])
@@ -71,7 +66,7 @@ def run():
     try:
         if run_type == 'sp':  # spark版本
             logger_info.info("RUNNING···")
-            build_date_weekly_feature(spark, param)
+            build_weather_monthly_feature(spark, param)
         else:
             # pandas版本
             pass

@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-# @Time : 2022/05/27
+# @Time : 2022/07/12
 # @Author : Arvin
 # -*- coding:utf-8  -*-
 """
 Copyright (c) 2021-2022 北京数势云创科技有限公司 <http://www.digitforce.com>
 All rights reserved. Unauthorized reproduction and use are strictly prohibited
-include:日期特征-天
+include:
+周销量特征
 """
 
-from forecast.feature_processing.sp.date_features import build_date_weekly_feature
+from forecast.feature_processing.sp.sale_features import build_sales_features_monthly
 import os
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
@@ -26,11 +27,12 @@ def load_params():
     param_cur = {
         'mode_type': 'sp',
         'sdate': '20210101',
-        'edate': '20220101',
-        'col_key': ['week_dt'],
-        'ctype': 'sp',
-        'col_time': 'dt'
+        'edate': '20210501',
+        'col_time': 'dt',
+        'col_qty': 'sum_th_y',
+
     }
+
     f = TomlOperation(os.getcwd()+"/forecast/feature_processing/config/param.toml")
     params_all = f.read_file()
     # 获取项目1配置参数
@@ -45,7 +47,7 @@ def parse_arguments():
     :return:
     """
     params = load_params()
-    parser = argparse.ArgumentParser(description='build date weekly features')
+    parser = argparse.ArgumentParser(description='big order filter')
     parser.add_argument('--param', default=params, help='arguments')
     parser.add_argument('--spark', default=spark, help='spark')
     args = parser.parse_args(args=[])
@@ -71,7 +73,7 @@ def run():
     try:
         if run_type == 'sp':  # spark版本
             logger_info.info("RUNNING···")
-            build_date_weekly_feature(spark, param)
+            build_sales_features_monthly(spark, param)
         else:
             # pandas版本
             pass
@@ -81,7 +83,6 @@ def run():
         status = "ERROR"
         logger_info.info(traceback.format_exc())
     return status
-
 
 if __name__ == "__main__":
     run()
