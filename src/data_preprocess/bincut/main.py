@@ -84,8 +84,8 @@ def data_after_chimerge_bincut(data:pd.DataFrame, var_list: List[str], target: s
     :param data: 待处理的数据集
     :param var_list: 需要卡方分箱的连续变量名称列表
     :param target: 目标列Y的名称
-    :param max_group_list: 每个变量对应的最大分箱数量列表
-    :param chi_threshold_list: 卡方阈值列表
+    :param max_group: 变量对应的最大分箱数量
+    :param chi_threshold: 卡方阈值
     :return:
     """
     bincut_dict = {}
