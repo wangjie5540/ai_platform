@@ -1,0 +1,15 @@
+# 基于miniconda生成基础镜像
+FROM centos:7
+ARG TMP_FILE=/tmp/miniconda3.sh MINICONDA_HOME=/opt/miniconda3
+ENV PATH $MINICONDA_HOME/bin:$MINICONDA_HOME/condabin:$PATH
+RUN yum install -y gcc gcc-c++ \
+    && yum install -y wget \
+    && wget -q -O $TMP_FILE --no-check-certificate https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py39_4.11.0-Linux-x86_64.sh \
+    && sh $TMP_FILE -b -p $MINICONDA_HOME \
+    && rm -rf $TMP_FILE \
+    && $MINICONDA_HOME/bin/conda init
+# 安装python依赖包
+RUN conda install --yes pyhive
+
+# 执行命令如下
+# docker build -t digit-force-docker.pkg.coding.net/ai-platform/base-images/miniconda3 -f Dockerfile-miniconda3 .

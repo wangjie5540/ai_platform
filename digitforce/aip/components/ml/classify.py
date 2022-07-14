@@ -8,7 +8,7 @@ def lr_classify_op(train_dataset_path, test_dataset_path,
                    label_col,
                    param="",
                    image_tag="latest"):
-    '''
+    """
     LR 分类模型
     输入文件格式:
         train_dataset_path 训练数据集
@@ -22,7 +22,7 @@ def lr_classify_op(train_dataset_path, test_dataset_path,
     :param label_col: 标签列
     :param image_tag: 组件版本
     :return: op
-    '''
+    """
 
     return dsl.ContainerOp(name="lr_classify",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
@@ -40,7 +40,7 @@ def lightgbm_classify_op(train_dataset_path, test_dataset_path,
                    label_col,
                    categorical_feature="",
                    image_tag="latest"):
-    '''
+    """
     LightGBM 分类模型
     输入文件格式:
         train_dataset_path 训练数据集
@@ -48,13 +48,14 @@ def lightgbm_classify_op(train_dataset_path, test_dataset_path,
     输出文件格式:
         pickle文件
 
+    :param categorical_feature: 类别特征
     :param test_dataset_path: 训练集
     :param train_dataset_path: 测试集
     :param model_save_dir: 模型文件保存路径
     :param label_col: 标签列
     :param image_tag: 组件版本
     :return: op
-    '''
+    """
 
     return dsl.ContainerOp(name="lightgbm_classify",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"

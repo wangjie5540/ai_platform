@@ -3,6 +3,7 @@
 # @Author : Arvin
 from forecast.common.common_helper import *
 
+
 def sales_aggregation_by_custom(sparkdf, other_agg_dim, col_custom):
     """自定义"""
     for x in col_custom:
@@ -10,7 +11,7 @@ def sales_aggregation_by_custom(sparkdf, other_agg_dim, col_custom):
     return sparkdf, other_agg_dim
 
 
-def sales_aggregation_by_day(sparkdf, other_agg_dim, col_time,agg_type):
+def sales_aggregation_by_day(sparkdf, other_agg_dim, col_time, agg_type):
     other_agg_dim.append(col_time)
     return sparkdf, other_agg_dim
 
@@ -22,10 +23,12 @@ def sales_aggregation_by_month(sparkdf, other_agg_dim, col_time, agg_type):
     roll_month:滚动月
     """
     if agg_type == 'solar_month':
-        sparkdf = sparkdf.withColumn("solar_month", psf.weekofyear(psf.to_date(psf.col(col_time), "yyyyMMdd")))
-        sparkdf = sparkdf.withColumn("year", psf.year(psf.to_date(psf.col(col_time), "yyyyMMdd")))
-        other_agg_dim+=['year','solar_month']
-    elif agg_type=='lunar_month':
+        func = udf(lambda x: (datetime.date(year=datetime.datetime.strptime(x, "%Y%m%d").year,
+                                            month=datetime.datetime.strptime(x, "%Y%m%d").month, day=1)).strftime(
+            "%Y%m%d"), StringType())
+        sparkdf = sparkdf.withColumn(col_time, func(col_time))
+        other_agg_dim += [col_time]
+    elif agg_type == 'lunar_month':
         pass
     else:
         """待处理"""
@@ -41,9 +44,10 @@ def sales_aggregation_by_week(sparkdf, other_agg_dim, col_time, agg_type):
     """
     if agg_type == 'solar_week':
         sparkdf = sparkdf.withColumn("solar_week", psf.weekofyear(psf.to_date(psf.col(col_time), "yyyyMMdd")))
-        func = udf(lambda x: (datetime.datetime.strptime(x, "%Y%m%d") - datetime.timedelta(days=datetime.datetime.strptime(x, "%Y%m%d").weekday())).strftime("%Y%m%d"), StringType())
-        sparkdf = sparkdf.withColumn(col_time,func(col_time))
-        other_agg_dim+=[col_time,'solar_week']
+        func = udf(lambda x: (datetime.datetime.strptime(x, "%Y%m%d") - datetime.timedelta(
+            days=datetime.datetime.strptime(x, "%Y%m%d").weekday())).strftime("%Y%m%d"), StringType())
+        sparkdf = sparkdf.withColumn(col_time, func(col_time))
+        other_agg_dim += [col_time, 'solar_week']
     elif agg_type == 'lunar_week':
         pass
     else:
@@ -91,25 +95,24 @@ def sales_aggregation(spark, param):
     output_table = param['output_table']
     shop_list = param['shop_list']
     agg_type = param['agg_type']
-    sparkdf = read_table(spark, input_table,shop_list=shop_list)
+    sparkdf = read_table(spark, input_table, shop_list=shop_list)
     sparkdf = sparkdf.filter("dt>={0} and dt<={1}".format(sdate, edate))
-#     print(sparkdf.show())
+    #     print(sparkdf.show())
     for dict_key in func_dict:
-        sparkdf, group_key = globals()[dict_key](sparkdf, other_agg_dim, func_dict[dict_key],agg_type)
-        print(group_key,col_qty,"sum_{}".format(col_qty))
-        
+        sparkdf, group_key = globals()[dict_key](sparkdf, other_agg_dim, func_dict[dict_key], agg_type)
+        print(group_key, col_qty, "sum_{}".format(col_qty))
+
         if agg_type == 'day':
             sparkdf_group = sparkdf.groupby(group_key).agg(psf.sum(col_qty).alias("sum_{}".format(col_qty)))
         else:
             print(group_key)
             func = udf(lambda x: x.strftime('%Y%m%d'), StringType())
             sparkdf_group = sparkdf.groupby(group_key).agg(psf.sum(col_qty).alias("sum_{}".format(col_qty)))
-        
-#     print(sparkdf_group.show(10))
-    sparkdf_group = sparkdf_group.filter(date_filter_condition(sdate, edate))
-    save_table(spark, sparkdf_group, output_table)    
-    return "SUCCESS"
 
+    #     print(sparkdf_group.show(10))
+    sparkdf_group = sparkdf_group.filter(date_filter_condition(sdate, edate))
+    save_table(spark, sparkdf_group, output_table)
+    return "SUCCESS"
 
 # print("ready")
 # sparkdf = sales_aggregation(sparkdf, ['shop_id', 'goods_id'], {'sales_aggregation_by_day': 'sdt'}, "qty", "20220101",

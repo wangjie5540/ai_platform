@@ -6,9 +6,13 @@ import numpy as np
 from pyspark.sql import Row
 import pyspark.sql.functions as psf
 from pyspark.sql import Window
-from pyspark.sql.functions import udf, pandas_udf, PandasUDFType
+from pyspark.sql.functions import udf, pandas_udf, PandasUDFType, lit, concat_ws
 from scipy import stats
+from pyspark.ml.feature import Bucketizer
 from pyspark.sql.types import FloatType, IntegerType, StringType, DoubleType, StructType, StructField
+from forecast.common.mysql import get_data_from_mysql
+from functools import reduce
+import portion as P
 import datetime
 
 
@@ -123,20 +127,35 @@ def show_columns(spark, check_table):
     return columns
     
 
-def read_table(spark, table_name, sdt='Y', dt="dt",shop_list=[]):
+# def read_table(spark, table_name, sdt='Y', dt="dt", shop_list=[]):
+#     """dt:分区字段
+#        sdt:时间戳字段
+#     """
+#     filter_str = ""
+#     if len(shop_list)>0:
+#         filter_str = " where shop_id in {0}".format(tuple_self(shop_list))
+#     sparkdf = spark.sql("""select * from {0} {1} """.format(table_name, filter_str))
+#     if sdt == 'N':
+#         sparkdf = sparkdf.withColumn("sdt", psf.unix_timestamp(psf.to_timestamp(psf.col(dt), 'yyyyMMdd'),
+#                                                                "format='yyyy-MM-dd"))
+#     return sparkdf
+
+
+def read_table(spark, table_name, sdt='Y', dt="dt", partition_name='shop_id', partition_list=[]):
     """dt:分区字段
        sdt:时间戳字段
     """
     filter_str = ""
-    if len(shop_list)>0:
-        filter_str = " where shop_id in {0}".format(tuple_self(shop_list))
+    if len(partition_list) > 0:
+        filter_str = " where {0} in {1}".format(partition_name, tuple_self(partition_list))
     sparkdf = spark.sql("""select * from {0} {1} """.format(table_name, filter_str))
     if sdt == 'N':
         sparkdf = sparkdf.withColumn("sdt", psf.unix_timestamp(psf.to_timestamp(psf.col(dt), 'yyyyMMdd'),
                                                                "format='yyyy-MM-dd"))
-    return sparkdf    
+    return sparkdf
 
-def read_origin_category_table(spark, table_name, sdt='Y', dt="dt",shop_list=[]):
+
+def read_origin_category_table(spark, table_name, sdt='Y', dt="dt", shop_list=[]):
     filter_str = ""
     if len(shop_list)>0:
         filter_str = " where site_code in {0}".format(tuple_self(shop_list))
@@ -147,7 +166,7 @@ def read_origin_category_table(spark, table_name, sdt='Y', dt="dt",shop_list=[])
     
 
    
-def read_origin_stock_table(spark, table_name, sdt='Y', dt="dt",shop_list=[]):
+def read_origin_stock_table(spark, table_name, sdt='Y', dt="dt", shop_list=[]):
     """dt:分区字段
        sdt:时间戳字段
     """
@@ -202,9 +221,9 @@ def read_origin_site_table(spark,table_name,shops):
 def save_table(spark, sparkdf, table_name, save_mode='overwrite', partition=["shop_id","dt"]):
     if is_exist_table(spark, table_name):
         columns = show_columns(spark, table_name)
-        print(columns,table_name)
-        sparkdf.repartition(1).select(columns).write.mode("overwrite").insertInto(table_name,True)
+        print(columns, table_name)
+        sparkdf.repartition(1).select(columns).write.mode("overwrite").insertInto(table_name, True)
     else:  
-        print("save table name",table_name)
+        print("save table name", table_name)
 #         print(sparkdf.show(10))
         sparkdf.write.mode(save_mode).partitionBy(partition).saveAsTable(table_name)

@@ -41,12 +41,17 @@ class HiveClient:
         return df
 
     @_get_conn
-    def query_to_table(self, sql, table_name, dataset=None):
+    def query_to_table(self, sql, table_name, db=None):
         cursor = self.conn.cursor()
-        table_name = f"{dataset}.{table_name}" if dataset else table_name
-        _sql = f"CREATE TABLE {table_name} AS " \
+        table_name = f"{db}.{table_name}" if db else table_name
+        _sql = f"CREATE TABLE IF NOT EXISTS {table_name} AS " \
                f"{sql}"
         cursor.execute(_sql)
+
+    @_get_conn
+    def delete_table(self, table_name):
+        cursor = self.conn.cursor()
+        _sql = f"DELETE "
 
     def close(self):
         if self.conn:
@@ -54,8 +59,8 @@ class HiveClient:
         self.conn = None
 
 
-dg_hive_helper = HiveClient(host=HIVE_HOST, port=HIVE_PORT)
+df_hive_helper = HiveClient(host=HIVE_HOST, port=HIVE_PORT)
 
 if __name__ == '__main__':
-    df = dg_hive_helper.query_to_df("select * from algorithm.sku_profile limit 100")
+    df = df_hive_helper.query_to_df("select * from algorithm.sku_profile limit 100")
     print(df)

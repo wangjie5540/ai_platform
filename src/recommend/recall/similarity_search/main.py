@@ -70,7 +70,7 @@ def main():
         user_and_id_map = dict(zip(df.id.astype(int), df.user_id))
         df = pd.read_csv(item_and_id_map_file, header=None, names=["item_id", "id"])
         item_and_id_map = dict(zip(df.id.astype(int), df.item_id))
-    print(item_and_id_map)
+
     with open(output_file_tmp) as fi:
         for line in fi:
             json_obj = json.loads(line)

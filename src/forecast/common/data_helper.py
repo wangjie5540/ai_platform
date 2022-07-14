@@ -9,7 +9,7 @@ import traceback
 import pandas as pd
 from pyspark.sql.types import Row
 
-from common_helper.log import get_logger
+from forecast.common.log import get_logger
 logger_info=get_logger()#日志
 
 def dict_key_lower(param):

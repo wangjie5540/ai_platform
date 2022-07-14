@@ -1,0 +1,15 @@
+[params]
+col_key = ['shop_id','goods_id']#商品分类所用的主字段
+w_tail=3
+w_ls=90
+threshold_count=1
+threshold_proportion=0.15
+threshold_sales=14
+col_time = 'sdt'
+col_qty = 'th_y'
+partition_list = ['1004','1228']
+input_partition_name = 'shop_id'
+output_partition_names = ['shop_id']
+col_sku_category = 'sales_category' #sku分类字段
+input_table = 'ai_dm_dev.no_sales_adjust_0620'
+output_table = 'ai_dm_dev.sales_classify_0620'

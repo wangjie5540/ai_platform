@@ -15,7 +15,7 @@ def deal_user_id_and_item_id(df, min_user_action_cnt=5):
     item_and_id_map = {0: 0}
     item_ids = df["item_id"].value_counts().index
     for _ in item_ids:
-        item_and_id_map[int(_)] = len(item_and_id_map)
+        item_and_id_map[_] = len(item_and_id_map)
 
     df["user_id"] = df["user_id"].apply(lambda x: user_and_id_map.get(x, 0))
     df["item_id"] = df["item_id"].apply(lambda x: item_and_id_map.get(x, 0))
@@ -23,11 +23,15 @@ def deal_user_id_and_item_id(df, min_user_action_cnt=5):
 
 
 def generate_train_data(input_file, output_file, user_and_id_map_file, item_and_id_map_file, names=None):
+    logging.info(f"input:{input_file} out:{output_file} names:{names}")
     if names:
         df = pd.read_csv(input_file, header=None, names=names)
     else:
         df = pd.read_csv(input_file)
     df, user_and_id_map, item_and_id_map = deal_user_id_and_item_id(df)
+    df.click_cnt = df.click_cnt.astype(int)
+    df.save_cnt = df.save_cnt.astype(int)
+    df.order_cnt = df.order_cnt.astype(int)
     df["score"] = df.apply(lambda x: sum([x["click_cnt"], x["save_cnt"], x["order_cnt"]]), axis=1)
     fo = open(output_file, "w")
     all_item_ids = list(set(df["item_id"]))

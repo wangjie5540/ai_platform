@@ -9,11 +9,11 @@ import pickle
 import os
 import pyhdfs
 import sys
-file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))#兼顾spark-submit方式
-sys.path.append(file_path)
+# file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))#兼顾spark-submit方式
+# sys.path.append(file_path)
 from zipfile import ZipFile
 import shutil
-from common_helper.config import get_config
+from forecast.common.config import get_config
 
 def save_model(model,filename):
     '''
