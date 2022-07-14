@@ -8,7 +8,7 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:日期特征-天
 """
 
-from forecast.feature_processing.sp.date_features import build_date_weekly_feature
+from forecast.feature_processing.sp.date_features import build_date_monthly_feature
 import os
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
@@ -27,9 +27,9 @@ def load_params():
         'mode_type': 'sp',
         'sdate': '20210101',
         'edate': '20220101',
-        'col_key': ['week_dt'],
+        'col_key': ['month_dt'],
         'ctype': 'sp',
-        'col_time': 'dt'
+        'col_time':'dt'
     }
     f = TomlOperation(os.getcwd()+"/forecast/feature_processing/config/param.toml")
     params_all = f.read_file()
@@ -45,7 +45,7 @@ def parse_arguments():
     :return:
     """
     params = load_params()
-    parser = argparse.ArgumentParser(description='build date weekly features')
+    parser = argparse.ArgumentParser(description='build date monthly features')
     parser.add_argument('--param', default=params, help='arguments')
     parser.add_argument('--spark', default=spark, help='spark')
     args = parser.parse_args(args=[])
@@ -71,7 +71,7 @@ def run():
     try:
         if run_type == 'sp':  # spark版本
             logger_info.info("RUNNING···")
-            build_date_weekly_feature(spark, param)
+            build_date_monthly_feature(spark, param)
         else:
             # pandas版本
             pass

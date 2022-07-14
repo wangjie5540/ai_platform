@@ -4,9 +4,13 @@ sales_feature_daily_func = "{'col_gtz_agg_days': (['mean', 'sum'], [2, 3]),'col_
 
 sales_feature_weekly_func= "{'col_agg_weeks':(['mean','sum'],[2,3,4])}"
 
+sales_feature_monthly_func= "{'col_agg_last_month':[1,2,3]}"
+
 date_feature_daily_func = "{'holiday_short': (['last', 'future'], [5]), 'holiday_long': (['last', 'future'], [14]), 'is_workday': (['last'], [14])}"
 
 date_feature_weekly_func = "{'dt':'min','is_holiday':'sum', 'is_workday':'sum','holiday_first_day':'sum', 'holiday_short':'max','holiday_long':'max', 'holiday_special':'max'}"
+
+date_feature_monthly_func = "{'dt':'min','is_holiday':'sum', 'is_workday':'sum','holiday_first_day':'sum', 'holiday_short':'max','holiday_long':'max', 'holiday_special':'max'}"
 
 col_time = "sdt"
 sdate = ''
@@ -18,14 +22,21 @@ input_site_table = "ai_dm.ads_scm_original_site"
 input_weather_table = "ai_dm.lbs_weather_history_partition"
 outlier_order_table = 'ai_dm_dev.outlier_order_0620'
 qty_aggregation_table = "ai_dm_dev.qty_aggregation_0620"
-qty_aggregation_weekly_table = "qty_aggregation_weekly_0620"
+qty_aggregation_weekly_table = "ai_dm_dev.qty_aggregation_weekly_0620"
+qty_aggregation_monthly_table = "ai_dm_dev.qty_aggregation_month_0620"
 fill_zero_table = "ai_dm_dev.fill_zero_0620"
 no_sales_adjust_table = "ai_dm_dev.no_sales_adjust_0620"
 sales_features_daily_table = "ai_dm_dev.sales_features_daily_0620"
 sales_features_weekly_table = "ai_dm_dev.sales_features_weekly_0620"
+sales_features_monthly_table = "ai_dm_dev.sales_features_monthly_0620"
 date_features_daily_table= "ai_dm_dev.date_features_daily_0620"
 date_features_weekly_table= "ai_dm_dev.date_features_weekly_0620"
+date_features_monthly_table= "ai_dm_dev.date_features_monthly_0620"
 weather_feature_daily_table = "ai_dm_dev.weather_features_daily_0620"
-weather_feature_weekly_table = "ai_dm_dev.weather_features_weekly_0620"
+weather_feature_monthly_table = "ai_dm_dev.weather_features_monthly_0620"
 
 shop_list = ['1004','1228']
+weatherfrom = "weatherfrom"
+weatherto = "weatherto"
+weatherfrom_value = "晴"
+weatherto_value = "晴"
