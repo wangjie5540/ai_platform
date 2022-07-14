@@ -210,8 +210,8 @@ def method_called_predict_sp(spark,param):
     if predict_len<=0:
         return
     sqls = '''
-    select * from ${table}
-    '''.replace("table", prepare_data_table)
+    select * from {0}
+    '''.format(prepare_data_table)
     spark_df = spark.sql(sqls)
     data_result=spark_df.rdd.map(lambda g:(key_process(g,key_cols),g)).groupByKey(). \
         flatMap(lambda x:model_predict(x[0],x[1],param,key_cols,param,forecast_start_date, predict_len,'sp')).filter(lambda h: h is not None).toDF()
