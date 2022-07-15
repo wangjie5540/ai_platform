@@ -5,6 +5,7 @@ from digitforce.aip.components.preprocess import dataset
 from digitforce.aip.components.preprocess import sql
 from digitforce.aip.components.recommend import hot
 from digitforce.aip.components.recommend import recall
+from digitforce.aip.components.recommend.tmp import rank_data_process_op, lightgbm_train_op
 from digitforce.aip.components.source import hive
 
 name = "RecommendMultiRecallAndRank"
@@ -96,6 +97,32 @@ def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_da
     deep_mf_recall_to_redis = recall.upload_recall_result_op(deep_mf_recall_result_jsonl_file,
                                                              "AIP_RC_RECALL_deep_mf__deep_mf__").after(deep_mf_recall)
     deep_mf_recall_to_redis.container.set_image_pull_policy("Always")
+
+    #### rank ###
+    dataset_file_path = f"/data/recommend/rank/lgb/dataset/train/{run_datetime_str}.csv"
+    _sql = f'''select a.user_id,sex, age, life_stage, consume_level, province, city, membership_level,  b.sku, cate, brand, label from 
+                    (select * from 
+                    (select user_id, sex, age, life_stage, consume_level, province, city, membership_level,
+                    row_number() over(partition by user_id order by dt desc) rk from labelx.push_user) t0
+                    where rk = 1
+                    ) a
+                    inner join 
+                    (select user_id, sku, max(label) as label from(
+                    select user_id, sku, case when event_code='CLICK' then 1 else 0 end as label from labelx.push_traffic_behavior 
+                    where  event_code in ('CLICK', 'EXPOSURE'))bh group by user_id, sku ) b 
+                    on a.user_id = b.user_id 
+                    inner join 
+                    (select * from(
+                    select sku, cate, brand, row_number() over(partition by sku order by dt desc)rk from labelx.push_goods
+                    where dt in('2022-03-01', '2022-03-18', '2022-03-31')) t1
+                    where rk = 1)c
+                    on b.sku = c.sku
+        '''
+    info_log_file = f"/data/recommend/rank/log/lgb/{run_datetime_str}.log"
+    error_log_file = f"/data/recommend/rank/log/lgb/{run_datetime_str}.error"
+    data_process_op = rank_data_process_op(_sql, dataset_file_path, info_log_file, error_log_file)
+    model_path = f"/data/recommend/rank/lgb/model/lgb-{run_datetime_str}.txt"
+    lightgbm_train_op(dataset_file_path, model_path, info_log_file, error_log_file).after(data_process_op)
 
 
 def upload_pipeline():
