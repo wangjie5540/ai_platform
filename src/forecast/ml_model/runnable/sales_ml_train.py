@@ -17,8 +17,8 @@ import argparse
 import traceback
 file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
 sys.path.append(file_path)#解决不同位置调用依赖包路径问题
-from ml_model.sp.train_sp import train_sp
-from common.log import get_logger
+from forecast.ml_model.sp.train_sp import train_sp
+from forecast.common.log import get_logger
 
 def ml_model_train(param,spark=None):
     """

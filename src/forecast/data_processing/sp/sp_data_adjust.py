@@ -44,13 +44,12 @@ def adjust_by_column(sales_sparkdf, stock_sparkdf, join_key, col_openinv, col_qt
     return sparkdf.filter(date_filter_condition(sdate, edate))    
 
 
-
-def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, edate, replace_func, w=90, conn='and',
+def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, edate, replace_func, w_boxcox=90, w_replace=14,conn='and',
                     col_time='sdt'):
     """
     过去一段时间窗口w内 ，通过filter_func超出上下限的用replace_func的边界值替换
     """
-    windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w),
+    windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w_boxcox),
                                                                                     end=Window.currentRow)
     for dict_key in filter_func:
         func_up, func_low = globals()[dict_key](windowOpt, col_boxcox, filter_func[dict_key])
@@ -68,7 +67,7 @@ def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, e
 
     for dict_key in replace_func:
         func_up, func_low = globals()[dict_key](windowOpt, col_qty, replace_func[dict_key])
-        windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w),
+        windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w_replace),
                                                                                         end=Window.currentRow)
         sparkdf = sparkdf.withColumn("{}_replace_up".format(dict_key), func_up)
         sparkdf = sparkdf.withColumn("{}_replace_low".format(dict_key), func_low)

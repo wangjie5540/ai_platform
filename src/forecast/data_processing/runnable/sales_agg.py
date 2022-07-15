@@ -19,8 +19,8 @@ except:
     pass
 import argparse
 import traceback
-from  forecast.common.log import get_logger
-from  forecast.common.toml_helper import TomlOperation
+from forecast.common.log import get_logger
+from forecast.common.toml_helper import TomlOperation
 
 
 def load_params():

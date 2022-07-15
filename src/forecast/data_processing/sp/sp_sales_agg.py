@@ -23,11 +23,12 @@ def sales_aggregation_by_month(sparkdf, other_agg_dim, col_time, agg_type):
     roll_month:滚动月
     """
     if agg_type == 'solar_month':
+        sparkdf = sparkdf.withColumn("solar_month", psf.month(psf.to_date(psf.col(col_time), "yyyyMMdd")))
         func = udf(lambda x: (datetime.date(year=datetime.datetime.strptime(x, "%Y%m%d").year,
                                             month=datetime.datetime.strptime(x, "%Y%m%d").month, day=1)).strftime(
             "%Y%m%d"), StringType())
         sparkdf = sparkdf.withColumn(col_time, func(col_time))
-        other_agg_dim += [col_time]
+        other_agg_dim += [col_time, 'solar_month']
     elif agg_type == 'lunar_month':
         pass
     else:
@@ -95,9 +96,7 @@ def sales_aggregation(spark, param):
     output_table = param['output_table']
     shop_list = param['shop_list']
     agg_type = param['agg_type']
-    sparkdf = read_table(spark, input_table, shop_list=shop_list)
-    sparkdf = sparkdf.filter("dt>={0} and dt<={1}".format(sdate, edate))
-    #     print(sparkdf.show())
+    sparkdf = read_table(spark, input_table, partition_list=shop_list)
     for dict_key in func_dict:
         sparkdf, group_key = globals()[dict_key](sparkdf, other_agg_dim, func_dict[dict_key], agg_type)
         print(group_key, col_qty, "sum_{}".format(col_qty))
@@ -114,7 +113,21 @@ def sales_aggregation(spark, param):
     save_table(spark, sparkdf_group, output_table)
     return "SUCCESS"
 
-# print("ready")
-# sparkdf = sales_aggregation(sparkdf, ['shop_id', 'goods_id'], {'sales_aggregation_by_day': 'sdt'}, "qty", "20220101",
-#                             "20220110")
-# sparkdf.show(10)
+
+def sales_continue_processing(spark, param):
+    col_key = param['col_key']
+    col_qty = param['col_qty']
+    col_time = param['col_time']
+    col_wm = param['col_wm']
+    end_date = param['edate']
+    date_type = param['date_type']
+    data_type = param['data_type']
+    input_table = param['input_table']
+    output_table = param['output_table']
+    sparkdf = read_table(spark, input_table)
+    print(col_key,end_date, col_qty, col_time,date_type,data_type)
+    data_result = sparkdf.rdd.map(lambda g: (key_process(g, col_key), g)).groupByKey().flatMap(lambda x: sales_continue(x[0],x[1],end_date, col_qty,col_time, col_key, col_wm,  date_type,data_type)).filter(lambda h: h is not None).toDF()
+    save_table(spark, data_result, output_table)
+    return 'SUCCESS'
+
+

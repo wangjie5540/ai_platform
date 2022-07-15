@@ -10,7 +10,8 @@ import pandas as pd
 from pyspark.sql.types import Row
 
 from forecast.common.log import get_logger
-logger_info=get_logger()#日志
+logger_info = get_logger()#日志
+
 
 def dict_key_lower(param):
     """
@@ -27,6 +28,7 @@ def dict_key_lower(param):
             pass
         param_new[key]=value
     return param_new
+
 
 def update_param_default(param,default_conf):
     """
@@ -49,6 +51,7 @@ def update_param_default(param,default_conf):
         logger_info.info(traceback.format_exc())
     return param
 
+
 def row_transform_to_dataFrame(data):
     """
     row类型转化为dataFrame
@@ -63,6 +66,21 @@ def row_transform_to_dataFrame(data):
             row_list.append(row.asDict())
         data_tmp=pd.DataFrame(row_list)
     return data_tmp
+
+
+def dataFrame_transform_to_row(result_df, data_type='pd'):
+    """
+    row类型转化为dataFrame
+    :param data: 原始数据
+    :return: 处理好的数据
+    """
+    if data_type == 'sp':#spark版本为row类型
+        resultRow = Row(*result_df.columns)
+        data_result = []
+        for r in result_df.values:
+            data_result.append(resultRow(*r))
+    return result_df
+
 
 def predict_result_handle(result_df,key_value,key_cols,mode_type,save_table_cols):
     """
@@ -91,3 +109,5 @@ def predict_result_handle(result_df,key_value,key_cols,mode_type,save_table_cols
         data_result=result_df
     data_result=data_result[save_table_cols]
     return data_result
+
+
