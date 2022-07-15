@@ -100,11 +100,10 @@ def days(i):
     return i * 86400
 
 
-def sales_continue(key, value, edate, col_qty, col_time, col_key, col_wm='', date_type='day', data_type='pd'):
+def sales_continue(value, edate, col_qty, col_time, col_key, col_wm='', date_type='day', data_type='pd'):
     """
     need sales continue
     """
-    print("key", key)
     df = row_transform_to_dataFrame(value)
     c_columns = df.columns.tolist()
     c_columns.remove(col_qty)
@@ -132,7 +131,6 @@ def sales_continue(key, value, edate, col_qty, col_time, col_key, col_wm='', dat
         pass
     df[col_time] = df[col_time].astype(str)
     df = pd.merge(dr, df, on=col_time, how='left')
-    df[col_time] = df[col_time].astype(str)
 
     # 填充其他
     for column in col_key:
@@ -229,6 +227,7 @@ def read_table(spark, table_name, sdt='Y', dt="dt", partition_name='shop_id', pa
 
 
 def read_origin_category_table(spark, table_name, sdt='Y', dt="dt", shop_list=[]):
+    """品类源数据"""
     filter_str = ""
     if len(shop_list)>0:
         filter_str = " where site_code in {0}".format(tuple_self(shop_list))
@@ -242,6 +241,7 @@ def read_origin_category_table(spark, table_name, sdt='Y', dt="dt", shop_list=[]
 def read_origin_stock_table(spark, table_name, sdt='Y', dt="dt", shop_list=[]):
     """dt:分区字段
        sdt:时间戳字段
+       库存源数据
     """
     filter_str = ""
     if len(shop_list)>0:
@@ -260,20 +260,22 @@ def read_origin_stock_table(spark, table_name, sdt='Y', dt="dt", shop_list=[]):
 def read_origin_sales_table(spark, table_name, sdt='Y', dt="dt", shop_list=[]):
     """dt:分区字段
        sdt:时间戳字段
+       可能涉及一些数据清洗的工作 字段映射 脏数据的清洗
     """
     filter_str = ""
     if len(shop_list)>0:
         filter_str = " and site_code in {0}".format(tuple_self(shop_list))
     sparkdf = spark.sql("""select goods_code as goods_id,order_id,quantity as qty,substring(data_date,12,2) as pay_hour,
                            sales_price,  to_unix_timestamp(dt,'yyyyMMdd') as  sdt,site_code as shop_id,dt from 
-                           {0} where 	site_code<>'site_code' {1} and quantity>0""".format(table_name, filter_str))
+                           {0} where 	site_code<>'site_code' {1} and quantity>=0 """.format(table_name, filter_str))
     if sdt == 'N':
         sparkdf = sparkdf.withColumn("sdt", psf.unix_timestamp(psf.to_timestamp(psf.col(dt), 'yyyyMMdd'),
                                                                "format='yyyy-MM-dd"))
     return sparkdf
 
 
-def read_origin_weather_table(spark,table_name,sdate,edate):
+def read_origin_weather_table(spark, table_name, sdate,edate):
+    """天气源数据"""
     sparkdf = spark.sql("""select *,to_unix_timestamp(recordtime,'yyyy-MM-dd') sdt,replace(recordtime,'-','') dt,
                    from_unixtime(to_unix_timestamp(date_add(recordtime,1 - case when dayofweek(recordtime) = 1 then 7 
                    else dayofweek(recordtime) - 1 end),'yyyy-MM-dd'),'yyyyMMdd') week_dt,weekofyear(recordtime) week,
@@ -284,6 +286,7 @@ def read_origin_weather_table(spark,table_name,sdate,edate):
 
 
 def read_origin_site_table(spark,table_name,shops):
+    """地点源数据"""
     sparkdf = spark.sql("""
     select site_code as shop_id,province,city,district  from {0}  
     where site_code in {1}

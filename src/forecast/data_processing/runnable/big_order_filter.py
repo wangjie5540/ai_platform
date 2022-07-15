@@ -8,11 +8,7 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
 大单过滤
 """
-from imp import reload
-
 import os
-import sys
-import forecast.data_processing.sp.sp_sales_filter
 from forecast.data_processing.sp.sp_sales_filter import big_order_filter
 
 try:
@@ -22,8 +18,8 @@ except:
     pass
 import argparse
 import traceback
-from  forecast.common.log import get_logger
-from  forecast.common.toml_helper import TomlOperation
+from forecast.common.log import get_logger
+from forecast.common.toml_helper import TomlOperation
 
 
 def load_params():
@@ -33,7 +29,7 @@ def load_params():
         'sdate': '20210101',
         'edate': '20220101'
     }
-    f = TomlOperation(os.getcwd()+"/config/param.toml")
+    f = TomlOperation(os.getcwd()+"/forecast/data_processing/config/param.toml")
     params_all = f.read_file()
     # 获取项目1配置参数
     params = params_all['filter_p1']
@@ -73,7 +69,7 @@ def run():
     try:
         if run_type == 'sp':  # spark版本
             logger_info.info("RUNNING···")
-            big_order_filter(spark,param)
+            big_order_filter(spark, param)
         else:
             # pandas版本
             pass

@@ -277,7 +277,7 @@ def big_order_filter(spark, param):
     output_table = param['outlier_order_table']
     col_partitions = param['col_partitions']
     shop_list = param['shop_list']
-    sparkdf = read_origin_sales_table(spark, input_table,shop_list=shop_list)
+    sparkdf = read_origin_sales_table(spark, input_table, shop_list=shop_list)
     sparkdf = sales_filter_by_bound(sparkdf, col_key, w, sdate, edate, col_qty, filter_func, conn)
     save_table(spark, sparkdf, output_table)
     return "SUCCESS"

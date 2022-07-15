@@ -108,7 +108,7 @@ def sales_aggregation(spark, param):
             func = udf(lambda x: x.strftime('%Y%m%d'), StringType())
             sparkdf_group = sparkdf.groupby(group_key).agg(psf.sum(col_qty).alias("sum_{}".format(col_qty)))
 
-    #     print(sparkdf_group.show(10))
+
     sparkdf_group = sparkdf_group.filter(date_filter_condition(sdate, edate))
     save_table(spark, sparkdf_group, output_table)
     return "SUCCESS"
@@ -126,7 +126,7 @@ def sales_continue_processing(spark, param):
     output_table = param['output_table']
     sparkdf = read_table(spark, input_table)
     print(col_key,end_date, col_qty, col_time,date_type,data_type)
-    data_result = sparkdf.rdd.map(lambda g: (key_process(g, col_key), g)).groupByKey().flatMap(lambda x: sales_continue(x[0],x[1],end_date, col_qty,col_time, col_key, col_wm,  date_type,data_type)).filter(lambda h: h is not None).toDF()
+    data_result = sparkdf.rdd.map(lambda g: (key_process(g, col_key), g)).groupByKey().flatMap(lambda x: sales_continue(x[1],end_date, col_qty,col_time, col_key, col_wm,  date_type,data_type)).filter(lambda h: h is not None).toDF()
     save_table(spark, data_result, output_table)
     return 'SUCCESS'
 

@@ -1,5 +1,5 @@
 from forecast.common.common_helper import *
-
+import random
 
 
 def isometric_binning(sparkdf_config, isometric_label, group_nums, partition_col, col_orderby=None):
@@ -11,7 +11,7 @@ def isometric_binning(sparkdf_config, isometric_label, group_nums, partition_col
     :return: 分组后的值
     """
     if col_orderby == None:
-        col_orderby = rand(seed=10000)
+        col_orderby = random.rand(seed=10000)
     w = Window.partitionBy(partition_col).orderBy(col_orderby)  # 随机排序
     sparkdf_config = sparkdf_config.withColumn(isometric_label, (psf.row_number().over(w)) % group_nums)
     return sparkdf_config

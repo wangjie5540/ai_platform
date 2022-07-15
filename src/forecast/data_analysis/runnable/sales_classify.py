@@ -27,7 +27,13 @@ def load_params():
     param_cur = {
         'mode_type': 'sp',
         'sdate': '20210101',
-        'edate': '20220101'
+        'edate': '20220101',
+        'input_table': 'ai_dm_dev.sales_boxcox_0620',
+        'output_table': 'ai_dm_dev.sales_classify_0620',
+        'input_partition_name': 'shop_id',
+        'output_partition_names': ['shop_id'],
+        'col_qty': 'th_y'
+
     }
     f = TomlOperation(os.getcwd()+"/forecast/data_analysis/config/param.toml")
     params_all = f.read_file()
