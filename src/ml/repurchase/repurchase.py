@@ -3,10 +3,10 @@ from typing import Dict
 import json
 import pandas as pd
 import numpy as np
-import lightgbm as lgb
+# import lightgbm as lgb
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
-from bayes_opt import BayesianOptimization
+# from bayes_opt import BayesianOptimization
 import pickle
 from create_dataset import CreateDataset
 import time
@@ -89,7 +89,7 @@ def lgb_cv(n_estimators, num_leaves, max_depth, learning_rate, reg_alpha, reg_la
     best_score = np.max(cv_res['auc-mean'])
     return best_score
 
-def train(input_dataset_filepath, taskId):
+def train(input_params, taskId):
     """
     :param input_params: 输入配置参数
     {"taskid":52,
@@ -150,84 +150,84 @@ def train(input_dataset_filepath, taskId):
     :return:
     """
     global train_set
-    try:
-        start = time.time()
-        # create_data = CreateDataset()
-        # cate_list = []
-        # for cateid in input_params['category']:
-        #     cate = '"'+cateid+'"'
-        #     cate_list.append(cate)
-        # catestr = "("+",".join(cate_list)+")"
+    # try:
+    start = time.time()
+    create_data = CreateDataset()
+    cate_list = []
+    for cateid in input_params['category']:
+        cate = '"'+cateid+'"'
+        cate_list.append(cate)
+    catestr = "("+",".join(cate_list)+")"
 
 
-        # dataset = create_data.ConstructFeatures(
-        #                             input_params['trainingScope'],
-        #                             input_params['forecastPeriod'],
-        #                             catestr,
-        #                             True,
-        #                             input_params['orderData']['tableName'],
-        #                             input_params['trafficData']['tableName'],
-        #                             input_params['userData']['tableName'],
-        #                             input_params['goodsData']['tableName'],
-        #                             input_params['orderData'],
-        #                             input_params['trafficData'],
-        #                             input_params['userData'],
-        #                             input_params['goodsData'],
-        #                             input_params['eventCode'][input_params['trafficData']['event_code']],
-        #                              None)
+    dataset = create_data.ConstructFeatures(
+                                input_params['trainingScope'],
+                                input_params['forecastPeriod'],
+                                catestr,
+                                True,
+                                input_params['orderData']['tableName'],
+                                input_params['trafficData']['tableName'],
+                                input_params['userData']['tableName'],
+                                input_params['goodsData']['tableName'],
+                                input_params['orderData'],
+                                input_params['trafficData'],
+                                input_params['userData'],
+                                input_params['goodsData'],
+                                input_params['eventCode'][input_params['trafficData']['event_code']],
+                                 None)
         # dataset.to_csv("dataset_fugou_test.csv", index=False)
         # res_target_path = os.path.join('hdfs:///usr/algorithm/cd/fugou/result', 'dataset_fugou_test.csv')
         # upload_flag = upload_hdfs("dataset_fugou_test.csv", res_target_path)
         # print(upload_flag)
 
-        dataset = pd.read_csv(input_dataset_filepath)
-        # 暂时处理
-        if len(dataset[dataset['label'] == 1]) == len(dataset):
-            dataset.loc[:len(dataset) // 2, 'label'] = 0
-        elif len(dataset[dataset['label'] == 0]) == len(dataset):
-            dataset.loc[:len(dataset) // 2, 'label'] = 1
-        print(dataset)
-        if (len(dataset) == 0) or (len(dataset[dataset['label']==0]) == len(dataset)) or (len(dataset[dataset['label']==1]) == len(dataset)):
-            return
-        else:
-            train_set, feats_train, labels_train, feats_test, labels_test = process_feats(dataset, 'label')
-            lgb_opt = BayesianOptimization(
-                lgb_cv,
-                {
-                    'n_estimators': (10, 200),
-                    'num_leaves': (2, 100),
-                    'max_depth': (1, 40),
-                    'learning_rate': (0.1, 1),
-                    'reg_alpha': (0.1, 1),
-                    'reg_lambda': (0.1, 1),
-                    'bagging_fraction': (0.5, 1),
-                    'bagging_freq': (1, 5),
-                    'colsample_bytree': (0.6, 1)
-                }
-            )
-
-            lgb_opt.maximize()
-            best_params = lgb_opt.max['params']
-            best_params['n_estimators'] = int(best_params['n_estimators'])
-            best_params['num_leaves'] = int(best_params['num_leaves'])
-            best_params['max_depth'] = int(best_params['max_depth'])
-            best_params['bagging_freq'] = int(best_params['bagging_freq'])
-#             print(best_params)
-            logging.info('Bayes_optimalization for best_params:')
-            logging.info(best_params)
-            best_lgb_model = lgb.LGBMClassifier(n_jobs=-1, boosting_type='gbdt', objective='binary', random_state=42, **best_params)
-            best_lgb_model.fit(feats_train, labels_train)
-
-            preds = best_lgb_model.predict_proba(feats_test)[:, 1]
-            auc = roc_auc_score(labels_test, preds)
-            print('The best model from Bayes optimization scores {:.5f} AUC ROC on the test set.'.format(auc))
-
-            # store the model
-            filepath = str(taskId)+r".pkl"
-            print(filepath)
-            pickle.dump(best_lgb_model, open(filepath, 'wb'))
-            end = time.time()
-            return 'success'
-    except:
-        logging.error('Raise errors when response to platform',exc_info=1)
-        return
+#         dataset = pd.read_csv(input_dataset_filepath)
+#         # 暂时处理
+#         if len(dataset[dataset['label'] == 1]) == len(dataset):
+#             dataset.loc[:len(dataset) // 2, 'label'] = 0
+#         elif len(dataset[dataset['label'] == 0]) == len(dataset):
+#             dataset.loc[:len(dataset) // 2, 'label'] = 1
+#         print(dataset)
+#         if (len(dataset) == 0) or (len(dataset[dataset['label']==0]) == len(dataset)) or (len(dataset[dataset['label']==1]) == len(dataset)):
+#             return
+#         else:
+#             train_set, feats_train, labels_train, feats_test, labels_test = process_feats(dataset, 'label')
+#             lgb_opt = BayesianOptimization(
+#                 lgb_cv,
+#                 {
+#                     'n_estimators': (10, 200),
+#                     'num_leaves': (2, 100),
+#                     'max_depth': (1, 40),
+#                     'learning_rate': (0.1, 1),
+#                     'reg_alpha': (0.1, 1),
+#                     'reg_lambda': (0.1, 1),
+#                     'bagging_fraction': (0.5, 1),
+#                     'bagging_freq': (1, 5),
+#                     'colsample_bytree': (0.6, 1)
+#                 }
+#             )
+#
+#             lgb_opt.maximize()
+#             best_params = lgb_opt.max['params']
+#             best_params['n_estimators'] = int(best_params['n_estimators'])
+#             best_params['num_leaves'] = int(best_params['num_leaves'])
+#             best_params['max_depth'] = int(best_params['max_depth'])
+#             best_params['bagging_freq'] = int(best_params['bagging_freq'])
+# #             print(best_params)
+#             logging.info('Bayes_optimalization for best_params:')
+#             logging.info(best_params)
+#             best_lgb_model = lgb.LGBMClassifier(n_jobs=-1, boosting_type='gbdt', objective='binary', random_state=42, **best_params)
+#             best_lgb_model.fit(feats_train, labels_train)
+#
+#             preds = best_lgb_model.predict_proba(feats_test)[:, 1]
+#             auc = roc_auc_score(labels_test, preds)
+#             print('The best model from Bayes optimization scores {:.5f} AUC ROC on the test set.'.format(auc))
+#
+#             # store the model
+#             filepath = str(taskId)+r".pkl"
+#             print(filepath)
+#             pickle.dump(best_lgb_model, open(filepath, 'wb'))
+#             end = time.time()
+#             return 'success'
+#     except:
+#         logging.error('Raise errors when response to platform',exc_info=1)
+#         return
