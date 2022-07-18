@@ -20,7 +20,7 @@ COPY ./digitforce/__init__.py $PROJECT_DIR/digitforce/__init__.py
 COPY ./digitforce/aip/__init__.py $PROJECT_DIR/digitforce/aip/__init__.py
 
 COPY ./digitforce/aip/common $PROJECT_DIR/digitforce/aip/common
-COPY ./digitforce/aip/cgf $PROJECT_DIR/digitforce/aip/cgf
+COPY  ./digitforce/aip/forecast/data_analysis $PROJECT_DIR/digitforce/aip/forecast/data_analysis
 
 COPY {image_dir}  $PROJECT_DIR/forecast
 

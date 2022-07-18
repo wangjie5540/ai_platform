@@ -44,13 +44,12 @@ def adjust_by_column(sales_sparkdf, stock_sparkdf, join_key, col_openinv, col_qt
     return sparkdf.filter(date_filter_condition(sdate, edate))    
 
 
-
-def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, edate, replace_func, w=90, conn='and',
+def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, edate, replace_func, w_boxcox=90, w_replace=14,conn='and',
                     col_time='sdt'):
     """
     过去一段时间窗口w内 ，通过filter_func超出上下限的用replace_func的边界值替换
     """
-    windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w),
+    windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w_boxcox),
                                                                                     end=Window.currentRow)
     for dict_key in filter_func:
         func_up, func_low = globals()[dict_key](windowOpt, col_boxcox, filter_func[dict_key])
@@ -68,7 +67,7 @@ def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, e
 
     for dict_key in replace_func:
         func_up, func_low = globals()[dict_key](windowOpt, col_qty, replace_func[dict_key])
-        windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w),
+        windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w_replace),
                                                                                         end=Window.currentRow)
         sparkdf = sparkdf.withColumn("{}_replace_up".format(dict_key), func_up)
         sparkdf = sparkdf.withColumn("{}_replace_low".format(dict_key), func_low)
@@ -83,12 +82,12 @@ def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, e
     return sparkdf.filter(date_filter_condition(sdate, edate))
 
 
-def adjust_by_sales_days(df, edate, col_qty,col_key, col_time, w=2, agg_func='mean'):
+def adjust_by_sales_days(df, edate, col_qty, col_key, col_time, w=2, agg_func='mean'):
     """前后7天无异常销量均值填补 w:周数"""
     c_columns = df.columns
-    df = sales_continue(df, edate, col_qty, col_time,col_key)
+    df = sales_continue(df, edate, col_qty, col_time, col_key)
     df['corr_qty'] = df[col_qty].rolling(window=15, center=True, min_periods=0).agg(agg_func)
-    df['dayofweek'] = df.dt.apply(lambda x: x.weekday())
+    df['dayofweek'] = df[col_time].apply(lambda x: pd.to_datetime(x).weekday())
     df['corr_weekend_qty'] = df[df['dayofweek'].isin([5, 6])][col_qty].rolling(window=w * 2 + 1, center=True,
                                                                                min_periods=0).agg(agg_func)
     df['corr_weekdays_qty'] = df[~df['dayofweek'].isin([5, 6])][col_qty].rolling(window=w * 5 + 1, center=True,
@@ -100,24 +99,24 @@ def adjust_by_sales_days(df, edate, col_qty,col_key, col_time, w=2, agg_func='me
     return df[c_columns]
 
 
-def adjust_by_sales_growth(df, col_key, col_qty, c_category,col_time, w=2, agg_func='mean'):
+def adjust_by_sales_growth(df, col_key, col_qty, c_category, col_time, w=2, agg_func='mean'):
     """根据去年同期增长系数 同期范围定义 阴历 阳历 节假日 系数的倍数最大值最小值限制"""
     c_columns = df.columns
-    df['last_dt'] = df.dt.apply(lambda x: x.replace(year=x.year - 1))
-    col_key_last = col_key + [col_qty, 'dt']
-    last_df = df[col_key_last].rename(columns={col_qty: 'last_qty', 'dt': 'last_dt'})
+    df['last_dt'] = df[col_time].apply(lambda x: pd.to_datetime(x).replace(year=pd.to_datetime(x).year - 1).strftime('%Y%m%d'))
+    col_key_last = col_key + [col_qty, col_time]
+    last_df = df[col_key_last].rename(columns={col_qty: 'last_qty', col_time: 'last_dt'})
     df = pd.merge(df, last_df, left_on=col_key + ['last_dt'], right_on=col_key + ['last_dt'], how='left')
 
     df['last_qty_mean'] = df.groupby(col_key).last_qty.apply(
         lambda x: x.rolling(window=w * 7 + 1, center=True, min_periods=0).agg(agg_func))
 
-    category_df = df.groupby(['dt', c_category])[col_qty].sum().reset_index()
+    category_df = df.groupby([col_time, c_category])[col_qty].sum().reset_index()
     category_df['corr_qty'] = category_df[col_qty].rolling(window=w * 7 + 1, center=True, min_periods=0).agg(agg_func)
 
     category_last_df = df.groupby(['last_dt', c_category])['last_qty'].sum().reset_index()
     category_last_df['corr_last_qty'] = category_last_df['last_qty'].rolling(window=w * 7 + 1, center=True,
                                                                              min_periods=0).agg(agg_func)
-    df = pd.merge(df, category_df[[c_category, 'dt', 'corr_qty']], on=[c_category, 'dt'], how='left')
+    df = pd.merge(df, category_df[[c_category, col_time, 'corr_qty']], on=[c_category, col_time], how='left')
     df = pd.merge(df, category_last_df[[c_category, 'last_dt', 'corr_last_qty']], on=[c_category, 'last_dt'],
                   how='left')
     print(df.head(10))
@@ -125,8 +124,7 @@ def adjust_by_sales_growth(df, col_key, col_qty, c_category,col_time, w=2, agg_f
     df[col_qty] = df[[col_qty, 'last_qty_mean', 'ratio']].apply(lambda x: x[0] if not pd.isna(x[0]) else x[1] * x[2],
                                                                 axis=1)
     df[col_qty].fillna(0, inplace=True)
-    df[col_time] = df[col_time].apply(lambda x:x.strftime('%Y%m%d'))
-    
+    # df[col_time] = df[col_time].apply(lambda x: x.strftime('%Y%m%d'))
     return df[c_columns] 
 
 
@@ -151,7 +149,7 @@ def adjust_by_common(rows, key, edate, col_qty, col_key, c_category, col_time, w
     """通用填充"""
     df = rdd_format_pdf(rows)
     df_step1 = adjust_by_sales_days(df, edate, col_qty, col_key, col_time, w)
-    result_df = adjust_by_sales_growth(df_step1,col_key, col_qty, c_category,col_time,w)
+    result_df = adjust_by_sales_growth(df_step1, col_key, col_qty, c_category, col_time, w)
     return pdf_format_rdd(result_df)
 
 

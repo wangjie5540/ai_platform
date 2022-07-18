@@ -10,12 +10,12 @@ import sys
 import traceback
 file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../'))
 sys.path.append(file_path)#解决不同位置调用依赖包路径问题
-from common.log import get_logger
-from ml_model.sp.data_prepare import data_prepare_train
-from ml_model.model.ml_train import ml_train
-from ml_model.sp.predict_sp import key_process,get_default_conf
-from common.data_helper import update_param_default
-from common.spark import spark_init
+from forecast.common.log import get_logger
+from forecast.ml_model.sp.data_prepare import data_prepare_train
+from forecast.ml_model.model.ml_train import ml_train
+from forecast.ml_model.sp.predict_sp import key_process,get_default_conf
+from forecast.common.data_helper import update_param_default
+from forecast.common.spark import spark_init
 
 def method_called_train_sp(data,key_cols,apply_model_index,param,hdfs_path,predict_len):
     """

@@ -8,22 +8,21 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
 大单过滤
 """
-from imp import reload
-
 import os
 import sys
-import forecast.data_processing.sp.sp_sales_filter
+
 from forecast.data_processing.sp.sp_sales_filter import sales_filter_by_boxcox
 
 try:
-    import findspark #使用spark-submit 的cluster时要注释掉
+    import findspark  # 使用spark-submit 的cluster时要注释掉
+
     findspark.init()
 except:
     pass
 import argparse
 import traceback
-from  forecast.common.log import get_logger
-from  forecast.common.toml_helper import TomlOperation
+from forecast.common.log import get_logger
+from forecast.common.toml_helper import TomlOperation
 
 
 def load_params():
@@ -31,9 +30,11 @@ def load_params():
     param_cur = {
         'mode_type': 'sp',
         'sdate': '20210101',
-        'edate': '20220101'
+        'edate': '20220101',
+        'col_qty': 'th_y'
+
     }
-    f = TomlOperation(os.getcwd()+"forecast/data_processing/config/param.toml")
+    f = TomlOperation(os.getcwd() + "/forecast/data_processing/config/param.toml")
     params_all = f.read_file()
     # 获取项目1配置参数
     params = params_all['filter_p1']
@@ -73,7 +74,7 @@ def run():
     try:
         if run_type == 'sp':  # spark版本
             logger_info.info("RUNNING···")
-            sales_filter_by_boxcox(spark,param)
+            sales_filter_by_boxcox(spark, param)
         else:
             # pandas版本
             pass

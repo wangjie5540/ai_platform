@@ -212,9 +212,11 @@ def build_sales_features_weekly(spark, param):
     col_time = param['col_time']
     col_qty = param['col_qty']
     dict_agg_func = eval(param['sales_feature_weekly_func'])
-    input_table = param['qty_aggregation_weekly_table']
-    output_table = param['sales_features_weekly_table']
-    sparkdf = read_table(spark, input_table)
+    input_table = param['input_table']
+    output_table = param['output_table']
+    partition_name = param['partition_name']
+    shop_list = param['shop_list']
+    sparkdf = read_table(spark, input_table,  partition_name=partition_name, partition_list=shop_list)
     for dict_key in dict_agg_func:
         sparkdf = globals()[dict_key](sparkdf, col_key, col_qty, col_time, dict_agg_func[dict_key])
     sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))    
@@ -229,9 +231,11 @@ def build_sales_features_monthly(spark, param):
     col_time = param['col_time']
     col_qty = param['col_qty']
     dict_agg_func = eval(param['sales_feature_monthly_func'])
-    input_table = param['qty_aggregation_monthly_table']
-    output_table = param['sales_features_monthly_table']
-    sparkdf = read_table(spark, input_table)
+    input_table = param['input_table']
+    output_table = param['output_table']
+    partition_name = param['partition_name']
+    shop_list = param['shop_list']
+    sparkdf = read_table(spark, input_table,  partition_name=partition_name, partition_list=shop_list)
     for dict_key in dict_agg_func:
         sparkdf = globals()[dict_key](sparkdf, col_key, col_qty, col_time, dict_agg_func[dict_key])
     sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))

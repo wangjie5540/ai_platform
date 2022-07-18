@@ -3,8 +3,6 @@
 # @Author : Arvin
 # 基于spark版
 from forecast.common.common_helper import *
-from forecast.data_processing.sp.sp_data_adjust import adjust_by_bound
-
 oldtime = datetime.datetime.now()
 # sparkdf = spark.sql("""
 #           select *,to_unix_timestamp(cast(sdt as string),'yyyyMMdd') dt,
@@ -20,7 +18,8 @@ def tran_boxcox_compute(x):
     :param x: 要转化的值
     :return:
     """
-
+    if x<0:
+        x=0
     tmp = 0.01  # 如果为0，那么默认加个临时数
     x = x + 1  # 对x进行+1处理
     tmp2 = 0.01  # 这是在boxcox转化的时候默认使用临时变量
@@ -94,6 +93,44 @@ def boxcox_tranform(sparkdf, col_qty, col_boxcox, sdate, edate):
     return sparkdf.filter(date_filter_condition(sdate, edate))
 
 
+def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, edate, replace_func, w_boxcox=90, w_replace=14,conn='and',
+                    col_time='sdt'):
+    """
+    过去一段时间窗口w内 ，通过filter_func超出上下限的用replace_func的边界值替换
+    """
+    windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w_boxcox),
+                                                                                    end=Window.currentRow)
+    for dict_key in filter_func:
+        func_up, func_low = globals()[dict_key](windowOpt, col_boxcox, filter_func[dict_key])
+        sparkdf = sparkdf.withColumn("{}_up".format(dict_key), func_up)
+        sparkdf = sparkdf.withColumn("{}_low".format(dict_key), func_low)
+    filter_up_str, filter_low_str = "1=1 ", "1=1 "
+    if conn == "and":
+        for dict_key in filter_func:
+            filter_up_str += "and {0}>{1}_up ".format(col_boxcox, dict_key)
+            filter_low_str += "and {0}<{1}_low ".format(col_boxcox, dict_key)
+    else:
+        for dict_key in filter_func:
+            filter_up_str += "or {0}>{1}_up ".format(col_boxcox, dict_key)
+            filter_low_str += "or {0}<{1}_low ".format(col_boxcox, dict_key)
+
+    for dict_key in replace_func:
+        func_up, func_low = globals()[dict_key](windowOpt, col_qty, replace_func[dict_key])
+        windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w_replace),
+                                                                                        end=Window.currentRow)
+        sparkdf = sparkdf.withColumn("{}_replace_up".format(dict_key), func_up)
+        sparkdf = sparkdf.withColumn("{}_replace_low".format(dict_key), func_low)
+        sparkdf = sparkdf.withColumn(col_qty, psf.when(psf.expr(filter_up_str),
+                                                       sparkdf['{}_replace_up'.format(dict_key)]).otherwise(
+            sparkdf[col_qty]))
+        sparkdf = sparkdf.withColumn(col_qty, psf.when(psf.expr(filter_low_str),
+                                                       sparkdf['{}_replace_low'.format(dict_key)]).otherwise(
+            sparkdf[col_qty]))
+
+    """落表"""
+    return sparkdf.filter(date_filter_condition(sdate, edate))
+
+
 def sales_filter_by_boxcox(spark, param):
     col_key = param['col_key']
     col_qty = param['col_qty']
@@ -101,8 +138,8 @@ def sales_filter_by_boxcox(spark, param):
     w_replace = param['w_replace']
     sdate = param['sdate']
     edate = param['edate']
-    func_dict_boxcox =  param['func_dict_boxcox']
-    replace_func_boxcox = param['replace_func_boxcox']
+    func_dict_boxcox = eval(param['func_dict_boxcox'])
+    replace_func_boxcox = eval(param['replace_func_boxcox'])
     conn = param['conn']
     col_time = param['col_time']
     input_table = param['no_sales_adjust_table']
@@ -110,9 +147,10 @@ def sales_filter_by_boxcox(spark, param):
     col_boxcox = param['col_boxcox']
     sparkdf = read_table(spark, input_table, sdt='N')
     sparkdf = boxcox_tranform(sparkdf, col_qty, col_boxcox, sdate, edate)
+
     sparkdf = adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, func_dict_boxcox, sdate, edate, replace_func_boxcox,
                           w_boxcox, w_replace, conn, col_time)
-    save_table(sparkdf, output_table)
+    save_table(spark, sparkdf, output_table,)
     return 'SUCCESS'
 
 
@@ -239,7 +277,7 @@ def big_order_filter(spark, param):
     output_table = param['outlier_order_table']
     col_partitions = param['col_partitions']
     shop_list = param['shop_list']
-    sparkdf = read_origin_sales_table(spark, input_table,shop_list=shop_list)
+    sparkdf = read_origin_sales_table(spark, input_table, shop_list=shop_list)
     sparkdf = sales_filter_by_bound(sparkdf, col_key, w, sdate, edate, col_qty, filter_func, conn)
     save_table(spark, sparkdf, output_table)
     return "SUCCESS"

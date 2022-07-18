@@ -25,4 +25,5 @@ func_dict_boxcox = "{'bound_sigma': (3, -3)}"
 replace_func_boxcox = "{'bound_mean': (1, 1)}"
 w_boxcox = 90
 w_replace = 14
+col_boxcox = 'boxcox_qty'
 
