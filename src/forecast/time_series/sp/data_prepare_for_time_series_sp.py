@@ -6,6 +6,8 @@ include:
     数据准备模块：保证进入时序模型数据可用，无不连续值，空值；
 """
 import traceback
+from datetime import datetime
+
 import pandas as pd
 from forecast.common.log import get_logger
 from forecast.common.date_helper import date_add_str
@@ -113,12 +115,13 @@ def data_precess(param,spark):
             t[y].fillna(0.0, inplace=True)
             sales_cleaned = sales_cleaned.append(t)
 
-        sales_cleaned = sales_cleaned[[dt, y]].sort_values(dt).set_index(dt, drop=True)
+        sales_cleaned = sales_cleaned[['shop_id', 'goods_id', 'th_y', 'apply_model', 'dt']].sort_values('dt')
+        sales_cleaned = sales_cleaned.dropna()
+        sales_cleaned["dt"] = sales_cleaned["dt"].apply(lambda x: datetime.datetime.strftime(x, "%Y-%m-%d"))
 
-
-        # parititions = param['time_col']
-        # prepare_data_table = param['prepare_data_table']
-        # save_table(spark, data_result, prepare_data_table, partition=parititions)
+        df_value = sales_cleaned.values.tolist()
+        df_columns = sales_cleaned.columns
+        spark_df = spark.createDataFrame(df_value, ['shop_id', 'goods_id', 'th_y', 'apply_model', 'dt'])
 
         logger_info.info("数据准备完成！")
     except Exception as e:
@@ -126,7 +129,7 @@ def data_precess(param,spark):
         status = False
         logger_info.info(traceback.format_exc())
 
-    return sales_cleaned
+    return spark_df
 
 
 #时序模型数据准备

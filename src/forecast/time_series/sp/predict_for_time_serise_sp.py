@@ -62,6 +62,7 @@ def model_predict(key_value,data,method,key_cols,param,forcast_start_date,predic
 
     model_include=True
     data = row_transform_to_dataFrame(data)
+    data[time_col] = data[time_col].apply(lambda x: datetime.datetime.strptime(x, "%Y-%m-%d"))
     method = data[apply_model].values[0]
     method_param = method_param_all[method]
 
@@ -122,8 +123,10 @@ def model_predict(key_value,data,method,key_cols,param,forcast_start_date,predic
         df_month = pd.DataFrame(dict_month)
         if str(method).lower() == 'croston' or str(method).lower() == 'crostontsb':
             result_df['y_pred'] = preds['forecast']
+            result_df['pred_time'] = preds['dt']
         else:
             result_df['y_pred'] = df_month['y']
+            result_df['pred_time']=preds.index
     else:
         result_df['y_pred'] = preds
     result_df['pred_time'] = [i for i in range(1, predict_len + 1)]
