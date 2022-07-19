@@ -9,7 +9,7 @@ from digitforce.aip.components.recommend.tmp import rank_data_process_op, lightg
 from digitforce.aip.components.source import hive
 
 name = "RecommendMultiRecallAndRank"
-description = ""
+description = '''{"source": [{"labelx.push_user": ["user_id", "gender", "age", "click_cnt", "city"]}, {"labelx.push_goods": ["sku", "category_l", "category_m", "category_s", "order_cnt"]}, {"labelx.push_traffic_behavior": ["event_time", "event_code", "user_id", "sku"]}]}'''
 
 
 @dsl.pipeline(
@@ -33,7 +33,7 @@ def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_da
         AND event_code IN ('EXPOSURE','CLICK', 'CART_ADD')
     
     '''
-    user_show_and_action_table = f"aip.show_and_action_{run_datetime_str}"  # 必须包含 user_id, item_id,  click_cnt
+    user_show_and_action_table = f"aip.show_and_action_latest"  # 必须包含 user_id, item_id,  click_cnt
     show_and_action_table_maker = sql.hive_sql_executor(show_and_action_sql, user_show_and_action_table)
     show_and_action_table_maker.container.set_image_pull_policy("Always")
 
