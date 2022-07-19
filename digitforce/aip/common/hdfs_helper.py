@@ -1,4 +1,5 @@
 import glob
+import os
 
 import pyhdfs
 
@@ -51,7 +52,18 @@ class HdfsClient:
     def copy_from_local_dir(self, local_dir, dest):
         self.mkdir_dirs(dest)
         files = glob.glob(local_dir)
+        for _ in files:
+            _dest = os.path.join(dest, os.path.basename(_))
+            self.copy_from_local(_, _dest)
 
+    def copy_dir_to_local(self, local_dir, dest_dir):
+        dest_files = self.list_dir(dest_dir)
+        if not os.path.exists(local_dir):
+            os.makedirs(local_dir, exist_ok=True)
+        for _ in dest_files:
+            dest = os.path.join(dest_dir, _)
+            local_path = os.path.join(local_dir, _)
+            self.copy_to_local(dest, local_path)
 
 dg_hdfs_client = HdfsClient(hosts=[f"{HDFS_HOST}:{HDFS_PORT}"])
 
