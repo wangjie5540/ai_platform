@@ -81,7 +81,6 @@ def data_precess(param,spark):
         df_value = sales_cleaned.values.tolist()
         df_columns = sales_cleaned.columns
         spark_df = spark.createDataFrame(df_value, ['shop_id', 'goods_id', 'th_y', 'apply_model', 'dt'])
-
         logger_info.info("数据准备完成！")
     except Exception as e:
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>...data prepare",e)
