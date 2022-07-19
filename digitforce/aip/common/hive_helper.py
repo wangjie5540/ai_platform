@@ -41,8 +41,10 @@ class HiveClient:
         return df
 
     @_get_conn
-    def query_to_table(self, sql, table_name, db=None):
+    def query_to_table(self, sql, table_name, db=None, delete_tb=False):
         cursor = self.conn.cursor()
+        if delete_tb:
+            self.delete_table(table_name)
         table_name = f"{db}.{table_name}" if db else table_name
         _sql = f"CREATE TABLE IF NOT EXISTS {table_name} AS " \
                f"{sql}"
@@ -51,7 +53,8 @@ class HiveClient:
     @_get_conn
     def delete_table(self, table_name):
         cursor = self.conn.cursor()
-        _sql = f"DELETE "
+        _sql = f"DROP TABLE IF EXISTS {table_name}"
+        cursor.execute(_sql)
 
     def close(self):
         if self.conn:
