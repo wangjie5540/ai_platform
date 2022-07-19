@@ -17,8 +17,9 @@ from forecast.common.spark import spark_init
 from forecast.time_series.sp.data_prepare_for_time_series_sp import *
 from forecast.common.save_data import write_to_hive
 from forecast.common.common_helper import *
+from forecast.model_evaluation import forecast_evaluation
 
-def method_called_back_sp(spark,param):
+def method_called_back_sp(spark,param,spark_df):
     """
     模型回测
     :param data: 样本
@@ -31,37 +32,29 @@ def method_called_back_sp(spark,param):
     :param assist_param: 一些辅助函数
     :return: 回测结果
     """
-
-    predict_sum=0
-    time_type=param['time_type']#day/week/month
-    forcast_start_date=param['forcast_start_date']
-    predict_len=param['predict_len']
-    step_len=param['step_len']
+    key_cols = param['key_cols']
+    apply_model_index = param['apply_model_index']
+    forecast_start_date = param['forecast_start_date']
+    predict_len = param['predict_len']
+    col_qty = param['col_qty']
     output_table = param['output_table']
     partitions = param['partitions']
-    result_tmp = False
+    index = pd.date_range(forecast_start_date, periods=predict_len, freq='D')
+    temp_dict = {"day": "D", "week": "W-MON", "month": "MS", "season": "QS-OCT", "year": "A"}
+    if param['time_type'] in temp_dict:
+        index = pd.date_range(forecast_start_date, periods=predict_len, freq=temp_dict[param['time_type']])
+    time_list = list(datetime.datetime.strftime(i,"%Y%m%d") for i in index)
+    result_data = method_called_predict_sp(param, spark_df)
+    #TODO 每天都过过滤还是一次性过率好那个效果更好？
+    for i in range(1,len(time_list)):
+        param['forecast_start_date']=time_list[i]
+        result_data_temp = method_called_predict_sp(param, spark_df)
+        result_data.union(result_data_temp)
+    param['forecast_start_date'] = forecast_start_date
+    spark_df = spark_df.join(result_data,on=key_cols,how='left')
+    wmape_spdf = forecast_evaluation.forecast_evaluation_wmape(spark_df,col_qty,"pred_time",col_key=key_cols,df_type='sp')
 
-    if predict_len<=0:
-        return
-    if step_len<=0:
-        step_len=1
-    for i in range(predict_len):
-        if i!=0:
-            forcast_start_date=date_add_str(forcast_start_date,step_len,time_type)
-        predict_sum+=step_len
-        if predict_sum>predict_len:
-            tmp_len=predict_len+step_len-predict_sum
-            result_tmp=method_called_predict_sp(spark,param)
-        else:
-            result_tmp=method_called_predict_sp(spark,param)
-        if i==0:
-            result_data=result_tmp
-        else:
-            result_data=result_data.union(result_tmp)#合并结果
-        if predict_sum>predict_len:
-            break
     save_table(spark, result_data, output_table, partition=partitions)
-    return result_tmp
 
 def back_test_sp(param,spark):
     """
@@ -70,7 +63,6 @@ def back_test_sp(param,spark):
     :param spark: spark
     :return:
     """
-    status=True
     logger_info=get_logger()
     if 'purpose' not in param.keys() or 'predict_len' not in param.keys():
         logger_info.info('problem:purpose or predict_len')
@@ -85,45 +77,7 @@ def back_test_sp(param,spark):
     param=update_param_default(param,default_conf)
     logger_info.info("time_series_operation:")
     logger_info.info(str(param))
-    # mode_type=param['mode_type']
-    # spark_inner=0
-    # if str(mode_type).lower()=='sp' and spark==None:
-    #     try:
-    #         add_file='time_series.zip'
-    #         spark=spark_init(add_file)
-    #         logger_info.info('spark 启动成功')
-    #     except Exception as e:
-    #         logger_info.info(traceback.format_exc())
-    #         status=False
-    #     spark_inner=1
-    # key_cols=param['key_cols']
-    # apply_model_index=param['apply_model_index']
-    # forcast_start_date=param['forcast_start_date']
-    # predict_len=param['predict_len']
-    # step_len=param['step_len']
-    # result_processing_param=param['result_processing_param']
 
-
-    # try:
     prepare_data = data_prepared_for_model(spark, param)
-    if prepare_data:
-        status=method_called_back_sp(spark,param)
-    #     logger_info.info("method called 成功")
-    # except Exception as e:
-    #     data_pred=None
-    #     status=False
-    #     logger_info.info(traceback.format_exc())
-    #
-    # try:
-    #     partition=result_processing_param['partition']
-    #     table_name=result_processing_param['table_name']
-    #     mode_type=result_processing_param['mode_type']
-    #     write_to_hive(spark,data_pred,partition,table_name,mode_type)#结果保存
-    # except Exception as e:
-    #     status=False
-    #     logger_info.error(traceback.format_exc())
-    #
-    # if spark_inner==1:#如果当前接口启动的spark，那么要停止
-    #     spark.stop()
-    #     logger_info.info("spark stop")
-    return status
+    status=method_called_back_sp(spark,param,prepare_data)
+    return "BACKUP TEST SUCCESS"
