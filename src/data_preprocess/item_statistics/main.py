@@ -8,7 +8,7 @@ def main():
     setup_console_log()
     parser = argparse.ArgumentParser()
     parser.add_argument('statistics_table', type=str)
-    parser.add_argument('--event_table', type=str, default='push_traffic_behavior')
+    parser.add_argument('--event_table', type=str, default='labelx.push_traffic_behavior')
     parser.add_argument('--event_code_column_name', type=str, default='event_code')
     parser.add_argument('--duration', type=int)
     parser.add_argument('--partition_name', type=str, default='dt')

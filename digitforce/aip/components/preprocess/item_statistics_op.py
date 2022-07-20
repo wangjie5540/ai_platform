@@ -2,12 +2,12 @@ from digitforce.aip.common.constants.global_constant import AI_PLATFORM_IMAGE_RE
 from digitforce.aip.components.op_decorator import *
 
 
-def item_statistics(statistics_table, table_name=None, event_code_column_name=None, duration=None,
+def item_statistics(statistics_table_name, event_table_name=None, event_code_column_name=None, duration=None,
                     partition_name=None, date_str=None, item_column=None, image_tag='latest'):
-    arguments = ['main.py', statistics_table]
-    if table_name:
+    arguments = ['main.py', statistics_table_name]
+    if event_table_name:
         arguments.append('--event_table')
-        arguments.append(table_name)
+        arguments.append(event_table_name)
 
     if event_code_column_name:
         arguments.append('--event_code_column_name')
