@@ -51,13 +51,15 @@ def model_predict(key_value,data,param,forcast_start_date,predict_len):
         data = data_process(data_temp,param)
 
     temp_dict = {"day": "D", "week": "W-MON", "month": "MS", "season": "QS-OCT", "year": "A"}
-
-    data[time_col] = data[time_col].apply(lambda x: datetime.datetime.strptime(x, "%Y%m%d"))
+    forcast_start_date = pd.to_datetime(forcast_start_date)
+    # data[time_col] = data[time_col].apply(lambda x: datetime.datetime.strptime(x, "%Y%m%d"))
     method = data[apply_model].values[0]
     method_param = method_param_all[method]
 
     index = pd.date_range(forcast_start_date, periods=predict_len, freq="D")
-    # forcast_end_date = datetime.datetime.strftime(max(index), "%Y%m%d")
+    if param['time_type'] in temp_dict:
+        index = pd.date_range(forcast_start_date, periods=predict_len, freq=temp_dict[param['time_type']])
+
     data_tmp = data[data[time_col] < forcast_start_date]#日期小于预测日期
 
 
@@ -130,7 +132,7 @@ def model_predict(key_value,data,param,forcast_start_date,predict_len):
     # result_df['pred_time'] = [i for i in range(1, predict_len + 1)]
     result_df['time_type']=time_type
 
-    # result_df['pred_time'] = result_df['pred_time'].apply(lambda x:datetime.datetime.strftime(x,"%Y%m%d"))
+    result_df['pred_time'] = result_df['pred_time'].apply(lambda x:datetime.datetime.strftime(x,"%Y%m%d"))
     data_result=predict_result_handle(result_df,key_value,key_cols,mode_type,save_table_cols)#对结果进行处理
     return data_result
 
