@@ -61,12 +61,6 @@ def model_predict(key_value,data,param,forcast_start_date,predict_len):
     data_tmp = data[data[time_col] < forcast_start_date]#日期小于预测日期
 
 
-    # if param['purpose'] == 'back_test':
-    #     if param['time_type'] in temp_dict:
-    #         index = pd.date_range(forcast_start_date, periods=predict_len, freq=temp_dict[param['time_type']])
-    #         forcast_end_date = datetime.datetime.strftime(max(index),"%Y%m%d")
-    #     data_tmp = data[data[time_col]>=forcast_start_date and data[data[time_col]<=forcast_end_date]]#回测数据集
-
 
     data_tmp=data_tmp.sort_values(by=time_col,ascending=True)#进行排序
 

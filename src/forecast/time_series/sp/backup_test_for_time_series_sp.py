@@ -39,22 +39,26 @@ def method_called_back_sp(spark,param,spark_df):
     col_qty = param['col_qty']
     output_table = param['output_table']
     partitions = param['partitions']
+    dt = param['time_col']
     index = pd.date_range(forecast_start_date, periods=predict_len, freq='D')
     temp_dict = {"day": "D", "week": "W-MON", "month": "MS", "season": "QS-OCT", "year": "A"}
     if param['time_type'] in temp_dict:
         index = pd.date_range(forecast_start_date, periods=predict_len, freq=temp_dict[param['time_type']])
+    #按照forecast_start_time将数据集划分为训练集和测试集
+    back_test_data = spark_df.filter(spark_df[dt] >= forecast_start_date)
     time_list = list(datetime.datetime.strftime(i,"%Y%m%d") for i in index)
     result_data = method_called_predict_sp(param, spark_df)
-    #TODO 每天都过过滤还是一次性过率好那个效果更好？
+
+    #TODO 每天都过滤还是一次性过率好那个效果更好？
     for i in range(1,len(time_list)):
         param['forecast_start_date']=time_list[i]
         result_data_temp = method_called_predict_sp(param, spark_df)
         result_data.union(result_data_temp)
     param['forecast_start_date'] = forecast_start_date
-    spark_df = spark_df.join(result_data,on=key_cols,how='left')
-    wmape_spdf = forecast_evaluation.forecast_evaluation_wmape(spark_df,col_qty,"pred_time",col_key=key_cols,df_type='sp')
-
-    save_table(spark, result_data, output_table, partition=partitions)
+    back_test_data = back_test_data.join(result_data,on=key_cols,how='left')
+    wmape_spdf = forecast_evaluation.forecast_evaluation_wmape(back_test_data,col_qty,"pred_time",col_key=key_cols,df_type='sp')
+    get_logger().info("回测效果",wmape_spdf)
+    save_table(spark, back_test_data, output_table, partition=partitions)
 
 def back_test_sp(param,spark):
     """
