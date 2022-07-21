@@ -14,12 +14,12 @@ def build_spark_session(app_name):
 
 def forecast_spark_session(app_name):
     """
-        初始化特征
-        :return:
-        """
-    os.environ["PYSPARK_DRIVER_PYTHON"] = "/data/ibs/anaconda3/bin/python"
-    os.environ['PYSPARK_PYTHON'] = "/data/ibs/anaconda3/bin/python"
-    spark = SparkSession.builder \
+    初始化特征
+    :return:
+    """
+    os.environ["PYSPARK_DRIVER_PYTHON"]="/data/ibs/anaconda3/bin/python"
+    os.environ['PYSPARK_PYTHON']="/data/ibs/anaconda3/bin/python"
+    spark=SparkSession.builder \
         .appName(app_name).master('yarn') \
         .config("spark.executor.instances", "50") \
         .config("spark.executor.memory", "4g") \
