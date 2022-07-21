@@ -9,8 +9,6 @@ import pickle
 import os
 import pyhdfs
 import sys
-# file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))#兼顾spark-submit方式
-# sys.path.append(file_path)
 from zipfile import ZipFile
 import shutil
 from forecast.common.config import get_config
@@ -47,6 +45,8 @@ def get_client():
     获取操作hdfs的client
     :return:
     """
+    file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))#兼顾spark-submit方式
+    sys.path.append(file_path)
     file_tmp="/common/config/"
     environment=file_tmp+r'environment.toml'
     if os.path.exists(file_path):#如果压缩文件存在，是为了兼顾spark_submit形式
