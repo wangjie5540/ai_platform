@@ -13,6 +13,10 @@ def build_spark_session(app_name):
 
 
 def forecast_spark_session(app_name):
+    """
+        初始化特征
+        :return:
+        """
     os.environ["PYSPARK_DRIVER_PYTHON"] = "/data/ibs/anaconda3/bin/python"
     os.environ['PYSPARK_PYTHON'] = "/data/ibs/anaconda3/bin/python"
     spark = SparkSession.builder \
@@ -38,6 +42,12 @@ def forecast_spark_session(app_name):
     spark.sql("set hive.exec.dynamic.partitions=true")
     spark.sql("set hive.exec.max.dynamic.partitions=2048")
     spark.sql("set hive.exec.dynamic.partition.mode=nonstrict")
+    spark.sql("use ai_dm_dev")
+    sc = spark.sparkContext
+    zip_path1 = './forecast.zip'
+    zip_path2 = './digitforce.zip'
+    sc.addPyFile(zip_path1)
+    sc.addPyFile(zip_path2)
     return spark
 
 
@@ -118,4 +128,4 @@ class SparkHelper:
     #         data_tmp.to_csv(file_path, index=False, encoding=encoding)
 
 
-forecast_spark_helper = SparkHelper(forecast_spark_session("forecast_app_name"))
+forecast_spark_helper = SparkHelper(forecast_spark_session("forecast_app"))
