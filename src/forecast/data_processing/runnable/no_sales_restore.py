@@ -4,84 +4,70 @@
 """
 无销量还原天级别销量还原
 """
+import os
 from forecast.data_processing.sp.sp_data_adjust import no_sales_adjust
-
+import logging
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
     findspark.init()
 except:
     pass
-import argparse
+import sys
 import traceback
-from forecast.common.log import get_logger
-from forecast.common.toml_helper import TomlOperation
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+from digitforce.aip.common.file_config import get_config
 
 
-def load_params():
+def load_params(sdate,edate,col_openinv,col_endinv,col_category,col_time,w,col_qty,join_key):
     """运行run方法时"""
     param_cur = {
-        'mode_type': 'sp',
-        'sdate': '20210101',
-        'edate': '20220101',
-        'col_openinv': 'opening_inv',
-        'col_endinv': 'ending_inv',
-        'col_key': ['shop_id', 'goods_id'],
-        'col_category': 'category4_code',
-        'col_time': 'dt',
-        'w':2,
-        'col_qty':'fill_sum_qty',
-        'join_key':['shop_id','goods_id','dt']
+        'sdate': sdate,#'20210101',
+        'edate': edate,#'20220101',
+        'col_openinv': col_openinv,#'opening_inv',
+        'col_endinv': col_endinv,#'ending_inv',
+        'col_category': col_category,#'category4_code',
+        'col_time': col_time,#'dt',
+        'w': w, #2,
+        'col_qty': col_qty,#'fill_sum_qty',
+        'join_key': join_key# ['shop_id', 'goods_id', 'dt']
     }
-    f = TomlOperation(os.getcwd()+"/forecast/data_processing/config/param.toml")
-    params_all = f.read_file()
+    params_all = get_config(os.getcwd()+"/forecast/data_processing/config/param.toml")
     # 获取项目1配置参数
     params = params_all['filter_p1']
     params.update(param_cur)
     return params
 
 
-def parse_arguments():
-    """
-    #开发测试用
-    :return:
-    """
-    params = load_params()
-    parser = argparse.ArgumentParser(description='no_sales_adjust')
-    parser.add_argument('--param', default=params, help='arguments')
-    parser.add_argument('--spark', default=spark, help='spark')
-    args = parser.parse_args(args=[])
-    return args
-
-
-def run():
+def run(sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qty, join_key):
     """
     跑接口
     :return:
     """
-    logger_info = get_logger()
-    logger_info.info("LOADING···")
-    args = parse_arguments()
-    param = args.param
-    spark = args.spark
+    logger_info = setup_console_log(leve=logging.INFO)
+    setup_logging(info_log_file="", error_log_file="", info_log_file_level="INFO")
+    logging.info("LOADING···")
 
-    logger_info.info(str(param))
+    param = load_params(sdate,edate,col_openinv,col_endinv,col_category,col_time,w,col_qty,join_key)
+    logging.info(str(param))
     if 'mode_type' in param.keys():
         run_type = param['mode_type']
     else:
         run_type = 'sp'
     try:
         if run_type == 'sp':  # spark版本
-            logger_info.info("RUNNING···")
-            no_sales_adjust(spark, param)
+            logging.info("RUNNING···")
+            no_sales_adjust(param)
         else:
             # pandas版本
             pass
         status = "SUCCESS"
-        logger_info.info("SUCCESS")
+        logging.info("SUCCESS")
     except Exception as e:
         status = "ERROR"
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
     return status
 
 if __name__ == "__main__":
-    run()
+    sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qty, join_key = sys.argv[1], sys.argv[2],sys.argv[3], sys.argv[4],\
+                                                                      sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9]
+    run(sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qty, join_key)

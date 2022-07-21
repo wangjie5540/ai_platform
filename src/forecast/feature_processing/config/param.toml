@@ -1,4 +1,13 @@
 [feature_param]
+weather_data_sql = "select *,to_unix_timestamp(recordtime,'yyyy-MM-dd') sdt,replace(recordtime,'-','') dt,
+                       from_unixtime(to_unix_timestamp(date_add(recordtime,1 - case when dayofweek(recordtime) = 1 then 7
+                       else dayofweek(recordtime) - 1 end),'yyyy-MM-dd'),'yyyyMMdd') week_dt,weekofyear(recordtime) week,
+                       from_unixtime(to_unix_timestamp(trunc(recordtime,'MM'),'yyyy-MM-dd'),'yyyyMMdd') month_dt from  {0}"
+
+site_data_sql = " select site_code as shop_id,province,city,district  from {0} {1}
+                  group by site_code,province,city,district"
+
+col_origin_name = 'site_code'
 col_key = ['shop_id','goods_id']
 sales_feature_daily_func = "{'col_gtz_agg_days': (['mean', 'sum'], [2, 3]),'col_agg_days': (['mean'], [2,7]),'col_gtz_count_days': (['days'], [3,7]),'col_hb_days': (['hb'], [2]),'col_tb_days': (['tb'], [2])}"
 
@@ -15,17 +24,19 @@ date_feature_monthly_func = "{'dt':'min','is_holiday':'sum', 'is_workday':'sum',
 col_time = "sdt"
 sdate = ''
 edate = ''
-input_sales_table = 'ai_dm.ads_scm_goods_sales_log'
-input_stock_table = 'ai_dm.ads_scm_original_stock_snapshot'
-input_category_table = 'ai_dm.ads_scm_original_site_goods'
-input_site_table = "ai_dm.ads_scm_original_site"
-input_weather_table = "ai_dm.lbs_weather_history_partition"
+hive_origin_db = 'ai_dm'
+hive_dev_db = 'ai_dm_dev'
+input_sales_table = '{0}.ads_scm_goods_sales_log'
+input_stock_table = '{0}.ads_scm_original_stock_snapshot'
+input_category_table = '{0}.ads_scm_original_site_goods'
+input_site_table = "{0}.ads_scm_original_site"
+input_weather_table = "{0}.lbs_weather_history_partition"
 outlier_order_table = 'ai_dm_dev.outlier_order_0620'
 qty_aggregation_table = "ai_dm_dev.qty_aggregation_0620"
 qty_aggregation_weekly_table = "ai_dm_dev.qty_aggregation_weekly_0620"
 qty_aggregation_monthly_table = "ai_dm_dev.qty_aggregation_month_0620"
 fill_zero_table = "ai_dm_dev.fill_zero_0620"
-no_sales_adjust_table = "ai_dm_dev.no_sales_adjust_0620"
+no_sales_adjust_table = "ai_dm_dev.no_sales_adjust_0620"#数据库分开
 sales_features_daily_table = "ai_dm_dev.sales_features_daily_0620"
 sales_features_weekly_table = "ai_dm_dev.sales_features_weekly_0620"
 sales_features_monthly_table = "ai_dm_dev.sales_features_monthly_0620"

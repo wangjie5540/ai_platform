@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # @Time : 2022/06/29
 # @Author : Arvin
-from forecast.common.common_helper import *
-
+from forecast.common.mysql import get_data_from_mysql
+from forecast.common.reference_package import *
+from digitforce.aip.common.spark_helper import *
 
 
 def is_new_sku(standard, storage_life, sale_days):
@@ -97,7 +98,7 @@ def data_prepare(spark, params_data_prepare):
     threshold_proportion = params_data_prepare['threshold_proportion']
     threshold_sales = params_data_prepare['threshold_sales']
     # data_prepare_table = params_data_prepare['data_prepare_table']
-    sparkdf_sales = read_table(spark, sales_table, sdt='N', partition_list=shops)
+    sparkdf_sales = forecast_spark_helper.read_table(sales_table, sdt='N', partition_list=shops)
     config_tables = params_data_prepare['config_tables']
     config_table_list = []
 
@@ -116,7 +117,7 @@ def data_prepare(spark, params_data_prepare):
 
     table_names = locals()
     for table_name in config_tables:
-        table_names[table_name] = read_table(spark, table_name)
+        table_names[table_name] = forecast_spark_helper.read_table(table_name)
         config_table_list.append(table_names[table_name])
 
     merge_info = reduce(lambda l, r: l.join(r, col_key, 'left'), config_table_list)

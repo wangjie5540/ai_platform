@@ -9,7 +9,6 @@ include:
 大单过滤
 """
 import os
-import sys
 
 from forecast.data_split.sp.model_selection_grouping import model_selection_grouping
 
@@ -20,8 +19,9 @@ except:
     pass
 import argparse
 import traceback
-from  forecast.common.log import get_logger
-from  forecast.common.toml_helper import TomlOperation
+import logging
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+from digitforce.aip.common.file_config import get_config
 
 
 def load_params():
@@ -31,8 +31,7 @@ def load_params():
         'sdate': '20210101',
         'edate': '20220101'
     }
-    f = TomlOperation(os.getcwd()+"/forecast/data_split/config/param.toml")
-    params_all = f.read_file()
+    params_all = get_config(os.getcwd()+"/forecast/data_split/config/param.toml")
     # 获取项目1配置参数
     params_data_prepare = params_all['params_data_prepare']
     params_model_selection = params_all['model_selection']
@@ -53,7 +52,7 @@ def parse_arguments():
     parser.add_argument('--params_data_prepare', default=params_data_prepare, help='arguments')
     parser.add_argument('--params_model_selection', default=params_model_selection, help='arguments')
     parser.add_argument('--params_model_grouping', default=params_model_grouping, help='arguments')
-    parser.add_argument('--spark', default=spark, help='spark')
+    parser.add_argument('--spark', default=None, help='spark')
     args = parser.parse_args(args=[])
     return args
 
@@ -63,7 +62,8 @@ def run():
     跑接口
     :return:
     """
-    logger_info = get_logger()
+    logger_info = setup_console_log(leve=logging.INFO)
+    setup_logging(info_log_file="", error_log_file="", info_log_file_level="INFO")
     logger_info.info("LOADING···")
     args = parse_arguments()
     params_data_prepare = args.params_data_prepare
@@ -79,7 +79,7 @@ def run():
     try:
         if run_type == 'sp':  # spark版本
             logger_info.info("RUNNING···")
-            model_selection_grouping(spark,params_data_prepare,params_model_selection,params_model_grouping)
+            model_selection_grouping(params_data_prepare,params_model_selection,params_model_grouping)
         else:
             # pandas版本
             pass

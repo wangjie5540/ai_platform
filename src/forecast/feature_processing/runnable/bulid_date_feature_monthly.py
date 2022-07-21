@@ -17,8 +17,9 @@ except:
     pass
 import argparse
 import traceback
-from forecast.common.log import get_logger
-from forecast.common.toml_helper import TomlOperation
+import logging
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+from digitforce.aip.common.file_config import get_config
 
 
 def load_params():
@@ -31,8 +32,7 @@ def load_params():
         'ctype': 'sp',
         'col_time':'dt'
     }
-    f = TomlOperation(os.getcwd()+"/forecast/feature_processing/config/param.toml")
-    params_all = f.read_file()
+    params_all = get_config(os.getcwd()+"/forecast/feature_processing/config/param.toml")
     # 获取项目1配置参数
     params = params_all['feature_param']
     params.update(param_cur)
@@ -47,7 +47,7 @@ def parse_arguments():
     params = load_params()
     parser = argparse.ArgumentParser(description='build date monthly features')
     parser.add_argument('--param', default=params, help='arguments')
-    parser.add_argument('--spark', default=spark, help='spark')
+    parser.add_argument('--spark', default=None, help='spark')
     args = parser.parse_args(args=[])
     return args
 
@@ -57,7 +57,8 @@ def run():
     跑接口
     :return:
     """
-    logger_info = get_logger()
+    logger_info = setup_console_log(leve=logging.INFO)
+    setup_logging(info_log_file="", error_log_file="", info_log_file_level="INFO")
     logger_info.info("LOADING···")
     args = parse_arguments()
     param = args.param

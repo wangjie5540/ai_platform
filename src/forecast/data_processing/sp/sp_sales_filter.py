@@ -2,14 +2,10 @@
 # @Time : 2021/12/25
 # @Author : Arvin
 # 基于spark版
-from forecast.common.common_helper import *
-oldtime = datetime.datetime.now()
-# sparkdf = spark.sql("""
-#           select *,to_unix_timestamp(cast(sdt as string),'yyyyMMdd') dt,
-#           weekofyear(from_unixtime(unix_timestamp(cast(sdt as string),'yyyyMMdd'),'yyyy-MM-dd')) solar_week,
-#           dayofweek(from_unixtime(unix_timestamp(cast(sdt as string),'yyyyMMdd'),'yyyy-MM-dd')) dayofweek,
-#           month(from_unixtime(unix_timestamp(cast(sdt as string),'yyyyMMdd'),'yyyy-MM-dd')) month
-#           from ai_dm.poc_data_test""")
+
+from forecast.common.reference_package import *
+from digitforce.aip.common.spark_helper import *
+from digitforce.aip.common.data_helper import *
 
 
 def tran_boxcox_compute(x):
@@ -131,7 +127,7 @@ def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, e
     return sparkdf.filter(date_filter_condition(sdate, edate))
 
 
-def sales_filter_by_boxcox(spark, param):
+def sales_filter_by_boxcox(param):
     col_key = param['col_key']
     col_qty = param['col_qty']
     w_boxcox = param['w_boxcox']
@@ -145,12 +141,12 @@ def sales_filter_by_boxcox(spark, param):
     input_table = param['no_sales_adjust_table']
     output_table = param['sales_boxcox_table']
     col_boxcox = param['col_boxcox']
-    sparkdf = read_table(spark, input_table, sdt='N')
+    sparkdf = forecast_spark_helper.read_table(input_table, sdt='N')
     sparkdf = boxcox_tranform(sparkdf, col_qty, col_boxcox, sdate, edate)
 
     sparkdf = adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, func_dict_boxcox, sdate, edate, replace_func_boxcox,
                           w_boxcox, w_replace, conn, col_time)
-    save_table(spark, sparkdf, output_table,)
+    forecast_spark_helper.save_table(sparkdf, output_table)
     return 'SUCCESS'
 
 
@@ -246,15 +242,15 @@ def sales_clearance_filter(param):
     conn = param['conn']
     input_table = param['input_table']
     output_table = param['output_table']
-    sparkdf = read_table(spark, input_table)
+    sparkdf = forecast_spark_helper.read_table(input_table)
 
     sparkdf = sales_fliter_by_label_price(sparkdf, col_key, col_label, filter_value, col_price, discount,
                                           price_func_dict, sdate, edate, col_time, w, conn)
-    save_table(sparkdf, output_table)
+    forecast_spark_helper.save_table(sparkdf, output_table)
     return sparkdf
 
 
-def big_order_filter(spark, param):
+def big_order_filter(param):
     """订单过滤
        col_key：主键
        filter_func:过滤函数
@@ -269,21 +265,21 @@ def big_order_filter(spark, param):
     w = param['w']
     sdate = param['sdate']
     edate = param['edate']
-    col_time = param['col_time']
     col_qty = param['col_qty']
     filter_func = eval(param['filter_func'])
     conn = param['conn']
     input_table = param['input_sales_table']
     output_table = param['outlier_order_table']
-    col_partitions = param['col_partitions']
     shop_list = param['shop_list']
-    sparkdf = read_origin_sales_table(spark, input_table, shop_list=shop_list)
+    order_sql = param['order_data_sql']
+    col_origin_name = param['col_origin_name']
+    sparkdf = forecast_spark_helper.read_origin_table(input_table, order_sql, col_origin_name, shop_list)
     sparkdf = sales_filter_by_bound(sparkdf, col_key, w, sdate, edate, col_qty, filter_func, conn)
-    save_table(spark, sparkdf, output_table)
+    forecast_spark_helper.save_table(sparkdf, output_table)
     return "SUCCESS"
 
 
-def filter_by_bound(spark, param):
+def filter_by_bound(param):
     """阈值过滤
           col_key：主键
           filter_func:过滤函数
@@ -304,9 +300,9 @@ def filter_by_bound(spark, param):
     conn = param['conn']
     input_table = param['input_table']
     output_table = param['output_table']
-    sparkdf = read_table(spark, input_table)
+    sparkdf = forecast_spark_helper.read_table(input_table)
     sparkdf = sales_filter_by_bound(sparkdf, col_key, w, sdate, edate, col_time, col_qty, filter_func, conn)
-    save_table(sparkdf, output_table)
+    forecast_spark_helper.save_table(sparkdf, output_table)
     return 'SUCCESS'
 
 
@@ -328,9 +324,9 @@ def filter_by_label(param):
     edate = param['edate']
     input_table = param['input_table']
     output_table = param['output_table']
-    sparkdf = read_table(spark, input_table)
+    sparkdf = forecast_spark_helper.read_table(input_table)
     sparkdf = sales_filter_by_label(sparkdf, col_label, filter_value, sdate, edate)
-    save_table(sparkdf, output_table)
+    forecast_spark_helper.save_table(sparkdf, output_table)
     return sparkdf
 
 
@@ -384,8 +380,11 @@ def sales_fill_zero(spark,param):
     input_sales_table = param['qty_aggregation_table']
     input_stock_table = param['input_stock_table']
     output_table = param['fill_zero_table']
-    sales_sparkdf = read_table(spark, input_sales_table)
-    stock_sparkdf = read_origin_stock_table(spark, input_stock_table)
+    shops = param['shop_list']
+    col_origin_name = param['col_origin_name']
+    stock_data_sql = param['stock_data_sql']
+    sales_sparkdf = forecast_spark_helper.read_table(input_sales_table)
+    stock_sparkdf = forecast_spark_helper.read_origin_table(input_stock_table, stock_data_sql, col_origin_name, shops)
     sparkdf = adjust_by_column(sales_sparkdf, stock_sparkdf, join_key, col_openinv, col_qty, sdate, edate, fill_value)
-    save_table(spark,sparkdf, output_table)
+    forecast_spark_helper.save_table(sparkdf, output_table)
     return "SUCCESS"

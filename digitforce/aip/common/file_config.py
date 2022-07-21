@@ -6,18 +6,17 @@ include:
     获取配置
 """
 import toml
-import os
-from zipfile import ZipFile
-import shutil
 
-def get_config(file_path,section=None):
+
+def get_config(file_path, section=None):
     """
     获取配置
     :param file_path: 配置文件地址
     :param section: 关键字
     :return: 配置结果，dict
     """
-    cfg=toml.load(file_path)
+    cfg = toml.load(file_path)
     if section==None:
         return cfg
     return cfg[section]
+

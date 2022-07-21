@@ -8,78 +8,62 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
 大单过滤
 """
-import os
-from forecast.data_processing.sp.sp_sales_filter import big_order_filter
 
+import sys
+from digitforce.aip.common.spark_helper import *
+from forecast.data_processing.sp.sp_sales_filter import big_order_filter
+import logging
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+from digitforce.aip.common.file_config import get_config
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
     findspark.init()
 except:
     pass
-import argparse
 import traceback
-from forecast.common.log import get_logger
-from forecast.common.toml_helper import TomlOperation
 
 
-def load_params():
-    """运行run方法时"""
+def load_params(sdate, edate):
     param_cur = {
-        'mode_type': 'sp',
-        'sdate': '20210101',
-        'edate': '20220101'
+        'sdate': sdate,
+        'edate': edate
     }
-    f = TomlOperation(os.getcwd()+"/forecast/data_processing/config/param.toml")
-    params_all = f.read_file()
+    params_all = get_config(os.getcwd()+"/forecast/data_processing/config/param.toml")
     # 获取项目1配置参数
     params = params_all['filter_p1']
     params.update(param_cur)
     return params
 
 
-def parse_arguments():
-    """
-    #开发测试用
-    :return:
-    """
-    params = load_params()
-    parser = argparse.ArgumentParser(description='big order filter')
-    parser.add_argument('--param', default=params, help='arguments')
-    parser.add_argument('--spark', default=spark, help='spark')
-    args = parser.parse_args(args=[])
-    return args
-
-
-def run():
+def run(sdate, edate):
     """
     跑接口
     :return:
     """
-    logger_info = get_logger()
-    logger_info.info("LOADING···")
-    args = parse_arguments()
-    param = args.param
-    spark = args.spark
-    print("args", args)
-    logger_info.info(str(param))
+    logger_info = setup_console_log()
+    setup_logging(info_log_file="big_order_filter.info", error_log_file="", info_log_file_level="INFO")
+    logging.info("LOADING···")
+    param = load_params(sdate, edate)
+    logging.info(str(param))
     if 'mode_type' in param.keys():
         run_type = param['mode_type']
     else:
         run_type = 'sp'
     try:
         if run_type == 'sp':  # spark版本
-            logger_info.info("RUNNING···")
-            big_order_filter(spark, param)
+            logging.info("RUNNING···")
+            big_order_filter(param)
         else:
             # pandas版本
             pass
         status = "SUCCESS"
-        logger_info.info("SUCCESS")
+        logging.info("SUCCESS")
     except Exception as e:
         status = "ERROR"
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
     return status
 
 
 if __name__ == "__main__":
-    run()
+    sdate, edate = sys.argv[1], sys.argv[2]
+    run(sdate, edate)

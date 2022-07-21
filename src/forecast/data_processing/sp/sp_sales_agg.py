@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # @Time : 2021/12/25
 # @Author : Arvin
-from forecast.common.common_helper import *
-
-
+from forecast.common.reference_package import *
+from digitforce.aip.common.spark_helper import *
+from digitforce.aip.common.data_helper import *
 def sales_aggregation_by_custom(sparkdf, other_agg_dim, col_custom):
     """自定义"""
     for x in col_custom:
@@ -72,7 +72,7 @@ def sales_aggregation_by_time(sparkdf, other_agg_dim, time_agg_param):
     return sparkdf, other_agg_dim.append('time_agg_type')
 
 
-def sales_aggregation(spark, param):
+def sales_aggregation(param):
     """销售聚合
     sparkdf, granularity_table, other_agg_dim, func_dict, col_qty, sdate, edate
     dict_key = {'shop':'shop_id','sku':'goods_id','day':'dt'}
@@ -96,7 +96,7 @@ def sales_aggregation(spark, param):
     output_table = param['output_table']
     shop_list = param['shop_list']
     agg_type = param['agg_type']
-    sparkdf = read_table(spark, input_table, partition_list=shop_list)
+    sparkdf = forecast_spark_helper.read_table(input_table, partition_list=shop_list)
     for dict_key in func_dict:
         sparkdf, group_key = globals()[dict_key](sparkdf, other_agg_dim, func_dict[dict_key], agg_type)
         print(group_key, col_qty, "sum_{}".format(col_qty))
@@ -110,11 +110,11 @@ def sales_aggregation(spark, param):
 
 
     sparkdf_group = sparkdf_group.filter(date_filter_condition(sdate, edate))
-    save_table(spark, sparkdf_group, output_table)
+    forecast_spark_helper.save_table(sparkdf_group, output_table)
     return "SUCCESS"
 
 
-def sales_continue_processing(spark, param):
+def sales_continue_processing(param):
     col_key = param['col_key']
     col_qty = param['col_qty']
     col_time = param['col_time']
@@ -124,10 +124,10 @@ def sales_continue_processing(spark, param):
     data_type = param['data_type']
     input_table = param['input_table']
     output_table = param['output_table']
-    sparkdf = read_table(spark, input_table)
-    print(col_key,end_date, col_qty, col_time,date_type,data_type)
+    sparkdf = forecast_spark_helper.read_table(input_table)
+    print(col_key,end_date, col_qty, col_time, date_type, data_type)
     data_result = sparkdf.rdd.map(lambda g: (key_process(g, col_key), g)).groupByKey().flatMap(lambda x: sales_continue(x[1],end_date, col_qty,col_time, col_key, col_wm,  date_type,data_type)).filter(lambda h: h is not None).toDF()
-    save_table(spark, data_result, output_table)
+    forecast_spark_helper.save_table(data_result, output_table)
     return 'SUCCESS'
 
 

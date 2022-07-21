@@ -15,6 +15,7 @@ from zipfile import ZipFile
 import shutil
 from forecast.common.config import get_config
 
+
 def save_model(model,filename):
     '''
     保存模型
@@ -27,6 +28,7 @@ def save_model(model,filename):
     f.write(s)
     f.close()
 
+
 def load_model(filename):
     '''
     加载模型
@@ -38,6 +40,7 @@ def load_model(filename):
     s2=f2.read()
     model=pickle.loads(s2)
     return model
+
 
 def get_client():
     """
