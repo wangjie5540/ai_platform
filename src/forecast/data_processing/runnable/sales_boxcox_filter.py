@@ -9,18 +9,13 @@ include:
 大单过滤
 """
 import os
-from digitforce.aip.common.spark_helper import *
 from forecast.data_processing.sp.sp_sales_filter import sales_filter_by_boxcox
 import logging
 import sys
 import traceback
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 from digitforce.aip.common.file_config import get_config
-try:
-    import findspark  # 使用spark-submit 的cluster时要注释掉
-    findspark.init()
-except:
-    pass
+
 
 def load_params(sdate, edate, col_qty):
     """运行run方法时"""
@@ -37,7 +32,7 @@ def load_params(sdate, edate, col_qty):
     return params
 
 
-def run(sdate, edate, col_qty):
+def run(sdate, edate, col_qty, spark):
     """
     跑接口
     :return:
@@ -54,7 +49,7 @@ def run(sdate, edate, col_qty):
     try:
         if run_type == 'sp':  # spark版本
             logging.info("RUNNING···")
-            sales_filter_by_boxcox(param)
+            sales_filter_by_boxcox(spark, param)
         else:
             # pandas版本
             pass

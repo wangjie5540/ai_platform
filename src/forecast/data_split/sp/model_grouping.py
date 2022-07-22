@@ -59,7 +59,7 @@ def label_binning(sparkdf_config, label_list, col_group):
     return sparkdf_config
 
 
-def group_category(params_model_grouping):
+def group_category(spark, params_model_grouping):
 
     group_conditions = params_model_grouping['group_condition']
     col_key = params_model_grouping['col_key']
@@ -109,5 +109,5 @@ def group_category(params_model_grouping):
                         continue
             sparkdf_config_group = label_binning(sparkdf_config_group, col_groups, group_label)
             sparkdf_config = sparkdf_config_group.select(sparkdf_config_other.columns).unionAll(sparkdf_config_other)
-    forecast_spark_helper.save_table(sparkdf_config, model_grouping_table, partition=["shop_id"]) #shop配置partionname 数据
+    save_table(spark, sparkdf_config, model_grouping_table, partition=["shop_id"]) #shop配置partionname 数据
     return 'SUCCESS'

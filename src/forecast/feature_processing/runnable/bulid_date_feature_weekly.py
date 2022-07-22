@@ -7,7 +7,6 @@ Copyright (c) 2021-2022 北京数势云创科技有限公司 <http://www.digitfo
 All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:日期特征-天
 """
-from digitforce.aip.common.spark_helper import *
 from forecast.feature_processing.sp.date_features import build_date_weekly_feature
 import os
 import sys
@@ -32,7 +31,7 @@ def load_params(sdate, edate, col_key, col_time):
     return params
 
 
-def run(sdate, edate, col_key, col_time):
+def run(sdate, edate, col_key, col_time, spark):
     """
     跑接口
     :return:
@@ -49,7 +48,7 @@ def run(sdate, edate, col_key, col_time):
     try:
         if run_type == 'sp':  # spark版本
             logging.info("RUNNING···")
-            build_date_weekly_feature(param)
+            build_date_weekly_feature(spark, param)
         else:
             # pandas版本
             pass

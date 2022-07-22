@@ -12,15 +12,8 @@ import logging
 from forecast.data_processing.sp.sp_sales_filter import sales_clearance_filter
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 from digitforce.aip.common.file_config import get_config
-try:
-    import findspark #使用spark-submit 的cluster时要注释掉
-    findspark.init()
-except:
-    pass
 import argparse
 import traceback
-
-
 
 
 def load_params():

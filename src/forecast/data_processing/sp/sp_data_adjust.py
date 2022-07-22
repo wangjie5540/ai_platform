@@ -3,7 +3,7 @@
 # @Author : Arvin
 from forecast.common.reference_package import *
 from digitforce.aip.common.data_helper import *
-from digitforce.aip.common.spark_helper2 import *
+from digitforce.aip.common.spark_helper import *
 
 
 def adjust_by_interpolate(df, start_date, end_date, col_qty, method='linear'):
@@ -350,5 +350,5 @@ def sales_fill_zero(spark, param):
     sales_sparkdf = read_table(spark, input_sales_table)
     stock_sparkdf = read_origin_table(spark, input_stock_table, stock_data_sql, col_origin_name, shops)
     sparkdf = adjust_by_column(sales_sparkdf, stock_sparkdf, join_key, col_openinv, col_qty, sdate, edate, fill_value)
-    save_table(sparkdf, output_table)
+    save_table(spark, sparkdf, output_table)
     return "SUCCESS"
