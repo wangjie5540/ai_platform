@@ -60,7 +60,7 @@ def col_ptp_future_days(sparkdf, col_key, col_weather, col_time, param):
     return sparkdf
 
 
-def build_weather_daily_feature(spark, param):
+def build_weather_daily_feature(param):
     col_key = param['col_key']
     sdate = param['sdate']
     edate = param['edate']

@@ -44,27 +44,27 @@ def run(sdate, edate, col_openinv, col_qty, join_key, fill_value):
     跑接口
     :return:
     """
-    logger_info = setup_console_log(leve=logging.INFO)
-    setup_logging(info_log_file="", error_log_file="", info_log_file_level="INFO")
-    logger_info.info("LOADING···")
+    logger_info = setup_console_log()
+    setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
+    logging.info("LOADING···")
     param = load_params(sdate, edate, col_openinv, col_qty, join_key, fill_value)
-    logger_info.info(str(param))
+    logging.info(str(param))
     if 'mode_type' in param.keys():
         run_type = param['mode_type']
     else:
         run_type = 'sp'
     try:
         if run_type == 'sp':  # spark版本
-            logger_info.info("RUNNING···")
+            logging.info("RUNNING···")
             sales_fill_zero(param)
         else:
             # pandas版本
             pass
         status = "SUCCESS"
-        logger_info.info("SUCCESS")
+        logging.info("SUCCESS")
     except Exception as e:
         status = "ERROR"
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
     return status
 
 

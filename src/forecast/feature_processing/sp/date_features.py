@@ -156,7 +156,7 @@ def bulid_date_daily_feature(param):
     """日粒度日期特征"""
 
     col_list = param['col_list']
-    ctype = param['ctype']
+    ctype = param['mode_type']
     sdate = param['sdate']
     edate = param['edate']
     col_time = param['col_time']
@@ -196,7 +196,7 @@ def build_date_weekly_feature(param):
     """周粒度日期特征"""
 
     col_key = param['col_key']
-    ctype = param['ctype']
+    ctype = param['model_type']
     sdate = param['sdate']
     edate = param['edate']
     col_time = param['col_time']
@@ -222,7 +222,7 @@ def build_date_monthly_feature(param):
     """周粒度日期特征"""
 
     col_key = param['col_key']
-    ctype = param['ctype']
+    ctype = param['mode_type']
     sdate = param['sdate']
     edate = param['edate']
     col_time = param['col_time']

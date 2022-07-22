@@ -1,11 +1,6 @@
 [feature_param]
-weather_data_sql = "select *,to_unix_timestamp(recordtime,'yyyy-MM-dd') sdt,replace(recordtime,'-','') dt,
-                       from_unixtime(to_unix_timestamp(date_add(recordtime,1 - case when dayofweek(recordtime) = 1 then 7
-                       else dayofweek(recordtime) - 1 end),'yyyy-MM-dd'),'yyyyMMdd') week_dt,weekofyear(recordtime) week,
-                       from_unixtime(to_unix_timestamp(trunc(recordtime,'MM'),'yyyy-MM-dd'),'yyyyMMdd') month_dt from  {0}"
-
-site_data_sql = " select site_code as shop_id,province,city,district  from {0} {1}
-                  group by site_code,province,city,district"
+weather_data_sql = "select *,to_unix_timestamp(recordtime,'yyyy-MM-dd') sdt,replace(recordtime,'-','') dt,from_unixtime(to_unix_timestamp(date_add(recordtime,1 - case when dayofweek(recordtime) = 1 then 7 else dayofweek(recordtime) - 1 end),'yyyy-MM-dd'),'yyyyMMdd') week_dt,weekofyear(recordtime) week,from_unixtime(to_unix_timestamp(trunc(recordtime,'MM'),'yyyy-MM-dd'),'yyyyMMdd') month_dt from  {0}"
+site_data_sql = " select site_code as shop_id,province,city,district  from {0} {1} group by site_code,province,city,district"
 
 col_origin_name = 'site_code'
 col_key = ['shop_id','goods_id']
@@ -20,17 +15,17 @@ date_feature_daily_func = "{'holiday_short': (['last', 'future'], [5]), 'holiday
 date_feature_weekly_func = "{'dt':'min','is_holiday':'sum', 'is_workday':'sum','holiday_first_day':'sum', 'holiday_short':'max','holiday_long':'max', 'holiday_special':'max'}"
 
 date_feature_monthly_func = "{'dt':'min','is_holiday':'sum', 'is_workday':'sum','holiday_first_day':'sum', 'holiday_short':'max','holiday_long':'max', 'holiday_special':'max'}"
-
+model_type = 'sp'
 col_time = "sdt"
 sdate = ''
 edate = ''
 hive_origin_db = 'ai_dm'
 hive_dev_db = 'ai_dm_dev'
-input_sales_table = '{0}.ads_scm_goods_sales_log'
-input_stock_table = '{0}.ads_scm_original_stock_snapshot'
-input_category_table = '{0}.ads_scm_original_site_goods'
-input_site_table = "{0}.ads_scm_original_site"
-input_weather_table = "{0}.lbs_weather_history_partition"
+input_sales_table = 'ai_dm_dev.ads_scm_goods_sales_log'
+input_stock_table = 'ai_dm_dev.ads_scm_original_stock_snapshot'
+input_category_table = 'ai_dm_dev.ads_scm_original_site_goods'
+input_site_table = "ai_dm_dev.ads_scm_original_site"
+input_weather_table = "ai_dm_dev.lbs_weather_history_partition"
 outlier_order_table = 'ai_dm_dev.outlier_order_0620'
 qty_aggregation_table = "ai_dm_dev.qty_aggregation_0620"
 qty_aggregation_weekly_table = "ai_dm_dev.qty_aggregation_weekly_0620"
@@ -45,7 +40,7 @@ date_features_weekly_table= "ai_dm_dev.date_features_weekly_0620"
 date_features_monthly_table= "ai_dm_dev.date_features_monthly_0620"
 weather_feature_daily_table = "ai_dm_dev.weather_features_daily_0620"
 weather_feature_monthly_table = "ai_dm_dev.weather_features_monthly_0620"
-
+partition_name = 'shop_id'
 shop_list = ['1004','1228']
 weatherfrom = "weatherfrom"
 weatherto = "weatherto"
