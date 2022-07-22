@@ -2,8 +2,8 @@
 # @Time : 2021/12/25
 # @Author : Arvin
 
-from forecast.common.common_helper import *
-
+from forecast.common.reference_package import *
+from digitforce.aip.common.spark_helper import *
 
 def get_holiday(dt):
     if type(dt) == str:
@@ -152,11 +152,11 @@ def build_date_features(sdate, edate, col_dt='dt'):
     return feats.drop(['holiday', 'holiday_next_day'], axis=1)
 
 
-def bulid_date_daily_feature(spark, param):
+def bulid_date_daily_feature(param):
     """日粒度日期特征"""
 
     col_list = param['col_list']
-    ctype = param['ctype']
+    ctype = param['mode_type']
     sdate = param['sdate']
     edate = param['edate']
     col_time = param['col_time']
@@ -185,18 +185,18 @@ def bulid_date_daily_feature(spark, param):
     if ctype == 'sp':
         df_values = df.values.tolist()
         df_columns = df.columns.tolist()
-        sparkdf = spark.createDataFrame(df_values, df_columns)
-        save_table(spark, sparkdf, output_table, partition=["dt"])
+        sparkdf = forecast_spark_helper.get_spark().createDataFrame(df_values, df_columns)
+        forecast_spark_helper.save_table(sparkdf, output_table, partition=["dt"])
         return sparkdf
     else:
         return df
 
 
-def build_date_weekly_feature(spark, param):
+def build_date_weekly_feature(param):
     """周粒度日期特征"""
 
     col_key = param['col_key']
-    ctype = param['ctype']
+    ctype = param['model_type']
     sdate = param['sdate']
     edate = param['edate']
     col_time = param['col_time']
@@ -211,18 +211,18 @@ def build_date_weekly_feature(spark, param):
     if ctype == 'sp':
         df_values = df.values.tolist()
         df_columns = df.columns.tolist()
-        sparkdf = spark.createDataFrame(df_values, df_columns)
-        save_table(spark, sparkdf, output_table, partition=["dt"])
+        sparkdf = forecast_spark_helper.get_spark().createDataFrame(df_values, df_columns)
+        forecast_spark_helper.save_table(sparkdf, output_table, partition=["dt"])
         return sparkdf
     else:
         return df
 
 
-def build_date_monthly_feature(spark, param):
+def build_date_monthly_feature(param):
     """周粒度日期特征"""
 
     col_key = param['col_key']
-    ctype = param['ctype']
+    ctype = param['mode_type']
     sdate = param['sdate']
     edate = param['edate']
     col_time = param['col_time']
@@ -237,8 +237,8 @@ def build_date_monthly_feature(spark, param):
     if ctype == 'sp':
         df_values = df.values.tolist()
         df_columns = df.columns.tolist()
-        sparkdf = spark.createDataFrame(df_values, df_columns)
-        save_table(spark, sparkdf, output_table, partition=["dt"])
+        sparkdf = forecast_spark_helper.get_spark().createDataFrame(df_values, df_columns)
+        forecast_spark_helper.save_table(sparkdf, output_table, partition=["dt"])
         return sparkdf
     else:
         return df

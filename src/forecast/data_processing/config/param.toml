@@ -1,4 +1,10 @@
 [filter_p1]
+order_data_sql = "select goods_code as goods_id,order_id,quantity as qty,substring(data_date,12,2) as pay_hour,sales_price,  to_unix_timestamp(dt,'yyyyMMdd') as  sdt,site_code as shop_id,dt from {0}  {1}  and site_code<>'site_code' and quantity>=0 "
+stock_data_sql = "select t1.shop_id as shop_id ,t1.goods_id as goods_id,cast(t1.stock_available as double) as opening_inv, cast(t2.stock_available as double) as ending_inv,t1.dt as dt from (select site_code as shop_id,goods_code as goods_id,stock_available,dt from {0} {1}) t1 left join (select site_code as shop_id,goods_code as goods_id,stock_available, regexp_replace(date_sub(from_unixtime(to_unix_timestamp(dt,'yyyyMMdd'),'yyyy-MM-dd'),1),'-','') dt from {0} {1}) t2 on t1.shop_id= t2.shop_id and t1.goods_id = t2.goods_id and t1.dt = t2.dt"
+weather_data_sql = "select *,to_unix_timestamp(recordtime,'yyyy-MM-dd') sdt,replace(recordtime,'-','') dt,from_unixtime(to_unix_timestamp(date_add(recordtime,1 - case when dayofweek(recordtime) = 1 then 7 else dayofweek(recordtime) - 1 end),'yyyy-MM-dd'),'yyyyMMdd') week_dt,weekofyear(recordtime) week,from_unixtime(to_unix_timestamp(trunc(recordtime,'MM'),'yyyy-MM-dd'),'yyyyMMdd') month_dt from  {0}"
+site_data_sql = " select site_code as shop_id,province,city,district  from {0} {1} group by site_code,province,city,district"
+category_data_sql = "select site_code as shop_id,goods_code as goods_id, category4_code from {0} {1} group by site_code,goods_code,category4_code "
+col_origin_name = 'site_code'
 w = 90
 col_key = ['shop_id','goods_id']
 col_qty = 'qty'
@@ -26,4 +32,5 @@ replace_func_boxcox = "{'bound_mean': (1, 1)}"
 w_boxcox = 90
 w_replace = 14
 col_boxcox = 'boxcox_qty'
+mode_type='sp'
 

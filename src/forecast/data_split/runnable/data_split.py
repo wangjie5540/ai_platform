@@ -9,30 +9,26 @@ include:
 大单过滤
 """
 import os
-import sys
-
+from digitforce.aip.common.spark_helper import *
 from forecast.data_split.sp.model_selection_grouping import model_selection_grouping
-
+import sys
+import logging
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+from digitforce.aip.common.file_config import get_config
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
     findspark.init()
 except:
     pass
-import argparse
 import traceback
-from  forecast.common.log import get_logger
-from  forecast.common.toml_helper import TomlOperation
 
-
-def load_params():
+def load_params(sdate,edate):
     """运行run方法时"""
     param_cur = {
-        'mode_type': 'sp',
-        'sdate': '20210101',
-        'edate': '20220101'
+        'sdate': sdate,#'20210101',
+        'edate': edate,#'20220101'
     }
-    f = TomlOperation(os.getcwd()+"/forecast/data_split/config/param.toml")
-    params_all = f.read_file()
+    params_all = get_config(os.getcwd()+"/forecast/data_split/config/param.toml")
     # 获取项目1配置参数
     params_data_prepare = params_all['params_data_prepare']
     params_model_selection = params_all['model_selection']
@@ -40,56 +36,39 @@ def load_params():
     params_data_prepare.update(param_cur)
     params_model_selection.update(param_cur)
     params_model_grouping.update(param_cur)
-    return params_data_prepare,params_model_selection,params_model_grouping
+    return params_data_prepare, params_model_selection, params_model_grouping
 
 
-def parse_arguments():
-    """
-    #开发测试用
-    :return:
-    """
-    params_data_prepare,params_model_selection,params_model_grouping = load_params()
-    parser = argparse.ArgumentParser(description='model select group')
-    parser.add_argument('--params_data_prepare', default=params_data_prepare, help='arguments')
-    parser.add_argument('--params_model_selection', default=params_model_selection, help='arguments')
-    parser.add_argument('--params_model_grouping', default=params_model_grouping, help='arguments')
-    parser.add_argument('--spark', default=spark, help='spark')
-    args = parser.parse_args(args=[])
-    return args
-
-
-def run():
+def run(sdate, edate):
     """
     跑接口
     :return:
     """
-    logger_info = get_logger()
-    logger_info.info("LOADING···")
-    args = parse_arguments()
-    params_data_prepare = args.params_data_prepare
-    params_model_selection = args.params_model_selection
-    params_model_grouping = args.params_model_grouping
-    spark = args.spark
-    print("args", args)
-    logger_info.info(str(params_data_prepare)+str(params_model_selection)+str(params_model_grouping))
+    logger_info = setup_console_log()
+    setup_logging(info_log_file="data_split.info", error_log_file="", info_log_file_level="INFO")
+    logging.info("LOADING···")
+
+    params_data_prepare, params_model_selection, params_model_grouping = load_params(sdate, edate)
+    logging.info(str(params_data_prepare)+str(params_model_selection)+str(params_model_grouping))
     if 'mode_type' in params_data_prepare.keys():
         run_type = params_data_prepare['mode_type']
     else:
         run_type = 'sp'
     try:
         if run_type == 'sp':  # spark版本
-            logger_info.info("RUNNING···")
-            model_selection_grouping(spark,params_data_prepare,params_model_selection,params_model_grouping)
+            logging.info("RUNNING···")
+            model_selection_grouping(params_data_prepare, params_model_selection, params_model_grouping)
         else:
             # pandas版本
             pass
         status = "SUCCESS"
-        logger_info.info("SUCCESS")
+        logging.info("SUCCESS")
     except Exception as e:
         status = "ERROR"
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
     return status
 
 
 if __name__ == "__main__":
-    run()
+    sdate, edate = sys.argv[1], sys.argv[2]
+    run(sdate, edate)

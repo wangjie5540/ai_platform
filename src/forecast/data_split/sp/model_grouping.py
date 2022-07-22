@@ -1,5 +1,7 @@
-from forecast.common.common_helper import *
-import random
+
+from forecast.common.reference_package import *
+from digitforce.aip.common.spark_helper import *
+
 
 
 def isometric_binning(sparkdf_config, isometric_label, group_nums, partition_col, col_orderby=None):
@@ -57,7 +59,7 @@ def label_binning(sparkdf_config, label_list, col_group):
     return sparkdf_config
 
 
-def group_category(spark, params_model_grouping):
+def group_category(params_model_grouping):
 
     group_conditions = params_model_grouping['group_condition']
     col_key = params_model_grouping['col_key']
@@ -69,7 +71,7 @@ def group_category(spark, params_model_grouping):
     shops = params_model_grouping['shop_list']
     model_selection_table = params_model_grouping['model_selection_table']
     model_grouping_table = params_model_grouping['model_grouping_table']
-    sparkdf_config = read_table(spark, model_selection_table, partition_list = shops) #读取模型选择生成的表
+    sparkdf_config = forecast_spark_helper.read_table(model_selection_table, partition_list = shops) #读取模型选择生成的表
     sparkdf_config = sparkdf_config.withColumn(group_label, lit(None))
     for group_condition in group_conditions:
         print(group_condition)
@@ -107,5 +109,5 @@ def group_category(spark, params_model_grouping):
                         continue
             sparkdf_config_group = label_binning(sparkdf_config_group, col_groups, group_label)
             sparkdf_config = sparkdf_config_group.select(sparkdf_config_other.columns).unionAll(sparkdf_config_other)
-    save_table(spark, sparkdf_config, model_grouping_table, partition=["shop_id"]) #shop配置partionname 数据
+    forecast_spark_helper.save_table(sparkdf_config, model_grouping_table, partition=["shop_id"]) #shop配置partionname 数据
     return 'SUCCESS'

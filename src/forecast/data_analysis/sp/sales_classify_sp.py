@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 # @Time : 2022/12/25
 # @Author : Arvin
-from forecast.common.common_helper import *
+from forecast.common.reference_package import *
+from forecast.common.data_helper import days
+from forecast.common.read_save_data import read_table, save_table
+
 
 def compute_tail_sku(sparkdf_sales, col_qty, col_key, w_tail, col_time, threshold_count, threshold_proportion):
     windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w_tail - 1),
