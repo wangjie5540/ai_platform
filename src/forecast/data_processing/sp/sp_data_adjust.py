@@ -3,7 +3,8 @@
 # @Author : Arvin
 from forecast.common.reference_package import *
 from digitforce.aip.common.data_helper import *
-from digitforce.aip.common.spark_helper import *
+from digitforce.aip.common.spark_helper2 import *
+
 
 def adjust_by_interpolate(df, start_date, end_date, col_qty, method='linear'):
     """插值填补"""
@@ -33,7 +34,7 @@ def sales_fill(qty_value, openinv_value, fill_value):
 
 def adjust_by_column(sales_sparkdf, stock_sparkdf, join_key, col_openinv, col_qty, sdate, edate, fill_value):
     """销售补零 要不要把销售连续起来？"""
-   
+
     sparkdf = stock_sparkdf.join(sales_sparkdf, on=join_key, how='left')
     sparkdf = sparkdf.withColumn("fill_tmp", psf.lit(fill_value))
     sales_fill_udf = udf(sales_fill, DoubleType())
@@ -122,7 +123,7 @@ def adjust_by_sales_growth(df, col_key, col_qty, c_category, col_time, w=2, agg_
                                                                 axis=1)
     df[col_qty].fillna(0, inplace=True)
     # df[col_time] = df[col_time].apply(lambda x: x.strftime('%Y%m%d'))
-    return df[c_columns] 
+    return df[c_columns]
 
 
 def key_process(x, key):
@@ -135,7 +136,7 @@ def sales_day_abnormal_by_day_stock(openinv_value, endinv_value, qty_values):
         return None
     else:
         return qty_values
-    
+
 def sales_check(ac_y_value,th_y_value):
     if (ac_y_value is not None and th_y_value is not None) and th_y_value < ac_y_value:
         return ac_y_value
@@ -151,7 +152,7 @@ def adjust_by_common(rows, key, edate, col_qty, col_key, c_category, col_time, w
     return dataFrame_transform_to_row(result_df, data_type='sp')
 
 
-def no_sales_adjust(param):
+def no_sales_adjust(spark, param):
     """天级汇总销量、天级库存进行识别（无销售还原） sparkdf = sales+inv+category
        1.有期初、期末库存
        2.有期初、无期末
@@ -170,29 +171,30 @@ def no_sales_adjust(param):
     input_sales_table = param['fill_zero_table']
     output_table = param['no_sales_adjust_table']
     input_stock_table = param['input_stock_table']
-    input_category_table=param['input_category_table']
+    stock_data_sql = param['stock_data_sql']
+    input_category_table = param['input_category_table']
     category_data_sql = param['category_data_sql']
     shops = param['shop_list']
     col_origin_name = param['col_origin_name']
-    select_list =join_key + [col_qty]
-    
-    sales_df = forecast_spark_helper.read_table(input_sales_table)
-    stock_df = forecast_spark_helper.read_origin_stock_table(input_stock_table)
-    categorty_df = forecast_spark_helper.read_origin_table(input_category_table,category_data_sql, col_origin_name, shops)
-    sparkdf = sales_df.select(select_list).join(stock_df,on=join_key,how='left')
-    sparkdf = sparkdf.join(categorty_df,on=col_key,how='left')
+    select_list = join_key + [col_qty]
+
+    sales_df = read_table(spark, input_sales_table)
+    stock_df = read_origin_table(spark, input_stock_table, stock_data_sql, col_origin_name, shops)
+    categorty_df = read_origin_table(spark, input_category_table, category_data_sql, col_origin_name, shops)
+    sparkdf = sales_df.select(select_list).join(stock_df, on=join_key, how='left')
+    sparkdf = sparkdf.join(categorty_df, on=col_key, how='left')
     sales_day_abnormal_by_day_stock_udf = udf(sales_day_abnormal_by_day_stock, DoubleType())
     sparkdf = sparkdf.withColumn("col_qty_tmp",
                                  sales_day_abnormal_by_day_stock_udf(sparkdf[col_openinv], sparkdf[col_endinv],
                                                                      sparkdf[col_qty]))
     sparkdf = sparkdf.rdd.map(lambda x: (key_process(x, col_key), x)).groupByKey().flatMap(
-    lambda x: adjust_by_common(x[1], x[0], edate, "col_qty_tmp", col_key, col_category, col_time, w)).toDF()
+        lambda x: adjust_by_common(x[1], x[0], edate, "col_qty_tmp", col_key, col_category, col_time, w)).toDF()
     sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))
     sparkdf = sparkdf.withColumnRenamed("col_qty_tmp", "th_y")
     sparkdf = sparkdf.withColumnRenamed(col_qty, "ac_y")
     sales_check_udf = udf(sales_check, DoubleType())
-    sparkdf = sparkdf.withColumn("th_y",sales_check_udf(sparkdf['ac_y'],sparkdf['th_y']))
-    forecast_spark_helper.save_table(sparkdf, output_table)
+    sparkdf = sparkdf.withColumn("th_y", sales_check_udf(sparkdf['ac_y'], sparkdf['th_y']))
+    save_table(spark, sparkdf, output_table)
     return 'SUCCESS'
 
 
@@ -278,7 +280,7 @@ def sales_fill_by_hour_inventory(sparkdf, col_key, col_qty, col_time, col_catego
 
 #     return sparkdf
 
-def out_of_stock_adjust(param):
+def out_of_stock_adjust(spark, param):
     """***小时级缺货还原
        sales_sparkdf:销量数据 sparkdf=sales+inv+category
        inv_sparkdf:库存数据
@@ -301,7 +303,7 @@ def out_of_stock_adjust(param):
     edate = param['edate']
     input_table = param['input_table']
     output_table = param['output_table']
-    sparkdf = forecast_spark_helper.read_table(input_table)
+    sparkdf = read_table(spark, input_table)
     sales_abnormal_recognition_by_hour_udf = udf(sales_abnormal_recognition_by_hour, DoubleType())
     # 异常识别
     sparkdf = sparkdf.withColumn(col_qty, sales_abnormal_recognition_by_hour_udf(sparkdf[col_qty],sparkdf[col_hour],
@@ -310,7 +312,7 @@ def out_of_stock_adjust(param):
     sparkdf = sales_fill_by_hour_inventory(sparkdf, col_key, col_qty, col_partition, col_category, col_hour,
                                            col_out_stock_time, w)
     sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))
-    forecast_spark_helper.save_table(sparkdf, output_table)
+    save_table(sparkdf, output_table)
     return sparkdf
 
 # sparkdf = spark.sql(
@@ -320,7 +322,7 @@ def out_of_stock_adjust(param):
 #                           "20191231", {'bound_mean': (1, 1)}, 90, 'and')
 # sparkdf.filter("qty>0 ").show(100)
 
-def sales_fill_zero(param):
+def sales_fill_zero(spark, param):
     """标签过滤
           col_key：主键
           filter_func:过滤函数
@@ -343,8 +345,10 @@ def sales_fill_zero(param):
     stock_data_sql = param['stock_data_sql']
     col_origin_name = param['col_origin_name']
     shops = param['shop_list']
-    sales_sparkdf = forecast_spark_helper.read_table(input_sales_table)
-    stock_sparkdf = forecast_spark_helper.read_origin_table(input_stock_table, stock_data_sql, col_origin_name, shops)
+    print(stock_data_sql)
+    print(input_stock_table, col_origin_name, shops)
+    sales_sparkdf = read_table(spark, input_sales_table)
+    stock_sparkdf = read_origin_table(spark, input_stock_table, stock_data_sql, col_origin_name, shops)
     sparkdf = adjust_by_column(sales_sparkdf, stock_sparkdf, join_key, col_openinv, col_qty, sdate, edate, fill_value)
-    forecast_spark_helper.save_table(sparkdf, output_table)
+    save_table(sparkdf, output_table)
     return "SUCCESS"

@@ -4,6 +4,7 @@
 from forecast.common.reference_package import *
 from digitforce.aip.common.spark_helper import *
 from digitforce.aip.common.data_helper import *
+
 def sales_aggregation_by_custom(sparkdf, other_agg_dim, col_custom):
     """自定义"""
     for x in col_custom:

@@ -6,7 +6,7 @@ include:
     mysql读取数据
 """
 from forecast.common.reference_package import *
-from forecast.common.config import get_config
+from digitforce.aip.common.file_config import *
 
 
 def connect_mysql():

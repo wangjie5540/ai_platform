@@ -1,9 +1,10 @@
-import os
-import findspark
+import findspark #使用spark-submit 的cluster时要注释掉
 findspark.init()
+import os
 from pyspark.sql import SparkSession
 from digitforce.aip.common.data_helper import tuple_self
 import pyspark.sql.functions as psf
+
 
 def build_spark_session(app_name):
     spark = (SparkSession.builder.appName(app_name).master("yarn")
@@ -17,10 +18,12 @@ def forecast_spark_session(app_name):
     初始化特征
     :return:
     """
+
     os.environ["PYSPARK_DRIVER_PYTHON"]="/data/ibs/anaconda3/bin/python"
     os.environ['PYSPARK_PYTHON']="/data/ibs/anaconda3/bin/python"
     spark=SparkSession.builder \
         .appName(app_name).master('yarn') \
+        .config("spark.yarn.queue", "shusBI") \
         .config("spark.executor.instances", "50") \
         .config("spark.executor.memory", "4g") \
         .config("spark.executor.cores", "4") \
@@ -128,4 +131,4 @@ class SparkHelper:
     #         data_tmp.to_csv(file_path, index=False, encoding=encoding)
 
 
-forecast_spark_helper = SparkHelper(forecast_spark_session("forecast_app"))
+forecast_spark_helper = SparkHelper(forecast_spark_session("forecast_awg"))

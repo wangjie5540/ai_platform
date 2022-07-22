@@ -79,10 +79,7 @@ def get_item_config_info(spark, sparkdf_sales, config_columns, col_key, shops):
     return sparkdf_item.select(config_columns + col_key)
 
 
-
-
-
-def data_prepare(spark, params_data_prepare):
+def data_prepare(params_data_prepare):
     method = params_data_prepare['method']
     sales_table = params_data_prepare['sales_table']
     col_key = params_data_prepare['col_key']

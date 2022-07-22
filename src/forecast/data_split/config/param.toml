@@ -17,6 +17,7 @@ item_config_table = 'ai_dm_dev.item_config_table_0620'
 sales_table = 'ai_dm_dev.no_sales_adjust_0620'
 goods_class_table ='ai_dm_dev.goods_class_table_0620'
 config_tables = ['ai_dm_dev.itemlevel_config_table_0620','ai_dm_dev.sales_classify_0620']
+mode_type='sp'
 
 [model_selection]
 model_selection_condition= ["{'lightgbm':[{'storage_life':'(180,]','sales_category':'normal','is_new':'0'},{'standard':'1','sale_period':'[10,60]','sales_category':'normal','is_new':'0'}]}","{'holt-winter':[{'standard':'1','storage_life':'[30,180]'},{'storage_life':'[1,1]'}]}"]

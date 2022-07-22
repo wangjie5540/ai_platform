@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # @Time : 2022/06/29
 # @Author : Arvin
-from forecast.common.reference_package import *
 from digitforce.aip.common.spark_helper import *
+from forecast.common.reference_package import *
+
 
 
 def bound_identify(value, condition):
@@ -63,7 +64,7 @@ def generate_udf(model_selection_conditions, col_selection, col_bound, col_label
     return udf(apply_model_function, StringType())
 
 
-def model_selection(spark, params_model_selection, sparkdf_config):
+def model_selection(params_model_selection, sparkdf_config):
     model_selection_conditions = params_model_selection['model_selection_condition']
     col_selection = params_model_selection['col_selection']
     col_bound = params_model_selection['col_bound']

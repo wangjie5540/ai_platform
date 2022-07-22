@@ -7,6 +7,7 @@
 from forecast.common.reference_package import *
 from digitforce.aip.common.data_helper import *
 from digitforce.aip.common.spark_helper import *
+from pyspark.sql.functions import sum, mean, count, max, min
 
 def zero_turn_nan(col_value):
     if not pd.isna(col_value) and col_value > 0:

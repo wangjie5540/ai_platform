@@ -7,11 +7,6 @@
 import os
 from forecast.data_processing.sp.sp_data_adjust import no_sales_adjust
 import logging
-try:
-    import findspark #使用spark-submit 的cluster时要注释掉
-    findspark.init()
-except:
-    pass
 import sys
 import traceback
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
@@ -38,13 +33,13 @@ def load_params(sdate,edate,col_openinv,col_endinv,col_category,col_time,w,col_q
     return params
 
 
-def run(sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qty, join_key):
+def run(sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qty, join_key, spark):
     """
     跑接口
     :return:
     """
-    logger_info = setup_console_log(leve=logging.INFO)
-    setup_logging(info_log_file="", error_log_file="", info_log_file_level="INFO")
+    logger_info = setup_console_log()
+    setup_logging(info_log_file="no_sales_restore.info", error_log_file="", info_log_file_level="INFO")
     logging.info("LOADING···")
 
     param = load_params(sdate,edate,col_openinv,col_endinv,col_category,col_time,w,col_qty,join_key)
@@ -56,7 +51,7 @@ def run(sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qt
     try:
         if run_type == 'sp':  # spark版本
             logging.info("RUNNING···")
-            no_sales_adjust(param)
+            no_sales_adjust(spark, param)
         else:
             # pandas版本
             pass
@@ -70,4 +65,4 @@ def run(sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qt
 if __name__ == "__main__":
     sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qty, join_key = sys.argv[1], sys.argv[2],sys.argv[3], sys.argv[4],\
                                                                       sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9]
-    run(sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qty, join_key)
+    run(sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qty, join_key, spark=None)
