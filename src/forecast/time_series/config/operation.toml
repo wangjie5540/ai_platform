@@ -2,7 +2,7 @@
 mode_type='sp'
 time_type='day'#day/week/month
 y='y'#y的类型
-save_table_cols=['shop_id','goods_id','apply_model','time_type','pred_time','y_pred']
+save_table_cols=['shop_id','goods_id','apply_model','time_type','pred_time','y_pred','dt']
 hdfs_path='/user/liguoqiang/model'#模型存放地址
 
 
