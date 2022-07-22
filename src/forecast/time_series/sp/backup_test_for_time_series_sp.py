@@ -60,7 +60,7 @@ def method_called_back_sp(spark, param):
     back_test_data = back_test_data.join(result_data_temp, on=key_cols, how='left')
     param['forecast_start_date'] = forecast_start_date
     save_table(spark, back_test_data, output_table, partition=partitions)
-    wmape_spdf = forecast_evaluation.forecast_evaluation_wmape(back_test_data, col_qty, "pred_time", col_key=key_cols,
+    wmape_spdf = forecast_evaluation.forecast_evaluation_wmape(back_test_data, col_qty, "y_pred", col_key=key_cols,
                                                                df_type='sp')
     get_logger().info("回测效果", wmape_spdf)
 
