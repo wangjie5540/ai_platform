@@ -48,9 +48,11 @@ def method_called_back_sp(spark, param):
     time_list = list(datetime.datetime.strftime(i, "%Y%m%d") for i in index)
 
     # TODO 每天都过滤还是一次性过率好那个效果更好？
+    i = 0
     for cur_time in time_list:
-        if cur_time == forecast_start_date:
+        if i == 0:
             result_data_temp = method_called_predict_sp(param, spark_df, cur_time)
+            i += 1
         else:
             result_data_temp = result_data_temp.union(method_called_predict_sp(param, spark_df, cur_time))
 
@@ -61,7 +63,6 @@ def method_called_back_sp(spark, param):
     wmape_spdf = forecast_evaluation.forecast_evaluation_wmape(back_test_data, col_qty, "pred_time", col_key=key_cols,
                                                                df_type='sp')
     get_logger().info("回测效果", wmape_spdf)
-
 
 
 def back_test_sp(param, spark):
