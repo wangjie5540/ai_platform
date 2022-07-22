@@ -6,113 +6,128 @@ include:
     时序模型：对外提供的接口：回测
 """
 import os
+
 try:
-    import findspark #使用spark-submit 的cluster时要注释掉
+    import findspark  # 使用spark-submit 的cluster时要注释掉
+
     findspark.init()
 except:
     pass
 import sys
 import json
 import traceback
-file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
-sys.path.append(file_path)
-import argparse
-from time_series.sp.backup_test_for_time_series_sp import back_test_sp
-from common.log import get_logger
 
-def time_series_back_test(param,spark=None):
+file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
+sys.path.append(file_path)
+
+from forecast.time_series.sp.backup_test_for_time_series_sp import back_test_sp
+from forecast.common.log import get_logger
+from forecast.common.config import get_config
+from forecast.common.data_helper import update_param_default
+
+from pyspark.sql import SparkSession
+
+
+def spark_init():
+    """
+    初始化特征
+    :return:
+    """
+    os.environ["PYSPARK_DRIVER_PYTHON"] = "/data/ibs/anaconda3/bin/python"
+    os.environ['PYSPARK_PYTHON'] = "/data/ibs/anaconda3/bin/python"
+    spark = SparkSession.builder \
+        .appName("model_test").master('yarn') \
+        .config("spark.executor.instances", "50") \
+        .config("spark.executor.memory", "4g") \
+        .config("spark.executor.cores", "4") \
+        .config("spark.driver.memory", "8g") \
+        .config("spark.driver.maxResultSize", "6g") \
+        .config("spark.default.parallelism", "600") \
+        .config("spark.network.timeout", "240s") \
+        .config("spark.sql.adaptive.enabled", "true") \
+        .config("spark.sql.adaptive.join.enabled", "true") \
+        .config("spark.sql.adaptive.shuffle.targetPostShuffleInputSize", "128000000") \
+        .config("spark.dynamicAllocation.enabled", "true") \
+        .config("spark.dynamicAllocation.minExecutors", "1") \
+        .config("spark.shuffle.service.enabled", "true") \
+        .config("spark.sql.sources.partitionOverwriteMode", "dynamic") \
+        .config("hive.exec.dynamici.partition", True) \
+        .config("hive.exec.dynamic.partition.mode", "nonstrict") \
+        .config("hive.exec.max.dynamic.partitions", "10000") \
+        .enableHiveSupport().getOrCreate()
+    spark.sql("set hive.exec.dynamic.partitions=true")
+    spark.sql("set hive.exec.max.dynamic.partitions=2048")
+    spark.sql("set hive.exec.dynamic.partition.mode=nonstrict")
+    spark.sql("use ai_dm_dev")
+    sc = spark.sparkContext
+    zip_path = './forecast.zip'
+    sc.addPyFile(zip_path)
+    return spark
+
+
+def time_series_back_test(param, spark=None):
     """
     预测模型回测
     :param param: 所需参数
     :param spark: spark，如果不传入则会内部启动一个运行完关闭
     :return:成功：True 失败：False
     """
-    logger_info=get_logger()
-    mode_type='sp'#先给个默认值
-    status=False
+    logger_info = get_logger()
+    mode_type = 'sp'  # 先给个默认值
+    status = False
     if 'mode_type' in param.keys():
-        mode_type=param['mode_type']
+        mode_type = param['mode_type']
     try:
-        if mode_type=='sp':#spark版本
-            status=back_test_sp(param,spark)
-        else:#pandas版本
+        if mode_type == 'sp':  # spark版本
+            status = back_test_sp(param, spark)
+        else:  # pandas版本
             pass
         logger_info.info(str(param))
     except Exception as e:
         logger_info.info(traceback.format_exc())
     return status
 
-#为了开发测试用，正式环境记得删除
-def param_default():
-    param = {
-        'ts_model_list': ['holt-winter'],
-        'y_type_list': ['c'],
-        'mode_type': 'sp',
-        'forcast_start_date': '20211212',
-        'predict_len': 14,
-        'key_list': ['shop_id', 'goods_id', 'y_type', 'apply_model'],
-        'apply_model_index': 2,
-        'step_len': 1,
-        'mode_type': 'sp',
-        'purpose': 'back_test',
-        'time_col': 'dt',
-        'col_qty': 'th_y',
-        'time_type': 'day',
-        'cols_feat_y': ['shop_id', 'goods_id', 'th_y', 'dt'],
-        'sdate': '20210101',
-        'edate': '20211211',
-        'apply_model': 'apply_model',
-        'partitions': ['shop_id', 'apply_model'],
-        'key_cols': ['shop_id', 'goods_id', 'apply_model'],
-        'feat_y': 'ai_dm_dev.no_sales_adjust_0620',
-        'table_sku_group': 'ai_dm_dev.model_selection_grouping_table_0620',
-        'output_table': 'ai_dm_dev.model_backup_test_result',
-        'prepare_data_table': 'ai_dm_dev.prepare_data_result',
-        'method_param_all': {
-            'holt-winter': {
-                'param': {
-                    "trend": None,
-                    "damped_trend": False,
-                    "seasonal": None,
-                    "seasonal_periods": None,
-                    "initialization_method": "estimated",
-                    "initial_level": None,
-                    "initial_trend": None,
-                    "initial_seasonal": None,
-                    "use_boxcox": False,
-                    "bounds": None,
-                    "freq": None,
-                    "missing": "missing",
-                    "dates": None
-                }
-            }
-        }
-    }
-    return param
 
-def parse_arguments():
+def get_default_conf():
     """
-    解析参数
-    :return:
+    获取时序预测所需的默认参数
+    :return: 默认参数
     """
-    param=param_default()#开发测试用
-    parser=argparse.ArgumentParser(description='time series predict')
-    parser.add_argument('--param',default=param,help='arguments')
-    parser.add_argument('--spark',default=None,help='spark')
-    args=parser.parse_args()
-    return args
+    file_tmp = "forecast/time_series/config/"
+    time_series_operation = file_tmp + 'operation.toml'
+    time_series = file_tmp + r'model.toml'
+    sales_data_file = file_tmp + 'sales_data.toml'
+    conf_default = get_config(time_series_operation, None)
+    method_param_all = get_config(time_series, None)  # 模型参数
+    conf_default['method_param_all'] = method_param_all
+    sales_data_dict = get_config(sales_data_file, 'data')
+    conf_default.update(sales_data_dict)
+    return conf_default
 
-def run():
+
+def run(forecast_start_date, purpose, time_type):
     """
     跑接口
     :return:
     """
-    args=parse_arguments()
-    param=args.param
-    spark=args.spark
-    if isinstance(param,str):
-        param=json.loads(param)
-    time_series_back_test(param,spark)
+    param = {"forecast_start_date": forecast_start_date, "purpose": purpose, "time_type": time_type}
+    default_conf = get_default_conf()
+    if isinstance(param, str):
+        param = json.loads(param)
+    param = update_param_default(param, default_conf)
+    spark = spark_init()
+    time_series_back_test(param, spark)
+
+
+def main():
+    if len(sys.argv) < 3:
+        print("运行模式为：python main.py forecast_start_date purpose time_type!")
+        sys.exit(1)
+    forecast_start_date = sys.argv[1]
+    purpose = sys.argv[2]
+    time_type = sys.argv[3]
+    run(forecast_start_date, purpose, time_type)
+
 
 if __name__ == "__main__":
-    run()
+    main()
