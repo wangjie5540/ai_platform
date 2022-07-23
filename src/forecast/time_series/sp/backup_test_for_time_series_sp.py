@@ -10,7 +10,7 @@ import logging
 
 import pandas as pd
 
-from forecast.time_series.sp.predict_for_time_serise_sp import method_called_predict_sp
+from forecast.time_series.sp.predict_for_time_series_sp import method_called_predict_sp
 from forecast.model_evaluation import forecast_evaluation
 from forecast.time_series.sp.data_prepare_for_time_series_sp import data_prepared_for_model
 from digitforce.aip.common.logging_config import setup_console_log,setup_logging
