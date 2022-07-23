@@ -9,6 +9,7 @@ from digitforce.aip.common.data_helper import *
 from digitforce.aip.common.spark_helper import *
 from pyspark.sql.functions import sum, mean, count, max, min
 
+
 def zero_turn_nan(col_value):
     if not pd.isna(col_value) and col_value > 0:
         return col_value
@@ -177,7 +178,7 @@ def col_agg_last_month(sparkdf, col_key, col_qty, col_time, param):
     return sparkdf
 
 
-def build_sales_features_daily(param):
+def build_sales_features_daily(spark, param):
     """
     dict_agg_func:字段聚合字典
     col_qty:聚合的列
@@ -191,15 +192,15 @@ def build_sales_features_daily(param):
     dict_agg_func = eval(param['sales_feature_daily_func'])
     input_table = param['no_sales_adjust_table']
     output_table = param['sales_features_daily_table']
-    sparkdf = forecast_spark_helper.read_table(input_table, sdt='N')
+    sparkdf = read_table(spark, input_table, sdt='N')
     for dict_key in dict_agg_func:
         sparkdf = globals()[dict_key](sparkdf, col_key, col_qty, col_time, dict_agg_func[dict_key])
     sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))    
-    forecast_spark_helper.save_table(sparkdf, output_table)
+    save_table(spark, sparkdf, output_table)
     return 'SUCCESS'
 
 
-def build_sales_features_weekly(param):
+def build_sales_features_weekly(spark, param):
     col_key = param['col_key']
     sdate = param['sdate']
     edate = param['edate']
@@ -210,15 +211,15 @@ def build_sales_features_weekly(param):
     output_table = param['output_table']
     partition_name = param['partition_name']
     shop_list = param['shop_list']
-    sparkdf = forecast_spark_helper.read_table(input_table,  partition_name=partition_name, partition_list=shop_list)
+    sparkdf = read_table(spark, input_table,  partition_name=partition_name, partition_list=shop_list)
     for dict_key in dict_agg_func:
         sparkdf = globals()[dict_key](sparkdf, col_key, col_qty, col_time, dict_agg_func[dict_key])
     sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))    
-    forecast_spark_helper.save_table(sparkdf, output_table)
+    save_table(spark, sparkdf, output_table)
     return 'SUCCESS'
 
 
-def build_sales_features_monthly(param):
+def build_sales_features_monthly(spark, param):
     col_key = param['col_key']
     sdate = param['sdate']
     edate = param['edate']
@@ -229,11 +230,11 @@ def build_sales_features_monthly(param):
     output_table = param['output_table']
     partition_name = param['partition_name']
     shop_list = param['shop_list']
-    sparkdf = forecast_spark_helper.read_table(input_table,  partition_name=partition_name, partition_list=shop_list)
+    sparkdf = read_table(spark, input_table,  partition_name=partition_name, partition_list=shop_list)
     for dict_key in dict_agg_func:
         sparkdf = globals()[dict_key](sparkdf, col_key, col_qty, col_time, dict_agg_func[dict_key])
     sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))
-    forecast_spark_helper.save_table(sparkdf, output_table)
+    save_table(spark, sparkdf, output_table)
     return 'SUCCESS'
 
 

@@ -11,11 +11,6 @@ include:
 import os
 from forecast.data_processing.sp.sp_data_adjust import sales_fill_zero
 import logging
-try:
-    import findspark #使用spark-submit 的cluster时要注释掉
-    findspark.init()
-except:
-    pass
 import sys
 import traceback
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
@@ -39,7 +34,7 @@ def load_params(sdate, edate, col_openinv, col_qty, join_key, fill_value):
     return params
 
 
-def run(sdate, edate, col_openinv, col_qty, join_key, fill_value):
+def run(sdate, edate, col_openinv, col_qty, join_key, fill_value, spark):
     """
     跑接口
     :return:
@@ -56,7 +51,7 @@ def run(sdate, edate, col_openinv, col_qty, join_key, fill_value):
     try:
         if run_type == 'sp':  # spark版本
             logging.info("RUNNING···")
-            sales_fill_zero(param)
+            sales_fill_zero(spark, param)
         else:
             # pandas版本
             pass

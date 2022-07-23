@@ -14,7 +14,7 @@ from forecast.time_series.sp.predict_for_time_serise_sp import method_called_pre
 from forecast.model_evaluation import forecast_evaluation
 from forecast.time_series.sp.data_prepare_for_time_series_sp import data_prepared_for_model
 from digitforce.aip.common.logging_config import setup_console_log,setup_logging
-from digitforce.aip.common.spark_helper2 import save_table
+from digitforce.aip.common.spark_helper import save_table
 
 
 def method_called_back_sp(spark, param):

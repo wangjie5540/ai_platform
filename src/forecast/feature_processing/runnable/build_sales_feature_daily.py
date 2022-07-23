@@ -8,14 +8,8 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
 日销量特征
 """
-from digitforce.aip.common.spark_helper import *
 from forecast.feature_processing.sp.sale_features import build_sales_features_daily
 import os
-try:
-    import findspark #使用spark-submit 的cluster时要注释掉
-    findspark.init()
-except:
-    pass
 import sys
 import traceback
 import logging
@@ -38,7 +32,7 @@ def load_params(sdate, edate, col_qty):
     return params
 
 
-def run(sdate, edate, col_qty):
+def run(sdate, edate, col_qty, spark):
     """
     跑接口
     :return:
@@ -55,7 +49,7 @@ def run(sdate, edate, col_qty):
     try:
         if run_type == 'sp':  # spark版本
             logging.info("RUNNING···")
-            build_sales_features_daily(param)
+            build_sales_features_daily(spark, param)
         else:
             # pandas版本
             pass

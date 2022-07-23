@@ -9,7 +9,6 @@ include:
 大单过滤
 """
 import os
-from digitforce.aip.common.spark_helper import *
 from forecast.data_split.sp.model_selection_grouping import model_selection_grouping
 import sys
 import logging
@@ -39,7 +38,7 @@ def load_params(sdate,edate):
     return params_data_prepare, params_model_selection, params_model_grouping
 
 
-def run(sdate, edate):
+def run(sdate, edate, spark):
     """
     跑接口
     :return:
@@ -57,7 +56,7 @@ def run(sdate, edate):
     try:
         if run_type == 'sp':  # spark版本
             logging.info("RUNNING···")
-            model_selection_grouping(params_data_prepare, params_model_selection, params_model_grouping)
+            model_selection_grouping(spark, params_data_prepare, params_model_selection, params_model_grouping)
         else:
             # pandas版本
             pass
@@ -71,4 +70,4 @@ def run(sdate, edate):
 
 if __name__ == "__main__":
     sdate, edate = sys.argv[1], sys.argv[2]
-    run(sdate, edate)
+    run(sdate, edate, spark=None)

@@ -7,14 +7,8 @@ Copyright (c) 2021-2022 北京数势云创科技有限公司 <http://www.digitfo
 All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:日期特征-天
 """
-from digitforce.aip.common.spark_helper import *
+from digitforce.aip.common.spark_init import *
 from forecast.feature_processing.sp.date_features import bulid_date_daily_feature
-import os
-try:
-    import findspark #使用spark-submit 的cluster时要注释掉
-    findspark.init()
-except:
-    pass
 import sys
 import traceback
 import logging
@@ -38,7 +32,7 @@ def load_params(sdate, edate, col_list, col_time):
     return params
 
 
-def run(sdate, edate, col_list, col_time):
+def run(sdate, edate, col_list, col_time,spark):
     """
     跑接口
     :return:
@@ -55,7 +49,7 @@ def run(sdate, edate, col_list, col_time):
     try:
         if run_type == 'sp':  # spark版本
             logging.info("RUNNING···")
-            bulid_date_daily_feature(param)
+            bulid_date_daily_feature(spark, param)
         else:
             # pandas版本
             pass
