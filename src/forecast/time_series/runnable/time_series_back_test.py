@@ -5,6 +5,7 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
     时序模型：对外提供的接口：回测
 """
+import logging
 import os
 
 try:
@@ -21,9 +22,13 @@ file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 sys.path.append(file_path)
 
 from forecast.time_series.sp.backup_test_for_time_series_sp import back_test_sp
-from forecast.common.log import get_logger
-from forecast.common.config import get_config
-from forecast.common.data_helper import update_param_default
+# from forecast.common.log import get_logger
+# from forecast.common.config import get_config
+# from forecast.common.data_helper import update_param_default
+
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+from digitforce.aip.common.file_config import get_config
+from digitforce.aip.common.data_helper import update_param_default
 
 from pyspark.sql import SparkSession
 
@@ -72,19 +77,25 @@ def time_series_back_test(param, spark=None):
     :param spark: spark，如果不传入则会内部启动一个运行完关闭
     :return:成功：True 失败：False
     """
-    logger_info = get_logger()
+
+    logger_info = setup_console_log(level=logging.INFO)
+    setup_logging(info_log_file="", error_log_file="", info_log_file_level="INFO")
+    logger_info.info("==============================LOADING============================")
     mode_type = 'sp'  # 先给个默认值
     status = False
     if 'mode_type' in param.keys():
         mode_type = param['mode_type']
     try:
         if mode_type == 'sp':  # spark版本
+            logger_info.info("RUNNING......")
             status = back_test_sp(param, spark)
         else:  # pandas版本
             pass
-        logger_info.info(str(param))
+
+        logger_info.info("SUCCESS")
     except Exception as e:
         logger_info.info(traceback.format_exc())
+        status = "FAIL"
     return status
 
 

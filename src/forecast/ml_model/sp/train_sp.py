@@ -8,8 +8,8 @@ include:
 import os
 import sys
 import traceback
-file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../'))
-sys.path.append(file_path)#解决不同位置调用依赖包路径问题
+# file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../'))
+# sys.path.append(file_path)#解决不同位置调用依赖包路径问题
 from forecast.common.log import get_logger
 from forecast.ml_model.sp.data_prepare import data_prepare_train
 from forecast.ml_model.model.ml_train import ml_train
@@ -57,14 +57,14 @@ def train_sp(param,spark):
     logger_info.info(str(param))
     mode_type=param['mode_type']
     spark_inner=0
-    if str(mode_type).lower()=='sp' and spark==None:
-        try:
-            spark=spark_init()
-            logger_info.info('spark 启动成功')
-        except Exception as e:
-            status=False
-            logger_info.info(traceback.format_exc())
-        spark_inner=1
+    # if str(mode_type).lower()=='sp' and spark==None:
+        # try:
+        #     spark=spark_init()
+        #     logger_info.info('spark 启动成功')
+        # except Exception as e:
+        #     status=False
+        #     logger_info.info(traceback.format_exc())
+        # spark_inner=1
     key_cols=param['key_cols']
     apply_model_index=param['apply_model_index']
     predict_len=param['predict_len']
@@ -77,7 +77,7 @@ def train_sp(param,spark):
         status=False
         logger_info.info(traceback.format_exc())
 
-    if spark_inner==1:#如果当前接口启动的spark，那么要停止
-        spark.stop()
-        logger_info.info("spark stop")
+    # if spark_inner==1:#如果当前接口启动的spark，那么要停止
+    #     spark.stop()
+    #     logger_info.info("spark stop")
     return status

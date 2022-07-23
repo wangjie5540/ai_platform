@@ -5,15 +5,16 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
     数据准备模块：保证进入时序模型数据可用，无不连续值，空值；
 """
+import logging
 import traceback
-
-from forecast.common.log import get_logger
-from forecast.common.date_helper import date_add_str
-from forecast.common.common_helper import *
+from digitforce.aip.common.logging_config import setup_console_log,setup_logging
+from digitforce.aip.common.datetime_helper import date_add_str
+import pyspark.sql.functions as psf
 
 
 def data_prepared_for_model(spark,param):
-    logger_info = get_logger()
+    logger_info = setup_console_log(level=logging.INFO)
+    setup_logging(info_log_file="",error_log_file="",info_log_file_level="INFO")
     table_sku_grouping = param['table_sku_group']
     ts_model_list = param['ts_model_list']
     table_feat_y = param['feat_y']

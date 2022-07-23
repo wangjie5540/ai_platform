@@ -6,6 +6,7 @@ include:
     时序模型：预测spark版本
 """
 from forecast.time_series.sp.model_predict import *
+from digitforce.aip.common.spark_helper import save_table
 
 
 def key_process(x, key_cols):
@@ -60,6 +61,6 @@ def predict_sp(param, spark):
     partitions = param['partitions']
     preds = method_called_predict_sp(param, prepare_data)
     save_table(spark, preds, output_table, partition=partitions)
-    status = "TEST SUCCESS"
+    status = "SUCCESS"
 
     return status
