@@ -26,6 +26,7 @@ col_qty='th_y'
 partitions=['shop_id','apply_model']
 output_table='ai_dm_dev.model_test_result_arima'
 prepare_data_table='ai_dm_dev.prepare_data_result_arima'
+eval_key=['shop_id']
 
 #pipline input
 #'forecast_start_date': '20211207',

@@ -59,7 +59,8 @@ def predict_sp(param, spark):
     prepare_data = data_prepared_for_model(spark, param)
     output_table = param['output_table']
     partitions = param['partitions']
-    preds = method_called_predict_sp(param, prepare_data)
+    forecast_start_time = param['forecast_start_date']
+    preds = method_called_predict_sp(param, prepare_data, forecast_start_time)
     save_table(spark, preds, output_table, partition=partitions)
     status = "SUCCESS"
 

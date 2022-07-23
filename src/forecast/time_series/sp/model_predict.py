@@ -23,7 +23,7 @@ from digitforce.aip.common.data_helper import *
 '''
 
 
-def model_predict(key_value, data, method, param, forcast_start_date, predict_len):
+def model_predict(key_value, data, method, param, forcast_start_date, predict_len,mode_type):
     """
     所有的时序模型预测,可以实现pipeline和spark级别并行
     :param key_value: key值
@@ -41,7 +41,7 @@ def model_predict(key_value, data, method, param, forcast_start_date, predict_le
     time_type = param['time_type']
     save_table_cols = param['default']['save_table_cols']
     key_cols = param['key_cols']
-    mode_type = param['mode_type']
+    # mode_type = param['mode_type']
     y = param['col_qty']
     model_include = True
     data_temp = row_transform_to_dataFrame(data)
@@ -52,7 +52,7 @@ def model_predict(key_value, data, method, param, forcast_start_date, predict_le
         data = data_process(data_temp, param)
 
     temp_dict = {"day": "D", "week": "W-MON", "month": "MS", "season": "QS-OCT", "year": "A"}
-    forcast_start_date = pd.to_datetime(forcast_start_date)
+    # forcast_start_date = pd.to_datetime(forcast_start_date)
     method_param = method_param_all[method]
 
     index = pd.date_range(forcast_start_date, periods=predict_len, freq="D")
@@ -129,7 +129,7 @@ def model_predict(key_value, data, method, param, forcast_start_date, predict_le
     cur_date_list = list(datetime.datetime.strftime(i, "%Y%m%d") for i in index)
     result_df['dt'] = [i for i in cur_date_list]
     result_df['time_type'] = time_type
-    forcast_start_date = datetime.datetime.strftime(forcast_start_date, "%Y%m%d")
+    # forcast_start_date = datetime.datetime.strftime(forcast_start_date, "%Y%m%d")
     result_df['pred_time'] = forcast_start_date
 
     data_result = predict_result_handle(result_df, key_value, key_cols, mode_type, save_table_cols)  # 对结果进行处理
@@ -160,4 +160,6 @@ def data_process(df, param):
         ts_null.loc[i, y] = y_
 
     ts2 = pd.concat([df, ts_null])
-    return ts2
+    data = ts2.sort_values(by=dt, ascending=True)  # 进行排序
+    data[dt] = data[dt].apply(lambda x: datetime.datetime.strftime(x, "%Y%m%d"))
+    return data

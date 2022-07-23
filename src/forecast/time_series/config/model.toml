@@ -73,17 +73,17 @@
         flags="None"
         low_memory=false
 
-[arima]
-start_p = 1
-start_q = 1
-max_p = 3
-max_q = 3
-m = 12
-seasonal = false
-d = 1
-trace = true
-suppress_warnings = true
-stepwise = true
+#[arima]
+#start_p = 1
+#start_q = 1
+#max_p = 3
+#max_q = 3
+#m = 12
+#seasonal = false
+#d = 1
+#trace = true
+#suppress_warnings = true
+#stepwise = true
 
 [es]
 smoothing_level = 0.8

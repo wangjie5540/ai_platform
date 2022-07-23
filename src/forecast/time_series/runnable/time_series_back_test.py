@@ -79,22 +79,22 @@ def time_series_back_test(param, spark=None):
     """
 
     logger_info = setup_console_log(level=logging.INFO)
-    setup_logging(info_log_file="", error_log_file="", info_log_file_level="INFO")
-    logger_info.info("==============================LOADING============================")
+    setup_logging(info_log_file="time_series_back_test.info", error_log_file="", info_log_file_level="INFO")
+    logging.info("==============================LOADING============================")
     mode_type = 'sp'  # 先给个默认值
     status = False
     if 'mode_type' in param.keys():
         mode_type = param['mode_type']
     try:
         if mode_type == 'sp':  # spark版本
-            logger_info.info("RUNNING......")
+            logging.info("RUNNING......")
             status = back_test_sp(param, spark)
         else:  # pandas版本
             pass
 
-        logger_info.info("SUCCESS")
+        logging.info("SUCCESS")
     except Exception as e:
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
         status = "FAIL"
     return status
 
