@@ -70,4 +70,4 @@ def run(sdate, edate, spark):
 
 if __name__ == "__main__":
     sdate, edate = sys.argv[1], sys.argv[2]
-    run(sdate, edate)
+    run(sdate, edate, spark=None)

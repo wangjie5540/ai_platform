@@ -9,14 +9,12 @@ include:
 大单过滤
 """
 import os
+import sys
 import logging
 from forecast.data_processing.sp.sp_sales_agg import sales_continue_processing
-import argparse
 import traceback
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 from digitforce.aip.common.file_config import get_config
-
-
 
 
 def load_params(sdate,edate,date_type,col_time,col_wm,input_table,output_table,col_qty):
@@ -39,34 +37,37 @@ def load_params(sdate,edate,date_type,col_time,col_wm,input_table,output_table,c
     return params
 
 
-def run(sdate,edate,date_type,col_time,col_wm,input_table,output_table,col_qty,spark):
+def run(sdate, edate,date_type, col_time, col_wm, input_table, output_table, col_qty, spark):
     """
     跑接口
     :return:
     """
-    logger_info = setup_console_log(leve=logging.INFO)
-    setup_logging(info_log_file="", error_log_file="", info_log_file_level="INFO")
-    logger_info.info("LOADING···")
+    logger_info = setup_console_log()
+    setup_logging(info_log_file="sale_continue.info", error_log_file="", info_log_file_level="INFO")
+    logging.info("LOADING···")
     param = load_params(sdate,edate,date_type,col_time,col_wm,input_table,output_table,col_qty)
-    logger_info.info(str(param))
+    logging.info(str(param))
     if 'mode_type' in param.keys():
         run_type = param['mode_type']
     else:
         run_type = 'sp'
     try:
         if run_type == 'sp':  # spark版本
-            logger_info.info("RUNNING···")
+            logging.info("RUNNING···")
             sales_continue_processing(spark, param)
         else:
             # pandas版本
             pass
         status = "SUCCESS"
-        logger_info.info("SUCCESS")
+        logging.info("SUCCESS")
     except Exception as e:
         status = "ERROR"
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
     return status
 
 
 if __name__ == "__main__":
-    run()
+    sdate, edate,date_type, col_time, col_wm, input_table, output_table, col_qty = sys.argv[1], sys.argv[2], sys.argv[3], \
+                                                                                   sys.argv[4], sys.argv[5], sys.argv[6], \
+                                                                                   sys.argv[7], sys.argv[8]
+    run(sdate, edate,date_type, col_time, col_wm, input_table, output_table, col_qty, spark=None)

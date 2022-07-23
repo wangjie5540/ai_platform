@@ -120,7 +120,7 @@ def sales_continue_processing(spark, param):
     col_wm = param['col_wm']
     end_date = param['edate']
     date_type = param['date_type']
-    data_type = param['data_type']
+    data_type = param['mode_type']
     input_table = param['input_table']
     output_table = param['output_table']
     sparkdf = read_table(spark, input_table)

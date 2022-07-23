@@ -71,7 +71,7 @@ def group_category(spark, params_model_grouping):
     shops = params_model_grouping['shop_list']
     model_selection_table = params_model_grouping['model_selection_table']
     model_grouping_table = params_model_grouping['model_grouping_table']
-    sparkdf_config = forecast_spark_helper.read_table(model_selection_table, partition_list = shops) #读取模型选择生成的表
+    sparkdf_config = read_table(spark, model_selection_table, partition_list=shops) #读取模型选择生成的表
     sparkdf_config = sparkdf_config.withColumn(group_label, lit(None))
     for group_condition in group_conditions:
         print(group_condition)
