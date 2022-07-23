@@ -152,7 +152,7 @@ def build_date_features(sdate, edate, col_dt='dt'):
     return feats.drop(['holiday', 'holiday_next_day'], axis=1)
 
 
-def bulid_date_daily_feature(param):
+def bulid_date_daily_feature(spark, param):
     """日粒度日期特征"""
 
     col_list = param['col_list']
@@ -185,14 +185,14 @@ def bulid_date_daily_feature(param):
     if ctype == 'sp':
         df_values = df.values.tolist()
         df_columns = df.columns.tolist()
-        sparkdf = forecast_spark_helper.get_spark().createDataFrame(df_values, df_columns)
-        forecast_spark_helper.save_table(sparkdf, output_table, partition=["dt"])
+        sparkdf = spark.createDataFrame(df_values, df_columns)
+        save_table(spark, sparkdf, output_table, partition=["dt"])
         return sparkdf
     else:
         return df
 
 
-def build_date_weekly_feature(param):
+def build_date_weekly_feature(spark, param):
     """周粒度日期特征"""
 
     col_key = param['col_key']
@@ -211,14 +211,14 @@ def build_date_weekly_feature(param):
     if ctype == 'sp':
         df_values = df.values.tolist()
         df_columns = df.columns.tolist()
-        sparkdf = forecast_spark_helper.get_spark().createDataFrame(df_values, df_columns)
-        forecast_spark_helper.save_table(sparkdf, output_table, partition=["dt"])
+        sparkdf = spark.createDataFrame(df_values, df_columns)
+        save_table(spark, sparkdf, output_table, partition=["dt"])
         return sparkdf
     else:
         return df
 
 
-def build_date_monthly_feature(param):
+def build_date_monthly_feature(spark, param):
     """周粒度日期特征"""
 
     col_key = param['col_key']
@@ -237,8 +237,8 @@ def build_date_monthly_feature(param):
     if ctype == 'sp':
         df_values = df.values.tolist()
         df_columns = df.columns.tolist()
-        sparkdf = forecast_spark_helper.get_spark().createDataFrame(df_values, df_columns)
-        forecast_spark_helper.save_table(sparkdf, output_table, partition=["dt"])
+        sparkdf = spark.createDataFrame(df_values, df_columns)
+        save_table(sparkdf, output_table, partition=["dt"])
         return sparkdf
     else:
         return df

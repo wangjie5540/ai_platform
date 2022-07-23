@@ -124,7 +124,7 @@ def sales_continue(value, edate, col_qty, col_time, col_key, col_wm='', date_typ
     if date_type == 'week':
         df[col_wm] = df[[col_time, col_wm]].apply(lambda x: pd.to_datetime(x[0]).weekofyear if pd.isna(x[1]) else x[1],
                                                   axis=1)
-    elif data_type == 'month':
+    elif date_type == 'month':
         df[col_wm] = df[[col_time, col_wm]].apply(lambda x: pd.to_datetime(x[0]).month if pd.isna(x[1]) else x[1],
                                                   axis=1)
     else:

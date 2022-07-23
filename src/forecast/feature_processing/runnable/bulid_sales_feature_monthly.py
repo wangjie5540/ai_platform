@@ -8,7 +8,6 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
 周销量特征
 """
-from digitforce.aip.common.spark_helper import *
 from forecast.feature_processing.sp.sale_features import build_sales_features_monthly
 import os
 import sys
@@ -36,7 +35,7 @@ def load_params(sdate, edate, col_time, col_qty, input_table, output_table):
     return params
 
 
-def run(sdate, edate, col_time, col_qty, input_table, output_table):
+def run(sdate, edate, col_time, col_qty, input_table, output_table,spark):
     """
     跑接口
     :return:
@@ -53,7 +52,7 @@ def run(sdate, edate, col_time, col_qty, input_table, output_table):
     try:
         if run_type == 'sp':  # spark版本
             logging.info("RUNNING···")
-            build_sales_features_monthly(param)
+            build_sales_features_monthly(spark, param)
         else:
             # pandas版本
             pass

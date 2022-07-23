@@ -8,18 +8,12 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
 大单过滤
 """
-
 import sys
-from digitforce.aip.common.spark_helper import *
+import os
 from forecast.data_processing.sp.sp_sales_filter import big_order_filter
 import logging
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 from digitforce.aip.common.file_config import get_config
-try:
-    import findspark #使用spark-submit 的cluster时要注释掉
-    findspark.init()
-except:
-    pass
 import traceback
 
 
@@ -35,7 +29,7 @@ def load_params(sdate, edate):
     return params
 
 
-def run(sdate, edate):
+def run(sdate, edate, spark):
     """
     跑接口
     :return:
@@ -52,7 +46,7 @@ def run(sdate, edate):
     try:
         if run_type == 'sp':  # spark版本
             logging.info("RUNNING···")
-            big_order_filter(param)
+            big_order_filter(spark, param)
         else:
             # pandas版本
             pass

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time : 2022/05/28
 # @Author : Arvin
-from digitforce.aip.common.spark_helper import *
 from forecast.feature_processing.sp.weather_features import build_weather_daily_feature
 import os
 import sys
@@ -28,7 +27,7 @@ def load_params(sdate, edate, col_key, col_weather_list, dict_agg_func):
     return params
 
 
-def run(sdate, edate, col_key, col_weather_list, dict_agg_func):
+def run(sdate, edate, col_key, col_weather_list, dict_agg_func, spark):
     """
     跑接口
     :return:
@@ -45,7 +44,7 @@ def run(sdate, edate, col_key, col_weather_list, dict_agg_func):
     try:
         if run_type == 'sp':  # spark版本
             logging.info("RUNNING···")
-            build_weather_daily_feature(param)
+            build_weather_daily_feature(spark, param)
         else:
             # pandas版本
             pass
