@@ -6,12 +6,12 @@ include:
     时序模型：预测spark版本
 """
 
-from forecast.common.data_helper import *
+# from forecast.common.data_helper import *
 from forecast.time_series.sp.data_prepare_for_time_series_sp import *
 from forecast.time_series.model import ARModel, ARXModel, ARIMAXModel, ARIMAModel, ThetaModel, SARIMAXModel, \
     MAModel, SARIMAModel, SESModel, STLModel, ESModel, CrostonModel, CrostonTSBModel, HoltModel, HoltWinterModel, \
     STLForecastModel, DmsModel
-from forecast.common.common_helper import *
+from digitforce.aip.common.data_helper import *
 
 '''
 整体思路：
@@ -129,11 +129,12 @@ def model_predict(key_value, data, method, param, forcast_start_date, predict_le
     cur_date_list = list(datetime.datetime.strftime(i, "%Y%m%d") for i in index)
     result_df['dt'] = [i for i in cur_date_list]
     result_df['time_type'] = time_type
-    forcast_start_date = datetime.datetime.strftime(forcast_start_date,"%Y%m%d")
+    forcast_start_date = datetime.datetime.strftime(forcast_start_date, "%Y%m%d")
     result_df['pred_time'] = forcast_start_date
 
     data_result = predict_result_handle(result_df, key_value, key_cols, mode_type, save_table_cols)  # 对结果进行处理
     return data_result
+
 
 def data_process(df, param):
     dt = param['time_col']

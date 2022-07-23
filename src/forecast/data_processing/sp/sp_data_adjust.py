@@ -5,7 +5,6 @@ from forecast.common.reference_package import *
 from digitforce.aip.common.data_helper import *
 from digitforce.aip.common.spark_helper2 import *
 
-
 def adjust_by_interpolate(df, start_date, end_date, col_qty, method='linear'):
     """插值填补"""
     c_columns = df.columns
@@ -25,8 +24,9 @@ def adjust_by_stat(df, start_date, end_date, col_qty, w, agg_func='mean'):
 
 def sales_fill(qty_value, openinv_value, fill_value):
     """销售填充:有库存无销售填充fill_value"""
-#     return qty_value
-    if (qty_value is None or pd.isna(qty_value)) and (openinv_value is not None or not pd.isna(openinv_value)) and openinv_value > fill_value:
+    #     return qty_value
+    if (qty_value is None or pd.isna(qty_value)) and (
+            openinv_value is not None or not pd.isna(openinv_value)) and openinv_value > fill_value:
         return fill_value
     else:
         return qty_value
@@ -38,11 +38,17 @@ def adjust_by_column(sales_sparkdf, stock_sparkdf, join_key, col_openinv, col_qt
     sparkdf = stock_sparkdf.join(sales_sparkdf, on=join_key, how='left')
     sparkdf = sparkdf.withColumn("fill_tmp", psf.lit(fill_value))
     sales_fill_udf = udf(sales_fill, DoubleType())
+<<<<<<< Updated upstream
     sparkdf = sparkdf.withColumn("fill_{}".format(col_qty), sales_fill_udf(sparkdf[col_qty], sparkdf[col_openinv], sparkdf.fill_tmp))
+=======
+    sparkdf = sparkdf.withColumn("fill_{}".format(col_qty),
+                                 sales_fill_udf(sparkdf[col_qty], sparkdf[col_openinv], sparkdf.fill_tmp))
+>>>>>>> Stashed changes
     return sparkdf.filter(date_filter_condition(sdate, edate))
 
 
-def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, edate, replace_func, w_boxcox=90, w_replace=14,conn='and',
+def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, edate, replace_func, w_boxcox=90,
+                    w_replace=14, conn='and',
                     col_time='sdt'):
     """
     过去一段时间窗口w内 ，通过filter_func超出上下限的用replace_func的边界值替换
@@ -100,7 +106,8 @@ def adjust_by_sales_days(df, edate, col_qty, col_key, col_time, w=2, agg_func='m
 def adjust_by_sales_growth(df, col_key, col_qty, c_category, col_time, w=2, agg_func='mean'):
     """根据去年同期增长系数 同期范围定义 阴历 阳历 节假日 系数的倍数最大值最小值限制"""
     c_columns = df.columns
-    df['last_dt'] = df[col_time].apply(lambda x: pd.to_datetime(x).replace(year=pd.to_datetime(x).year - 1).strftime('%Y%m%d'))
+    df['last_dt'] = df[col_time].apply(
+        lambda x: pd.to_datetime(x).replace(year=pd.to_datetime(x).year - 1).strftime('%Y%m%d'))
     col_key_last = col_key + [col_qty, col_time]
     last_df = df[col_key_last].rename(columns={col_qty: 'last_qty', col_time: 'last_dt'})
     df = pd.merge(df, last_df, left_on=col_key + ['last_dt'], right_on=col_key + ['last_dt'], how='left')
@@ -132,16 +139,23 @@ def key_process(x, key):
 
 def sales_day_abnormal_by_day_stock(openinv_value, endinv_value, qty_values):
     """期初或者期末一个为0认为缺货"""
-    if (openinv_value is not None and endinv_value is not None) and (np.float64(openinv_value) <= 0.0 or np.float64(endinv_value) <= 0.0):
+    if (openinv_value is not None and endinv_value is not None) and (
+            np.float64(openinv_value) <= 0.0 or np.float64(endinv_value) <= 0.0):
         return None
     else:
         return qty_values
 
+<<<<<<< Updated upstream
 def sales_check(ac_y_value,th_y_value):
+=======
+
+def sales_check(ac_y_value, th_y_value):
+>>>>>>> Stashed changes
     if (ac_y_value is not None and th_y_value is not None) and th_y_value < ac_y_value:
         return ac_y_value
     else:
         return th_y_value
+
 
 def adjust_by_common(rows, key, edate, col_qty, col_key, c_category, col_time, w):
     """通用填充"""
@@ -171,6 +185,7 @@ def no_sales_adjust(spark, param):
     input_sales_table = param['fill_zero_table']
     output_table = param['no_sales_adjust_table']
     input_stock_table = param['input_stock_table']
+<<<<<<< Updated upstream
     stock_data_sql = param['stock_data_sql']
     input_category_table = param['input_category_table']
     category_data_sql = param['category_data_sql']
@@ -181,6 +196,14 @@ def no_sales_adjust(spark, param):
     sales_df = read_table(spark, input_sales_table)
     stock_df = read_origin_table(spark, input_stock_table, stock_data_sql, col_origin_name, shops)
     categorty_df = read_origin_table(spark, input_category_table, category_data_sql, col_origin_name, shops)
+=======
+    input_category_table = param['input_category_table']
+    select_list = join_key + [col_qty]
+
+    sales_df = read_table(spark, input_sales_table)
+    stock_df = read_origin_stock_table(spark, input_stock_table)
+    categorty_df = read_origin_category_table(spark, input_category_table)
+>>>>>>> Stashed changes
     sparkdf = sales_df.select(select_list).join(stock_df, on=join_key, how='left')
     sparkdf = sparkdf.join(categorty_df, on=col_key, how='left')
     sales_day_abnormal_by_day_stock_udf = udf(sales_day_abnormal_by_day_stock, DoubleType())
@@ -265,7 +288,7 @@ def sales_fill_by_hour_inventory(sparkdf, col_key, col_qty, col_time, col_catego
                                                                                 sparkdf_agg['rec_qty'],
                                                                                 sparkdf_agg['ratio']))
     windowOpt_day = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w),
-                                                                                      end=Window.currentRow)
+                                                                                        end=Window.currentRow)
     sparkdf_agg = sparkdf_agg.withColumn("qty_actual2", 2 * psf.col('actual_qty'))
     sparkdf_agg = sparkdf_agg.withColumn("qty_sigma3",
                                          psf.sum(psf.col('actual_qty')).over(windowOpt_day) + 3 * psf.stddev_pop(
@@ -306,14 +329,15 @@ def out_of_stock_adjust(spark, param):
     sparkdf = read_table(spark, input_table)
     sales_abnormal_recognition_by_hour_udf = udf(sales_abnormal_recognition_by_hour, DoubleType())
     # 异常识别
-    sparkdf = sparkdf.withColumn(col_qty, sales_abnormal_recognition_by_hour_udf(sparkdf[col_qty],sparkdf[col_hour],
-                                                                                         sparkdf[col_out_stock_time]))
+    sparkdf = sparkdf.withColumn(col_qty, sales_abnormal_recognition_by_hour_udf(sparkdf[col_qty], sparkdf[col_hour],
+                                                                                 sparkdf[col_out_stock_time]))
     # 小时级缺货还原
     sparkdf = sales_fill_by_hour_inventory(sparkdf, col_key, col_qty, col_partition, col_category, col_hour,
                                            col_out_stock_time, w)
     sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))
     save_table(sparkdf, output_table)
     return sparkdf
+
 
 # sparkdf = spark.sql(
 #     """select shop_id,goods_id,qty,dt,to_unix_timestamp(cast(dt as string),'yyyyMMdd') sdt from ai_dm.poc_feat_y""")
@@ -350,5 +374,10 @@ def sales_fill_zero(spark, param):
     sales_sparkdf = read_table(spark, input_sales_table)
     stock_sparkdf = read_origin_table(spark, input_stock_table, stock_data_sql, col_origin_name, shops)
     sparkdf = adjust_by_column(sales_sparkdf, stock_sparkdf, join_key, col_openinv, col_qty, sdate, edate, fill_value)
+<<<<<<< Updated upstream
     save_table(sparkdf, output_table)
     return "SUCCESS"
+=======
+    save_table(spark, sparkdf, output_table)
+    return "SUCCESS"
+>>>>>>> Stashed changes

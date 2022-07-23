@@ -60,6 +60,6 @@ def predict_sp(param, spark):
     partitions = param['partitions']
     preds = method_called_predict_sp(param, prepare_data)
     save_table(spark, preds, output_table, partition=partitions)
-    status = "TEST SUCCESS"
+    status = "SUCCESS"
 
     return status

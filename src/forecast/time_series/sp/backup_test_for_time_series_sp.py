@@ -5,12 +5,16 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
     时序模型：回测spark版本
 """
+import datetime
+import logging
+
+import pandas as pd
 
 from forecast.time_series.sp.predict_for_time_serise_sp import method_called_predict_sp
-from forecast.time_series.sp.data_prepare_for_time_series_sp import *
-from forecast.common.common_helper import *
 from forecast.model_evaluation import forecast_evaluation
 from forecast.time_series.sp.data_prepare_for_time_series_sp import data_prepared_for_model
+from digitforce.aip.common.logging_config import setup_console_log,setup_logging
+from digitforce.aip.common.spark_helper2 import save_table
 
 
 def method_called_back_sp(spark, param):
@@ -62,7 +66,7 @@ def method_called_back_sp(spark, param):
     save_table(spark, back_test_data, output_table, partition=partitions)
     wmape_spdf = forecast_evaluation.forecast_evaluation_wmape(back_test_data, col_qty, "y_pred", col_key=key_cols,
                                                                df_type='sp')
-    get_logger().info("回测效果", wmape_spdf)
+    print("回测效果", wmape_spdf)
 
 
 def back_test_sp(param, spark):
@@ -72,7 +76,8 @@ def back_test_sp(param, spark):
     :param spark: spark
     :return:
     """
-    logger_info = get_logger()
+    logger_info = setup_console_log(level=logging.INFO)
+    setup_logging(info_log_file="",error_log_file="",info_log_file_level="INFO")
     if 'purpose' not in param.keys() or 'predict_len' not in param.keys():
         logger_info.info('problem:purpose or predict_len')
         return False
@@ -82,7 +87,5 @@ def back_test_sp(param, spark):
     if param['predict_len'] < 0 or param['predict_len'] == '':
         logger_info.info('problem:predict_len is "" or predict_len<0')
         return False
-    logger_info.info("time_series_operation:")
-    logger_info.info(str(param))
     status = method_called_back_sp(spark, param)
     return status
