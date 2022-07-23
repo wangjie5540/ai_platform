@@ -5,6 +5,8 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
     参数操作 ps:供应链场景应用
 """
+import traceback
+
 import pandas as pd
 import datetime
 from pyspark.sql import Row
@@ -28,27 +30,27 @@ def dict_key_lower(param):
     return param_new
 
 
-# def update_param_default(param,default_conf):
-#     """
-#     接口传过来的参数和默认参数融合
-#     :param param: 调用接口传过来的参数
-#     :param default_conf:默认参数
-#     :return: 参数集
-#     """
-#     logger_info = get_logger()#日志
-#     try:
-#         param=dict_key_lower(param)
-#         default_conf=dict_key_lower(default_conf)
-#         for key,value in default_conf.items():
-#             if isinstance(value,set):
-#                 param[key].update(value)
-#             if key not in param.keys():
-#                 param[key]=value
-#         logger_info.info('update_param_default success')
-#     except Exception as e:
-#         param={}
-#         logger_info.info(traceback.format_exc())
-#     return param
+def update_param_default(param,default_conf):
+    """
+    接口传过来的参数和默认参数融合
+    :param param: 调用接口传过来的参数
+    :param default_conf:默认参数
+    :return: 参数集
+    """
+    # logger_info = get_logger()#日志
+    try:
+        param=dict_key_lower(param)
+        default_conf=dict_key_lower(default_conf)
+        for key,value in default_conf.items():
+            if isinstance(value,set):
+                param[key].update(value)
+            if key not in param.keys():
+                param[key]=value
+        # logger_info.info('update_param_default success')
+    except Exception as e:
+        param={}
+        # logger_info.info(traceback.format_exc())
+    return param
 
 
 def row_transform_to_dataFrame(data):
