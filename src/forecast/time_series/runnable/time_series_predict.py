@@ -21,7 +21,7 @@ import traceback
 
 file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 sys.path.append(file_path)  # 解决不同位置调用依赖包路径问题
-from forecast.time_series.sp.predict_for_time_serise_sp import predict_sp
+from forecast.time_series.sp.predict_for_time_series_sp import predict_sp
 # from forecast.common.log import get_logger
 # from forecast.common.config import get_config
 # from forecast.common.data_helper import update_param_default
@@ -116,7 +116,7 @@ def get_default_conf():
     return conf_default
 
 
-def run(forecast_start_date, purpose, time_type):
+def run(forecast_start_date, purpose, time_type, spark):
     """
     跑接口
     :return:
@@ -130,7 +130,7 @@ def run(forecast_start_date, purpose, time_type):
         param = json.loads(param)
     default_conf = get_default_conf()
     param = update_param_default(param, default_conf)
-    spark = spark_init()
+    # spark = spark_init()
     time_series_predict(param, spark)
 
 
