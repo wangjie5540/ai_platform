@@ -6,8 +6,6 @@ include:
     时序模型：预测spark版本
 """
 
-# from forecast.common.data_helper import *
-from forecast.time_series.sp.data_prepare_for_time_series_sp import *
 from forecast.time_series.model import ARModel, ARXModel, ARIMAXModel, ARIMAModel, ThetaModel, SARIMAXModel, \
     MAModel, SARIMAModel, SESModel, STLModel, ESModel, CrostonModel, CrostonTSBModel, HoltModel, HoltWinterModel, \
     STLForecastModel, DmsModel
@@ -23,7 +21,7 @@ from digitforce.aip.common.data_helper import *
 '''
 
 
-def model_predict(key_value, data, method, param, forecast_start_date, predict_len,mode_type):
+def model_predict(key_value, data, method, param, forecast_start_date, predict_len, mode_type):
     """
     所有的时序模型预测,可以实现pipeline和spark级别并行
     :param key_value: key值
@@ -41,7 +39,6 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
     time_type = param['time_type']
     save_table_cols = param['default']['save_table_cols']
     key_cols = param['key_cols']
-    # mode_type = param['mode_type']
     y = param['col_qty']
     model_include = True
     data_temp = row_transform_to_dataFrame(data)
@@ -52,7 +49,6 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
         data = data_process(data_temp, param)
 
     temp_dict = {"day": "D", "week": "W-MON", "month": "MS", "season": "QS-OCT", "year": "A"}
-    # forcast_start_date = pd.to_datetime(forcast_start_date)
     method_param = method_param_all[method]
 
     index = pd.date_range(forecast_start_date, periods=predict_len, freq="D")

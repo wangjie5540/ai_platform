@@ -13,7 +13,7 @@ import pyspark.sql.functions as psf
 
 
 def data_prepared_for_model(spark, param):
-    logger_info = setup_console_log(level=logging.INFO)
+    setup_console_log(level=logging.INFO)
     setup_logging(info_log_file="data_prepare_for_time_series_sp.info", error_log_file="", info_log_file_level="INFO")
     table_sku_grouping = param['table_sku_group']
     ts_model_list = param['ts_model_list']

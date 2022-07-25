@@ -44,7 +44,6 @@ def method_called_back_sp(spark, param):
     back_test_data = spark_df.filter(spark_df[dt] >= forecast_start_date)
 
     back_end_date = back_test_data.select(dt).rdd.max()[0]  # 回测期获取最大值
-    # back_end_date = datetime.datetime.strftime(back_end_date, "%Y%m%d")
     index = pd.date_range(forecast_start_date, back_end_date, freq='D')
     temp_dict = {"day": "D", "week": "W-MON", "month": "MS", "season": "QS-OCT", "year": "A"}
     if param['time_type'] in temp_dict:
@@ -77,7 +76,7 @@ def back_test_sp(param, spark):
     :param spark: spark
     :return:
     """
-    logger_info = setup_console_log(level=logging.INFO)
+    setup_console_log(level=logging.INFO)
     setup_logging(info_log_file="backup_test_for_time_series_sp.info", error_log_file="", info_log_file_level="INFO")
     if 'purpose' not in param.keys() or 'predict_len' not in param.keys():
         logging.info('problem:purpose or predict_len')

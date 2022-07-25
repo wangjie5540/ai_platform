@@ -22,9 +22,6 @@ import traceback
 file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 sys.path.append(file_path)  # 解决不同位置调用依赖包路径问题
 from forecast.time_series.sp.predict_for_time_series_sp import predict_sp
-# from forecast.common.log import get_logger
-# from forecast.common.config import get_config
-# from forecast.common.data_helper import update_param_default
 from digitforce.aip.common.file_config import get_config
 from digitforce.aip.common.data_helper import update_param_default
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
@@ -80,7 +77,7 @@ def time_series_predict(param, spark=None):
     :param spark: spark，如果不传入则会内部启动一个运行完关闭
     :return:成功：True 失败：False
     """
-    logger_info = setup_console_log(level=logging.INFO)
+    setup_console_log(level=logging.INFO)
     setup_logging(info_log_file="time_series_predict.info", error_log_file="", info_log_file_level="INFO")
     logging.info("=============================LOADING==================================")
     mode_type = 'sp'  # 先给个默认值

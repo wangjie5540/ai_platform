@@ -79,7 +79,7 @@ def time_series_back_test(param, spark=None):
     :return:成功：True 失败：False
     """
 
-    logger_info = setup_console_log(level=logging.INFO)
+    setup_console_log(level=logging.INFO)
     setup_logging(info_log_file="time_series_back_test.info", error_log_file="", info_log_file_level="INFO")
     logging.info("==============================LOADING============================")
     mode_type = 'sp'  # 先给个默认值

@@ -5,8 +5,10 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
     时序模型：预测spark版本
 """
+from forecast.time_series.sp.data_prepare_for_time_series_sp import data_prepared_for_model
 from forecast.time_series.sp.model_predict import *
 from digitforce.aip.common.spark_helper import save_table
+
 
 
 def key_process(x, key_cols):
