@@ -117,17 +117,18 @@ def get_default_conf():
     return conf_default
 
 
-def run(forecast_start_date, purpose, time_type):
+def run(forecast_start_date, purpose, time_type, feat_y, output_table, spark):
     """
     跑接口
     :return:
     """
-    param = {"forecast_start_date": forecast_start_date, "purpose": purpose, "time_type": time_type}
+    param = {"forecast_start_date": forecast_start_date, "purpose": purpose, "time_type": time_type, "feat_y": feat_y,
+             "output_table": output_table}
     default_conf = get_default_conf()
     if isinstance(param, str):
         param = json.loads(param)
     param = update_param_default(param, default_conf)
-    spark = spark_init()
+    # spark = spark_init()
     time_series_back_test(param, spark)
 
 
@@ -136,8 +137,11 @@ def main():
     parser.add_argument('-f', '--forecast_start_date', type=str, default=None, help='input forecast_start_date')
     parser.add_argument('-p', '--purpose', type=str, default='back_test', help='input purpose')
     parser.add_argument('-t', '--time_type', type=str, default='day', help='input time_type')
+    parser.add_argument('-f_y', '--feat_y', type=str, default=None, help='input feat_y')
+    parser.add_argument('-o', '--output_table', type=str, default=None, help='input output_table')
     args = parser.parse_args()
-    run(args.forecast_start_date, args.purpose, args.time_type)
+    spark = spark_init()
+    run(args.forecast_start_date, args.purpose, args.time_type, args.feat_y, args.output_table, spark)
 
 
 if __name__ == "__main__":
