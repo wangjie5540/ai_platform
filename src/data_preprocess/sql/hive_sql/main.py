@@ -10,7 +10,7 @@ def main():
     sql = sys.argv[1]
     table_name = sys.argv[2]
     logging.info(sql)
-    df_hive_helper.query_to_table(sql, table_name)
+    df_hive_helper.query_to_table(sql, table_name, delete_tb=True)
 
 
 if __name__ == '__main__':

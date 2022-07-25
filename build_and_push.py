@@ -70,13 +70,13 @@ def main():
     setup_console_log()
     for _dir in [
         "src/recommend/recall/recall_result_to_redis",
-        # "src/recommend/recall/mf",
-        # "src/recommend/recall/similarity_search",
-        # "src/recommend/recall",
-        # "src/data_preprocess",
-        # "src/source",
-        # "src/test",
-        # "src/deeplearning",
+        "src/recommend/recall/mf",
+        "src/recommend/recall/similarity_search",
+        "src/recommend/recall",
+        "src/data_preprocess",
+        "src/source",
+        "src/test",
+        "src/deeplearning",
     ]:
         result = []
         find_main_file(_dir, result)
