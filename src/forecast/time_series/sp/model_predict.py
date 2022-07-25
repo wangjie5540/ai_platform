@@ -23,7 +23,7 @@ from digitforce.aip.common.data_helper import *
 '''
 
 
-def model_predict(key_value, data, method, param, forcast_start_date, predict_len,mode_type):
+def model_predict(key_value, data, method, param, forecast_start_date, predict_len,mode_type):
     """
     所有的时序模型预测,可以实现pipeline和spark级别并行
     :param key_value: key值
@@ -31,7 +31,7 @@ def model_predict(key_value, data, method, param, forcast_start_date, predict_le
     :param method: 选择方法
     :param key_cols: key值的关键字
     :param param: 参数集合
-    :param forcast_start_date: 预测开始日期
+    :param forecast_start_date: 预测开始日期
     :param predict_len: 预测时长
     :param mode_type: 运行方式
     :return: 预测结果
@@ -55,11 +55,11 @@ def model_predict(key_value, data, method, param, forcast_start_date, predict_le
     # forcast_start_date = pd.to_datetime(forcast_start_date)
     method_param = method_param_all[method]
 
-    index = pd.date_range(forcast_start_date, periods=predict_len, freq="D")
+    index = pd.date_range(forecast_start_date, periods=predict_len, freq="D")
     if param['time_type'] in temp_dict:
-        index = pd.date_range(forcast_start_date, periods=predict_len, freq=temp_dict[param['time_type']])
+        index = pd.date_range(forecast_start_date, periods=predict_len, freq=temp_dict[param['time_type']])
 
-    data_tmp = data[data[time_col] < forcast_start_date]  # 日期小于预测日期
+    data_tmp = data[data[time_col] < forecast_start_date]  # 日期小于预测日期
     data_tmp = data_tmp.sort_values(by=time_col, ascending=True)  # 进行排序
 
     p_data = data_tmp[[y, time_col]].set_index(time_col)
@@ -129,8 +129,7 @@ def model_predict(key_value, data, method, param, forcast_start_date, predict_le
     cur_date_list = list(datetime.datetime.strftime(i, "%Y%m%d") for i in index)
     result_df['dt'] = [i for i in cur_date_list]
     result_df['time_type'] = time_type
-    # forcast_start_date = datetime.datetime.strftime(forcast_start_date, "%Y%m%d")
-    result_df['pred_time'] = forcast_start_date
+    result_df['pred_time'] = forecast_start_date
 
     data_result = predict_result_handle(result_df, key_value, key_cols, mode_type, save_table_cols)  # 对结果进行处理
     return data_result
