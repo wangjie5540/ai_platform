@@ -135,13 +135,12 @@ def run(forecast_start_date, purpose, time_type):
 
 
 def main():
-    if len(sys.argv) < 3:
-        print("运行模式为：python main.py forecast_start_date purpose time_type!")
-        sys.exit(1)
-    forecast_start_date = sys.argv[1]
-    purpose = sys.argv[2]
-    time_type = sys.argv[3]
-    run(forecast_start_date, purpose, time_type)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--forecast_start_date', type=str, default=None, help='input forecast_start_date')
+    parser.add_argument('-p', '--purpose', type=str, default='predict', help='input purpose')
+    parser.add_argument('-t', '--time_type', type=str, default='day', help='input time_type')
+    args = parser.parse_args()
+    run(args.forecast_start_date, args.purpose, args.time_type)
 
 
 if __name__ == "__main__":
