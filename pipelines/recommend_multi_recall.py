@@ -1,3 +1,4 @@
+import os
 import kfp
 import kfp.dsl as dsl
 
@@ -135,8 +136,16 @@ def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_da
     info_log_file = f"/data/recommend/rank/log/lgb/{run_datetime_str}.log"
     error_log_file = f"/data/recommend/rank/log/lgb/{run_datetime_str}.error"
     data_process_op = rank_data_process_op(_sql, dataset_file_path, info_log_file, error_log_file)
-    model_path = f"/data/recommend/rank/lgb/model/lgb-{run_datetime_str}.txt"
-    lightgbm_train_op(dataset_file_path, model_path, info_log_file, error_log_file).after(data_process_op)
+    model_path = f"/data/recommend/rank/lgb/model/{run_datetime_str}"
+
+    train_op = lightgbm_train_op(dataset_file_path, model_path, info_log_file, error_log_file).after(data_process_op)
+    with open(os.path.join(model_path, 'model_path.txt'), 'r') as f:
+        model_file_path = f.read()
+    model_name = os.path.split(model_file_path)[-1]
+    model_hdfs_path = f"/user/aip/recommend/rank/lgb/{run_datetime_str}/{model_file_path}"
+    df_model_manager.save_one_model_to_model_manage_system(
+        solution_id, instance_id, model_file_path, model_hdfs_path,
+        model_name=model_name).after(train_op)
 
 
 def upload_pipeline():
