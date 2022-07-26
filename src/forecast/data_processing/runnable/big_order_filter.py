@@ -108,5 +108,5 @@ if __name__ == "__main__":
     files1.extractall(os.getcwd())
     files2.extractall(os.getcwd())
     spark = forecast_spark_session("submit_test")
-    sdate, edate = sys.argv[1], sys.argv[2]
+    sdate, edate = sys.argv[1].replace('-', ''), sys.argv[2].replace('-', '')
     run(sdate, edate, spark)

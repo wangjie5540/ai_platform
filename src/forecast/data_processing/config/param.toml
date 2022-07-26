@@ -15,7 +15,8 @@ col_time = "sdt"
 conn = 'and'
 sdate = ''
 edate = ''
-input_sales_table = 'ai_dm.ads_scm_goods_sales_log'
+
+input_sales_table = "f'{}.{}ads_scm_goods_sales_log'"
 input_stock_table = 'ai_dm.ads_scm_original_stock_snapshot'
 input_category_table = 'ai_dm.ads_scm_original_site_goods'
 outlier_order_table = 'ai_dm_dev.outlier_order_0620'
