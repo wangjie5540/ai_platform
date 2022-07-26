@@ -8,7 +8,7 @@
         use_boxcox = false
         initialization_method = 'estimated'
         missing = 'drop'
-        freq = 'D'
+
 [arima]
     [arima.param]
         exog = "None"

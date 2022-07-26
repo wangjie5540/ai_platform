@@ -6,6 +6,7 @@ include:
     时序模型：对外提供的接口：回测
 """
 import argparse
+import ast
 import logging
 import os
 
@@ -117,13 +118,13 @@ def get_default_conf():
     return conf_default
 
 
-def run(forecast_start_date, purpose, time_type, feat_y, output_table, spark):
+def run(forecast_start_date, purpose, time_type, feat_y, output_table, col_qty, cols_feat_y, spark):
     """
     跑接口
     :return:
     """
     param = {"forecast_start_date": forecast_start_date, "purpose": purpose, "time_type": time_type, "feat_y": feat_y,
-             "output_table": output_table}
+             "output_table": output_table, "col_qty": col_qty, "cols_feat_y": cols_feat_y}
     default_conf = get_default_conf()
     if isinstance(param, str):
         param = json.loads(param)
@@ -139,9 +140,12 @@ def main():
     parser.add_argument('-t', '--time_type', type=str, default='day', help='input time_type')
     parser.add_argument('-f_y', '--feat_y', type=str, default=None, help='input feat_y')
     parser.add_argument('-o', '--output_table', type=str, default=None, help='input output_table')
+    parser.add_argument('-c', '--col_qty', type=str, default=None, help='input col_qty')
+    parser.add_argument('-c_f_y', '--cols_feat_y', type=ast.literal_eval(), default=None, help='input cols_feat_y')
     args = parser.parse_args()
     spark = spark_init()
-    run(args.forecast_start_date, args.purpose, args.time_type, args.feat_y, args.output_table, spark)
+    run(args.forecast_start_date, args.purpose, args.time_type, args.feat_y, args.output_table, args.col_qty,
+        args.cols_feat_y, spark)
 
 
 if __name__ == "__main__":

@@ -7,6 +7,10 @@ include:
 """
 import logging
 import traceback
+import datetime
+
+from pandas import pd
+
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 from digitforce.aip.common.datetime_helper import date_add_str
 import pyspark.sql.functions as psf
@@ -47,3 +51,31 @@ def data_prepared_for_model(spark, param):
         logging.info(traceback.format_exc())
 
     return data_result
+
+def data_process(df, param):
+    dt = param['time_col']
+    y = param['col_qty']
+    key_cols = param['key_cols']
+
+    df[dt] = df[dt].apply(lambda x: pd.to_datetime(x))
+    ts = pd.DataFrame(pd.date_range(start=df.dt.min(), end=df.dt.max()), columns=[dt])
+    ts = ts.merge(df, on=dt, how='left')
+    for i in key_cols:
+        ts.loc[:, i] = df.loc[0, i]
+
+    ts_null = ts[ts.isnull().values]
+    ts_null.index = range(len(ts_null))
+
+    for i in range(len(ts_null)):
+        cur_date = ts_null.loc[i, dt]
+        start = pd.to_datetime(cur_date) - pd.Timedelta(days=14)
+        end = pd.to_datetime(cur_date) + pd.Timedelta(days=14)
+        temp = pd.DataFrame(pd.date_range(start, end), columns=[dt])
+        temp = temp.merge(df, on=dt, how='left')
+        y_ = temp[y].mean()
+        ts_null.loc[i, y] = y_
+
+    ts2 = pd.concat([df, ts_null])
+    data = ts2.sort_values(by=dt, ascending=True)  # 进行排序
+    data[dt] = data[dt].apply(lambda x: datetime.datetime.strftime(x, "%Y%m%d"))
+    return data

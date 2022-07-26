@@ -10,6 +10,7 @@ from forecast.time_series.model import ARModel, ARXModel, ARIMAXModel, ARIMAMode
     MAModel, SARIMAModel, SESModel, STLModel, ESModel, CrostonModel, CrostonTSBModel, HoltModel, HoltWinterModel, \
     STLForecastModel, DmsModel
 from digitforce.aip.common.data_helper import *
+from forecast.time_series.sp.data_prepare_for_time_series_sp import data_process
 
 '''
 整体思路：
@@ -62,7 +63,7 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
     p_data[y] = p_data[y].astype(float)
 
     if p_data.shape[0] < 17:
-        preds_value = data[y].mean()
+        preds_value = p_data[y].mean()
         preds = [preds_value for i in range(predict_len)]
         model_include = False
 
@@ -114,47 +115,22 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
 
     if model_include == True:
         preds = ts_model.forecast(predict_len)
-        dict_month = {'datetime': preds.index, 'y': preds.values}
-        df_month = pd.DataFrame(dict_month)
+        dict_ = {'datetime': preds.index, 'y': preds.values}
+        df_ = pd.DataFrame(dict_)
         if str(method).lower() == 'croston' or str(method).lower() == 'crostontsb':
             result_df['y_pred'] = preds['forecast']
         else:
-            result_df['y_pred'] = df_month['y']
+            result_df['y_pred'] = df_['y']
     else:
         result_df['y_pred'] = preds
     cur_date_list = list(datetime.datetime.strftime(i, "%Y%m%d") for i in index)
     result_df['dt'] = [i for i in cur_date_list]
     result_df['time_type'] = time_type
     result_df['pred_time'] = forecast_start_date
+    result_df['y_pred'] = result_df['y_pred'].apply(lambda x: x if x >= 0 else 0)
 
     data_result = predict_result_handle(result_df, key_value, key_cols, mode_type, save_table_cols)  # 对结果进行处理
     return data_result
 
 
-def data_process(df, param):
-    dt = param['time_col']
-    y = param['col_qty']
-    key_cols = param['key_cols']
 
-    df[dt] = df[dt].apply(lambda x: pd.to_datetime(x))
-    ts = pd.DataFrame(pd.date_range(start=df.dt.min(), end=df.dt.max()), columns=[dt])
-    ts = ts.merge(df, on=dt, how='left')
-    for i in key_cols:
-        ts.loc[:, i] = df.loc[0, i]
-
-    ts_null = ts[ts.isnull().values]
-    ts_null.index = range(len(ts_null))
-
-    for i in range(len(ts_null)):
-        cur_date = ts_null.loc[i, dt]
-        start = pd.to_datetime(cur_date) - pd.Timedelta(days=7)
-        end = pd.to_datetime(cur_date) + pd.Timedelta(days=7)
-        temp = pd.DataFrame(pd.date_range(start, end), columns=['dt'])
-        temp = temp.merge(df, on=dt, how='left')
-        y_ = temp.y.mean()
-        ts_null.loc[i, y] = y_
-
-    ts2 = pd.concat([df, ts_null])
-    data = ts2.sort_values(by=dt, ascending=True)  # 进行排序
-    data[dt] = data[dt].apply(lambda x: datetime.datetime.strftime(x, "%Y%m%d"))
-    return data
