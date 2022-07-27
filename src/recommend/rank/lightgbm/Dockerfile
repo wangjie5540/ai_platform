@@ -1,4 +1,4 @@
-FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/miniconda3-base:latest
+FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/pytorch-cpu:latest
 
 ARG PROJECT_DIR=/app/digit-force-kubeflow-pipeline-component-image
 
