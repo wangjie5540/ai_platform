@@ -20,3 +20,17 @@ def get_config(file_path, section=None):
         return cfg
     return cfg[section]
 
+def get_default_conf(file_list,section_list):
+    param = {}
+    if len(file_list)>0 and len(section_list)>0:
+        for file_section in zip(file_list,section_list):
+            file_toml = file_section[0]
+            section = file_section[1]
+            cfg = get_config(file_toml,section)
+            param.update(cfg)
+    else:
+        return None
+    return param
+
+
+
