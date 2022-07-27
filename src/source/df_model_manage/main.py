@@ -26,6 +26,7 @@ def parse_metrics_from_model_file(model_file):
         vals = _.split("_")
         if i > 0 and len(vals) == 2:
             metrics_info[vals[0]] = vals[1]
+    metrics_info = [{"name": k, "value": v} for k, v in metrics_info.items()]
     return metrics_info
 
 
@@ -67,11 +68,11 @@ if __name__ == '__main__':
     import sys
 
     setup_console_log()
-    # main()
-    with open("lgb__auc_0.88__recall_0.78__loss_0.3.pk", "wb") as fo:
-        pass
-    upload_file_model_to_hdfs(10000, 20000, "lgb__auc_0.88__recall_0.78__loss_0.3.pk",
-                              "/user/aip/recommend/rank/model/lgb/2022-07-21/lgb__auc_0.88__recall_0.78__loss_0.3.pk",
-                              "rank_lgb_model")
-    print(dg_hdfs_client.list_dir("/user/aip/pipeline_model_file/10000/20000"))
-    print(dg_hdfs_client.list_dir("/user/aip/recommend/rank/model/lgb/2022-07-21/"))
+    main()
+    # with open("lgb__auc_0.88__recall_0.78__loss_0.3.pk", "wb") as fo:
+    #     pass
+    # upload_file_model_to_hdfs(10000, 20000, "lgb__auc_0.88__recall_0.78__loss_0.3.pk",
+    #                           "/user/aip/recommend/rank/model/lgb/2022-07-21/lgb__auc_0.88__recall_0.78__loss_0.3.pk",
+    #                           "rank_lgb_model")
+    # print(dg_hdfs_client.list_dir("/user/aip/pipeline_model_file/10000/20000"))
+    # print(dg_hdfs_client.list_dir("/user/aip/recommend/rank/model/lgb/2022-07-21/"))
