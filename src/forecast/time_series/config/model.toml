@@ -1,6 +1,6 @@
-[model]
-[holt-winter]
-    [holt-winter.param]
+[method_param_all]
+[method_param_all.holt-winter]
+    [method_param_all.holt-winter.param]
         seasonal_periods = 7
         trend = 'add'
         seasonal = 'add'
@@ -9,8 +9,8 @@
         initialization_method = 'estimated'
         missing = 'drop'
 
-[arima]
-    [arima.param]
+[method_param_all.arima]
+    [method_param_all.arima.param]
         exog = "None"
         order = "(0, 0, 0)"
         seasonal_order = "(0, 0, 0,0)"
@@ -23,7 +23,7 @@
         freq = "None"
         missing = 'missing'
         validate_specification = true
-    [arima.param_fit]
+    [method_param_all.arima.param_fit]
         start_params="None"
         transformed=true
         includes_fixed=false
@@ -35,8 +35,8 @@
         cov_kwds="None"
         return_params=false
         low_memory=false
-[sarima]
-    [sarima.param]
+[method_param_all.sarima]
+    [method_param_all.sarima.param]
         exog="None"
         order="(1, 0, 0)"
         seasonal_order="(0, 0, 0,0)"
@@ -55,7 +55,7 @@
         freq="None"
         missing='missing'
         validate_specification=true
-    [sarima.param_fit]
+    [method_param_all.sarima.param_fit]
         start_params="None"
         transformed=true
         includes_fixed=false
@@ -85,7 +85,7 @@
 #suppress_warnings = true
 #stepwise = true
 
-[es]
-smoothing_level = 0.8
-optimized = false
+#[method_param_all.es]
+#smoothing_level = 0.8
+#optimized = false
 

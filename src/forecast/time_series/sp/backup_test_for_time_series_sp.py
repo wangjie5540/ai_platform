@@ -9,6 +9,7 @@ import datetime
 import logging
 
 import pandas as pd
+from pyspark.sql.functions import lit
 
 from forecast.time_series.sp.predict_for_time_series_sp import method_called_predict_sp
 from forecast.model_evaluation import forecast_evaluation
@@ -37,6 +38,7 @@ def method_called_back_sp(spark, param):
     partitions = param['partitions']
     dt = param['time_col']
     eval_key = param['eval_key']
+    eval_table = param['eval_table']
 
     spark_df = data_prepared_for_model(spark, param)
 
@@ -44,10 +46,12 @@ def method_called_back_sp(spark, param):
     back_test_data = spark_df.filter(spark_df[dt] >= forecast_start_date)
 
     back_end_date = back_test_data.select(dt).rdd.max()[0]  # 回测期获取最大值
-    index = pd.date_range(forecast_start_date, back_end_date, freq='D')
+
     temp_dict = {"day": "D", "week": "W-MON", "month": "MS", "season": "QS-OCT", "year": "A"}
     if param['time_type'] in temp_dict:
         index = pd.date_range(forecast_start_date, back_end_date, freq=temp_dict[param['time_type']])
+    else:
+        index = pd.date_range(forecast_start_date, back_end_date, freq='D')
 
     time_list = list(datetime.datetime.strftime(i, "%Y%m%d") for i in index)
 
@@ -62,10 +66,15 @@ def method_called_back_sp(spark, param):
 
     key_cols.append(dt)
     back_test_data = back_test_data.join(result_data_temp, on=key_cols, how='left')
-    param['forecast_start_date'] = forecast_start_date
     save_table(spark, back_test_data, output_table, partition=partitions)
     wmape_spdf = forecast_evaluation.forecast_evaluation_wmape(back_test_data, col_qty, "y_pred", col_key=eval_key,
                                                                df_type='sp')
+    # todo 落表 预测未来某天的准确率 评估开始结束日期
+    # todo 落表的话，表明暂定eval_key_forecast_apply_model
+    apply_model = back_test_data.select("apply_model").rdd.max()[0]
+    wmape_spdf.withColumn("apply_model", lit(apply_model))
+    wmape_spdf.withColumn("time_type",lit(param['time_type']))
+    save_table(spark,wmape_spdf,eval_table,partition=eval_key)
     print("回测效果", wmape_spdf.show(10))
 
 

@@ -52,16 +52,17 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
     temp_dict = {"day": "D", "week": "W-MON", "month": "MS", "season": "QS-OCT", "year": "A"}
     method_param = method_param_all[method]
 
-    index = pd.date_range(forecast_start_date, periods=predict_len, freq="D")
     if param['time_type'] in temp_dict:
         index = pd.date_range(forecast_start_date, periods=predict_len, freq=temp_dict[param['time_type']])
+    else:
+        index = pd.date_range(forecast_start_date, periods=predict_len, freq="D")
 
     data_tmp = data[data[time_col] < forecast_start_date]  # 日期小于预测日期
     data_tmp = data_tmp.sort_values(by=time_col, ascending=True)  # 进行排序
 
     p_data = data_tmp[[y, time_col]].set_index(time_col)
     p_data[y] = p_data[y].astype(float)
-
+    # holtwinter 7 day todo 简单指数平滑托底
     if p_data.shape[0] < 17:
         preds_value = p_data[y].mean()
         preds = [preds_value for i in range(predict_len)]
@@ -112,15 +113,12 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
         model_include = False
 
     result_df = pd.DataFrame()
-
+    # todo 模型内部处理日期
     if model_include == True:
         preds = ts_model.forecast(predict_len)
         dict_ = {'datetime': preds.index, 'y': preds.values}
         df_ = pd.DataFrame(dict_)
-        if str(method).lower() == 'croston' or str(method).lower() == 'crostontsb':
-            result_df['y_pred'] = preds['forecast']
-        else:
-            result_df['y_pred'] = df_['y']
+        result_df['y_pred'] = df_['y']
     else:
         result_df['y_pred'] = preds
     cur_date_list = list(datetime.datetime.strftime(i, "%Y%m%d") for i in index)
@@ -131,6 +129,3 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
 
     data_result = predict_result_handle(result_df, key_value, key_cols, mode_type, save_table_cols)  # 对结果进行处理
     return data_result
-
-
-

@@ -34,17 +34,12 @@ def method_called_predict_sp(param, spark_df, cur_time):
     """
     key_cols = param['key_cols']
     apply_model_index = param['apply_model_index']
-    forecast_start_date = param['forecast_start_date']
     predict_len = param['predict_len']
-    if cur_time == forecast_start_date:
-        pass
-    else:
-        forecast_start_date = cur_time
-
+    #todo 异常抛出 logging.err() 稳定性保障 日志位置？？？
     if predict_len <= 0:
         return
     data_result = spark_df.rdd.map(lambda g: (key_process(g, key_cols), g)).groupByKey(). \
-        flatMap(lambda x: model_predict(x[0], x[1], x[0][apply_model_index], param, forecast_start_date, predict_len,
+        flatMap(lambda x: model_predict(x[0], x[1], x[0][apply_model_index], param, cur_time, predict_len,
                                         'sp')).filter(lambda h: h is not None).toDF()
 
     return data_result

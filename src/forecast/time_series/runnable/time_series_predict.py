@@ -23,52 +23,12 @@ import traceback
 file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 sys.path.append(file_path)  # 解决不同位置调用依赖包路径问题
 from forecast.time_series.sp.predict_for_time_series_sp import predict_sp
-from digitforce.aip.common.file_config import get_config
+from digitforce.aip.common.file_config import get_default_conf
 from digitforce.aip.common.data_helper import update_param_default
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 
-import os
 import findspark
-
 findspark.init()
-from pyspark.sql import SparkSession
-
-
-def spark_init():
-    """
-    初始化特征
-    :return:
-    """
-    os.environ["PYSPARK_DRIVER_PYTHON"] = "/data/ibs/anaconda3/bin/python"
-    os.environ['PYSPARK_PYTHON'] = "/data/ibs/anaconda3/bin/python"
-    spark = SparkSession.builder \
-        .appName("model_test").master('yarn') \
-        .config("spark.executor.instances", "50") \
-        .config("spark.executor.memory", "4g") \
-        .config("spark.executor.cores", "4") \
-        .config("spark.driver.memory", "8g") \
-        .config("spark.driver.maxResultSize", "6g") \
-        .config("spark.default.parallelism", "600") \
-        .config("spark.network.timeout", "240s") \
-        .config("spark.sql.adaptive.enabled", "true") \
-        .config("spark.sql.adaptive.join.enabled", "true") \
-        .config("spark.sql.adaptive.shuffle.targetPostShuffleInputSize", "128000000") \
-        .config("spark.dynamicAllocation.enabled", "true") \
-        .config("spark.dynamicAllocation.minExecutors", "1") \
-        .config("spark.shuffle.service.enabled", "true") \
-        .config("spark.sql.sources.partitionOverwriteMode", "dynamic") \
-        .config("hive.exec.dynamici.partition", True) \
-        .config("hive.exec.dynamic.partition.mode", "nonstrict") \
-        .config("hive.exec.max.dynamic.partitions", "10000") \
-        .enableHiveSupport().getOrCreate()
-    spark.sql("set hive.exec.dynamic.partitions=true")
-    spark.sql("set hive.exec.max.dynamic.partitions=2048")
-    spark.sql("set hive.exec.dynamic.partition.mode=nonstrict")
-    spark.sql("use ai_dm_dev")
-    sc = spark.sparkContext
-    zip_path = './forecast.zip'
-    sc.addPyFile(zip_path)
-    return spark
 
 
 def time_series_predict(param, spark=None):
@@ -97,22 +57,6 @@ def time_series_predict(param, spark=None):
     return status
 
 
-def get_default_conf():
-    """
-    获取时序预测所需的默认参数
-    :return: 默认参数
-    """
-    file_tmp = "forecast/time_series/config/"
-    time_series_operation = file_tmp + 'operation.toml'
-    time_series = file_tmp + r'model.toml'
-    sales_data_file = file_tmp + 'sales_data.toml'
-    conf_default = get_config(time_series_operation, None)
-    method_param_all = get_config(time_series, None)  # 模型参数
-    conf_default['method_param_all'] = method_param_all
-    sales_data_dict = get_config(sales_data_file, 'data')
-    conf_default.update(sales_data_dict)
-    return conf_default
-
 
 def run(forecast_start_date, purpose, time_type, feat_y, output_table, col_qty, cols_feat_y, spark):
     """
@@ -125,13 +69,13 @@ def run(forecast_start_date, purpose, time_type, feat_y, output_table, col_qty, 
     # 'time_type': 'day',
     # 'feat_y':y值表
     # 'output_table':结果表
-    param = {"forecast_start_date": forecast_start_date, "purpose": purpose, "time_type": time_type, "feat_y": feat_y,
+    param = {"forecast_start_date": forecast_start_date,
+             "purpose": purpose,#该参数判断是预测还是回测，存在的意义是更新配置文件中的purpose,生成更新后的param，为后续使用
+             "time_type": time_type, "feat_y": feat_y,
              "output_table": output_table, "col_qty": col_qty, "cols_feat_y": cols_feat_y}
-    if isinstance(param, str):
-        param = json.loads(param)
+
     default_conf = get_default_conf()
     param = update_param_default(param, default_conf)
-    # spark = spark_init()
     time_series_predict(param, spark)
 
 
@@ -144,10 +88,10 @@ def main():
     parser.add_argument('-o', '--output_table', type=str, default=None, help='input output_table')
     parser.add_argument('-c', '--col_qty', type=str, default=None, help='input col_qty')
     parser.add_argument('-c_f_y', '--cols_feat_y', type=ast.literal_eval(), default=None, help='input cols_feat_y')
+    parser.add_argument('-s','--spark',type=str,default=None,help='input spark')
     args = parser.parse_args()
-    spark = spark_init()
     run(args.forecast_start_date, args.purpose, args.time_type, args.feat_y, args.output_table, args.col_qty,
-        args.cols_feat_y, spark)
+        args.cols_feat_y, args.spark)
 
 
 if __name__ == "__main__":
