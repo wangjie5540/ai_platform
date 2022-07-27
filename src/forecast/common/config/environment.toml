@@ -33,3 +33,6 @@ mysql_user="digitforce_arch"
 mysql_password="arch123456"
 
 [hive]
+
+[exec]
+exec_list = ["db_origin = 'ai_dm'", "db_dev = 'ai_dm_dev'", "pre_table_name = 'ss_aip'"]
