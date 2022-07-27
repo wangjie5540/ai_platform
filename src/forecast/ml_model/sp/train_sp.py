@@ -8,15 +8,22 @@ include:
 import os
 import sys
 import traceback
-from forecast.common.log import get_logger
+# from digitforce.aip.common.log import get_logger
 from forecast.ml_model.sp.data_prepare import data_prepare_train
 from forecast.ml_model.model.ml_train import ml_train
 from forecast.ml_model.sp.predict_sp import key_process, get_default_conf
-from forecast.common.data_helper import update_param_default
+from digitforce.aip.common.data_helper import update_param_default
 from forecast.common.spark import spark_init
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+import logging
+# from digitforce.aip.common.spark_helper import SparkHelper,forecast_spark_session
 
-file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
-sys.path.append(file_path)  # 解决不同位置调用依赖包路径问题
+
+# file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
+# sys.path.append(file_path)  # 解决不同位置调用依赖包路径问题
+logger_info = setup_console_log()
+setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
+
 
 
 def method_called_train_sp(data, key_cols, apply_model_index, param, hdfs_path, predict_len):
@@ -30,10 +37,16 @@ def method_called_train_sp(data, key_cols, apply_model_index, param, hdfs_path, 
     :param predict_len: 预测时长
     :return:
     """
+    try:
+        back_testing = param['back_testing']
+    except:
+        back_testing = None
     if predict_len <= 0:
         return
-    data.rdd.map(lambda g: (key_process(g, key_cols), g)).groupByKey(). \
-        flatMap(lambda x: ml_train(x[0], x[1], x[0][apply_model_index], param, hdfs_path, predict_len, 'sp'))
+    result = data.rdd.map(lambda g: (key_process(g, key_cols), g)).groupByKey(). \
+        flatMap(lambda x: ml_train(x[0], x[1], x[0][apply_model_index],
+                                   param, hdfs_path, predict_len, 'sp',back_testing)).toDF()
+    result.show()
 
 
 def train_sp(param, spark):
@@ -44,43 +57,45 @@ def train_sp(param, spark):
     :return:
     """
     status = True
-    logger_info = get_logger()
     if 'purpose' not in param.keys() or 'predict_len' not in param.keys():
-        logger_info.info('problem:purpose or predict_len')
+        logging.info('problem:purpose or predict_len')
         return False
     if param['purpose'] != 'train':
-        logger_info.info('problem:purpose is not train')
+        logging.info('problem:purpose is not train')
         return False
     if param['predict_len'] < 0 or param['predict_len'] == '':
-        logger_info.info('problem:predict_len is "" or predict_len<0')
+        logging.info('problem:predict_len is "" or predict_len<0')
         return False
     default_conf = get_default_conf()
     param = update_param_default(param, default_conf)
-    logger_info.info("ml_time_operation:")
-    logger_info.info(str(param))
+    logging.info("ml_time_operation:")
+    logging.info(str(param))
     mode_type = param['mode_type']
     spark_inner = 0
     if str(mode_type).lower() == 'sp' and not spark:
         try:
-            spark = spark_init()
-            logger_info.info('spark 启动成功')
+            # forecast_spark_helper = SparkHelper(forecast_spark_session("forecast_app"))
+            # spark = forecast_spark_helper.get_spark()  # spark_init()
+            logging.info('spark 启动成功')
         except Exception as e:
             status = False
-            logger_info.info(traceback.format_exc())
+            logging.info(traceback.format_exc())
         spark_inner = 1
-    key_cols = param['key_cols']
+    key_cols = param['col_keys']
     apply_model_index = param['apply_model_index']
     predict_len = param['predict_len']
     hdfs_path = param['hdfs_path']
 
     try:
         data_train = data_prepare_train(spark, param)  # 训练样本
+        logging.info("提取数据成功")
         method_called_train_sp(data_train, key_cols, apply_model_index, param, hdfs_path, predict_len)
+        logging.info("模型训练成功")
     except Exception as e:
         status = False
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
 
     if spark_inner == 1:  # 如果当前接口启动的spark，那么要停止
         spark.stop()
-        logger_info.info("spark stop")
+        logging.info("spark stop")
     return status

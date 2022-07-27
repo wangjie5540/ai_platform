@@ -8,9 +8,16 @@ include:
 
 import traceback
 import copy
-from forecast.common.log import get_logger
-from forecast.common.date_helper import date_add_str
+# from forecast.common.log import get_logger
+from digitforce.aip.common.datetime_helper import date_add_str
 from pyspark.sql.functions import max
+
+# from digitforce.aip.common.spark_helper import SparkHelper, forecast_spark_session
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+import logging
+
+logger_info = setup_console_log()
+setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
 
 
 def data_prepare_train(spark, param):
@@ -20,14 +27,14 @@ def data_prepare_train(spark, param):
     :param param:样本选择
     :return:样本
     """
-    logger_info = get_logger()
+
     table_sku_grouping = param['table_sku_group']
     ts_model_list = param['ts_model_list']
     table_feat_y = param['table_feat_y']
-    y_type_list = param['y_type_list']
+    # y_type_list = param['y_type_list']
     cols_sku_grouping = param['cols_sku_grouping']
     apply_model = param['apply_model']
-    y_type = param['y_type']
+    # y_type = param['y_type']
     sample_join_key_grouping = param['sample_join_key_grouping']  # 与分类分组表join的key
     table_feat_x = param['table_feat_x']
     sample_join_key_feat = param['sample_join_key_feat']
@@ -37,6 +44,9 @@ def data_prepare_train(spark, param):
 
     cols_feat_y_columns = param['cols_feat_y_columns']
     cols_feat_x_columns = param['cols_feat_x_columns']
+    logging.info("table_sku_grouping is %s" % table_sku_grouping)
+    logging.info("table_feat_y is %s" % table_feat_y)
+    logging.info("table_feat_x is %s" % table_feat_x)
 
     try:
         data_sku_grouping = spark.table(table_sku_grouping).select(cols_sku_grouping)
@@ -53,7 +63,7 @@ def data_prepare_train(spark, param):
             edate = data_feat_y.select([max(dt)]).head(1)[0][0]  # 获取最大值
             sdate = date_add_str(edate, -365)  # 默认一年
 
-        data_feat_y = data_feat_y.filter(data_feat_y[y_type].isin(y_type_list))
+        # data_feat_y = data_feat_y.filter(data_feat_y[y_type].isin(y_type_list))
         data_feat_y = data_feat_y.filter((data_feat_y[dt] >= sdate) & (data_feat_y[dt] <= edate))
 
         # 特征表
@@ -63,16 +73,16 @@ def data_prepare_train(spark, param):
             cols_feat_x.extend(cols_feat_x_columns)
             data_feat_x = data_feat_x.select(cols_feat_x)
 
-        data_feat_x = data_feat_x.filter(data_feat_x[y_type].isin(y_type_list))  # 也是筛选y_type
+        # data_feat_x = data_feat_x.filter(data_feat_x[y_type].isin(y_type_list))  # 也是筛选y_type
         data_feat_x = data_feat_x.filter((data_feat_x[dt] >= sdate) & (data_feat_x[dt] <= edate))
 
         data_feat = data_feat_y.join(data_feat_x, on=sample_join_key_feat, how='inner')
         data_result = data_feat.join(data_sku_grouping, on=sample_join_key_grouping, how='inner')
 
-        logger_info.info("sample_select_sp train 成功")
+        logging.info("sample_select_sp train 成功")
     except Exception as e:
         data_result = None
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
     return data_result
 
 
@@ -83,7 +93,7 @@ def data_prepare_predict(spark, param):
     :param param:样本选择
     :return:样本
     """
-    logger_info = get_logger()
+
     table_sku_grouping = param['table_sku_group']
     ts_model_list = param['ts_model_list']
     y_type_list = param['y_type_list']
@@ -112,9 +122,9 @@ def data_prepare_predict(spark, param):
         data_feat_x = data_feat_x.filter(data_feat_x[dt] == forcast_start_date)
 
         data_result = data_feat_x.join(data_sku_grouping, on=sample_join_key_grouping, how='inner')
-        logger_info.info("sample_select_sp predict 成功")
+        logging.info("sample_select_sp predict 成功")
     except Exception as e:
         data_result = None
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
 
     return data_result

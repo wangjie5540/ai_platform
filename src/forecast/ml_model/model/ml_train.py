@@ -5,16 +5,33 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
     各种机器学习模型
 """
+import pandas as pd
+
 from forecast.ml_model.model.LightgbmModel import LightgbmModel
 from forecast.ml_model.model.XgboostModel import XgboostModel
 import numpy as np
 import datetime
 from dateutil.relativedelta import relativedelta
 from forecast.common.model_helper import *
-from forecast.common.data_helper import *
+from digitforce.aip.common.data_helper import *
+from pyspark.sql import Row
 
 
-def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_type):
+def generate_rows_from_df(df, cast_int=None):
+    columns = df.columns.tolist()
+    row_list = list()
+    for row in df.iterrows():
+        k_v = dict()
+        for key in columns:
+            if cast_int is not None and key in cast_int:
+                k_v[key] = int(row[1][key])
+            else:
+                k_v[key] = row[1][key]
+        row_list.append(Row(**k_v))
+    return row_list
+
+
+def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_type,back_testing=None):
     """
     模型训练
     :param key_value: key值
@@ -24,6 +41,7 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
     :param save_path: 模型上保存地址
     :param predict_len: 预测时长
     :param mode_type: 运行方式
+    :param back_testing 是否进行回测
     :return:
     """
     method_param_all = param['method_param_all']
@@ -43,7 +61,11 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
     feature_columns = param['cols_feat_x_columns']  # 模型使用特征
     sample_join_key_feat = param['sample_join_key_feat']
     model_name = 'ml'
-    data = row_transform_to_dataFrame(data_all)
+    if isinstance(data_all, pd.DataFrame):
+        data = data_all
+    else:
+
+        data = row_transform_to_dataFrame(data_all)
 
     edate = data[time_col].max()
     sdate = datetime.datetime.strptime(edate, '%Y%m%d')
@@ -103,9 +125,19 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
         save_path = save_path[0:len(save_path) - 1]
     if isinstance(key_value, list):
         key_value = '/'.join(key_value)
+    elif isinstance(key_value, tuple):
+        key_value_list = [str(i) for i in list(key_value)]
+        key_value = '/'.join(key_value_list)
     save_path = save_path + '/' + key_value
-    if mode_type == 'sp':
-        save_model_hdfs(model_reg_all, model_name, save_path)
+    if mode_type == 'sp' and not back_testing:
+        save_model_hdfs(model_reg_all, model_name, save_path, key_value)
     else:
-        save_path = save_path + '/' + model_name
-        save_model(model_reg_all, save_path)
+        # save_path = save_path + '/' + model_name
+        file_local = r'model_tmp/' + key_value  # 创建临时文件地址
+        file_local_tmp = file_local + '/' + model_name
+        if not os.path.exists(file_local):
+            os.makedirs(file_local)
+        # save_model(model, file_local_tmp)
+        save_model(model_reg_all, file_local_tmp)
+
+    return generate_rows_from_df(data)

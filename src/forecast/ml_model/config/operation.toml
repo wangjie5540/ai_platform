@@ -1,8 +1,8 @@
 [default]
 time_type='day'#day/week/month
 loop_key=['shop_id','goods_id']#求y1、y2......y14的聚合key
-save_table_cols=['shop_id','goods_id','apply_model','time_type','pred_time','y_pred']
-hdfs_path='/user/gaoxiancheng/model'#模型存放地址
+save_table_cols=['shop_id','goods_id','apply_model','time_type','pred_time','y_pred','dt']
+hdfs_path='/user/liguoqiang/model'#模型存放地址
 is_log=true#使用模型训练和预测是否要经过log变化
 
 
@@ -10,7 +10,7 @@ is_log=true#使用模型训练和预测是否要经过log变化
 is_write=true
 write_type='hive'
 mode_type='overwrite'
-partition=[]
+partition=["shop_id", "dt"]
 table_name='ai_dm.ml_model_result'#结果输出表
 file_path='/tmp'
 repartition=1

@@ -21,7 +21,11 @@ import traceback
 file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 sys.path.append(file_path)  # 解决不同位置调用依赖包路径问题
 from forecast.ml_model.sp.predict_sp import predict_sp
-from forecast.common.log import get_logger
+# from digitforce.aip.common.spark_helper import SparkHelper,forecast_spark_session
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+import logging
+logger_info = setup_console_log()
+setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
 
 
 def ml_model_predict(param, spark=None):
@@ -31,7 +35,7 @@ def ml_model_predict(param, spark=None):
     :param spark: spark，如果不传入则会内部启动一个运行完关闭
     :return:成功：True 失败：False
     """
-    logger_info = get_logger()
+
     mode_type = 'sp'  # 先给个默认值
     status = False
     if 'mode_type' in param.keys():
@@ -41,24 +45,24 @@ def ml_model_predict(param, spark=None):
             status = predict_sp(param, spark)
         else:  # pandas版本
             pass
-        logger_info.info(str(param))
+        logging.info(str(param))
     except Exception as e:
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
     return status
 
 
 # 为了开发测试用，正式环境记得删除
 def param_default():
     param = {
-        'ts_model_list': ['Integrated'],
+        'ts_model_list': ['lightgbm'],
         'y_type_list': ['c'],
         'mode_type': 'sp',
         'forcast_start_date': '20211009',
         'predict_len': 14,
-        'key_list': ['shop_id', 'goods_id', 'y_type', 'apply_model'],
-        'apply_model_index': 3,
+        'col_keys': ['shop_id', 'group_category', 'apply_model'],
+        'apply_model_index': 2,
         'step_len': 5,
-        'purpose': 'predict'
+        'purpose': 'train'
     }
     return param
 
