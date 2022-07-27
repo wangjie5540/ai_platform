@@ -6,6 +6,7 @@ from digitforce.aip.components.preprocess import sql
 from digitforce.aip.components.recommend import hot
 from digitforce.aip.components.recommend import recall
 from digitforce.aip.components.recommend.tmp import rank_data_process_op, lightgbm_train_op
+from digitforce.aip.components.source import df_model_manager
 from digitforce.aip.components.source import hive
 
 name = "RecommendMultiRecallAndRank"
@@ -16,7 +17,8 @@ description = '''{"source": [{"labelx.push_user": ["user_id", "gender", "age", "
     name=name,
     description=description,
 )
-def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_data_end_date_str, run_datetime_str):
+def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_data_end_date_str, run_datetime_str,
+                                             solution_id, instance_id):
     # run_datetime_str = to_date_str(parse_date_str(run_datetime_str))
     show_and_action_sql = f'''
     SELECT user_id, 
@@ -61,6 +63,7 @@ def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_da
 
     # item2vec
     item2vec_item_emb_jsonl_file = f"/data/recommend/recall/item_emb/item2vec/{run_datetime_str}.jsonl"
+    item2vec_item_emb_jsonl_hdfs_path = f"/user/aip/recommend/recall/item_emb/item2vec/{run_datetime_str}.jsonl"
     item2vec_recall_result_jsonl_file = f"/data/recommend/recall/recall_result/item2vec/{run_datetime_str}.jsonl"
     item2vec = recall.item2vec_op(user_action_csv_file, item2vec_item_emb_jsonl_file,
                                   recall_result_file=item2vec_recall_result_jsonl_file, vec_size=16) \
@@ -70,6 +73,11 @@ def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_da
     item2vec_recall_to_redis = recall.upload_recall_result_op(item2vec_recall_result_jsonl_file,
                                                               "AIP_RC_RECALL_item2vec__item2vec__").after(item2vec)
     item2vec_recall_to_redis.container.set_image_pull_policy("Always")
+
+    upload_item2vec_item_emb = df_model_manager.save_one_model_to_model_manage_system(
+        solution_id, instance_id, item2vec_item_emb_jsonl_file, item2vec_item_emb_jsonl_hdfs_path,
+        model_name="word2vec_item_emb").after(item2vec_recall_to_redis)
+    upload_item2vec_item_emb.container.set_image_pull_policy("Always")
 
     # deep fm
     mf_train_dataset_csv_file = f"/data/recommend/dataset/mf/{run_datetime_str}.csv"
@@ -83,6 +91,7 @@ def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_da
     deep_mf_dataset.container.set_image_pull_policy("Always")
     deep_mf_item_emb_jsonl_file = f"/data/recommend/recall/item_emb/deep_mf/{run_datetime_str}.jsonl"
     deep_mf_user_emb_jsonl_file = f"/data/recommend/recall/user_emb/deep_mf/{run_datetime_str}.jsonl"
+    deep_mf_user_emb_jsonl_hdfs = f"/user/aip/recommend/recall/user_emb/deep_mf/{run_datetime_str}.jsonl"
     deep_mf = recall.deep_mf_op(mf_train_dataset_csv_file, deep_mf_item_emb_jsonl_file, deep_mf_user_emb_jsonl_file)
     deep_mf.after(deep_mf_dataset)
     deep_mf.container.set_image_pull_policy("Always")
@@ -97,6 +106,11 @@ def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_da
     deep_mf_recall_to_redis = recall.upload_recall_result_op(deep_mf_recall_result_jsonl_file,
                                                              "AIP_RC_RECALL_deep_mf__deep_mf__").after(deep_mf_recall)
     deep_mf_recall_to_redis.container.set_image_pull_policy("Always")
+
+    upload_deepmf_item_emb = df_model_manager.save_one_model_to_model_manage_system(
+        solution_id, instance_id, deep_mf_item_emb_jsonl_file, deep_mf_user_emb_jsonl_hdfs,
+        model_name="deep_mf_item_emb").after(deep_mf_recall_to_redis)
+    upload_deepmf_item_emb.container.set_image_pull_policy("Always")
 
     #### rank ###
     dataset_file_path = f"/data/recommend/rank/lgb/dataset/train/{run_datetime_str}.csv"

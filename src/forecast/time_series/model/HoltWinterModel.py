@@ -8,13 +8,14 @@ include:
 
 from statsmodels.tsa.api import ExponentialSmoothing
 
+
 class HoltWinterModel():
 
-    def __init__(self,data,param=None):
-                 # ,param_fit=None):
+    def __init__(self, data, param=None):
+        # ,param_fit=None):
 
-        self.data=data
-        self.param=param
+        self.data = data
+        self.param = param
         # self.param_fit = param_fit
 
         param = {
@@ -31,6 +32,7 @@ class HoltWinterModel():
             "freq": None,
             "missing": "none",
             "dates": None
+
         }
         param.update(self.param)
 
@@ -39,9 +41,7 @@ class HoltWinterModel():
             **param
         )
 
-
     def fit(self):
-
         # param_fit = {
         #     "smoothing_level": None,
         #     "smoothing_trend": None,
@@ -60,11 +60,10 @@ class HoltWinterModel():
         # }
         # param_fit.update(self.param_fit)
 
-        self.model=self.model.fit()
-            # **param_fit)
+        self.model = self.model.fit()
+        # **param_fit)
         return self.model
-        
-    def forecast(self,predict_len):
-        preds=self.model.forecast(predict_len)
-        return preds
 
+    def forecast(self, predict_len):
+        preds = self.model.forecast(predict_len)
+        return preds

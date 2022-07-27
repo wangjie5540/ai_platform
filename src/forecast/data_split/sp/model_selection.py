@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # @Time : 2022/06/29
 # @Author : Arvin
-from forecast.common.reference_package import *
 from digitforce.aip.common.spark_helper import *
+from forecast.common.reference_package import *
+
 
 
 def bound_identify(value, condition):
@@ -77,5 +78,5 @@ def model_selection(spark, params_model_selection, sparkdf_config):
     sparkdf_config = sparkdf_config.withColumn("apply_model",
                                                generate_udf(model_selection_conditions, col_selection, col_bound,
                                                             col_label)(sparkdf_config.col_selection_tmp))
-    forecast_spark_helper.save_table(sparkdf_config, model_selection_table, partition=["shop_id"])
+    save_table(spark, sparkdf_config, model_selection_table, partition=["shop_id"])
     print("模型选择已经完成！")

@@ -1,25 +1,91 @@
-[holt-winter]
-seasonal_periods=7
-trend='add'
-seasonal='add'
-damped_trend=true
-use_boxcox=false
-initialization_method='estimated'
-missing='drop'
-freq='D'
+[method_param_all]
+[method_param_all.holt-winter]
+    [method_param_all.holt-winter.param]
+        seasonal_periods = 7
+        trend = 'add'
+        seasonal = 'add'
+        damped_trend = true
+        use_boxcox = false
+        initialization_method = 'estimated'
+        missing = 'drop'
 
-[arima]
-start_p=1
-start_q=1
-max_p=3
-max_q=3
-m=12
-seasonal=false
-d=1
-trace=true
-suppress_warnings=true
-stepwise=true
+[method_param_all.arima]
+    [method_param_all.arima.param]
+        exog = "None"
+        order = "(0, 0, 0)"
+        seasonal_order = "(0, 0, 0,0)"
+        trend = "None"
+        enforce_stationarity = true
+        enforce_invertibility = true
+        concentrate_scale = true
+        trend_offset = 1
+        dates = "None"
+        freq = "None"
+        missing = 'missing'
+        validate_specification = true
+    [method_param_all.arima.param_fit]
+        start_params="None"
+        transformed=true
+        includes_fixed=false
+        method="None"
+        method_kwargs="None"
+        gls="None"
+        gls_kwargs="None"
+        cov_type="None"
+        cov_kwds="None"
+        return_params=false
+        low_memory=false
+[method_param_all.sarima]
+    [method_param_all.sarima.param]
+        exog="None"
+        order="(1, 0, 0)"
+        seasonal_order="(0, 0, 0,0)"
+        trend="None"
+        measurement_error=false
+        time_varying_regression=false
+        mle_regression=true
+        simple_differencing=false
+        enforce_stationarity=true
+        enforce_invertibility=true
+        hamilton_representation=false
+        concentrate_scale=false
+        trend_offset=1
+        use_exact_diffuse=false
+        dates="None"
+        freq="None"
+        missing='missing'
+        validate_specification=true
+    [method_param_all.sarima.param_fit]
+        start_params="None"
+        transformed=true
+        includes_fixed=false
+        cov_type="None"
+        cov_kwds="None"
+        method="lbfgs"
+        maxiter=50
+        full_output=1
+        disp=5
+        callback="None"
+        return_params=false
+        optim_score="None"
+        optim_complex_step="None"
+        optim_hessian="None"
+        flags="None"
+        low_memory=false
 
-[es]
-smoothing_level=0.8
-optimized=false
+#[arima]
+#start_p = 1
+#start_q = 1
+#max_p = 3
+#max_q = 3
+#m = 12
+#seasonal = false
+#d = 1
+#trace = true
+#suppress_warnings = true
+#stepwise = true
+
+#[method_param_all.es]
+#smoothing_level = 0.8
+#optimized = false
+

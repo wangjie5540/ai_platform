@@ -8,30 +8,24 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
 周销量特征
 """
-
 from forecast.feature_processing.sp.sale_features import build_sales_features_monthly
 import os
-try:
-    import findspark #使用spark-submit 的cluster时要注释掉
-    findspark.init()
-except:
-    pass
-import argparse
+import sys
 import traceback
 import logging
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 from digitforce.aip.common.file_config import get_config
 
 
-def load_params():
+def load_params(sdate, edate, col_time, col_qty, input_table, output_table):
     """运行run方法时"""
     param_cur = {
-        'mode_type': 'sp',
-        'sdate': '20210101',
-        'edate': '20210501',
-        'col_time': 'dt',
-        'col_qty': 'sum_th_y',
-
+        'sdate': sdate,#'20210101',
+        'edate': edate,#'20210501',
+        'col_time': col_time,#'dt',
+        'col_qty': col_qty,#'sum_th_y',
+        'input_table': input_table,#'ai_dm_dev.qty_aggregation_monthly_continue_0620',
+        'output_table': output_table,#'ai_dm_dev.sales_features_monthly_0620'
     }
 
     params_all = get_config(os.getcwd()+"/forecast/feature_processing/config/param.toml")
@@ -41,50 +35,36 @@ def load_params():
     return params
 
 
-def parse_arguments():
-    """
-    #开发测试用
-    :return:
-    """
-    params = load_params()
-    parser = argparse.ArgumentParser(description='big order filter')
-    parser.add_argument('--param', default=params, help='arguments')
-    parser.add_argument('--spark', default=None, help='spark')
-    args = parser.parse_args(args=[])
-    return args
-
-
-def run():
+def run(sdate, edate, col_time, col_qty, input_table, output_table,spark):
     """
     跑接口
     :return:
     """
-    logger_info = setup_console_log(leve=logging.INFO)
-    setup_logging(info_log_file="", error_log_file="", info_log_file_level="INFO")
-    logger_info.info("LOADING···")
-    args = parse_arguments()
-    param = args.param
-    spark = args.spark
-
-    logger_info.info(str(param))
+    logger_info = setup_console_log()
+    setup_logging(info_log_file="build_sales_feature_monthly.info", error_log_file="", info_log_file_level="INFO")
+    logging.info("LOADING···")
+    param = load_params(sdate, edate, col_time, col_qty, input_table, output_table)
+    logging.info(str(param))
     if 'mode_type' in param.keys():
         run_type = param['mode_type']
     else:
         run_type = 'sp'
     try:
         if run_type == 'sp':  # spark版本
-            logger_info.info("RUNNING···")
+            logging.info("RUNNING···")
             build_sales_features_monthly(spark, param)
         else:
             # pandas版本
             pass
         status = "SUCCESS"
-        logger_info.info("SUCCESS")
+        logging.info("SUCCESS")
     except Exception as e:
         status = "ERROR"
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
     return status
 
 
 if __name__ == "__main__":
-    run()
+    sdate, edate, col_time, col_qty, input_table, output_table = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], \
+                                                                 sys.argv[5], sys.argv[6]
+    run(sdate, edate, col_time, col_qty, input_table, output_table)

@@ -5,20 +5,20 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
     时序模型：回测spark版本
 """
+import datetime
+import logging
 
-import os
-import sys
-import traceback
+import pandas as pd
+from pyspark.sql.functions import lit
 
-from forecast.common.date_helper import date_add_str
-from forecast.time_series.sp.predict_for_time_serise_sp import method_called_predict_sp,get_default_conf
-from forecast.common.data_helper import update_param_default
-from forecast.common.spark import spark_init
-from forecast.time_series.sp.data_prepare_for_time_series_sp import *
-from forecast.common.save_data import write_to_hive
-from forecast.common.common_helper import *
+from forecast.time_series.sp.predict_for_time_series_sp import method_called_predict_sp
+from forecast.model_evaluation import forecast_evaluation
+from forecast.time_series.sp.data_prepare_for_time_series_sp import data_prepared_for_model
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+from digitforce.aip.common.spark_helper import save_table
 
-def method_called_back_sp(spark,param):
+
+def method_called_back_sp(spark, param):
     """
     模型回测
     :param data: 样本
@@ -31,99 +31,70 @@ def method_called_back_sp(spark,param):
     :param assist_param: 一些辅助函数
     :return: 回测结果
     """
-
-    predict_sum=0
-    time_type=param['time_type']#day/week/month
-    forcast_start_date=param['forcast_start_date']
-    predict_len=param['predict_len']
-    step_len=param['step_len']
+    key_cols = param['key_cols']
+    forecast_start_date = param['forecast_start_date']
+    col_qty = param['col_qty']
     output_table = param['output_table']
     partitions = param['partitions']
-    result_tmp = False
+    dt = param['time_col']
+    eval_key = param['eval_key']
+    eval_table = param['eval_table']
 
-    if predict_len<=0:
-        return
-    if step_len<=0:
-        step_len=1
-    for i in range(predict_len):
-        if i!=0:
-            forcast_start_date=date_add_str(forcast_start_date,step_len,time_type)
-        predict_sum+=step_len
-        if predict_sum>predict_len:
-            tmp_len=predict_len+step_len-predict_sum
-            result_tmp=method_called_predict_sp(spark,param)
-        else:
-            result_tmp=method_called_predict_sp(spark,param)
-        if i==0:
-            result_data=result_tmp
-        else:
-            result_data=result_data.union(result_tmp)#合并结果
-        if predict_sum>predict_len:
-            break
-    save_table(spark, result_data, output_table, partition=partitions)
-    return result_tmp
+    spark_df = data_prepared_for_model(spark, param)
 
-def back_test_sp(param,spark):
+    # 按照forecast_start_time将数据集划分为训练集和测试集
+    back_test_data = spark_df.filter(spark_df[dt] >= forecast_start_date)
+
+    back_end_date = back_test_data.select(dt).rdd.max()[0]  # 回测期获取最大值
+
+    temp_dict = {"day": "D", "week": "W-MON", "month": "MS", "season": "QS-OCT", "year": "A"}
+    if param['time_type'] in temp_dict:
+        index = pd.date_range(forecast_start_date, back_end_date, freq=temp_dict[param['time_type']])
+    else:
+        index = pd.date_range(forecast_start_date, back_end_date, freq='D')
+
+    time_list = list(datetime.datetime.strftime(i, "%Y%m%d") for i in index)
+
+    # TODO 每天都过滤还是一次性过率好那个效果更好？
+    i = 0
+    for cur_time in time_list:
+        if i == 0:
+            result_data_temp = method_called_predict_sp(param, spark_df, cur_time)
+            i += 1
+        else:
+            result_data_temp = result_data_temp.union(method_called_predict_sp(param, spark_df, cur_time))
+
+    key_cols.append(dt)
+    back_test_data = back_test_data.join(result_data_temp, on=key_cols, how='left')
+    save_table(spark, back_test_data, output_table, partition=partitions)
+    wmape_spdf = forecast_evaluation.forecast_evaluation_wmape(back_test_data, col_qty, "y_pred", col_key=eval_key,
+                                                               df_type='sp')
+    # todo 落表 预测未来某天的准确率 评估开始结束日期
+    # todo 落表的话，表明暂定eval_key_forecast_apply_model
+    apply_model = back_test_data.select("apply_model").rdd.max()[0]
+    wmape_spdf.withColumn("apply_model", lit(apply_model))
+    wmape_spdf.withColumn("time_type",lit(param['time_type']))
+    save_table(spark,wmape_spdf,eval_table,partition=eval_key)
+    print("回测效果", wmape_spdf.show(10))
+
+
+def back_test_sp(param, spark):
     """
     时序模型运行
     :param param: 参数
     :param spark: spark
     :return:
     """
-    status=True
-    logger_info=get_logger()
+    setup_console_log(level=logging.INFO)
+    setup_logging(info_log_file="backup_test_for_time_series_sp.info", error_log_file="", info_log_file_level="INFO")
     if 'purpose' not in param.keys() or 'predict_len' not in param.keys():
-        logger_info.info('problem:purpose or predict_len')
+        logging.info('problem:purpose or predict_len')
         return False
-    if param['purpose']!='back_test':
-        logger_info.info('problem:purpose is not predict')
+    if param['purpose'] != 'back_test':
+        logging.info('problem:purpose is not predict')
         return False
-    if param['predict_len']<0 or param['predict_len']=='':
-        logger_info.info('problem:predict_len is "" or predict_len<0')
+    if param['predict_len'] < 0 or param['predict_len'] == '':
+        logging.info('problem:predict_len is "" or predict_len<0')
         return False
-    default_conf=get_default_conf()
-    param=update_param_default(param,default_conf)
-    logger_info.info("time_series_operation:")
-    logger_info.info(str(param))
-    # mode_type=param['mode_type']
-    # spark_inner=0
-    # if str(mode_type).lower()=='sp' and spark==None:
-    #     try:
-    #         add_file='time_series.zip'
-    #         spark=spark_init(add_file)
-    #         logger_info.info('spark 启动成功')
-    #     except Exception as e:
-    #         logger_info.info(traceback.format_exc())
-    #         status=False
-    #     spark_inner=1
-    # key_cols=param['key_cols']
-    # apply_model_index=param['apply_model_index']
-    # forcast_start_date=param['forcast_start_date']
-    # predict_len=param['predict_len']
-    # step_len=param['step_len']
-    # result_processing_param=param['result_processing_param']
-
-
-    # try:
-    prepare_data = data_prepared_for_model(spark, param)
-    if prepare_data:
-        status=method_called_back_sp(spark,param)
-    #     logger_info.info("method called 成功")
-    # except Exception as e:
-    #     data_pred=None
-    #     status=False
-    #     logger_info.info(traceback.format_exc())
-    #
-    # try:
-    #     partition=result_processing_param['partition']
-    #     table_name=result_processing_param['table_name']
-    #     mode_type=result_processing_param['mode_type']
-    #     write_to_hive(spark,data_pred,partition,table_name,mode_type)#结果保存
-    # except Exception as e:
-    #     status=False
-    #     logger_info.error(traceback.format_exc())
-    #
-    # if spark_inner==1:#如果当前接口启动的spark，那么要停止
-    #     spark.stop()
-    #     logger_info.info("spark stop")
+    status = method_called_back_sp(spark, param)
     return status

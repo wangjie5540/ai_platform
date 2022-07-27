@@ -11,12 +11,6 @@ include:
 import os
 from forecast.data_processing.sp.sp_sales_filter import sales_filter_by_boxcox
 import logging
-try:
-    import findspark  # 使用spark-submit 的cluster时要注释掉
-
-    findspark.init()
-except:
-    pass
 import sys
 import traceback
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
@@ -38,13 +32,13 @@ def load_params(sdate, edate, col_qty):
     return params
 
 
-def run(sdate, edate, col_qty):
+def run(sdate, edate, col_qty, spark):
     """
     跑接口
     :return:
     """
-    logger_info = setup_console_log(leve=logging.INFO)
-    setup_logging(info_log_file="", error_log_file="", info_log_file_level="INFO")
+    logger_info = setup_console_log()
+    setup_logging(info_log_file="sales_boxcox_filter.info", error_log_file="", info_log_file_level="INFO")
     logging.info("LOADING···")
     param = load_params(sdate, edate, col_qty)
     logging.info(str(param))
@@ -55,12 +49,12 @@ def run(sdate, edate, col_qty):
     try:
         if run_type == 'sp':  # spark版本
             logging.info("RUNNING···")
-            sales_filter_by_boxcox(param)
+            sales_filter_by_boxcox(spark, param)
         else:
             # pandas版本
             pass
         status = "SUCCESS"
-        logger_info.info("SUCCESS")
+        logging.info("SUCCESS")
     except Exception as e:
         status = "ERROR"
         logging.info(traceback.format_exc())

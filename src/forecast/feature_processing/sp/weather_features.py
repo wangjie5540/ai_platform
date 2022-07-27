@@ -74,19 +74,19 @@ def build_weather_daily_feature(spark, param):
     weather_data_sql = param['weather_data_sql']
     site_data_sql = param['site_data_sql']
     col_origin_name = param['col_origin_name']
-    sparkdf_weather = forecast_spark_helper.read_origin_table(input_weather_table, weather_data_sql, col_origin_name, shops)
-    sparkdf_site = forecast_spark_helper.read_origin_table(input_site_table,site_data_sql, col_origin_name, shops)
+    sparkdf_weather = read_origin_table(spark, input_weather_table, weather_data_sql, col_origin_name, shops)
+    sparkdf_site = read_origin_table(spark, input_site_table,site_data_sql, col_origin_name, shops)
     for col_weather in col_weather_list:
         for dict_key in dict_agg_func:
             sparkdf_weather = globals()[dict_key](sparkdf_weather, col_key, col_weather, col_time,
                                                   dict_agg_func[dict_key])
     sparkdf_weather = sparkdf_weather.filter(date_filter_condition(sdate, edate))
     sparkdf_weather = sparkdf_weather.join(sparkdf_site, on=col_key, how='inner')
-    forecast_spark_helper.save_table(spark, sparkdf_weather, output_table)
+    save_table(spark, sparkdf_weather, output_table)
     return 'SUCCESS'
 
 
-def build_weather_weekly_feature(param):
+def build_weather_weekly_feature(spark, param):
     col_key = param['col_key']
     join_key = param['join_key']
     sdate = param['sdate']
@@ -99,8 +99,8 @@ def build_weather_weekly_feature(param):
     weather_data_sql = param['weather_data_sql']
     site_data_sql = param['site_data_sql']
     col_origin_name = param['col_origin_name']
-    sparkdf_weather = forecast_spark_helper.read_origin_table(input_weather_table, weather_data_sql, col_origin_name, shops)
-    sparkdf_site = forecast_spark_helper.read_origin_table(input_site_table, site_data_sql, col_origin_name, shops)
+    sparkdf_weather = read_origin_table(spark, input_weather_table, weather_data_sql, col_origin_name, shops)
+    sparkdf_site = read_origin_table(spark, input_site_table, site_data_sql, col_origin_name, shops)
     ff = lambda cond: psf.sum(psf.when(cond, 1).otherwise(0))
     cond_sunny = (sparkdf_weather['weatherfrom'] == '晴') & (sparkdf_weather['weatherto'] == '晴')
     sparkdf_weather = sparkdf_weather.groupby(col_key).agg(
@@ -113,12 +113,11 @@ def build_weather_weekly_feature(param):
     sparkdf_weather = sparkdf_weather.withColumnRenamed("week_dt", "dt")
     sparkdf_weather = sparkdf_weather.filter(date_filter_condition(sdate, edate))
     sparkdf_weather = sparkdf_weather.join(sparkdf_site, on=join_key, how='inner')
-
-    forecast_spark_helper.save_table(sparkdf_weather, output_table)
+    save_table(spark, sparkdf_weather, output_table)
     return 'SUCCESS'
 
 
-def build_weather_monthly_feature(param):
+def build_weather_monthly_feature(spark, param):
     col_key = param['col_key']
     join_key = param['join_key']
     sdate = param['sdate']
@@ -135,8 +134,8 @@ def build_weather_monthly_feature(param):
     weather_data_sql = param['weather_data_sql']
     site_data_sql = param['site_data_sql']
     col_origin_name = param['col_origin_name']
-    sparkdf_weather = forecast_spark_helper.read_origin_table(input_weather_table,weather_data_sql, col_origin_name, shops)
-    sparkdf_site = forecast_spark_helper.read_origin_table(input_site_table, site_data_sql, col_origin_name, shops)
+    sparkdf_weather = read_origin_table(spark, input_weather_table,weather_data_sql, col_origin_name, shops)
+    sparkdf_site = read_origin_table(spark, input_site_table, site_data_sql, col_origin_name, shops)
     ff = lambda cond: psf.sum(psf.when(cond, 1).otherwise(0))
     cond_weather = (sparkdf_weather[weatherfrom] == weatherfrom_value) & (sparkdf_weather[weatherto] == weatherto_value)
     sparkdf_weather = sparkdf_weather.groupby(col_key).agg(
@@ -150,7 +149,7 @@ def build_weather_monthly_feature(param):
     sparkdf_weather = sparkdf_weather.filter(date_filter_condition(sdate, edate))
     sparkdf_weather = sparkdf_weather.join(sparkdf_site, on=join_key, how='inner')
 
-    forecast_spark_helper.save_table(sparkdf_weather, output_table)
+    save_table(spark, sparkdf_weather, output_table)
     return 'SUCCESS'
 
 # sparkdf = spark.sql("""select *,to_unix_timestamp(recordtime,'yyyy-MM-dd') sdt,replace(recordtime,'-','') dt from ai_dm.lbs_weather_history_partition where recordtime>='2021-01-01' and recordtime<='2021-12-31'""")

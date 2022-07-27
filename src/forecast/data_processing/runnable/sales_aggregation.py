@@ -9,21 +9,15 @@ include:
 大单过滤
 """
 import sys
-from digitforce.aip.common.spark_helper import *
+import os
 from forecast.data_processing.sp.sp_sales_agg import sales_aggregation
 import logging
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 from digitforce.aip.common.file_config import get_config
-try:
-    import findspark #使用spark-submit 的cluster时要注释掉
-    findspark.init()
-except:
-    pass
 import traceback
 
 
-
-def load_params(sdate, edate,input_table,output_table,agg_func,col_qty,agg_type):
+def load_params(sdate, edate, input_table, output_table, agg_func, col_qty, agg_type):
     """运行run方法时"""
     param_cur = {
         'sdate': sdate,
@@ -41,7 +35,7 @@ def load_params(sdate, edate,input_table,output_table,agg_func,col_qty,agg_type)
     return params
 
 
-def run(sdate, edate,input_table,output_table,agg_func,col_qty,agg_type):
+def run(sdate, edate, input_table, output_table, agg_func, col_qty, agg_type, spark):
     """
     跑接口
     :return:
@@ -58,7 +52,7 @@ def run(sdate, edate,input_table,output_table,agg_func,col_qty,agg_type):
     try:
         if run_type == 'sp':  # spark版本
             logging.info("RUNNING···")
-            sales_aggregation(param)
+            sales_aggregation(spark, param)
         else:
             # pandas版本
             pass

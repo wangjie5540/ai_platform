@@ -79,9 +79,6 @@ def get_item_config_info(spark, sparkdf_sales, config_columns, col_key, shops):
     return sparkdf_item.select(config_columns + col_key)
 
 
-
-
-
 def data_prepare(spark, params_data_prepare):
     method = params_data_prepare['method']
     sales_table = params_data_prepare['sales_table']
@@ -98,8 +95,9 @@ def data_prepare(spark, params_data_prepare):
     threshold_proportion = params_data_prepare['threshold_proportion']
     threshold_sales = params_data_prepare['threshold_sales']
     # data_prepare_table = params_data_prepare['data_prepare_table']
-    sparkdf_sales = forecast_spark_helper.read_table(sales_table, sdt='N', partition_list=shops)
+    sparkdf_sales = read_table(spark, sales_table, sdt='N', partition_list=shops)
     config_tables = params_data_prepare['config_tables']
+    task_id = params_data_prepare['task_id']
     config_table_list = []
 
     # 销量分层
@@ -117,11 +115,11 @@ def data_prepare(spark, params_data_prepare):
 
     table_names = locals()
     for table_name in config_tables:
-        table_names[table_name] = forecast_spark_helper.read_table(table_name)
+        table_names[table_name] = read_table(spark, table_name)
         config_table_list.append(table_names[table_name])
 
     merge_info = reduce(lambda l, r: l.join(r, col_key, 'left'), config_table_list)
-    merge_info.select(config_columns + [col_sku_category])
+    merge_info.select(config_columns + col_sku_category).filter("task_id='{0}'".format(task_id))
     # save_table(spark, merge_info, data_prepare_table, partition=["shop_id"])
     print("数据准备已经完成！")
     return merge_info
