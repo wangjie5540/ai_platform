@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Time : 2022/07/11
 # @Author : Arvin
-from forecast.common.common_helper import *
+import pyspark.sql.functions as psf
+from pyspark.sql.functions import lit
 
 
 def forecast_evaluation_wmape(df, col_true, col_pred, col_key=[], df_type='pd'):
@@ -11,13 +12,17 @@ def forecast_evaluation_wmape(df, col_true, col_pred, col_key=[], df_type='pd'):
     if df_type == 'sp':
         if len(col_key) == 0:
             wmape_df = df.groupBy(lit("total")).agg(
-                psf.when(psf.sum(df.col_true) == 0, psf.sum(psf.abs(df.col_true - df.col_pred)) / 1).otherwise(
-                    psf.sum(psf.abs(df.col_true - df.col_pred)) / psf.sum(df.col_true)).alias('wmape'))
+                psf.when(psf.sum(psf.col(col_true)) == 0,
+                         psf.sum(psf.abs(psf.col(col_true) - psf.col(col_pred))) / 1).otherwise(
+                    psf.sum(psf.abs(psf.col(col_true) - psf.col(col_pred))) / psf.sum(psf.col(col_true))).alias(
+                    'wmape'))
 
         else:
             wmape_df = df.groupBy(col_key).agg(
-                psf.when(psf.sum(df.col_true) == 0, psf.sum(psf.abs(df.col_true - df.col_pred)) / 1).otherwise(
-                    psf.sum(psf.abs(df.col_true - df.col_pred)) / psf.sum(df.col_true)).alias('wmape'))
+                psf.when(psf.sum(psf.col(col_true)) == 0,
+                         psf.sum(psf.abs(psf.col(col_true) - psf.col(col_pred))) / 1).otherwise(
+                    psf.sum(psf.abs(psf.col(col_true) - psf.col(col_pred))) / psf.sum(psf.col(col_true))).alias(
+                    'wmape'))
         return wmape_df
 
     else:

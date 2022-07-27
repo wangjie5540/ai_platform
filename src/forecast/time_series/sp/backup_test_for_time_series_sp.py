@@ -9,11 +9,12 @@ import datetime
 import logging
 
 import pandas as pd
+from pyspark.sql.functions import lit
 
 from forecast.time_series.sp.predict_for_time_series_sp import method_called_predict_sp
 from forecast.model_evaluation import forecast_evaluation
 from forecast.time_series.sp.data_prepare_for_time_series_sp import data_prepared_for_model
-from digitforce.aip.common.logging_config import setup_console_log,setup_logging
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 from digitforce.aip.common.spark_helper import save_table
 
 
@@ -36,6 +37,8 @@ def method_called_back_sp(spark, param):
     output_table = param['output_table']
     partitions = param['partitions']
     dt = param['time_col']
+    eval_key = param['eval_key']
+    eval_table = param['eval_table']
 
     spark_df = data_prepared_for_model(spark, param)
 
@@ -43,11 +46,12 @@ def method_called_back_sp(spark, param):
     back_test_data = spark_df.filter(spark_df[dt] >= forecast_start_date)
 
     back_end_date = back_test_data.select(dt).rdd.max()[0]  # 回测期获取最大值
-    back_end_date = datetime.datetime.strftime(back_end_date, "%Y%m%d")
-    index = pd.date_range(forecast_start_date, back_end_date, freq='D')
+
     temp_dict = {"day": "D", "week": "W-MON", "month": "MS", "season": "QS-OCT", "year": "A"}
     if param['time_type'] in temp_dict:
         index = pd.date_range(forecast_start_date, back_end_date, freq=temp_dict[param['time_type']])
+    else:
+        index = pd.date_range(forecast_start_date, back_end_date, freq='D')
 
     time_list = list(datetime.datetime.strftime(i, "%Y%m%d") for i in index)
 
@@ -62,11 +66,16 @@ def method_called_back_sp(spark, param):
 
     key_cols.append(dt)
     back_test_data = back_test_data.join(result_data_temp, on=key_cols, how='left')
-    param['forecast_start_date'] = forecast_start_date
     save_table(spark, back_test_data, output_table, partition=partitions)
-    wmape_spdf = forecast_evaluation.forecast_evaluation_wmape(back_test_data, col_qty, "y_pred", col_key=key_cols,
+    wmape_spdf = forecast_evaluation.forecast_evaluation_wmape(back_test_data, col_qty, "y_pred", col_key=eval_key,
                                                                df_type='sp')
-    print("回测效果", wmape_spdf)
+    # todo 落表 预测未来某天的准确率 评估开始结束日期
+    # todo 落表的话，表明暂定eval_key_forecast_apply_model
+    apply_model = back_test_data.select("apply_model").rdd.max()[0]
+    wmape_spdf.withColumn("apply_model", lit(apply_model))
+    wmape_spdf.withColumn("time_type",lit(param['time_type']))
+    save_table(spark,wmape_spdf,eval_table,partition=eval_key)
+    print("回测效果", wmape_spdf.show(10))
 
 
 def back_test_sp(param, spark):
@@ -76,16 +85,16 @@ def back_test_sp(param, spark):
     :param spark: spark
     :return:
     """
-    logger_info = setup_console_log(level=logging.INFO)
-    setup_logging(info_log_file="",error_log_file="",info_log_file_level="INFO")
+    setup_console_log(level=logging.INFO)
+    setup_logging(info_log_file="backup_test_for_time_series_sp.info", error_log_file="", info_log_file_level="INFO")
     if 'purpose' not in param.keys() or 'predict_len' not in param.keys():
-        logger_info.info('problem:purpose or predict_len')
+        logging.info('problem:purpose or predict_len')
         return False
     if param['purpose'] != 'back_test':
-        logger_info.info('problem:purpose is not predict')
+        logging.info('problem:purpose is not predict')
         return False
     if param['predict_len'] < 0 or param['predict_len'] == '':
-        logger_info.info('problem:predict_len is "" or predict_len<0')
+        logging.info('problem:predict_len is "" or predict_len<0')
         return False
     status = method_called_back_sp(spark, param)
     return status

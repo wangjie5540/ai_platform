@@ -3,13 +3,13 @@ table_sku_group='ai_dm_dev.model_selection_grouping_table_0620'
 #'ai_dm.ibs_sku_group_model'#分类分组结果表
 ts_model_list=['holt-winter']
 #    'arima','arimax','ar','ma','sarima','sarimax','arx','croston','crostontsb','holt','holt-winter','ses','theta','stlf']
-feat_y='ai_dm_dev.no_sales_adjust_0620'
+feat_y='ai_dm_dev.qty_aggregation_0620'
 #'ai_dm_dev.feat_y'#y值表
 y_type_list=['c']
 cols_sku_grouping=['shop_id','goods_id','apply_model']
 apply_model='apply_model'
 y_type='y_type'
-cols_feat_y=['shop_id','goods_id','th_y','dt']
+cols_feat_y=['shop_id','goods_id','sum_qty','dt']
 sample_join_key=['shop_id','goods_id']
 time_type=''#预测粒度
 mode_type='sp'
@@ -22,10 +22,11 @@ time_col='dt'#表示时间的的列，例如：dt，周和月有可能不用这�
 sdate='20210101'#样本开始日期
 edate='20220101'#样本结束日期
 key_cols=['shop_id','goods_id','apply_model']
-col_qty='th_y'
+col_qty='sum_qty'
 partitions=['shop_id','apply_model']
-output_table='ai_dm_dev.model_test_result_arima'
-prepare_data_table='ai_dm_dev.prepare_data_result_arima'
+output_table='ai_dm_dev.model_test_result'
+prepare_data_table='ai_dm_dev.prepare_data_result'
+eval_key=['shop_id']
 
 #pipline input
 #'forecast_start_date': '20211207',
