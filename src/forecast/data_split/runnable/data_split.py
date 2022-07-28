@@ -41,10 +41,10 @@ def run(sdate, edate, task_id, spark):
     :return:
     """
     logger_info = setup_console_log()
-    setup_logging(info_log_file="data_split.info", error_log_file="", info_log_file_level="INFO")
+    setup_logging(info_log_file="data_split.info", error_log_file="")
     logging.info("LOADING···")
 
-    params_data_prepare, params_model_selection, params_model_grouping = load_params(sdate, edate,task_id)
+    params_data_prepare, params_model_selection, params_model_grouping = load_params(sdate, edate, task_id)
     logging.info(str(params_data_prepare)+str(params_model_selection)+str(params_model_grouping))
     if 'mode_type' in params_data_prepare.keys():
         run_type = params_data_prepare['mode_type']
