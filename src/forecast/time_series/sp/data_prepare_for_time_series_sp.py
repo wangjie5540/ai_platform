@@ -112,4 +112,5 @@ def data_process(df,predict_start,time_col,col_qty):
     sales_cleaned.index = range(sales_cleaned.shape[0])
     sales_cleaned = sales_cleaned.ffill()
         # .set_index('dt', drop=True)
+    sales_cleaned[time_col] = sales_cleaned[time_col].apply(lambda x: datetime.datetime.strftime(x, "%Y%m%d"))
     return sales_cleaned
