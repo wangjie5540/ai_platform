@@ -32,7 +32,8 @@ def connect_mysql():
     mysql_port=mysql_dict['mysql_port']
     mysql_user=mysql_dict['mysql_user']
     mysql_password=mysql_dict['mysql_password']
-    db = pymysql.Connect(host=mysql_host, port=mysql_port, user=mysql_user, passwd=mysql_password)
+    mysql_db = mysql_dict['mysql_db']
+    db = pymysql.Connect(host=mysql_host, port=mysql_port, user=mysql_user, passwd=mysql_password, database=mysql_db)
     return db
 
 
