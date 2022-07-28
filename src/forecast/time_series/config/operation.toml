@@ -3,7 +3,7 @@ mode_type='sp'
 time_type='day'#day/week/month
 y='y'#y的类型
 save_table_cols=['shop_id','goods_id','apply_model','time_type','pred_time','y_pred','dt']
-hdfs_path='/user/liguoqiang/model'#模型存放地址
+#hdfs_path='/user/liguoqiang/model'#模型存放地址
 
 
 [result_processing_param]
@@ -11,7 +11,7 @@ is_write=true
 write_type='hive'
 mode_type='overwrite'
 partition=[]
-table_name='ai_dm.time_series_result'
+table_name="f'{db_dev}.{pre_table_name}_time_series_result'"
 file_path='/tmp'
 repartition=1
 encoding='utf-8'

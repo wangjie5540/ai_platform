@@ -1,9 +1,9 @@
 [data]
-table_sku_group='ai_dm_dev.model_selection_grouping_table_0620'
+table_sku_group="f'{db_dev}.{pre_table_name}_model_selection_grouping_table_0620'"
 #'ai_dm.ibs_sku_group_model'#分类分组结果表
 ts_model_list=['holt-winter']
 #    'arima','arimax','ar','ma','sarima','sarimax','arx','croston','crostontsb','holt','holt-winter','ses','theta','stlf']
-feat_y='ai_dm_dev.qty_aggregation_0620'
+feat_y="f'{db_dev}.{pre_table_name}_qty_aggregation_0620'"
 #'ai_dm_dev.feat_y'#y值表
 y_type_list=['c']
 cols_sku_grouping=['shop_id','goods_id','apply_model']
@@ -24,14 +24,10 @@ edate='20220101'#样本结束日期
 key_cols=['shop_id','goods_id','apply_model']
 col_qty='sum_qty'
 partitions=['shop_id','apply_model']
-output_table='ai_dm_dev.model_test_result'
-prepare_data_table='ai_dm_dev.prepare_data_result'
+output_table="f'{db_dev}.{pre_table_name}_model_test_result'"
+prepare_data_table="f'{db_dev}.{pre_table_name}_prepare_data_result'"
 eval_key=['shop_id']
 
-#pipline input
-#'forecast_start_date': '20211207',
-#'purpose': 'predict',
-#'time_type': 'day',
 
 
 
