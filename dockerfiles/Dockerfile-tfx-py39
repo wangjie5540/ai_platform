@@ -2,7 +2,6 @@
 FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/miniconda3
 RUN conda create -n tfx python=3.9 -y
 RUN source activate && conda activate tfx
-COPY requirements-tfx-py39.txt /tmp/requirements.txt
 # 安装python依赖包
 RUN . ~/.bashrc && conda activate tfx && pip --default-timeout=1000 install tfx==1.9.0 -i https://pypi.tuna.tsinghua.edu.cn/simple
 
