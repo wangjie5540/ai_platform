@@ -15,7 +15,7 @@ class SESModel():
         self.param_fit = param_fit
 
         param = {
-        "initialization_method": None,
+        "initialization_method": "legacy-heuristic",
         "initial_level": None
         }
 

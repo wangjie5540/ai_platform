@@ -42,17 +42,14 @@ def data_prepared_for_model(spark, param):
         data_feat_y = data_feat_y.filter((data_feat_y[dt] >= sdate) & (data_feat_y[dt] <= edate))
         data_result = data_feat_y.join(data_sku_grouping, on=sample_join_key, how='inner')
 
-        # parititions = param['time_col']
-        # prepare_data_table = param['prepare_data_table']
-        # save_table(spark, data_result, prepare_data_table, partition=parititions)
-
         logging.info("数据准备完成！")
     except Exception as e:
         logging.info(traceback.format_exc())
 
     return data_result
 
-def data_process(df, param):
+#对于连续缺失7天以上的情况未作处理，直接填补
+def data_process_old(df, param):
     dt = param['time_col']
     y = param['col_qty']
     key_cols = param['key_cols']
@@ -79,3 +76,40 @@ def data_process(df, param):
     data = ts2.sort_values(by=dt, ascending=True)  # 进行排序
     data[dt] = data[dt].apply(lambda x: datetime.datetime.strftime(x, "%Y%m%d"))
     return data
+
+#对于连续缺失7天以上的情况，直接删除，进行日期重建
+def data_process(df,predict_start,time_col,col_qty):
+    df[time_col] = df[time_col].apply(lambda x:pd.to_datetime(str(x)))
+    ts = pd.DataFrame(pd.date_range(start=df.dt.min(),end=df.dt.max()),columns=['dt'])
+    ts = ts.merge(df,on=time_col,how='left')
+    dfc = df.columns
+
+    last_day = pd.to_datetime(predict_start) - pd.Timedelta(days=1)
+
+    if ts.dt.iloc[-1].dayofweek != last_day.dayofweek:
+        diff = (last_day.dayofweek - ts.dt.iloc[-1].dayofweek) % 7
+        for d in pd.date_range(end=last_day, periods=diff):
+            ts = ts.append({'dt': d, 'days_week': d.dayofweek}, ignore_index=True)
+    ts.dt = pd.date_range(end=last_day, periods=ts.shape[0])
+
+    ts['dt'] = ts['dt'].apply(lambda x: pd.to_datetime(x))
+    sales_cleaned = pd.DataFrame()
+    for d in range(0, 7):
+        t = ts.loc[ts.dt.dt.dayofweek == d].sort_values('dt').reset_index(drop=True)
+        t['dy'] = t[col_qty].shift(-1)
+        t['uy'] = t[col_qty].shift(1)
+        t.dy = t.dy.fillna(method='ffill').fillna(method='bfill')
+        t.uy = t.uy.fillna(method="ffill").fillna(method="bfill")
+
+        t['y'] = t[col_qty].fillna((t.dy + t.uy) / 2)
+        t['y'].fillna(method="ffill", inplace=True)
+        t['y'].fillna(method="bfill", inplace=True)
+        t['y'].fillna(t['y'].rolling(7, min_periods=0, center=True).mean(), inplace=True)
+        t['y'].fillna(0.0, inplace=True)
+        sales_cleaned = sales_cleaned.append(t)
+    sales_cleaned.loc[:,col_qty] = sales_cleaned.loc[:,'y']
+    sales_cleaned = sales_cleaned[dfc].sort_values('dt')
+    sales_cleaned.index = range(sales_cleaned.shape[0])
+    sales_cleaned = sales_cleaned.ffill()
+        # .set_index('dt', drop=True)
+    return sales_cleaned
