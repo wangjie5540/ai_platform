@@ -8,7 +8,6 @@ include:
 import toml
 import os
 
-
 def list_all_dict(dict_a):
     if isinstance(dict_a,dict) : #使用isinstance检测数据类型
         for x in range(len(dict_a)):
