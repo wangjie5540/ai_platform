@@ -141,7 +141,8 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
     else:
         result_df['y_pred'] = preds
     cur_date_list = list(datetime.datetime.strftime(i, "%Y%m%d") for i in index)
-    result_df['dt'] = [i for i in cur_date_list]
+    # result_df['dt'] = [i for i in cur_date_list]
+    result_df['dt'] = [i for i in len(cur_date_list)]
     result_df['time_type'] = time_type
     result_df['pred_time'] = forecast_start_date
     result_df['y_pred'] = result_df['y_pred'].apply(lambda x: x if x >= 0 else 0)
