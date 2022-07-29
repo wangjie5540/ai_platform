@@ -10,7 +10,7 @@ from digitforce.aip.components.recommend.tmp import rank_data_process_op, lightg
 from digitforce.aip.components.source import df_model_manager
 from digitforce.aip.components.source import hive
 
-name = "RecommendMultiRecallAndRank_1"
+name = "RecommendMultiRecallAndRank"
 description = '''{"source": [{"labelx.push_user": ["user_id", "gender", "age", "click_cnt", "city"]}, {"labelx.push_goods": ["sku", "category_l", "category_m", "category_s", "order_cnt"]}, {"labelx.push_traffic_behavior": ["event_time", "event_code", "user_id", "sku"]}]}'''
 
 
