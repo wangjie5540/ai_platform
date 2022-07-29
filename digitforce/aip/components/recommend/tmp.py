@@ -7,7 +7,7 @@ def rank_data_process_op(sql, output_file, info_log_file, error_log_file, image_
     op = dsl.ContainerOp(
         name='rank_data_process_op',
         image=f"{AI_PLATFORM_IMAGE_REPO}"
-              f"/pipelines-recommend_rank-data_process" + f":{image_tag}",
+              f"/src-recommend-rank-data_process" + f":{image_tag}",
         command="python",
         arguments=["main.py", sql, output_file, info_log_file, error_log_file]
     )
@@ -20,7 +20,7 @@ def lightgbm_train_op(dataset_path, model_output_file, info_log_file, error_log_
     op = dsl.ContainerOp(
         name='lightgbm_train_op',
         image=f"{AI_PLATFORM_IMAGE_REPO}"
-              f"/pipelines-recommend_rank-lightgbm" + f":{image_tag}",
+              f"/src-recommend-rank-lightgbm" + f":{image_tag}",
         command="python",
         arguments=["main.py", dataset_path, model_output_file, info_log_file, error_log_file]
     )
