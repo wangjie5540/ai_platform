@@ -1,9 +1,8 @@
 # 基于miniconda生成基础镜像
 FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/miniconda3
-RUN conda create -n tfx python=3.9 -y
-RUN source activate && conda activate tfx
-# 安装python依赖包
-RUN . ~/.bashrc && conda activate tfx && pip --default-timeout=1000 install tfx==1.9.0 -i https://pypi.tuna.tsinghua.edu.cn/simple
 
+# 安装python依赖包
+RUN . ~/.bashrc && pip --default-timeout=1000 install tfx==1.9.0 -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip install kfp https://pypi.tuna.tsinghua.edu.cn/simple
 # 执行命令如下
 # docker build -t digit-force-docker.pkg.coding.net/ai-platform/base-images/tfx-py39 -f Dockerfile-tfx-py39 .
