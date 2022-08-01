@@ -28,6 +28,7 @@ from digitforce.aip.common.data_helper import update_param_default
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 
 import findspark
+
 findspark.init()
 
 
@@ -57,8 +58,7 @@ def time_series_predict(param, spark=None):
     return status
 
 
-
-def run(forecast_start_date, purpose, time_type, feat_y, output_table, col_qty, cols_feat_y, spark):
+def run(forecast_start_date, purpose, time_type, feat_y, output_table, col_qty, cols_feat_y,toml_list,seaction, spark):
     """
     跑接口
     :return:
@@ -70,11 +70,11 @@ def run(forecast_start_date, purpose, time_type, feat_y, output_table, col_qty, 
     # 'feat_y':y值表
     # 'output_table':结果表
     param = {"forecast_start_date": forecast_start_date,
-             "purpose": purpose,#该参数判断是预测还是回测，存在的意义是更新配置文件中的purpose,生成更新后的param，为后续使用
+             "purpose": purpose,  # 该参数判断是预测还是回测，存在的意义是更新配置文件中的purpose,生成更新后的param，为后续使用
              "time_type": time_type, "feat_y": feat_y,
              "output_table": output_table, "col_qty": col_qty, "cols_feat_y": cols_feat_y}
 
-    default_conf = get_default_conf()
+    default_conf = get_default_conf(toml_list,seaction)
     param = update_param_default(param, default_conf)
     time_series_predict(param, spark)
 
@@ -88,10 +88,12 @@ def main():
     parser.add_argument('-o', '--output_table', type=str, default=None, help='input output_table')
     parser.add_argument('-c', '--col_qty', type=str, default=None, help='input col_qty')
     parser.add_argument('-c_f_y', '--cols_feat_y', type=ast.literal_eval(), default=None, help='input cols_feat_y')
-    parser.add_argument('-s','--spark',type=str,default=None,help='input spark')
+    parser.add_argument('-t_l', '--toml_list', type=ast.literal_eval(), default=None, help='input toml list')
+    parser.add_argument('-s_l', '--seaction', type=ast.literal_eval(), default=None, help='input seaction')
+    parser.add_argument('-s', '--spark', type=str, default=None, help='input spark')
     args = parser.parse_args()
     run(args.forecast_start_date, args.purpose, args.time_type, args.feat_y, args.output_table, args.col_qty,
-        args.cols_feat_y, args.spark)
+        args.cols_feat_y, args.toml_list, args.seaction, args.spark)
 
 
 if __name__ == "__main__":

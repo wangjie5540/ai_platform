@@ -47,7 +47,7 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
     # 天维度连续性检测
     data = data_temp
     if param['time_type'] == 'day':
-        data = data_process(data_temp, param)
+        data = data_process(data_temp, forecast_start_date, time_col, y)
 
     temp_dict = {"day": "D", "week": "W-MON", "month": "MS", "season": "QS-OCT", "year": "A"}
     method_param = method_param_all[method]
@@ -60,14 +60,11 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
     data_tmp = data[data[time_col] < forecast_start_date]  # 日期小于预测日期
     data_tmp = data_tmp.sort_values(by=time_col, ascending=True)  # 进行排序
 
+    data_tmp[time_col] = data_tmp[time_col].apply(lambda x: pd.to_datetime(x))
     p_data = data_tmp[[y, time_col]].set_index(time_col)
     p_data[y] = p_data[y].astype(float)
-    # holtwinter 7 day todo 简单指数平滑托底
-    if p_data.shape[0] < 17:
-        preds_value = p_data[y].mean()
-        preds = [preds_value for i in range(predict_len)]
-        model_include = False
-    elif str(method).lower() == 'holt-winter':
+
+    if str(method).lower() == 'holt-winter':
         seasonal_periods = method_param["param"]["seasonal_periods"]
         if p_data.shape[0] > max(2 * seasonal_periods, (10 + 2 * (seasonal_periods // 2))):
             ts_model = HoltWinterModel.HoltWinterModel(p_data, param=method_param["param"]).fit()
@@ -129,20 +126,13 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
                                               param_fit=method_param["param_fit"]).fit()
     else:
         ts_model = None
-        model_include = False
 
     result_df = pd.DataFrame()
-    # todo 模型内部处理日期
-    if model_include == True:
-        preds = ts_model.forecast(predict_len)
-        dict_ = {'datetime': preds.index, 'y': preds.values}
-        df_ = pd.DataFrame(dict_)
-        result_df['y_pred'] = df_['y']
-    else:
-        result_df['y_pred'] = preds
-    cur_date_list = list(datetime.datetime.strftime(i, "%Y%m%d") for i in index)
-    # result_df['dt'] = [i for i in cur_date_list]
-    result_df['dt'] = [i for i in len(cur_date_list)]
+    preds = ts_model.forecast(predict_len)
+    dict_ = {'datetime': preds.index, 'y': preds.values}
+    df_ = pd.DataFrame(dict_)
+    result_df['y_pred'] = df_['y']
+    result_df['dt'] = [i for i in range(len(index))]
     result_df['time_type'] = time_type
     result_df['pred_time'] = forecast_start_date
     result_df['y_pred'] = result_df['y_pred'].apply(lambda x: x if x >= 0 else 0)
