@@ -19,18 +19,18 @@ def dict_key_lower(param):
     :param param: 参数集合：dict
     :return: 转化后的param
     """
-    param_new={}
-    for key,value in param.items():
-        key=str(key).lower()
-        if isinstance(value,dict):
+    param_new = {}
+    for key, value in param.items():
+        key = str(key).lower()
+        if isinstance(value, dict):
             dict_key_lower(value)
         else:
             pass
-        param_new[key]=value
+        param_new[key] = value
     return param_new
 
 
-def update_param_default(param,default_conf):
+def update_param_default(param, default_conf):
     """
     接口传过来的参数和默认参数融合
     :param param: 调用接口传过来的参数
@@ -39,16 +39,16 @@ def update_param_default(param,default_conf):
     """
     # logger_info = get_logger()#日志
     try:
-        param=dict_key_lower(param)
-        default_conf=dict_key_lower(default_conf)
-        for key,value in default_conf.items():
-            if isinstance(value,set):
+        param = dict_key_lower(param)
+        default_conf = dict_key_lower(default_conf)
+        for key, value in default_conf.items():
+            if isinstance(value, set):
                 param[key].update(value)
             if key not in param.keys():
-                param[key]=value
+                param[key] = value
         # logger_info.info('update_param_default success')
     except Exception as e:
-        param={}
+        param = {}
         # logger_info.info(traceback.format_exc())
     return param
 
@@ -59,13 +59,13 @@ def row_transform_to_dataFrame(data):
     :param data: 原始数据
     :return: 处理好的数据
     """
-    if isinstance(data, pd.DataFrame):#pandas版本传入DataFrame类型
+    if isinstance(data, pd.DataFrame):  # pandas版本传入DataFrame类型
         data_tmp = data
-    else:#spark版本为row类型
-        row_list=list()
+    else:  # spark版本为row类型
+        row_list = list()
         for row in data:
             row_list.append(row.asDict())
-        data_tmp=pd.DataFrame(row_list)
+        data_tmp = pd.DataFrame(row_list)
     return data_tmp
 
 
@@ -75,7 +75,7 @@ def dataFrame_transform_to_row(result_df, data_type='pd'):
     :param data: 原始数据
     :return: 处理好的数据
     """
-    if data_type == 'sp':#spark版本为row类型
+    if data_type == 'sp':  # spark版本为row类型
         resultRow = Row(*result_df.columns)
         data_result = []
         for r in result_df.values:
@@ -161,7 +161,7 @@ def tuple_self(list_num):
     :return:('1003','1004')
     """
     if len(list_num) == 1:
-        return "('"+list_num[0]+"')"
+        return "('" + list_num[0] + "')"
     else:
         return tuple(list_num)
 
@@ -194,7 +194,7 @@ def date_filter_condition(sdata, edata, col='dt'):
     return data_filter
 
 
-def predict_result_handle(result_df,key_value,key_cols,mode_type,save_table_cols):
+def predict_result_handle(result_df, key_value, key_cols, mode_type, save_table_cols):
     """
     对预测结果进行处理
     :param result_df:结果表
@@ -206,20 +206,18 @@ def predict_result_handle(result_df,key_value,key_cols,mode_type,save_table_cols
     """
     # key的类型为str
     if isinstance(key_value, str):
-        key_value=key_value.split("|")  # 暂定"|"为拼接符
-        for i in range(len(key_cols)):
-            result_df[key_cols[i]]=key_value[i]
-    else:  #key的类型为元组
+        key_value = key_value.split("|")  # 暂定"|"为拼接符
         for i in range(len(key_cols)):
             result_df[key_cols[i]] = key_value[i]
-    if mode_type=='sp':
-        resultRow=Row(*result_df.columns)
-        data_result=[]
+    else:  # key的类型为元组
+        for i in range(len(key_cols)):
+            result_df[key_cols[i]] = key_value[i]
+    if mode_type == 'sp':
+        resultRow = Row(*result_df.columns)
+        data_result = []
         for r in result_df.values:
             data_result.append(resultRow(*r))
     else:
-        data_result=result_df
-    data_result=data_result[save_table_cols]
+        data_result = result_df
+    # data_result = data_result[save_table_cols]
     return data_result
-
-
