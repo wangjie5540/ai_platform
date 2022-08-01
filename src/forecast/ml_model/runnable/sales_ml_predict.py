@@ -24,9 +24,15 @@ from forecast.ml_model.sp.predict_sp import predict_sp
 # from digitforce.aip.common.spark_helper import SparkHelper,forecast_spark_session
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 import logging
+import zipfile
+from digitforce.aip.common.spark_init import forecast_spark_session
+
 logger_info = setup_console_log()
 setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
-from digitforce.aip.common.spark_init import forecast_spark_session
+
+file_path = os.path.abspath(os.path.join(os.getcwd(), '../../'))
+sys.path.append(file_path)
+
 
 def ml_model_predict(param, spark=None):
     """
@@ -92,5 +98,9 @@ def run(spark_):
 
 
 if __name__ == "__main__":
+    files1 = zipfile.ZipFile('./forecast.zip', 'r')
+    files2 = zipfile.ZipFile('./digitforce.zip', 'r')
+    files1.extractall(os.getcwd())
+    files2.extractall(os.getcwd())
     spark = forecast_spark_session("gaoxc_ml_predict")
     run(spark)

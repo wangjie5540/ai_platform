@@ -22,9 +22,13 @@ from forecast.ml_model.sp.train_sp import train_sp
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 import logging
 from digitforce.aip.common.spark_init import forecast_spark_session
+import zipfile
 
 logger_info = setup_console_log()
 setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
+
+file_path = os.path.abspath(os.path.join(os.getcwd(), '../../'))
+sys.path.append(file_path)
 
 
 def ml_model_train(param, spark=None):
@@ -92,7 +96,9 @@ def run(spark_):
 
 
 if __name__ == "__main__":
-    # spark = spark_init()
+    files1 = zipfile.ZipFile('./forecast.zip', 'r')
+    files2 = zipfile.ZipFile('./digitforce.zip', 'r')
+    files1.extractall(os.getcwd())
+    files2.extractall(os.getcwd())
     spark = forecast_spark_session("gaoxc_ml_train")
     run(spark)
-    spark.stop()

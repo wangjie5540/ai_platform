@@ -1,5 +1,10 @@
 import findspark #使用spark-submit 的cluster时要注释掉
-findspark.init()
+import sys
+if 'ipykernel' in sys.modules:
+
+    findspark.init()
+else:
+    pass
 import os
 from pyspark.sql import SparkSession
 from digitforce.aip.common.data_helper import tuple_self

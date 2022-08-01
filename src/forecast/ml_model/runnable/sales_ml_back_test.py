@@ -22,12 +22,13 @@ from forecast.ml_model.sp.back_test_sp import back_test_sp
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 import logging
 from digitforce.aip.common.spark_init import forecast_spark_session
+import zipfile
+
 logger_info = setup_console_log()
 setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
 
-
-# file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
-# sys.path.append(file_path)  # 解决不同位置调用依赖包路径问题
+file_path = os.path.abspath(os.path.join(os.getcwd(), '../../'))
+sys.path.append(file_path)
 
 
 def ml_model_back_test(param, spark=None):
@@ -58,7 +59,7 @@ def param_default():
         'y_type_list': ['c'],
         'mode_type': 'sp',
         'forcast_start_date': '20211009',
-        'bt_sdate':'20211001',
+        'bt_sdate': '20211001',
         'predict_len': 14,
         'col_keys': ['shop_id', 'group_category', 'apply_model'],
         'apply_model_index': 2,
@@ -86,16 +87,19 @@ def run(spark_):
     跑接口
     :return:
     """
-#     args = parse_arguments()
+    #     args = parse_arguments()
     param = param_default()
-#     param = args.param
-#     spark = args.spark
+    #     param = args.param
+    #     spark = args.spark
     if isinstance(param, str):
         param = json.loads(param)
     ml_model_back_test(param, spark_)
 
 
 if __name__ == "__main__":
+    files1 = zipfile.ZipFile('./forecast.zip', 'r')
+    files2 = zipfile.ZipFile('./digitforce.zip', 'r')
+    files1.extractall(os.getcwd())
+    files2.extractall(os.getcwd())
     spark = forecast_spark_session("gaoxc_ml_back_test")
     run(spark)
-    spark.stop()
