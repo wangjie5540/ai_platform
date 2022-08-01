@@ -17,13 +17,10 @@ import sys
 import json
 import argparse
 import traceback
-from forecast.ml_model.sp.train_sp import train_sp
+from forecast.ml_model.sp.back_test_sp import back_test_sp
 # from digitforce.aip.common.spark_helper import SparkHelper,forecast_spark_session
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 import logging
-logger_info = setup_console_log()
-setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
-
 from pyspark.sql import SparkSession
 
 def spark_init():
@@ -34,8 +31,8 @@ def spark_init():
     os.environ["PYSPARK_DRIVER_PYTHON"]="/data/ibs/anaconda3/bin/python"
     os.environ['PYSPARK_PYTHON']="/data/ibs/anaconda3/bin/python"
     spark=SparkSession.builder \
-        .appName("gxc_test").master('yarn') \
-        .config("spark.executor.instances", "8") \
+        .appName("gxc_test_bt").master('yarn') \
+        .config("spark.executor.instances", "5") \
         .config("spark.executor.memory", "16g") \
         .config("spark.executor.cores", "4") \
         .config("spark.driver.memory", "8g") \
@@ -47,7 +44,7 @@ def spark_init():
         .config("spark.sql.adaptive.shuffle.targetPostShuffleInputSize", "128000000") \
         .config("spark.dynamicAllocation.enabled", "true") \
         .config("spark.dynamicAllocation.minExecutors", "1") \
-        .config("spark.dynamicAllocation.maxExecutors", "10")\
+        .config("spark.dynamicAllocation.maxExecutors", "6")\
         .config("spark.shuffle.service.enabled", "true") \
         .config("spark.dynamicAllocation.enabled","false")\
         .config("spark.sql.sources.partitionOverwriteMode", "dynamic") \
@@ -66,7 +63,14 @@ def spark_init():
     sc.addPyFile(zip_path_1)
     return spark
 
-def ml_model_train(param, spark=None):
+logger_info = setup_console_log()
+setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
+
+# file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
+# sys.path.append(file_path)  # 解决不同位置调用依赖包路径问题
+
+
+def ml_model_back_test(param, spark=None):
     """
     #机器学习模型预测
     :param param: 所需参数
@@ -74,33 +78,32 @@ def ml_model_train(param, spark=None):
     :return:成功：True 失败：False
     """
 
+    mode_type = 'sp'  # 先给个默认值
     status = False
-    mode_type = 'sp'
     if 'mode_type' in param.keys():
         mode_type = param['mode_type']
-    try:
-        if mode_type == 'sp':  # spark版本
-            status = train_sp(param, spark)
-        else:  # pandas版本
-            pass
-        logging.info(str(param))
-    except Exception as e:
-        logging.info(traceback.format_exc())
+
+    if mode_type == 'sp':  # spark版本
+        status = back_test_sp(param, spark)
+    else:  # pandas版本
+        pass
+    logging.info(str(param))
+
     return status
 
 
-# 为了开发测试用，正式环境记得删除
 def param_default():
     param = {
         'ts_model_list': ['lightgbm'],
         'y_type_list': ['c'],
         'mode_type': 'sp',
         'forcast_start_date': '20211009',
+        'bt_sdate':'20211001',
         'predict_len': 14,
         'col_keys': ['shop_id', 'group_category', 'apply_model'],
         'apply_model_index': 2,
         'step_len': 1,
-        'purpose': 'train'
+        'purpose': 'back_test'
     }
     return param
 
@@ -123,14 +126,18 @@ def run(spark):
     跑接口
     :return:
     """
-
+#     args = parse_arguments()
     param = param_default()
+#     param = args.param
+#     spark = args.spark
     if isinstance(param, str):
         param = json.loads(param)
-    ml_model_train(param, spark)
+    ml_model_back_test(param, spark)
 
 
 if __name__ == "__main__":
     spark = spark_init()
     run(spark)
-#     spark.stop()
+    spark.stop()
+
+

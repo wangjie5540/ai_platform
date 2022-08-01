@@ -6,11 +6,12 @@ include:
     参数操作 ps:供应链场景应用
 """
 import traceback
-
 import pandas as pd
 import datetime
 from pyspark.sql import Row
 import numpy as np
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+import logging
 
 
 def dict_key_lower(param):
@@ -37,7 +38,10 @@ def update_param_default(param, default_conf):
     :param default_conf:默认参数
     :return: 参数集
     """
-    # logger_info = get_logger()#日志
+
+    logger_info = setup_console_log()
+    setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
+    logging.info("LOADING···")
     try:
         param = dict_key_lower(param)
         default_conf = dict_key_lower(default_conf)
@@ -46,10 +50,10 @@ def update_param_default(param, default_conf):
                 param[key].update(value)
             if key not in param.keys():
                 param[key] = value
-        # logger_info.info('update_param_default success')
+        logging.info('update_param_default success')
     except Exception as e:
         param = {}
-        # logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
     return param
 
 
@@ -124,7 +128,7 @@ def sales_continue(value, edate, col_qty, col_time, col_key, col_wm='', date_typ
     if date_type == 'week':
         df[col_wm] = df[[col_time, col_wm]].apply(lambda x: pd.to_datetime(x[0]).weekofyear if pd.isna(x[1]) else x[1],
                                                   axis=1)
-    elif date_type == 'month':
+    elif data_type == 'month':
         df[col_wm] = df[[col_time, col_wm]].apply(lambda x: pd.to_datetime(x[0]).month if pd.isna(x[1]) else x[1],
                                                   axis=1)
     else:

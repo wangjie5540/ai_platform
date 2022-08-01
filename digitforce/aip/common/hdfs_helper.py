@@ -65,7 +65,6 @@ class HdfsClient:
             local_path = os.path.join(local_dir, _)
             self.copy_to_local(dest, local_path)
 
-
 dg_hdfs_client = HdfsClient(hosts=[f"{HDFS_HOST}:{HDFS_PORT}"])
 
 

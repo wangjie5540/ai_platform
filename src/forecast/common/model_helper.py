@@ -34,10 +34,11 @@ def load_model(filename):
     :param filename:模型文件地址
     :return:加载的模型
     """
-
+    # f2 = open(filename, 'rb') as f:
     f2 = open(filename, 'rb')
     s2 = f2.read()
     model = pickle.loads(s2)
+    f2.close()
     return model
 
 
@@ -47,57 +48,97 @@ def get_client():
     :return:
     """
     file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))  # 兼顾spark-submit方式
-    sys.path.append(file_path)
-    file_tmp = "/forecast/common/config/"
-    environment = file_tmp + r'environment.toml'
-    if os.path.exists(file_path):  # 如果压缩文件存在，是为了兼顾spark_submit形式
-        try:
-            dst_dir = os.getcwd() + '/zip_tmp'
-            zo = ZipFile(file_path, 'r')
-            if os.path.exists(dst_dir):
-                shutil.rmtree(dst_dir)
-            os.mkdir(dst_dir)
-            for file in zo.namelist():
-                zo.extract(file, dst_dir)
-            environment = dst_dir + environment  # 解压后的地址
-        finally:
-            environment = file_path + environment  # 解压后的地址
-    hdfs_conf = get_config(environment, 'hdfs')  # hdfs的配置
+    #     sys.path.append(file_path)
+    #     file_tmp = "/forecast/common/config/"
+
+    files1 = ZipFile(file_path, 'r')
+    files1.extractall(os.getcwd())
+
+    config_path = os.getcwd() + r'/forecast/common/config/environment.toml'
+    #     if os.path.exists(config_path):  # 如果压缩文件存在，是为了兼顾spark_submit形式
+    #         try:
+    #             dst_dir = os.getcwd() + '/zip_tmp'
+    #             zo = ZipFile(file_path, 'r')
+    #             if os.path.exists(dst_dir):
+    #                 shutil.rmtree(dst_dir)
+    #             os.mkdir(dst_dir)
+    #             for file in zo.namelist():
+    #                 zo.extract(file, dst_dir)
+    #             environment = dst_dir + environment  # 解压后的地址
+    #         finally:
+
+    #             environment = file_path + environment  # 解压后的地址
+
+    hdfs_conf = get_config(config_path, 'hdfs')  # hdfs的配置
     hosts = hdfs_conf['hosts']
     user_name = hdfs_conf['user_name']
     client = pyhdfs.HdfsClient(hosts=hosts, user_name=user_name)
     return client
 
 
-def save_model_hdfs(model, model_name, hdfs_path):
+# def get_client():
+#     """
+#     获取操作hdfs的client
+#     :return:
+#     """
+#     file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))  # 兼顾spark-submit方式
+#     sys.path.append(file_path)
+#     file_tmp = "/forecast/common/config/"
+#     environment = file_tmp + r'environment.toml'
+#     if os.path.exists(file_path):  # 如果压缩文件存在，是为了兼顾spark_submit形式
+#         try:
+#             dst_dir = os.getcwd() + '/zip_tmp'
+#             print("dst_dir is ", dst_dir)
+#             zo = ZipFile(file_path, 'r')
+#             if os.path.exists(dst_dir):
+#                 shutil.rmtree(dst_dir)
+#             os.mkdir(dst_dir)
+#             for file in zo.namelist():
+#                 zo.extract(file, dst_dir)
+#             environment = dst_dir + environment  # 解压后的地址
+#         finally:
+#             environment = file_path + environment  # 解压后的地址
+#     hdfs_conf = get_config(environment, 'hdfs')  # hdfs的配置
+#     hosts = hdfs_conf['hosts']
+#     user_name = hdfs_conf['user_name']
+#     client = pyhdfs.HdfsClient(hosts=hosts, user_name=user_name)
+#     return client
+
+
+def save_model_hdfs(model, model_name, hdfs_path, key_value):
     """
     保存model到hdfs
     :param model:模型文件
+    :param key_value:保存路径需要加key_value
     :param model_name: model命名
     :param hdfs_path: hdfs地址
     :return:
     """
     client = get_client()  # hdfs的client
-    file_local = r'model_tmp'  # 创建临时文件地址
+    file_local = r'model_tmp/' + key_value  # 创建临时文件地址
     file_local_tmp = file_local + '/' + model_name
     if not os.path.exists(file_local):
         os.makedirs(file_local)
     save_model(model, file_local_tmp)
     hdfs_path_tmp = hdfs_path + '/' + model_name
     client.copy_from_local(file_local_tmp, hdfs_path_tmp, overwrite=True)  # 上传到hdfs
-    os.remove(file_local_tmp)
-    os.rmdir(file_local)
+    try:
+        os.remove(file_local_tmp)
+        os.rmdir(file_local)
+    except:
+        pass
 
 
-def load_model_hdfs(model_name, hdfs_path):
+def load_model_hdfs(model_name, hdfs_path, key_value):
     """
     从hdfs上加载模型
     :param model_name:模型命名
     :param hdfs_path: hdfs地址
+    :param key_value: tuple拼成的路径
     :return: model文件
     """
     client = get_client()  # hdfs的client
-    file_local = r'model_tmp'
+    file_local = r'model_tmp/' + key_value
     if not os.path.exists(file_local):
         os.makedirs(file_local)
     file_local_tmp = file_local + '/' + model_name
