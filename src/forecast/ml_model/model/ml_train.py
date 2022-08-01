@@ -5,8 +5,6 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
     各种机器学习模型
 """
-import pandas as pd
-
 from forecast.ml_model.model.LightgbmModel import LightgbmModel
 from forecast.ml_model.model.XgboostModel import XgboostModel
 import numpy as np
@@ -41,9 +39,9 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
     :param save_path: 模型上保存地址
     :param predict_len: 预测时长
     :param mode_type: 运行方式
-    :param back_testing 是否进行回测
     :return:
     """
+    print("key_value",key_value)
     method_param_all = param['method_param_all']
     try:
         method_param = method_param_all[method]
@@ -61,11 +59,7 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
     feature_columns = param['cols_feat_x_columns']  # 模型使用特征
     sample_join_key_feat = param['sample_join_key_feat']
     model_name = 'ml'
-    if isinstance(data_all, pd.DataFrame):
-        data = data_all
-    else:
-
-        data = row_transform_to_dataFrame(data_all)
+    data = row_transform_to_dataFrame(data_all)
 
     edate = data[time_col].max()
     sdate = datetime.datetime.strptime(edate, '%Y%m%d')
@@ -90,7 +84,9 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
 
     model_reg_all = {}
     importance_all = {}
+
     for x in zip(labels_list, feature_date):
+
         data_tmp = data_loop.copy()
         data_tmp = data_tmp.fillna(0)
         label = x[0]
@@ -112,7 +108,8 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
         else:
             model_reg = None
 
-        if not model_reg:
+        if model_reg:
+
             model_reg = model_reg.fit()
             # 模型重要特征
             feature_importances = pd.DataFrame({'column': train_x.columns,
@@ -129,8 +126,12 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
         key_value_list = [str(i) for i in list(key_value)]
         key_value = '/'.join(key_value_list)
     save_path = save_path + '/' + key_value
+    print("save_path",save_path)
+    print("model_name",model_name)
+    print("key_value",key_value)
     if mode_type == 'sp' and not back_testing:
         save_model_hdfs(model_reg_all, model_name, save_path, key_value)
+#         save_model_hdfs(model_reg_all, model_name, save_path)
     else:
         # save_path = save_path + '/' + model_name
         file_local = r'model_tmp/' + key_value  # 创建临时文件地址
@@ -139,5 +140,6 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
             os.makedirs(file_local)
         # save_model(model, file_local_tmp)
         save_model(model_reg_all, file_local_tmp)
+        print("save_model success", file_local_tmp)
 
-    return generate_rows_from_df(data)
+    return generate_rows_from_df(data[['shop_id','goods_id']].head(1))

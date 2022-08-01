@@ -24,9 +24,47 @@ import logging
 logger_info = setup_console_log()
 setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
 
-file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
-sys.path.append(file_path)  # 解决不同位置调用依赖包路径问题
+from pyspark.sql import SparkSession
 
+def spark_init():
+    """
+    初始化特征
+    :return:
+    """
+    os.environ["PYSPARK_DRIVER_PYTHON"]="/data/ibs/anaconda3/bin/python"
+    os.environ['PYSPARK_PYTHON']="/data/ibs/anaconda3/bin/python"
+    spark=SparkSession.builder \
+        .appName("gxc_test").master('yarn') \
+        .config("spark.executor.instances", "8") \
+        .config("spark.executor.memory", "16g") \
+        .config("spark.executor.cores", "4") \
+        .config("spark.driver.memory", "8g") \
+        .config("spark.driver.maxResultSize", "6g") \
+        .config("spark.default.parallelism", "600") \
+        .config("spark.network.timeout", "240s") \
+        .config("spark.sql.adaptive.enabled", "true") \
+        .config("spark.sql.adaptive.join.enabled", "true") \
+        .config("spark.sql.adaptive.shuffle.targetPostShuffleInputSize", "128000000") \
+        .config("spark.dynamicAllocation.enabled", "true") \
+        .config("spark.dynamicAllocation.minExecutors", "1") \
+        .config("spark.dynamicAllocation.maxExecutors", "10")\
+        .config("spark.shuffle.service.enabled", "true") \
+        .config("spark.dynamicAllocation.enabled","false")\
+        .config("spark.sql.sources.partitionOverwriteMode", "dynamic") \
+        .config("hive.exec.dynamici.partition", True) \
+        .config("hive.exec.dynamic.partition.mode", "nonstrict") \
+        .config("hive.exec.max.dynamic.partitions", "10000") \
+        .enableHiveSupport().getOrCreate()
+    spark.sql("set hive.exec.dynamic.partitions=true")
+    spark.sql("set hive.exec.max.dynamic.partitions=2048")
+    spark.sql("set hive.exec.dynamic.partition.mode=nonstrict")
+    spark.sql("use ai_dm_dev")
+    sc = spark.sparkContext
+    zip_path = './forecast.zip'
+    zip_path_1 = './digitforce.zip'
+    sc.addPyFile(zip_path)
+    sc.addPyFile(zip_path_1)
+    return spark
 
 def ml_model_train(param, spark=None):
     """
@@ -61,7 +99,7 @@ def param_default():
         'predict_len': 14,
         'col_keys': ['shop_id', 'group_category', 'apply_model'],
         'apply_model_index': 2,
-        'step_len': 5,
+        'step_len': 1,
         'purpose': 'train'
     }
     return param
@@ -80,18 +118,19 @@ def parse_arguments():
     return args
 
 
-def run():
+def run(spark):
     """
     跑接口
     :return:
     """
-    args = parse_arguments()
-    param = args.param
-    spark = args.spark
+
+    param = param_default()
     if isinstance(param, str):
         param = json.loads(param)
     ml_model_train(param, spark)
 
 
 if __name__ == "__main__":
-    run()
+    spark = spark_init()
+    run(spark)
+#     spark.stop()

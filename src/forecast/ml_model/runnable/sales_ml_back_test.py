@@ -58,10 +58,11 @@ def param_default():
         'y_type_list': ['c'],
         'mode_type': 'sp',
         'forcast_start_date': '20211009',
+        'bt_sdate':'20211001',
         'predict_len': 14,
         'col_keys': ['shop_id', 'group_category', 'apply_model'],
         'apply_model_index': 2,
-        'step_len': 5,
+        'step_len': 1,
         'purpose': 'train'
     }
     return param

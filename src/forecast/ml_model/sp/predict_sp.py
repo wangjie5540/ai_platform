@@ -80,29 +80,6 @@ def key_process(x, key_list):
     return tuple([x[key] for key in key_list])
 
 
-def method_called_predict_sp(data, key_cols, hdfs_path, param, predict_len):
-    """
-    模型预测
-    :param data: 预测特征
-    :param key_cols: key的列
-    :param hdfs_path: 保存hdfs地址
-    :param param: 参数
-    :param predict_len: 预测时长
-    :return: 预测值
-    """
-    try:
-        back_testing = param['back_testing']
-    except:
-        back_testing = None
-    if predict_len <= 0:
-        return
-    data_result = data.rdd.map(lambda g: (key_process(g, key_cols), g)).groupByKey(). \
-        flatMap(lambda x: ml_predict(x[0], x[1], predict_len, hdfs_path, param, 'sp',back_testing)).filter(
-        lambda h: h is not None).toDF()
-    data_result.show()
-    return data_result
-
-
 def is_exist_table(spark, check_table):
     """
     判断表是否存在
@@ -131,7 +108,31 @@ def save_table(spark, sparkdf, table_name, save_mode='overwrite', partition=["sh
         sparkdf.repartition(1).select(columns).write.mode("overwrite").insertInto(table_name, True)
     else:
         print("save table name", table_name)
+        logging.info("save_table begin")
         sparkdf.write.mode(save_mode).partitionBy(partition).saveAsTable(table_name)
+
+
+def method_called_predict_sp(data, key_cols, hdfs_path, param, predict_len):
+    """
+    模型预测
+    :param data: 预测特征
+    :param key_cols: key的列
+    :param hdfs_path: 保存hdfs地址
+    :param param: 参数
+    :param predict_len: 预测时长
+    :return: 预测值
+    """
+    try:
+        back_testing = param['back_testing']
+    except:
+        back_testing = None
+    forcast_start_date = param['forcast_start_date']
+    if predict_len <= 0:
+        return
+    data_result = data.rdd.map(lambda g: (key_process(g, key_cols), g)).groupByKey(). \
+        flatMap(lambda x: ml_predict(x[0], x[1], predict_len,forcast_start_date, hdfs_path, param, 'sp',back_testing)).filter(
+        lambda h: h is not None).toDF()
+    return data_result
 
 
 def predict_sp(param, spark):
@@ -184,7 +185,8 @@ def predict_sp(param, spark):
             partition = result_processing_param['partition']
             table_name = result_processing_param['table_name']
             mode_type = result_processing_param['mode_type']
-            save_table(spark, data_pred,  table_name, mode_type, partition=["shop_id", "dt"])  # 结果保存
+            save_table(spark, data_pred, table_name, mode_type, partition=["shop_id", "dt"])  # 结果保存
+            # write_to_hive(spark, data_pred, partition, table_name, mode_type)  # 结果保存
             logging.info('result_processing_sp 成功')
         except Exception as e:
             logging.info(traceback.format_exc())

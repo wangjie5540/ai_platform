@@ -34,12 +34,11 @@ def load_model(filename):
     :param filename:模型文件地址
     :return:加载的模型
     """
-    with open(filename, 'rb') as f:
-        # f2 =
-        # f2 = open(filename, 'rb')
-        s2 = f.read()
-        model = pickle.loads(s2)
-        f.close()
+    # f2 = open(filename, 'rb') as f:
+    f2 = open(filename, 'rb')
+    s2 = f2.read()
+    model = pickle.loads(s2)
+    f2.close()
     return model
 
 

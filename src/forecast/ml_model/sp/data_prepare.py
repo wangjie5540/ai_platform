@@ -11,7 +11,7 @@ import copy
 # from forecast.common.log import get_logger
 from digitforce.aip.common.datetime_helper import date_add_str
 from pyspark.sql.functions import max
-
+import pyspark.sql.functions as psf
 # from digitforce.aip.common.spark_helper import SparkHelper, forecast_spark_session
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 import logging
@@ -76,9 +76,8 @@ def data_prepare_train(spark, param):
         # data_feat_x = data_feat_x.filter(data_feat_x[y_type].isin(y_type_list))  # 也是筛选y_type
         data_feat_x = data_feat_x.filter((data_feat_x[dt] >= sdate) & (data_feat_x[dt] <= edate))
 
-        data_feat = data_feat_y.join(data_feat_x, on=sample_join_key_feat, how='inner')
-        data_result = data_feat.join(data_sku_grouping, on=sample_join_key_grouping, how='inner')
-
+#         data_feat = data_feat_y.join(data_feat_x, on=sample_join_key_feat, how='inner')
+        data_result = data_feat_x.join(data_sku_grouping, on=sample_join_key_grouping, how='inner')
         logging.info("sample_select_sp train 成功")
     except Exception as e:
         data_result = None
@@ -96,10 +95,10 @@ def data_prepare_predict(spark, param):
 
     table_sku_grouping = param['table_sku_group']
     ts_model_list = param['ts_model_list']
-    y_type_list = param['y_type_list']
+#     y_type_list = param['y_type_list']
     cols_sku_grouping = param['cols_sku_grouping']
     apply_model = param['apply_model']
-    y_type = param['y_type']
+#     y_type = param['y_type']
     sample_join_key_grouping = param['sample_join_key_grouping']  # 与分类分组表join的key
     table_feat_x = param['table_feat_x']
     sample_join_key_feat = param['sample_join_key_feat']
@@ -118,10 +117,11 @@ def data_prepare_predict(spark, param):
             cols_feat_x = sample_join_key_feat.copy()
             cols_feat_x.extend(cols_feat_x_columns)
             data_feat_x = data_feat_x.select(cols_feat_x)
-        data_feat_x = data_feat_x.filter(data_feat_x[y_type].isin(y_type_list))  # 也是筛选y_type
+#         data_feat_x = data_feat_x.filter(data_feat_x[y_type].isin(y_type_list))  # 也是筛选y_type
         data_feat_x = data_feat_x.filter(data_feat_x[dt] == forcast_start_date)
 
         data_result = data_feat_x.join(data_sku_grouping, on=sample_join_key_grouping, how='inner')
+        data_result.show()
         logging.info("sample_select_sp predict 成功")
     except Exception as e:
         data_result = None

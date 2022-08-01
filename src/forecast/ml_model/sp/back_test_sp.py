@@ -19,7 +19,7 @@ from forecast.ml_model.sp.train_sp import method_called_train_sp
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 import logging
 from forecast.ml_model.model.ml_backtest import ml_back_test
-
+from forecast.ml_model.sp.data_prepare import *
 logger_info = setup_console_log()
 setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
 
@@ -37,8 +37,8 @@ def key_process(x, key_list):
     return tuple([x[key] for key in key_list])
 
 
-def method_called_back_sp(data, key_cols, apply_model_index, forcast_start_date,
-                          predict_len, back_testing_len, param, hdfs_path, step_len):
+def method_called_back_sp(data, key_cols, apply_model_index,
+                          predict_len, back_testing_len, param, hdfs_path):
     """
     模型回测
     :param data: 样本
@@ -52,9 +52,6 @@ def method_called_back_sp(data, key_cols, apply_model_index, forcast_start_date,
     :param back_testing_len: 回测总长度
     :return: 回测结果
     """
-    predict_sum = 0
-    time_type = param['time_type']
-    time_col = param['time_col']
 
     result_data = None
     if predict_len <= 0:
@@ -69,35 +66,65 @@ def method_called_back_sp(data, key_cols, apply_model_index, forcast_start_date,
 
     data_result = data.rdd.map(lambda g: (key_process(g, key_cols), g)).groupByKey(). \
         flatMap(lambda x: ml_back_test(x[0], x[1], x[0][apply_model_index], param, hdfs_path,
-                                       predict_len, 'sp', back_testing)).filter(
+                                       predict_len, back_testing_len, 'sp', back_testing)).filter(
         lambda h: h is not None).toDF()
-    data_result.show()
+    # data_result.show()
 
-    for i in range(back_testing_len):
-        if i != 0:
-            forcast_start_date = date_add_str(forcast_start_date, step_len, time_type)
-        predict_sum += step_len
-        data_train = data.filter((data[time_col] < forcast_start_date))
-        data_predict = data.filter(data[time_col] == forcast_start_date)
-        print("predict_sum is ", predict_sum, "i is ", i)
-        if predict_sum == 1:
-            method_called_train_sp(data_train, key_cols, apply_model_index, param, hdfs_path, step_len)  # 训练模型
-            result_tmp = method_called_predict_sp(data_predict, key_cols, hdfs_path, param, step_len)  # 模型预测
-        elif predict_sum > predict_len:
-            tmp_len = predict_len + step_len - predict_sum
-            predict_sum = tmp_len
-            method_called_train_sp(data_train, key_cols, apply_model_index, param, hdfs_path, tmp_len)  # 训练模型
-            result_tmp = method_called_predict_sp(data_predict, key_cols, hdfs_path, param, tmp_len)  # 模型预测
-        else:
-            # method_called_train_sp(data_train, key_cols, apply_model_index, param, hdfs_path, step_len)  # 训练模型
-            result_tmp = method_called_predict_sp(data_predict, key_cols, hdfs_path, param, step_len)  # 模型预测
-        if i == 0:
-            result_data = result_tmp
-        else:
-            result_data = result_data.union(result_tmp)  # 合并结果
+    # for i in range(back_testing_len):
+    #     if i != 0:
+    #         forcast_start_date = date_add_str(forcast_start_date, step_len, time_type)
+    #     predict_sum += step_len
+    #     data_train = data.filter((data[time_col] < forcast_start_date))
+    #     data_predict = data.filter(data[time_col] == forcast_start_date)
+    #     print("predict_sum is ", predict_sum, "i is ", i)
+    #     if predict_sum == 1:
+    #         method_called_train_sp(data_train, key_cols, apply_model_index, param, hdfs_path, step_len)  # 训练模型
+    #         result_tmp = method_called_predict_sp(data_predict, key_cols, hdfs_path, param, step_len)  # 模型预测
+    #     elif predict_sum > predict_len:
+    #         tmp_len = predict_len + step_len - predict_sum
+    #         predict_sum = tmp_len
+    #         method_called_train_sp(data_train, key_cols, apply_model_index, param, hdfs_path, tmp_len)  # 训练模型
+    #         result_tmp = method_called_predict_sp(data_predict, key_cols, hdfs_path, param, tmp_len)  # 模型预测
+    #     else:
+    #         # method_called_train_sp(data_train, key_cols, apply_model_index, param, hdfs_path, step_len)  # 训练模型
+    #         result_tmp = method_called_predict_sp(data_predict, key_cols, hdfs_path, param, step_len)  # 模型预测
+    #     if i == 0:
+    #         result_data = result_tmp
+    #     else:
+    #         result_data = result_data.union(result_tmp)  # 合并结果
         # if predict_sum > predict_len:
         #     break
-    return result_data
+    return data_result
+def is_exist_table(spark, check_table):
+    """
+    判断表是否存在
+    :param spark:
+    :param check_table: 要检查的表
+    :return:
+    """
+    result = False
+    try:
+        if spark.table("{0}".format(check_table)):
+            result = True
+    except:
+        pass
+    return result
+
+
+def show_columns(spark, check_table):
+    columns = spark.sql("show columns in {0}".format(check_table)).toPandas()['col_name'].tolist()
+    return columns
+
+
+def save_table(spark, sparkdf, table_name, save_mode='overwrite', partition=["shop_id", "dt"]):
+    if is_exist_table(spark, table_name):
+        columns = show_columns(spark, table_name)
+        print(columns, table_name)
+        sparkdf.repartition(1).select(columns).write.mode("overwrite").insertInto(table_name, True)
+    else:
+        print("save table name", table_name)
+        sparkdf.write.mode(save_mode).partitionBy(partition).saveAsTable(table_name)
+
 
 
 def back_test_sp(param, spark):
@@ -132,9 +159,10 @@ def back_test_sp(param, spark):
             status = False
             logging.info(traceback.format_exc())
         spark_inner = 1
-    key_cols = param['key_cols']
+    key_cols = param['col_keys']
     apply_model_index = param['apply_model_index']
     forcast_start_date = param['forcast_start_date']
+    bt_sdate = param['bt_sdate']
     predict_len = param['predict_len']
     step_len = param['step_len']
     result_processing_param = param['result_processing_param']
@@ -145,8 +173,9 @@ def back_test_sp(param, spark):
         group_category_select = ["16", "17", "18", "19", "20"]
         data_train = data_prepare_train(spark, param)  # 训练样本
         data_train = data_train.filter(data_train['group_category'].isin(group_category_select))
-        data_pred = method_called_back_sp(data_train, key_cols, apply_model_index, forcast_start_date, predict_len,
-                                          back_testing_len, param, hdfs_path, step_len)
+        data_pred = method_called_back_sp(data_train, key_cols, apply_model_index,
+                                          predict_len, back_testing_len,
+                                          param, hdfs_path)
     except Exception as e:
         data_pred = None
         status = False
@@ -154,9 +183,9 @@ def back_test_sp(param, spark):
     if data_pred is not None:  # 预测和回测的结果写表
         try:
             partition = result_processing_param['partition']
-            table_name = result_processing_param['table_name']
+            table_name = result_processing_param['table_back_test_name']
             mode_type = result_processing_param['mode_type']
-            # write_to_hive(spark, data_pred, partition, table_name, mode_type)  # 结果保存
+            save_table(spark, data_pred,  table_name, mode_type, partition=["shop_id", "dt"])  # 结果保存
         except Exception as e:
             status = False
             logging.info(traceback.format_exc())

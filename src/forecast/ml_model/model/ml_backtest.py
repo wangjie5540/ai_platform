@@ -3,88 +3,141 @@
 Copyright (c) 2021-2022 北京数势云创科技有限公司 <http://www.digitforce.com>
 All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
-    各种机器学习模型进行回测
+    机器学习模型：对外提供的接口
 """
-import pandas as pd
+import os
 
-from forecast.ml_model.model.LightgbmModel import LightgbmModel
-from forecast.ml_model.model.XgboostModel import XgboostModel
-import numpy as np
-import datetime
-from dateutil.relativedelta import relativedelta
-from forecast.common.model_helper import *
-from digitforce.aip.common.data_helper import *
-from pyspark.sql import Row
-from forecast.ml_model.model.ml_train import ml_train
-from forecast.ml_model.model.ml_predict import ml_predict
+try:
+    import findspark  # 使用spark-submit 的cluster时要注释掉
+
+    findspark.init()
+except:
+    pass
+import sys
+import json
+import argparse
+import traceback
+from forecast.ml_model.sp.back_test_sp import back_test_sp
+# from digitforce.aip.common.spark_helper import SparkHelper,forecast_spark_session
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+import logging
+from pyspark.sql import SparkSession
+
+def spark_init():
+    """
+    初始化特征
+    :return:
+    """
+    os.environ["PYSPARK_DRIVER_PYTHON"]="/data/ibs/anaconda3/bin/python"
+    os.environ['PYSPARK_PYTHON']="/data/ibs/anaconda3/bin/python"
+    spark=SparkSession.builder \
+        .appName("gxc_test_bt").master('yarn') \
+        .config("spark.executor.instances", "5") \
+        .config("spark.executor.memory", "16g") \
+        .config("spark.executor.cores", "4") \
+        .config("spark.driver.memory", "8g") \
+        .config("spark.driver.maxResultSize", "6g") \
+        .config("spark.default.parallelism", "600") \
+        .config("spark.network.timeout", "240s") \
+        .config("spark.sql.adaptive.enabled", "true") \
+        .config("spark.sql.adaptive.join.enabled", "true") \
+        .config("spark.sql.adaptive.shuffle.targetPostShuffleInputSize", "128000000") \
+        .config("spark.dynamicAllocation.enabled", "true") \
+        .config("spark.dynamicAllocation.minExecutors", "1") \
+        .config("spark.dynamicAllocation.maxExecutors", "6")\
+        .config("spark.shuffle.service.enabled", "true") \
+        .config("spark.dynamicAllocation.enabled","false")\
+        .config("spark.sql.sources.partitionOverwriteMode", "dynamic") \
+        .config("hive.exec.dynamici.partition", True) \
+        .config("hive.exec.dynamic.partition.mode", "nonstrict") \
+        .config("hive.exec.max.dynamic.partitions", "10000") \
+        .enableHiveSupport().getOrCreate()
+    spark.sql("set hive.exec.dynamic.partitions=true")
+    spark.sql("set hive.exec.max.dynamic.partitions=2048")
+    spark.sql("set hive.exec.dynamic.partition.mode=nonstrict")
+    spark.sql("use ai_dm_dev")
+    sc = spark.sparkContext
+    zip_path = './forecast.zip'
+    zip_path_1 = './digitforce.zip'
+    sc.addPyFile(zip_path)
+    sc.addPyFile(zip_path_1)
+    return spark
+
+logger_info = setup_console_log()
+setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
+
+# file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
+# sys.path.append(file_path)  # 解决不同位置调用依赖包路径问题
 
 
-def ml_back_test(key_value, data_all, method, param, save_path,
-                 predict_len, mode_type, back_testing=None):
+def ml_model_back_test(param, spark=None):
+    """
+    #机器学习模型预测
+    :param param: 所需参数
+    :param spark: spark，如果不传入则会内部启动一个运行完关闭
+    :return:成功：True 失败：False
     """
 
-    :param key_value:
-    :param data_all:
-    :param method:
-    :param param:
-    :param save_path:
-    :param predict_len:
-    :param mode_type:
-    :param back_testing:
+    mode_type = 'sp'  # 先给个默认值
+    status = False
+    if 'mode_type' in param.keys():
+        mode_type = param['mode_type']
+
+    if mode_type == 'sp':  # spark版本
+        status = back_test_sp(param, spark)
+    else:  # pandas版本
+        pass
+    logging.info(str(param))
+
+    return status
+
+
+def param_default():
+    param = {
+        'ts_model_list': ['lightgbm'],
+        'y_type_list': ['c'],
+        'mode_type': 'sp',
+        'forcast_start_date': '20211009',
+        'bt_sdate':'20211001',
+        'predict_len': 14,
+        'col_keys': ['shop_id', 'group_category', 'apply_model'],
+        'apply_model_index': 2,
+        'step_len': 1,
+        'purpose': 'back_test'
+    }
+    return param
+
+
+def parse_arguments():
     """
-    predict_sum = 0
-    step_len = param['step_len']
+    解析参数
+    :return:
+    """
+    param = param_default()  # 开发测试用
+    parser = argparse.ArgumentParser(description='time series predict')
+    parser.add_argument('--param', default=param, help='arguments')
+    parser.add_argument('--spark', default=None, help='spark')
+    args = parser.parse_args()
+    return args
 
-    result_data = None
-    if predict_len <= 0:
-        return result_data
-    if step_len <= 0:
-        step_len = 1
-    time_col = param['time_col']  # 表示时间的的列，例如：dt
-    if isinstance(data_all, pd.DataFrame):
-        data = data_all
-    else:
 
-        data = row_transform_to_dataFrame(data_all)
-    bt_sdate = '20210110'
-    bt_len = 30
-    time_type = param['time_type']
-    dict_time_type = {'day': 'D', 'week': 'W', 'month': 'M'}
-    bt_date_list = [x.strftime(format='%Y%m%d') for x
-                    in pd.date_range(bt_sdate, periods=30, freq=dict_time_type[time_type])]
-    result_data = pd.DataFrame()
-    for x in zip(range(bt_len), bt_date_list):
+def run(spark):
+    """
+    跑接口
+    :return:
+    """
+#     args = parse_arguments()
+    param = param_default()
+#     param = args.param
+#     spark = args.spark
+    if isinstance(param, str):
+        param = json.loads(param)
+    ml_model_back_test(param, spark)
 
-        predict_sum += step_len
-        bt_date = x[1]
-        data_tmp = data[data[time_col] <= bt_date]
-        data_tmp['rank'] = data_tmp.groupby(list(key_value))[time_col].transform('rank', method='first',
-                                                                           ascending=False)
 
-        print("predict_sum is ", predict_sum, "i is ", x[0])
-        if predict_sum == step_len:
-            ml_train(key_value, data_tmp, method, param, save_path,
-                     predict_len, mode_type, back_testing)  # 训练模型
-            result_tmp = ml_predict(key_value, data_tmp[data_tmp['rank'] == 1], predict_len, save_path, param,
-                                    mode_type, back_testing)  # 模型预测
-        elif predict_sum > predict_len:
-            tmp_len = predict_len + step_len - predict_sum
-            predict_sum = tmp_len
-            ml_train(key_value, data_tmp, method, param, save_path,
-                     predict_len, mode_type, back_testing)  # 训练模型
-            result_tmp = ml_predict(key_value, data_tmp[data_tmp['rank'] == 1], predict_len, save_path, param,
-                                    mode_type, back_testing)  # 模型预测
-        else:
-            result_tmp = ml_predict(key_value, data_tmp[data_tmp['rank'] == 1], predict_len, save_path, param,
-                                    mode_type, back_testing)  # 模型预测
-        result_data = pd.concat(result_data, result_tmp)
+if __name__ == "__main__":
+    spark = spark_init()
+    run(spark)
+    spark.stop()
 
-    if not isinstance(data_all, pd.DataFrame):
-        resultRow = Row(*result_data.columns)
-        data_result = []
-        for r in result_data.values:
-            data_result.append(resultRow(*r))
-        data_result = data_result  # [save_table_cols]
-    else:
-        data_result = result_data
-    return data_result
+
