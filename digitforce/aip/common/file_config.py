@@ -16,7 +16,9 @@ def list_all_dict(dict_a):
             temp_value = dict_a[temp_key]
             if isinstance(temp_value, str) and "f'{" in temp_value:
                 dict_a[temp_key] = eval(temp_value)
-            if isinstance(temp_value,dict):
+            elif isinstance(temp_value, list):
+                dict_a[temp_key] = [eval(i) if isinstance(i, str) and "f'{" in temp_value else i for i in temp_value]
+            if isinstance(temp_value, dict):
                 list_all_dict(temp_value)
     return dict_a
 
@@ -38,7 +40,7 @@ def get_config(file_path, section=None):
     return cfg[section]
 
 
-def get_default_conf(file_list,section_list):
+def get_default_conf(file_list, section_list):
     param = {}
     if len(file_list)>0 and len(section_list)>0:
         for file_section in zip(file_list,section_list):

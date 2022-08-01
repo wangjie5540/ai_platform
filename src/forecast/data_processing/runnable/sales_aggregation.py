@@ -41,7 +41,7 @@ def run(sdate, edate, input_table, output_table, agg_func, col_qty, agg_type, sp
     :return:
     """
     logger_info = setup_console_log()
-    setup_logging(info_log_file="big_order_filter.info", error_log_file="", info_log_file_level="INFO")
+    setup_logging(info_log_file="sales_aggregation.info", error_log_file="")
     logging.info("LOADING···")
     param = load_params(sdate, edate,input_table,output_table,agg_func,col_qty,agg_type)
     logging.info(str(param))
