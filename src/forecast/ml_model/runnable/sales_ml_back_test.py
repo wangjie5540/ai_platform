@@ -21,12 +21,13 @@ from forecast.ml_model.sp.back_test_sp import back_test_sp
 # from digitforce.aip.common.spark_helper import SparkHelper,forecast_spark_session
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 import logging
+from digitforce.aip.common.spark_init import forecast_spark_session
 logger_info = setup_console_log()
 setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
 
 
-file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
-sys.path.append(file_path)  # 解决不同位置调用依赖包路径问题
+# file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
+# sys.path.append(file_path)  # 解决不同位置调用依赖包路径问题
 
 
 def ml_model_back_test(param, spark=None):
@@ -41,14 +42,13 @@ def ml_model_back_test(param, spark=None):
     status = False
     if 'mode_type' in param.keys():
         mode_type = param['mode_type']
-    try:
-        if mode_type == 'sp':  # spark版本
-            status = back_test_sp(param, spark)
-        else:  # pandas版本
-            pass
-        logging.info(str(param))
-    except Exception as e:
-        logging.info(traceback.format_exc())
+
+    if mode_type == 'sp':  # spark版本
+        status = back_test_sp(param, spark)
+    else:  # pandas版本
+        pass
+    logging.info(str(param))
+
     return status
 
 
@@ -63,7 +63,7 @@ def param_default():
         'col_keys': ['shop_id', 'group_category', 'apply_model'],
         'apply_model_index': 2,
         'step_len': 1,
-        'purpose': 'train'
+        'purpose': 'back_test'
     }
     return param
 
@@ -81,18 +81,21 @@ def parse_arguments():
     return args
 
 
-def run():
+def run(spark_):
     """
     跑接口
     :return:
     """
-    args = parse_arguments()
-    param = args.param
-    spark = args.spark
+#     args = parse_arguments()
+    param = param_default()
+#     param = args.param
+#     spark = args.spark
     if isinstance(param, str):
         param = json.loads(param)
-    ml_model_back_test(param, spark)
+    ml_model_back_test(param, spark_)
 
 
 if __name__ == "__main__":
-    run()
+    spark = forecast_spark_session("gaoxc_ml_back_test")
+    run(spark)
+    spark.stop()

@@ -52,10 +52,9 @@ def method_called_train_sp(data, key_cols, apply_model_index, param, hdfs_path, 
     #         flatMap(lambda x: ml_train(x[0], x[1], x[0][apply_model_index],
     #                                    param, hdfs_path, predict_len, 'sp',back_testing)).toDF()
     print("result sucess")
-    result.show()
+    # result.show()
 
-
-#     result_df = result.toPandas()
+    result_df = result.toPandas()
 
 
 def train_sp(param, spark):
