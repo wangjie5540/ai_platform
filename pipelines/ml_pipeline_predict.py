@@ -10,7 +10,7 @@ from digitforce.aip.components.source import df_model_manager
 from digitforce.aip.components.source import hive
 from digitforce.aip.components.forecast.data_processing import big_order_filter
 from digitforce.aip.components.forecast.ml_model import ml_predict
-name = "MachineLearningPredict"
+name = "MachineLearningPredictFirst"
 description = ''
 
 
