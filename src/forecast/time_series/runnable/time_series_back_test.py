@@ -57,7 +57,7 @@ def time_series_back_test(param, spark=None):
     return status
 
 
-def run(forecast_start_date, purpose, time_type, feat_y, output_table, col_qty, cols_feat_y, output_back_test_table,
+def run(forecast_start_date, purpose, time_type, feat_y, output_table, col_qty, cols_feat_y, output_back_test_table,toml_list,seaction,
         spark):
     """
     跑接口
@@ -65,8 +65,8 @@ def run(forecast_start_date, purpose, time_type, feat_y, output_table, col_qty, 
     """
     param = {"forecast_start_date": forecast_start_date, "purpose": purpose, "time_type": time_type, "feat_y": feat_y,
              "output_table": output_table, "col_qty": col_qty, "cols_feat_y": cols_feat_y,
-             "output_back_test_table": output_back_test_table}
-    default_conf = get_default_conf()
+             "eval_table": output_back_test_table}
+    default_conf = get_default_conf(toml_list,seaction)
     param = update_param_default(param, default_conf)
     time_series_back_test(param, spark)
 
@@ -81,11 +81,13 @@ def main():
     parser.add_argument('-c', '--col_qty', type=str, default=None, help='input col_qty')
     parser.add_argument('-c_f_y', '--cols_feat_y', type=ast.literal_eval(), default=None, help='input cols_feat_y')
     parser.add_argument('-s', '--spark', type=str, default=None, help='input spark')
-    parser.add_argument('o_b', '--output_back_test_table', type=str, default=None, help='input output_back_test_table')
+    parser.add_argument('-e', '--eval_table', type=str, default=None, help='input output_back_test_table')
+    parser.add_argument('-t_l', '--toml_list', type=ast.literal_eval(), default=None, help='input toml list')
+    parser.add_argument('-s_l', '--seaction', type=ast.literal_eval(), default=None, help='input seaction')
 
     args = parser.parse_args()
     run(args.forecast_start_date, args.purpose, args.time_type, args.feat_y, args.output_table, args.col_qty,
-        args.cols_feat_y, args.output_back_test_table, args.spark)
+        args.cols_feat_y, args.eval_table, args.toml_list, args.seaction, args.spark)
 
 
 if __name__ == "__main__":

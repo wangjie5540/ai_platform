@@ -223,5 +223,5 @@ def predict_result_handle(result_df, key_value, key_cols, mode_type, save_table_
             data_result.append(resultRow(*r))
     else:
         data_result = result_df
-    data_result = data_result[save_table_cols]
+    # data_result = data_result[save_table_cols]
     return data_result

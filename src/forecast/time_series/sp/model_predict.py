@@ -7,8 +7,8 @@ include:
 """
 
 from forecast.time_series.model import ARModel, ARXModel, ARIMAXModel, ARIMAModel, ThetaModel, SARIMAXModel, \
-    MAModel, SARIMAModel, SESModel, STLModel, ESModel, CrostonModel, CrostonTSBModel, HoltModel, HoltWinterModel, \
-    STLForecastModel, DmsModel
+    MAModel, SARIMAModel, SESModel, CrostonModel, CrostonTSBModel, HoltModel, HoltWinterModel, \
+    STLForecastModel
 from digitforce.aip.common.data_helper import *
 from forecast.time_series.sp.data_prepare_for_time_series_sp import data_process
 
@@ -47,7 +47,7 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
     # 天维度连续性检测
     data = data_temp
     if param['time_type'] == 'day':
-        data = data_process(data_temp, param)
+        data = data_process(data_temp, forecast_start_date, time_col, y)
 
     temp_dict = {"day": "D", "week": "W-MON", "month": "MS", "season": "QS-OCT", "year": "A"}
     method_param = method_param_all[method]
@@ -60,28 +60,37 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
     data_tmp = data[data[time_col] < forecast_start_date]  # 日期小于预测日期
     data_tmp = data_tmp.sort_values(by=time_col, ascending=True)  # 进行排序
 
+    data_tmp[time_col] = data_tmp[time_col].apply(lambda x: pd.to_datetime(x))
     p_data = data_tmp[[y, time_col]].set_index(time_col)
     p_data[y] = p_data[y].astype(float)
-    # holtwinter 7 day todo 简单指数平滑托底
-    if p_data.shape[0] < 17:
-        preds_value = p_data[y].mean()
-        preds = [preds_value for i in range(predict_len)]
-        model_include = False
 
-    elif str(method).lower() == 'es':
-        ts_model = ESModel.ESModel(p_data, param=method_param).fit()
-    elif str(method).lower() == 'holt-winter':
-        ts_model = HoltWinterModel.HoltWinterModel(p_data, param=method_param["param"]).fit()
+    if str(method).lower() == 'holt-winter':
+        seasonal_periods = method_param["param"]["seasonal_periods"]
+        if p_data.shape[0] > max(2 * seasonal_periods, (10 + 2 * (seasonal_periods // 2))):
+            ts_model = HoltWinterModel.HoltWinterModel(p_data, param=method_param["param"]).fit()
+        else:
+            ts_model = SESModel.SESModel(p_data, param=method_param["param"], param_fit=method_param["param_fit"]).fit()
     elif str(method).lower() == 'holt':
-        ts_model = HoltModel.HoltModel(p_data, param=method_param["param"], param_fit=method_param["param_fit"]).fit()
+        if p_data.shape[0] >= 10:
+            ts_model = HoltModel.HoltModel(p_data, param=method_param["param"],
+                                           param_fit=method_param["param_fit"]).fit()
+        else:
+            ts_model = SESModel.SESModel(p_data, param=method_param["param"], param_fit=method_param["param_fit"]).fit()
     elif str(method).lower() == 'ar':
         params = method_param['param']
         params_fit = method_param['param_fit']
-        ts_model = ARModel.ARModel(p_data, param=params, param_fit=params_fit).fit()
+        lags = params['lags']
+        if p_data.shape[0] > 2 * lags + 1:
+            ts_model = ARModel.ARModel(p_data, param=params, param_fit=params_fit).fit()
+        else:
+            ts_model = SESModel.SESModel(p_data, param=method_param["param"], param_fit=method_param["param_fit"]).fit()
     elif str(method).lower() == 'ma':
         ts_model = MAModel.MAModel(p_data, param=method_param["param"], param_fit=method_param["param_fit"]).fit()
     elif str(method).lower() == 'arx':
-        ts_model = ARXModel.ARXModel(p_data, param=method_param["param"], param_fit=method_param["param_fit"]).fit()
+        if p_data.shape[0] > 3 * method_param['param']['lags']:
+            ts_model = ARXModel.ARXModel(p_data, param=method_param["param"], param_fit=method_param["param_fit"]).fit()
+        else:
+            ts_model = SESModel.SESModel(p_data, param=method_param["param"], param_fit=method_param["param_fit"]).fit()
     elif str(method).lower() == 'arima':
         ts_model = ARIMAModel.ARIMAModel(p_data, param=method_param["param"],
                                          param_fit=method_param["param_fit"]).fit()
@@ -95,13 +104,20 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
         ts_model = SARIMAXModel.SARIMAXModel(p_data, param=method_param["param"],
                                              param_fit=method_param["param_fit"]).fit()
     elif str(method).lower() == 'ses':
-        ts_model = SESModel.SESModel(p_data, param=method_param["param"], param_fit=method_param["param_fit"]).fit()
+        if method_param['param']['initialization_method'] != 'legacy-heuristic':
+            if p_data.shape[0] >= 10:
+                ts_model = SESModel.SESModel(p_data, param=method_param["param"],
+                                             param_fit=method_param["param_fit"]).fit()
+            else:
+                method_param['param']['initialization_method'] = 'legacy-heuristic'
+                ts_model = SESModel.SESModel(p_data, param=method_param["param"],
+                                             param_fit=method_param["param_fit"]).fit()
+        else:
+            ts_model = SESModel.SESModel(p_data, param=method_param["param"], param_fit=method_param["param_fit"]).fit()
     elif str(method).lower() == 'croston':
         ts_model = CrostonModel.CrostonModel(p_data, param=method_param["param"]).fit()
     elif str(method).lower() == 'crostontsb':
         ts_model = CrostonTSBModel.CrostonTSBModel(p_data, param=method_param["param"]).fit()
-    elif str(method).lower() == 'stl':
-        ts_model = STLModel.STLModel(p_data, param=method_param["param"], param_fit=method_param["param_fit"]).fit()
     elif str(method).lower() == 'theta':
         ts_model = ThetaModel.ThetaModels(p_data, param=method_param["param"],
                                           param_fit=method_param["param_fit"]).fit()
@@ -110,19 +126,13 @@ def model_predict(key_value, data, method, param, forecast_start_date, predict_l
                                               param_fit=method_param["param_fit"]).fit()
     else:
         ts_model = None
-        model_include = False
 
     result_df = pd.DataFrame()
-    # todo 模型内部处理日期
-    if model_include == True:
-        preds = ts_model.forecast(predict_len)
-        dict_ = {'datetime': preds.index, 'y': preds.values}
-        df_ = pd.DataFrame(dict_)
-        result_df['y_pred'] = df_['y']
-    else:
-        result_df['y_pred'] = preds
-    cur_date_list = list(datetime.datetime.strftime(i, "%Y%m%d") for i in index)
-    result_df['dt'] = [i for i in cur_date_list]
+    preds = ts_model.forecast(predict_len)
+    dict_ = {'datetime': preds.index, 'y': preds.values}
+    df_ = pd.DataFrame(dict_)
+    result_df['y_pred'] = df_['y']
+    result_df['dt'] = [i for i in range(len(index))]
     result_df['time_type'] = time_type
     result_df['pred_time'] = forecast_start_date
     result_df['y_pred'] = result_df['y_pred'].apply(lambda x: x if x >= 0 else 0)
