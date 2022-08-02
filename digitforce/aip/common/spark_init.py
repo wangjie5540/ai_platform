@@ -1,10 +1,14 @@
 import findspark #使用spark-submit 的cluster时要注释掉
-findspark.init()
+import sys
+if 'ipykernel' in sys.modules:
+
+    findspark.init()
+else:
+    pass
 import os
 from pyspark.sql import SparkSession
 from digitforce.aip.common.data_helper import tuple_self
 import pyspark.sql.functions as psf
-
 
 def build_spark_session(app_name):
     spark = (SparkSession.builder.appName(app_name).master("yarn")

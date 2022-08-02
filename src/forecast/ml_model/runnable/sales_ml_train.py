@@ -6,14 +6,13 @@ include:
     机器学习模型：对外提供的接口
 """
 import os
-
-try:
+import sys
+if 'ipykernel' in sys.modules:
     import findspark  # 使用spark-submit 的cluster时要注释掉
 
     findspark.init()
-except:
+else:
     pass
-import sys
 import json
 import argparse
 import traceback
@@ -21,50 +20,15 @@ from forecast.ml_model.sp.train_sp import train_sp
 # from digitforce.aip.common.spark_helper import SparkHelper,forecast_spark_session
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 import logging
+from digitforce.aip.common.spark_init import forecast_spark_session
+import zipfile
+
 logger_info = setup_console_log()
 setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
 
-from pyspark.sql import SparkSession
+file_path = os.path.abspath(os.path.join(os.getcwd(), '../../'))
+sys.path.append(file_path)
 
-def spark_init():
-    """
-    初始化特征
-    :return:
-    """
-    os.environ["PYSPARK_DRIVER_PYTHON"]="/data/ibs/anaconda3/bin/python"
-    os.environ['PYSPARK_PYTHON']="/data/ibs/anaconda3/bin/python"
-    spark=SparkSession.builder \
-        .appName("gxc_test").master('yarn') \
-        .config("spark.executor.instances", "8") \
-        .config("spark.executor.memory", "16g") \
-        .config("spark.executor.cores", "4") \
-        .config("spark.driver.memory", "8g") \
-        .config("spark.driver.maxResultSize", "6g") \
-        .config("spark.default.parallelism", "600") \
-        .config("spark.network.timeout", "240s") \
-        .config("spark.sql.adaptive.enabled", "true") \
-        .config("spark.sql.adaptive.join.enabled", "true") \
-        .config("spark.sql.adaptive.shuffle.targetPostShuffleInputSize", "128000000") \
-        .config("spark.dynamicAllocation.enabled", "true") \
-        .config("spark.dynamicAllocation.minExecutors", "1") \
-        .config("spark.dynamicAllocation.maxExecutors", "10")\
-        .config("spark.shuffle.service.enabled", "true") \
-        .config("spark.dynamicAllocation.enabled","false")\
-        .config("spark.sql.sources.partitionOverwriteMode", "dynamic") \
-        .config("hive.exec.dynamici.partition", True) \
-        .config("hive.exec.dynamic.partition.mode", "nonstrict") \
-        .config("hive.exec.max.dynamic.partitions", "10000") \
-        .enableHiveSupport().getOrCreate()
-    spark.sql("set hive.exec.dynamic.partitions=true")
-    spark.sql("set hive.exec.max.dynamic.partitions=2048")
-    spark.sql("set hive.exec.dynamic.partition.mode=nonstrict")
-    spark.sql("use ai_dm_dev")
-    sc = spark.sparkContext
-    zip_path = './forecast.zip'
-    zip_path_1 = './digitforce.zip'
-    sc.addPyFile(zip_path)
-    sc.addPyFile(zip_path_1)
-    return spark
 
 def ml_model_train(param, spark=None):
     """
@@ -118,19 +82,29 @@ def parse_arguments():
     return args
 
 
-def run(spark):
+def run(spark_, sdate, edate):
     """
     跑接口
     :return:
     """
 
     param = param_default()
+    param['sdate'] = sdate
+    param['edate'] = edate
     if isinstance(param, str):
         param = json.loads(param)
-    ml_model_train(param, spark)
+    ml_model_train(param, spark_)
 
 
 if __name__ == "__main__":
-    spark = spark_init()
-    run(spark)
-#     spark.stop()
+    files1 = zipfile.ZipFile('./forecast.zip', 'r')
+    files2 = zipfile.ZipFile('./digitforce.zip', 'r')
+    files1.extractall(os.getcwd())
+    files2.extractall(os.getcwd())
+    spark = forecast_spark_session("gaoxc_ml_train")
+    if 'ipykernel' in sys.modules:
+        sdate = '20201009'
+        edate = '20211009'
+    else:
+        sdate, edate = sys.argv[1].replace('-', ''), sys.argv[2].replace('-', '')
+    run(spark, sdate, edate)

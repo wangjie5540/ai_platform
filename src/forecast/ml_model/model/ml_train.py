@@ -29,7 +29,7 @@ def generate_rows_from_df(df, cast_int=None):
     return row_list
 
 
-def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_type,back_testing=None):
+def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_type, back_testing=None):
     """
     模型训练
     :param key_value: key值
@@ -41,7 +41,7 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
     :param mode_type: 运行方式
     :return:
     """
-    print("key_value",key_value)
+    print("key_value", key_value)
     method_param_all = param['method_param_all']
     try:
         method_param = method_param_all[method]
@@ -61,19 +61,19 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
     model_name = 'ml'
     data = row_transform_to_dataFrame(data_all)
 
-    edate = data[time_col].max()
-    sdate = datetime.datetime.strptime(edate, '%Y%m%d')
+    edate = param['edate'] # data[time_col].max()
+    date_ = datetime.datetime.strptime(edate, '%Y%m%d')
     if time_type == 'day':
         delta_n = datetime.timedelta(days=-predict_len)
-        feature_sdate = sdate + delta_n
+        feature_sdate = date_ + delta_n
         feature_date = [x.strftime('%Y%m%d') for x in pd.date_range(feature_sdate, periods=predict_len)]
     elif time_type == 'week':
         delta_n = datetime.timedelta(weeks=-predict_len)
-        feature_sdate = sdate + delta_n
+        feature_sdate = date_ + delta_n
         feature_date = [x.strftime('%Y%m%d') for x in pd.date_range(feature_sdate, freq='1W', periods=predict_len)]
     else:  # 月
         sdate = datetime.datetime.strptime(edate, '%Y%m%d')
-        feature_sdate = sdate + relativedelta(months=-predict_len)
+        feature_sdate = date_ + relativedelta(months=-predict_len)
         feature_date = [x.strftime('%Y%m%d') for x in pd.date_range(feature_sdate, freq='1M', periods=predict_len)]
     feature_date.reverse()
     labels_list = ["y{}".format(i) for i in range(1, predict_len + 1)]
@@ -109,7 +109,6 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
             model_reg = None
 
         if model_reg:
-
             model_reg = model_reg.fit()
             # 模型重要特征
             feature_importances = pd.DataFrame({'column': train_x.columns,
@@ -126,12 +125,12 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
         key_value_list = [str(i) for i in list(key_value)]
         key_value = '/'.join(key_value_list)
     save_path = save_path + '/' + key_value
-    print("save_path",save_path)
-    print("model_name",model_name)
-    print("key_value",key_value)
+    print("save_path", save_path)
+    print("model_name", model_name)
+    print("key_value", key_value)
     if mode_type == 'sp' and not back_testing:
         save_model_hdfs(model_reg_all, model_name, save_path, key_value)
-#         save_model_hdfs(model_reg_all, model_name, save_path)
+    #         save_model_hdfs(model_reg_all, model_name, save_path)
     else:
         # save_path = save_path + '/' + model_name
         file_local = r'model_tmp/' + key_value  # 创建临时文件地址
@@ -142,4 +141,4 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
         save_model(model_reg_all, file_local_tmp)
         print("save_model success", file_local_tmp)
 
-    return generate_rows_from_df(data[['shop_id','goods_id']].head(1))
+    return generate_rows_from_df(data[['shop_id', 'goods_id']].head(1))

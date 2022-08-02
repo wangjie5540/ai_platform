@@ -7,13 +7,13 @@ include:
 """
 import os
 
-try:
+import sys
+if 'ipykernel' in sys.modules:
     import findspark  # 使用spark-submit 的cluster时要注释掉
 
     findspark.init()
-except:
+else:
     pass
-import sys
 import json
 import argparse
 import traceback
@@ -21,12 +21,14 @@ from forecast.ml_model.sp.back_test_sp import back_test_sp
 # from digitforce.aip.common.spark_helper import SparkHelper,forecast_spark_session
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 import logging
+from digitforce.aip.common.spark_init import forecast_spark_session
+import zipfile
+
 logger_info = setup_console_log()
 setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
 
-
-file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
-sys.path.append(file_path)  # 解决不同位置调用依赖包路径问题
+file_path = os.path.abspath(os.path.join(os.getcwd(), '../../'))
+sys.path.append(file_path)
 
 
 def ml_model_back_test(param, spark=None):
@@ -41,14 +43,13 @@ def ml_model_back_test(param, spark=None):
     status = False
     if 'mode_type' in param.keys():
         mode_type = param['mode_type']
-    try:
-        if mode_type == 'sp':  # spark版本
-            status = back_test_sp(param, spark)
-        else:  # pandas版本
-            pass
-        logging.info(str(param))
-    except Exception as e:
-        logging.info(traceback.format_exc())
+
+    if mode_type == 'sp':  # spark版本
+        status = back_test_sp(param, spark)
+    else:  # pandas版本
+        pass
+    logging.info(str(param))
+
     return status
 
 
@@ -58,12 +59,12 @@ def param_default():
         'y_type_list': ['c'],
         'mode_type': 'sp',
         'forcast_start_date': '20211009',
-        'bt_sdate':'20211001',
+        'bt_sdate': '20211001',
         'predict_len': 14,
         'col_keys': ['shop_id', 'group_category', 'apply_model'],
         'apply_model_index': 2,
         'step_len': 1,
-        'purpose': 'train'
+        'purpose': 'back_test'
     }
     return param
 
@@ -81,18 +82,33 @@ def parse_arguments():
     return args
 
 
-def run():
+def run(spark_,sdate, edate):
     """
-    跑接口
+
+    :param spark_:
+    :param edat:
     :return:
     """
-    args = parse_arguments()
-    param = args.param
-    spark = args.spark
+    #     args = parse_arguments()
+    param = param_default()
+    param['edate'] = edate
+    param['sdate'] = sdate
+    #     param = args.param
+    #     spark = args.spark
     if isinstance(param, str):
         param = json.loads(param)
-    ml_model_back_test(param, spark)
+    ml_model_back_test(param, spark_)
 
 
 if __name__ == "__main__":
-    run()
+    files1 = zipfile.ZipFile('./forecast.zip', 'r')
+    files2 = zipfile.ZipFile('./digitforce.zip', 'r')
+    files1.extractall(os.getcwd())
+    files2.extractall(os.getcwd())
+    spark = forecast_spark_session("gaoxc_ml_back_test")
+    if 'ipykernel' in sys.modules:
+        sdate = '20201009'
+        edate = '20211009'
+    else:
+        sdate, edate = sys.argv[1].replace('-', ''), sys.argv[2].replace('-', '')
+    run(spark,sdate, edate)
