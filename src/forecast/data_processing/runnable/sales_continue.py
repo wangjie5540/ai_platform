@@ -15,6 +15,9 @@ from forecast.data_processing.sp.sp_sales_agg import sales_continue_processing
 import traceback
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 from digitforce.aip.common.file_config import get_config
+import zipfile
+from digitforce.aip.common.spark_init import forecast_spark_session
+
 
 
 def load_params(sdate,edate,date_type,col_time,col_wm,input_table,output_table,col_qty):
@@ -67,6 +70,11 @@ def run(sdate, edate,date_type, col_time, col_wm, input_table, output_table, col
 
 
 if __name__ == "__main__":
+    files1 = zipfile.ZipFile('./forecast.zip', 'r')
+    files2 = zipfile.ZipFile('./digitforce.zip', 'r')
+    files1.extractall(os.getcwd())
+    files2.extractall(os.getcwd())
+    spark = forecast_spark_session("submit_test")
     sdate, edate,date_type, col_time, col_wm, input_table, output_table, col_qty = sys.argv[1], sys.argv[2], sys.argv[3], \
                                                                                    sys.argv[4], sys.argv[5], sys.argv[6], \
                                                                                    sys.argv[7], sys.argv[8]
