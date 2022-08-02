@@ -4,7 +4,7 @@ from digitforce.aip.components.op_decorator import *
 
 
 @mount_data_pv
-def time_series_predict(forecast_start_date,purpose,time_type,predict_model_output, image_tag="latest"):
+def time_series_predict(forecast_start_date,purpose,time_type, image_tag="latest"):
     '''
     time_series_predict：时序模型预测
     :param 预测模块需要的参数
