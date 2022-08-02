@@ -11,7 +11,8 @@ import sys
 import traceback
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 from digitforce.aip.common.file_config import get_config
-
+import zipfile
+from digitforce.aip.common.spark_init import forecast_spark_session
 
 def load_params(sdate,edate,col_openinv,col_endinv,col_category,col_time,w,col_qty,join_key):
     """运行run方法时"""
@@ -63,6 +64,11 @@ def run(sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qt
     return status
 
 if __name__ == "__main__":
+    files1 = zipfile.ZipFile('./forecast.zip', 'r')
+    files2 = zipfile.ZipFile('./digitforce.zip', 'r')
+    files1.extractall(os.getcwd())
+    files2.extractall(os.getcwd())
+    spark = forecast_spark_session("submit_test")
     sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qty, join_key = sys.argv[1], sys.argv[2],sys.argv[3], sys.argv[4],\
                                                                       sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9]
     run(sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qty, join_key, spark=None)

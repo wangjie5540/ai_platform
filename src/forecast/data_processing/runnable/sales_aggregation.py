@@ -15,6 +15,8 @@ import logging
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 from digitforce.aip.common.file_config import get_config
 import traceback
+import zipfile
+from digitforce.aip.common.spark_init import forecast_spark_session
 
 
 def load_params(sdate, edate, input_table, output_table, agg_func, col_qty, agg_type):
@@ -22,13 +24,13 @@ def load_params(sdate, edate, input_table, output_table, agg_func, col_qty, agg_
     param_cur = {
         'sdate': sdate,
         'edate': edate,
-        'input_table': input_table, #'ai_dm_dev.outlier_order_0620',
-        'output_table': output_table, #'ai_dm_dev.qty_aggregation_0620',
-        'agg_func': agg_func, #"{'sales_aggregation_by_day': 'dt'}",
-        'col_qty': col_qty, #'qty',
-        'agg_type': agg_type #'day'
+        'input_table': input_table,  # 'ai_dm_dev.outlier_order_0620',
+        'output_table': output_table,  # 'ai_dm_dev.qty_aggregation_0620',
+        'agg_func': agg_func,  # "{'sales_aggregation_by_day': 'dt'}",
+        'col_qty': col_qty,  # 'qty',
+        'agg_type': agg_type  # 'day'
     }
-    params_all = get_config(os.getcwd()+"/forecast/data_processing/config/param.toml")
+    params_all = get_config(os.getcwd() + "/forecast/data_processing/config/param.toml")
     # 获取项目1配置参数
     params = params_all['filter_p1']
     params.update(param_cur)
@@ -43,7 +45,7 @@ def run(sdate, edate, input_table, output_table, agg_func, col_qty, agg_type, sp
     logger_info = setup_console_log()
     setup_logging(info_log_file="sales_aggregation.info", error_log_file="")
     logging.info("LOADING···")
-    param = load_params(sdate, edate,input_table,output_table,agg_func,col_qty,agg_type)
+    param = load_params(sdate, edate, input_table, output_table, agg_func, col_qty, agg_type)
     logging.info(str(param))
     if 'mode_type' in param.keys():
         run_type = param['mode_type']
@@ -65,6 +67,12 @@ def run(sdate, edate, input_table, output_table, agg_func, col_qty, agg_type, sp
 
 
 if __name__ == "__main__":
-    sdate, edate,input_table,output_table,agg_func,col_qty,agg_type = sys.argv[1], sys.argv[2],sys.argv[3], sys.argv[4],\
-                                                                      sys.argv[5], sys.argv[6], sys.argv[7]
-    run(sdate, edate,input_table,output_table,agg_func,col_qty,agg_type)
+    files1 = zipfile.ZipFile('./forecast.zip', 'r')
+    files2 = zipfile.ZipFile('./digitforce.zip', 'r')
+    files1.extractall(os.getcwd())
+    files2.extractall(os.getcwd())
+    spark = forecast_spark_session("submit_test")
+    sdate, edate, input_table, output_table, agg_func, col_qty, agg_type = sys.argv[1], sys.argv[2], sys.argv[3], \
+                                                                           sys.argv[4], \
+                                                                           sys.argv[5], sys.argv[6], sys.argv[7]
+    run(sdate, edate, input_table, output_table, agg_func, col_qty, agg_type)
