@@ -53,7 +53,9 @@ def predict_sp(param, spark):
     :return:
     """
     # s数据准备是否成功
-    prepare_data = data_prepared_for_model(spark, param)
+    prepare_data_table = param['prepare_data_table']
+    prepare_data = spark.table(prepare_data_table)
+        # data_prepared_for_model(spark, param)
     output_table = param['output_table']
     partitions = param['partitions']
     forecast_start_time = param['forecast_start_date']

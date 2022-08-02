@@ -14,6 +14,7 @@ import pandas as pd
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 from digitforce.aip.common.datetime_helper import date_add_str
 import pyspark.sql.functions as psf
+from digitforce.aip.common.spark_helper import save_table
 
 
 def data_prepared_for_model(spark, param):
@@ -29,6 +30,7 @@ def data_prepared_for_model(spark, param):
     edate = param['edate']
     sdate = param['sdate']
     dt = param['time_col']
+    status = True
     try:
         # sku分类分组表
         data_sku_grouping = spark.table(table_sku_grouping).select(cols_sku_grouping)
@@ -42,11 +44,16 @@ def data_prepared_for_model(spark, param):
         data_feat_y = data_feat_y.filter((data_feat_y[dt] >= sdate) & (data_feat_y[dt] <= edate))
         data_result = data_feat_y.join(data_sku_grouping, on=sample_join_key, how='inner')
 
+        parititions = param['time_col']
+        prepare_data_table = param['prepare_data_table']
+        save_table(spark, data_result, prepare_data_table, partition=parititions)
+
         logging.info("数据准备完成！")
     except Exception as e:
+        status = False
         logging.info(traceback.format_exc())
 
-    return data_result
+    return status
 
 
 # 对于连续缺失7天以上的情况未作处理，直接填补
