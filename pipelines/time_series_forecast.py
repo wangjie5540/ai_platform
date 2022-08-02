@@ -4,8 +4,8 @@ import kfp.dsl as dsl
 from digitforce.aip.components.forecast.data_prepare import data_prepare
 from digitforce.aip.components.forecast.series_predict import time_series_predict
 
-name = "time series predict"
-description = 'first prepare data then train time series model'
+name = "time_series_predict"
+description = 'firstPrepareDataThenTrainTimeSeriesModel'
 
 
 @dsl.pipeline(
