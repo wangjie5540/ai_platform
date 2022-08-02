@@ -8,8 +8,8 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
 阈值过滤 过去N天通过by bound过滤
 """
-
-from data_process.sp.sp_sales_filter import filter_by_bound
+import logging
+from forecast.data_processing.sp.sp_sales_filter import filter_by_bound
 
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
@@ -18,8 +18,8 @@ except:
     pass
 import argparse
 import traceback
-from  common.log import get_logger
-from  common.toml_helper import TomlOperation
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+from digitforce.aip.common.file_config import get_config
 
 
 def load_params():
@@ -29,8 +29,7 @@ def load_params():
         'sdate': '20220101',
         'edate': '20220501'
     }
-    f = TomlOperation("param.toml")
-    params_all = f.read_file()
+    params_all = get_config("param.toml")
     # 获取项目1配置参数
     params = params_all['filter_p1']
     params.update(param_cur)
@@ -55,7 +54,8 @@ def run():
     跑接口
     :return:
     """
-    logger_info = get_logger()
+    logger_info = setup_console_log(leve=logging.INFO)
+    setup_logging(info_log_file="", error_log_file="", info_log_file_level="INFO")
     logger_info.info("LOADING···")
     args = parse_arguments()
     param = args.param
@@ -69,7 +69,7 @@ def run():
     try:
         if run_type == 'sp':  # spark版本
             logger_info.info("RUNNING···")
-            filter_by_bound(spark, param)
+            filter_by_bound(param)
         else:
             # pandas版本
             pass

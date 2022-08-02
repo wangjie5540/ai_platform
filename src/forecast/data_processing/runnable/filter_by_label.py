@@ -7,8 +7,8 @@ Copyright (c) 2021-2022 北京数势云创科技有限公司 <http://www.digitfo
 All rights reserved. Unauthorized reproduction and use are strictly prohibited
 标签过滤 where label not in ['A','B','C']
 """
-
-from data_process.sp.sp_sales_filter import filter_by_label
+import logging
+from forecast.data_processing.sp.sp_sales_filter import filter_by_label
 
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
@@ -17,9 +17,8 @@ except:
     pass
 import argparse
 import traceback
-from  common.log import get_logger
-from  common.toml_helper import TomlOperation
-
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+from digitforce.aip.common.file_config import get_config
 
 def load_params():
     """运行run方法时"""
@@ -31,8 +30,7 @@ def load_params():
         'filter_value': []
 
     }
-    f = TomlOperation("param.toml")
-    params_all = f.read_file()
+    params_all = get_config("param.toml")
     # 获取项目1配置参数
     params = params_all['filter_p1']
     params.update(param_cur)
@@ -57,7 +55,8 @@ def run():
     跑接口
     :return:
     """
-    logger_info = get_logger()
+    logger_info = setup_console_log(leve=logging.INFO)
+    setup_logging(info_log_file="", error_log_file="", info_log_file_level="INFO")
     logger_info.info("LOADING···")
     args = parse_arguments()
     param = args.param
@@ -71,7 +70,7 @@ def run():
     try:
         if run_type == 'sp':  # spark版本
             logger_info.info("RUNNING···")
-            filter_by_label(spark, param)
+            filter_by_label(param)
         else:
             # pandas版本
             pass

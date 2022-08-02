@@ -31,5 +31,8 @@ mysql_host="172.21.32.86"
 mysql_port=3306
 mysql_user="digitforce_arch"
 mysql_password="arch123456"
-
+mysql_db = "ibs_replenish"
 [hive]
+
+[exec]
+exec_list = ["db_origin = 'ai_dm'", "db_dev = 'ai_dm_dev'", "pre_table_name = 'ss_aip'"]

@@ -10,76 +10,64 @@ include:
 """
 import os
 from forecast.data_analysis.sp.sales_classify_sp import sales_classify
-
-try:
-    import findspark #使用spark-submit 的cluster时要注释掉
-    findspark.init()
-except:
-    pass
-import argparse
+import sys
 import traceback
-from forecast.common.log import get_logger
-from forecast.common.toml_helper import TomlOperation
+import logging
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+from digitforce.aip.common.file_config import get_config
 
 
-def load_params():
+def load_params(sdate, edate,input_table, output_table, input_partition_name, output_partition_names, col_qty, task_id):
     """运行run方法时"""
     param_cur = {
-        'mode_type': 'sp',
-        'sdate': '20210101',
-        'edate': '20220101'
+        'sdate': sdate,#'20210101',
+        'edate': edate,#'20220101',
+        'input_table': input_table,#'ai_dm_dev.sales_boxcox_0620',
+        'output_table': output_table,#'ai_dm_dev.sales_classify_0620',
+        'input_partition_name': input_partition_name, #'shop_id',
+        'output_partition_names':output_partition_names, # ['shop_id'],
+        'col_qty': col_qty,#'th_y',
+        'task_id': task_id,#'forecast_days'
+
     }
-    f = TomlOperation(os.getcwd()+"/forecast/data_analysis/config/param.toml")
-    params_all = f.read_file()
+    params_all = get_config(os.getcwd()+"/forecast/data_analysis/config/param.toml")
     # 获取项目1配置参数
     params = params_all['params']
     params.update(param_cur)
     return params
 
 
-def parse_arguments():
-    """
-    #开发测试用
-    :return:
-    """
-    params = load_params()
-    parser = argparse.ArgumentParser(description='sales classify')
-    parser.add_argument('--param', default=params, help='arguments')
-    parser.add_argument('--spark', default=spark, help='spark')
-    args = parser.parse_args(args=[])
-    return args
-
-
-def run():
+def run(sdate, edate, input_table, output_table, input_partition_name, output_partition_names, col_qty, task_id, spark):
     """
     跑接口
     :return:
     """
-    logger_info = get_logger()
-    logger_info.info("LOADING···")
-    args = parse_arguments()
-    param = args.param
-    spark = args.spark
-    print("args", args)
-    logger_info.info(str(param))
+    logger_info = setup_console_log()
+    setup_logging(info_log_file="sales_classify.info", error_log_file="")
+    logging.info("LOADING···")
+
+    param = load_params(sdate, edate,input_table, output_table, input_partition_name, output_partition_names, col_qty, task_id)
+    logging.info(str(param))
     if 'mode_type' in param.keys():
         run_type = param['mode_type']
     else:
         run_type = 'sp'
     try:
         if run_type == 'sp':  # spark版本
-            logger_info.info("RUNNING···")
+            logging.info("RUNNING···")
             sales_classify(spark, param)
         else:
             # pandas版本
             pass
         status = "SUCCESS"
-        logger_info.info("SUCCESS")
+        logging.info("SUCCESS")
     except Exception as e:
         status = "ERROR"
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
     return status
 
 
 if __name__ == "__main__":
-    run()
+    sdate, edate, input_table, output_table, input_partition_name, output_partition_names, col_qty, task_id = \
+        sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8]
+    run(sdate, edate, input_table, output_table, input_partition_name, output_partition_names, col_qty, task_id, spark=None)

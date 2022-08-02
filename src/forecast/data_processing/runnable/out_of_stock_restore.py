@@ -4,8 +4,9 @@
 """
 小时级缺货还原
 """
-from forecast.data_process.sp.sp_data_adjust import out_of_stock_adjust
-
+import os
+from forecast.data_processing.sp.sp_data_adjust import out_of_stock_adjust
+import logging
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
     findspark.init()
@@ -13,8 +14,8 @@ except:
     pass
 import argparse
 import traceback
-from common.log import get_logger
-from common.toml_helper import TomlOperation
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+from digitforce.aip.common.file_config import get_config
 
 
 def load_params():
@@ -31,8 +32,7 @@ def load_params():
         'input_table': '',
         'output_table': ''
     }
-    f = TomlOperation("param.toml")
-    params_all = f.read_file()
+    params_all = get_config("param.toml")
     # 获取项目1配置参数
     params = params_all['filter_p1']
     params.update(param_cur)
@@ -57,7 +57,8 @@ def run():
     跑接口
     :return:
     """
-    logger_info = get_logger()
+    logger_info = setup_console_log(leve=logging.INFO)
+    setup_logging(info_log_file="", error_log_file="", info_log_file_level="INFO")
     logger_info.info("LOADING···")
     args = parse_arguments()
     param = args.param
@@ -71,7 +72,7 @@ def run():
     try:
         if run_type == 'sp':  # spark版本
             logger_info.info("RUNNING···")
-            out_of_stock_adjust(spark, param)
+            out_of_stock_adjust(param)
         else:
             # pandas版本
             pass
