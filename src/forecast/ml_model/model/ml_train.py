@@ -61,19 +61,19 @@ def ml_train(key_value, data_all, method, param, save_path, predict_len, mode_ty
     model_name = 'ml'
     data = row_transform_to_dataFrame(data_all)
 
-    edate = data[time_col].max()
-    sdate = datetime.datetime.strptime(edate, '%Y%m%d')
+    edate = param['edate'] # data[time_col].max()
+    date_ = datetime.datetime.strptime(edate, '%Y%m%d')
     if time_type == 'day':
         delta_n = datetime.timedelta(days=-predict_len)
-        feature_sdate = sdate + delta_n
+        feature_sdate = date_ + delta_n
         feature_date = [x.strftime('%Y%m%d') for x in pd.date_range(feature_sdate, periods=predict_len)]
     elif time_type == 'week':
         delta_n = datetime.timedelta(weeks=-predict_len)
-        feature_sdate = sdate + delta_n
+        feature_sdate = date_ + delta_n
         feature_date = [x.strftime('%Y%m%d') for x in pd.date_range(feature_sdate, freq='1W', periods=predict_len)]
     else:  # 月
         sdate = datetime.datetime.strptime(edate, '%Y%m%d')
-        feature_sdate = sdate + relativedelta(months=-predict_len)
+        feature_sdate = date_ + relativedelta(months=-predict_len)
         feature_date = [x.strftime('%Y%m%d') for x in pd.date_range(feature_sdate, freq='1M', periods=predict_len)]
     feature_date.reverse()
     labels_list = ["y{}".format(i) for i in range(1, predict_len + 1)]

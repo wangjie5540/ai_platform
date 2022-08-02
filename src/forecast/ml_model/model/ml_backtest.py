@@ -48,11 +48,12 @@ def ml_back_test(key_value, data_all, method, param, save_path,
 
         data = row_transform_to_dataFrame(data_all)
     bt_sdate = param['bt_sdate']
+    edate = param['edate']
     bt_len = back_test_len
     time_type = param['time_type']
     dict_time_type = {'day': 'D', 'week': 'W', 'month': 'M'}
     bt_date_list = [x.strftime(format='%Y%m%d') for x
-                    in pd.date_range(bt_sdate, periods=30, freq=dict_time_type[time_type])]
+                    in pd.date_range(end=edate, periods=30, freq=dict_time_type[time_type])]
     result_data = pd.DataFrame()
     for x in zip(range(bt_len), bt_date_list):
 

@@ -10,7 +10,6 @@ from pyspark.sql import SparkSession
 from digitforce.aip.common.data_helper import tuple_self
 import pyspark.sql.functions as psf
 
-
 def build_spark_session(app_name):
     spark = (SparkSession.builder.appName(app_name).master("yarn")
              .enableHiveSupport()

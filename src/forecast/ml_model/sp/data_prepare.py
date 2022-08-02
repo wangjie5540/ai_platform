@@ -63,8 +63,7 @@ def data_prepare_train(spark, param):
             edate = data_feat_y.select([max(dt)]).head(1)[0][0]  # 获取最大值
             sdate = date_add_str(edate, -365)  # 默认一年
 
-        # data_feat_y = data_feat_y.filter(data_feat_y[y_type].isin(y_type_list))
-        data_feat_y = data_feat_y.filter((data_feat_y[dt] >= sdate) & (data_feat_y[dt] <= edate))
+        # data_feat_y = data_feat_y.filter((data_feat_y[dt] >= sdate) & (data_feat_y[dt] <= edate))
 
         # 特征表
         data_feat_x = spark.table(table_feat_x)
@@ -106,6 +105,7 @@ def data_prepare_predict(spark, param):
 
     cols_feat_x_columns = param['cols_feat_x_columns']
     forcast_start_date = param['forcast_start_date']
+    edate = param['edate']
 
     try:
         data_sku_grouping = spark.table(table_sku_grouping).select(cols_sku_grouping)
@@ -118,7 +118,7 @@ def data_prepare_predict(spark, param):
             cols_feat_x.extend(cols_feat_x_columns)
             data_feat_x = data_feat_x.select(cols_feat_x)
 #         data_feat_x = data_feat_x.filter(data_feat_x[y_type].isin(y_type_list))  # 也是筛选y_type
-        data_feat_x = data_feat_x.filter(data_feat_x[dt] == forcast_start_date)
+        data_feat_x = data_feat_x.filter(data_feat_x[dt] == edate)
 
         data_result = data_feat_x.join(data_sku_grouping, on=sample_join_key_grouping, how='inner')
         data_result.show()

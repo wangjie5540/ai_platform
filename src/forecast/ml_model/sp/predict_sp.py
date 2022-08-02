@@ -126,11 +126,12 @@ def method_called_predict_sp(data, key_cols, hdfs_path, param, predict_len):
         back_testing = param['back_testing']
     except:
         back_testing = None
-    forcast_start_date = param['forcast_start_date']
+    # forcast_start_date = param['forcast_start_date']
+    edate = param['edate']
     if predict_len <= 0:
         return
     data_result = data.rdd.map(lambda g: (key_process(g, key_cols), g)).groupByKey(). \
-        flatMap(lambda x: ml_predict(x[0], x[1], predict_len,forcast_start_date, hdfs_path, param, 'sp',back_testing)).filter(
+        flatMap(lambda x: ml_predict(x[0], x[1], predict_len,edate, hdfs_path, param, 'sp',back_testing)).filter(
         lambda h: h is not None).toDF()
     return data_result
 

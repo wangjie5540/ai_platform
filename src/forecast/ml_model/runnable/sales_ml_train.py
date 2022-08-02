@@ -6,14 +6,13 @@ include:
     机器学习模型：对外提供的接口
 """
 import os
-
-try:
+import sys
+if 'ipykernel' in sys.modules:
     import findspark  # 使用spark-submit 的cluster时要注释掉
 
     findspark.init()
-except:
+else:
     pass
-import sys
 import json
 import argparse
 import traceback
@@ -83,13 +82,15 @@ def parse_arguments():
     return args
 
 
-def run(spark_):
+def run(spark_, sdate, edate):
     """
     跑接口
     :return:
     """
 
     param = param_default()
+    param['sdate'] = sdate
+    param['edate'] = edate
     if isinstance(param, str):
         param = json.loads(param)
     ml_model_train(param, spark_)
@@ -101,4 +102,9 @@ if __name__ == "__main__":
     files1.extractall(os.getcwd())
     files2.extractall(os.getcwd())
     spark = forecast_spark_session("gaoxc_ml_train")
-    run(spark)
+    if 'ipykernel' in sys.modules:
+        sdate = '20201009'
+        edate = '20211009'
+    else:
+        sdate, edate = sys.argv[1].replace('-', ''), sys.argv[2].replace('-', '')
+    run(spark, sdate, edate)

@@ -82,8 +82,6 @@ def train_sp(param, spark):
     spark_inner = 0
     if str(mode_type).lower() == 'sp' and not spark:
         try:
-            # forecast_spark_helper = SparkHelper(forecast_spark_session("forecast_app"))
-            # spark = forecast_spark_helper.get_spark()  # spark_init()
             logging.info('spark 启动成功')
         except Exception as e:
             status = False
@@ -93,8 +91,7 @@ def train_sp(param, spark):
     apply_model_index = param['apply_model_index']
     predict_len = param['predict_len']
     hdfs_path = param['hdfs_path']
-    #     group_category_select = ["1","2","3","4","5","6","7","8","9","10","11","12","14","15","16","17","18","19","20","13"]
-    #     group_category_select = [1,2,3,4,5,6,7,8,9,10,13,20]
+
 
     try:
         data_train = data_prepare_train(spark, param).fillna(0)  # 训练样本
