@@ -9,44 +9,45 @@ from digitforce.aip.components.forecast.feature_processing import build_sales_fe
     build_date_feature_daily, build_date_feature_monthly, build_weather_feature_monthly, build_weather_feature_daily, \
     build_weather_feature_weekly, build_sales_feature_monthly
 from digitforce.aip.components.forecast.ml_model import ml_train
+from digitforce.aip.components.forecast.ml_model import ml_predict
 
-name = "ml_model_pipeline_train"
-description = 'ml_model_pipeline_train'
+name = "ml_model_pipeline_predict"
+description = 'ml_model_pipeline_predict'
 
 
 @dsl.pipeline(
     name=name,
     description=description,
 )
-def ml_model_pipeline_train(forecast_start_date, purpose, time_type, sdate, edate, col_qty, col_qty_1, col_qty_2,
-                         col_qty_3, col_openinv, join_key, fill_value, col_endinv, col_category, col_time, w,
-                         input_table, output_table, agg_func, col_key, col_weather_list, dict_agg_func):
+def ml_model_pipeline_predict(forecast_start_date, purpose, time_type, sdate, edate, col_qty, col_openinv, join_key,
+                              fill_value, col_endinv, col_category, col_time, w, input_table, output_table, agg_func,
+                              agg_type, col_key, col_weather_list, dict_agg_func):
     # 大单过滤
     big_order_filter_ = big_order_filter.forecast_big_order_filter(sdate, edate)
     big_order_filter_.container.set_image_pull_policy("Always")
 
     # 天维度聚合
     sales_agg = sales_aggregation.sales_aggregation(sdate, edate, input_table, output_table, agg_func, col_qty,
-                                                    time_type).after(big_order_filter_)
+                                                    agg_type).after(big_order_filter_)
     sales_agg.container.set_image_pull_policy("Always")
 
     # 0库存销填补
     no_sales = no_sales_restore.no_sales_restore(sdate, edate, col_openinv, col_endinv, col_category, col_time, w,
-                                                 col_qty_1, join_key).after(sales_agg)
+                                                 col_qty, join_key).after(sales_agg)
     no_sales.container.set_image_pull_policy("Always")
 
     # 无销量填0
-    sales_fill = sales_fill_zero.sales_fill_zero(sdate, edate, col_openinv, col_qty_2, join_key, fill_value).after(
+    sales_fill = sales_fill_zero.sales_fill_zero(sdate, edate, col_openinv, col_qty, join_key, fill_value).after(
         no_sales)
     sales_fill.container.set_image_pull_policy("Always")
 
     # boxcox
-    boxcox_file = sales_boxcox_filter.sales_boxcox_filter(sdate, edate, col_qty_3).after(sales_fill)
+    boxcox_file = sales_boxcox_filter.sales_boxcox_filter(sdate, edate, col_qty).after(sales_fill)
     boxcox_file.container.set_image_pull_policy("Always")
 
     # 周维度聚合
     sales_agg_week = sales_aggregation.sales_aggregation(sdate, edate, input_table, output_table, agg_func, col_qty,
-                                                         time_type).after(boxcox_file)
+                                                         agg_type).after(boxcox_file)
     sales_agg_week.container.set_image_pull_policy("Always")
 
     # data_prepare
@@ -80,18 +81,18 @@ def ml_model_pipeline_train(forecast_start_date, purpose, time_type, sdate, edat
                                                                                        col_key, join_key)
     weather_feature_weekly.container.set_image_pull_policy("Always")
 
-    # 汇总到模型训练
+    # 汇总到预测
 
-    ml_train_task = ml_train.ml_model_train(sdate, edate).after(sales_feature_daily, weather_feature_daily,
-                                                                time_series_forecast_day, sales_feature_weekly,
-                                                                weather_feature_weekly)
+    ml_predict_task = ml_predict.ml_model_predict(sdate, edate).after(sales_feature_daily, weather_feature_daily,
+                                                                      time_series_forecast_day, sales_feature_weekly,
+                                                                      weather_feature_weekly)
 
-    ml_train_task.container.set_image_pull_policy("Always")
+    ml_predict_task.container.set_image_pull_policy("Always")
 
 
 def upload_pipeline():
     pipeline_path = "/data/aip/pipelines/" + name + ".yaml"
-    kfp.compiler.Compiler().compile(ml_model_pipeline_train, pipeline_path)
+    kfp.compiler.Compiler().compile(ml_model_pipeline_predict, pipeline_path)
     client = kfp.Client()
     client.upload_pipeline(pipeline_path, name, description)
 

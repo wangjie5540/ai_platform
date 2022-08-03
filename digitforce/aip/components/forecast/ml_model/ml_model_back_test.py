@@ -15,8 +15,8 @@ def ml_model_back_test(sdate, edate, image_tag="latest"):
     return dsl.ContainerOp(name="ml_model_back_test",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"/src-forecast-image" + f":{image_tag}",
-                           command='/data/entrypoint.sh',
-                           arguments=['spark-submit', '--master', 'yarn', '--deploy-mode', 'cluster', '--conf',
+                           command='bash',
+                           arguments=['/data/entrypoint.sh','spark-submit', '--master', 'yarn', '--deploy-mode', 'cluster', '--conf',
                                       'spark.yarn.appMasterEnv.PYSPARK_PYTHON=./environment/ibs/bin/python',
                                       '--conf', 'spark.yarn.dist.archives=hdfs:///user/awg/ibs.zip#environment',
                                       '--driver-memory', '8G', '--py-files', './forecast.zip,digitforce.zip',
