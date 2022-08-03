@@ -15,7 +15,8 @@ import traceback
 import logging
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 from digitforce.aip.common.file_config import get_config
-
+from digitforce.aip.common.spark_init import forecast_spark_session
+import zipfile
 
 def load_params(sdate, edate, col_qty):
     """运行run方法时"""
@@ -62,5 +63,10 @@ def run(sdate, edate, col_qty, spark):
 
 
 if __name__ == "__main__":
+    files1 = zipfile.ZipFile('./forecast.zip', 'r')
+    files2 = zipfile.ZipFile('./digitforce.zip', 'r')
+    files1.extractall(os.getcwd())
+    files2.extractall(os.getcwd())
+    spark = forecast_spark_session("weather_featuer")
     sdate, edate, col_qty = sys.argv[1], sys.argv[2], sys.argv[3]
-    run(sdate, edate, col_qty)
+    run(sdate, edate, col_qty,spark)

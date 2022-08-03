@@ -8,7 +8,8 @@ import traceback
 import logging
 from digitforce.aip.common.logging_config import setup_console_log, setup_logging
 from digitforce.aip.common.file_config import get_config
-
+from digitforce.aip.common.spark_init import forecast_spark_session
+import zipfile
 
 def load_params(sdate, edate, col_key, col_weather_list, dict_agg_func):
     """运行run方法时"""
@@ -57,5 +58,10 @@ def run(sdate, edate, col_key, col_weather_list, dict_agg_func, spark):
 
 
 if __name__ == "__main__":
+    files1 = zipfile.ZipFile('./forecast.zip', 'r')
+    files2 = zipfile.ZipFile('./digitforce.zip', 'r')
+    files1.extractall(os.getcwd())
+    files2.extractall(os.getcwd())
+    spark = forecast_spark_session("weather_featuer")
     sdate, edate, col_key, col_weather_list, dict_agg_func = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
-    run(sdate, edate, col_key, col_weather_list, dict_agg_func)
+    run(sdate, edate, col_key, col_weather_list, dict_agg_func,spark)
