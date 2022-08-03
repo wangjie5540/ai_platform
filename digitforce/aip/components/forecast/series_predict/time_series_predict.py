@@ -4,7 +4,7 @@ from digitforce.aip.components.op_decorator import *
 
 
 @mount_data_pv
-def time_series_predict(forecast_start_date,purpose,time_type, image_tag="latest"):
+def time_series_predict(forecast_start_date, purpose, time_type, image_tag="latest"):
     '''
     time_series_predict：时序模型预测
     :param 预测模块需要的参数
@@ -15,17 +15,17 @@ def time_series_predict(forecast_start_date,purpose,time_type, image_tag="latest
     :param image_tag: 组件版本
     :return: op
     '''
-    arguments = ['spark-submit', '--master', 'yarn', '--deploy-mode', 'cluster', '--conf',
-                  'spark.yarn.appMasterEnv.PYSPARK_PYTHON=./environment/ibs/bin/python',
-                  '--conf', 'spark.yarn.dist.archives=hdfs:///user/awg/ibs.zip#environment',
-                  '--driver-memory', '8G', '--py-files',
-                  './forecast.zip,digitforce.zip', 'forecast/time_series/runnable/submit_predict.py',
-                  str(forecast_start_date),
-                  str(purpose),
-                  str(time_type)
+    arguments = ['/data/entrypoint.sh', 'spark-submit', '--master', 'yarn', '--deploy-mode', 'cluster', '--conf',
+                 'spark.yarn.appMasterEnv.PYSPARK_PYTHON=./environment/ibs/bin/python',
+                 '--conf', 'spark.yarn.dist.archives=hdfs:///user/awg/ibs.zip#environment',
+                 '--driver-memory', '8G', '--py-files',
+                 './forecast.zip,digitforce.zip', 'forecast/time_series/runnable/submit_predict.py',
+                 str(forecast_start_date),
+                 str(purpose),
+                 str(time_type)
                  ]
     return dsl.ContainerOp(name="time_series_predict",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"/src-forecast-image" + f":{image_tag}",
-                           command='/data/entrypoint.sh',
+                           command='bash',
                            arguments=arguments)

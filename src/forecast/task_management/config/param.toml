@@ -1,0 +1,13 @@
+[params]
+origin_task_table = "forecast_job_instance"
+origin_site_table = "forecast_site_shop"
+shop_status_table = "forecast_task_status_site"
+col_param = "params"
+col_sitelevel = "site_name"
+col_shops = "shop_id"
+col_list = ["shops","job_id","pred_granularity"]
+col_site = "siteLevel"
+col_item = "itemLevel"
+col_time = "timeLevel"
+col_siteInclude = "siteInclude"
+col_jobid = "job_id"

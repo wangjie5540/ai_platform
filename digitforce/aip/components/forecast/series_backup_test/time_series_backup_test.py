@@ -15,7 +15,7 @@ def time_series_backup_test(forecast_start_date,purpose,time_type,predict_model_
     :param image_tag: 组件版本
     :return: op
     '''
-    arguments = ['spark-submit', '--master', 'yarn', '--deploy-mode', 'cluster', '--conf',
+    arguments = ['/data/entrypoint.sh','spark-submit', '--master', 'yarn', '--deploy-mode', 'cluster', '--conf',
                   'spark.yarn.appMasterEnv.PYSPARK_PYTHON=./environment/ibs/bin/python',
                   '--conf', 'spark.yarn.dist.archives=hdfs:///user/awg/ibs.zip#environment',
                   '--driver-memory', '8G', '--py-files',
@@ -27,5 +27,5 @@ def time_series_backup_test(forecast_start_date,purpose,time_type,predict_model_
     return dsl.ContainerOp(name="time_series_backup_test",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"/src-forecast-image" + f":{image_tag}",
-                           command='/data/entrypoint.sh',
+                           command='bash',
                            arguments=arguments)

@@ -71,4 +71,4 @@ if __name__ == "__main__":
     spark = forecast_spark_session("submit_test")
     sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qty, join_key = sys.argv[1], sys.argv[2],sys.argv[3], sys.argv[4],\
                                                                       sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9]
-    run(sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qty, join_key, spark=None)
+    run(sdate, edate, col_openinv, col_endinv, col_category, col_time, w, col_qty, join_key, spark)
