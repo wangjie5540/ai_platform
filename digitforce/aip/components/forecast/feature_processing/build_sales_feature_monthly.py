@@ -14,7 +14,7 @@ from digitforce.aip.components.op_decorator import *
 
 
 @mount_data_pv
-def bulid_date_feature_monthly(sdate, edate, col_key, col_time, image_tag="latest"):
+def bulid_sales_feature_monthly(sdate, edate, col_time, col_qty, input_table, output_table, image_tag="latest"):
     """
     大单过滤
 
@@ -23,7 +23,7 @@ def bulid_date_feature_monthly(sdate, edate, col_key, col_time, image_tag="lates
     :param image_tag: 组件版本
     :return: user_profile_calculator_op
     """
-    return dsl.ContainerOp(name="bulid_date_feature_monthly",
+    return dsl.ContainerOp(name="bulid_sales_feature_monthly",
                            image=f"{AI_PLATFORM_IMAGE_REPO}"
                                  f"/src-forecast-image" + f":{image_tag}",
                            command='/data/entrypoint.sh',
@@ -31,6 +31,6 @@ def bulid_date_feature_monthly(sdate, edate, col_key, col_time, image_tag="lates
                                       'spark.yarn.appMasterEnv.PYSPARK_PYTHON=./environment/ibs/bin/python',
                                       '--conf', 'spark.yarn.dist.archives=hdfs:///user/awg/ibs.zip#environment',
                                       '--driver-memory', '8G', '--py-files', './forecast.zip,digitforce.zip',
-                                      'forecast/feature_processing/runnable/bulid_date_feature_monthly.py', str(sdate),
-                                      str(edate), col_key, col_time])
+                                      'forecast/feature_processing/runnable/build_sales_feature_monthly.py', str(sdate),
+                                      str(edate), col_time, col_qty, input_table, output_table])
 

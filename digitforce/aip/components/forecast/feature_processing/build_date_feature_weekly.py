@@ -31,5 +31,5 @@ def bulid_date_feature_weekly(sdate, edate, col_key, col_time, image_tag="latest
                                       'spark.yarn.appMasterEnv.PYSPARK_PYTHON=./environment/ibs/bin/python',
                                       '--conf', 'spark.yarn.dist.archives=hdfs:///user/awg/ibs.zip#environment',
                                       '--driver-memory', '8G', '--py-files', './forecast.zip,digitforce.zip',
-                                      'forecast/feature_processing/runnable/bulid_date_feature_weekly.py', str(sdate),
+                                      'forecast/feature_processing/runnable/build_date_feature_weekly.py', str(sdate),
                                       str(edate), col_key, col_time])
