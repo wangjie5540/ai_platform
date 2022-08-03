@@ -2,13 +2,11 @@
 import logging
 import os
 
-from digitforce.aip.common.logging_config import setup_console_log
-
 
 def get_dockerfile_content(image_dir, bottom_image_name=None):
     if bottom_image_name is None:
         bottom_image_name = "digit-force-docker.pkg.coding.net/ai-platform/base-images/miniconda3-base:latest"
-    return f'''FROM {bottom_image_name}
+    return """FROM {0}
 
 ARG PROJECT_DIR=/app/digit-force-kubeflow-pipeline-component-image
 
@@ -24,9 +22,7 @@ COPY ./digitforce/aip/__init__.py $PROJECT_DIR/digitforce/aip/__init__.py
 COPY ./digitforce/aip/common $PROJECT_DIR/digitforce/aip/common
 COPY ./digitforce/aip/cgf $PROJECT_DIR/digitforce/aip/cgf
 
-COPY {image_dir}/*py $PROJECT_DIR/
-
-'''
+COPY {1}/*py $PROJECT_DIR/""".format(bottom_image_name, image_dir)
 
 
 def generate_docker_file(one_dir, bottom_image_name=None, tag="latest"):
@@ -41,20 +37,19 @@ def generate_docker_file(one_dir, bottom_image_name=None, tag="latest"):
     with open(dockerfile_path, mode='w', encoding='utf-8') as fo:
         fo.write(get_dockerfile_content(one_dir, bottom_image_name))
 
-    image_name = f"digit-force-docker.pkg.coding.net/ai-platform/ai-components" \
-                 f"/{one_dir.replace('/', '-')}:{tag}"
-    build_cmd = f"docker build -t " \
-                f"{image_name}" \
-                f" -f {dockerfile_path} ."
+    image_name = "digit-force-docker.pkg.coding.net/ai-platform/ai-components" \
+                 "/{0}:{1}".format(one_dir.replace('/', '-'), tag)
+    build_cmd = "docker build -t " \
+                "{0}" \
+                " -f {1} .".format(image_name, dockerfile_path)
     os.system(build_cmd)
-    push_cmt = f"docker push " \
-               f"{image_name}"
+    push_cmt = "docker push {0}".format(image_name)
     os.system(push_cmt)
 
 
 def find_main_file(one_dir, result):
     if not os.path.exists(one_dir):
-        logging.warning(f"this dir is not exists dir:{one_dir}")
+        logging.warning("this dir is not exists dir:" + str(one_dir))
     if os.path.isdir(one_dir):
         if os.path.exists(os.path.join(one_dir, "main.py")):
             result.append(one_dir)
@@ -67,7 +62,6 @@ def find_main_file(one_dir, result):
 
 
 def main():
-    setup_console_log()
     for _dir in [
         "src/recommend/recall/recall_result_to_redis",
         "src/recommend/recall/mf",

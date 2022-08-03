@@ -1,4 +1,3 @@
-import os
 import kfp
 import kfp.dsl as dsl
 
