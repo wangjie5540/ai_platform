@@ -65,9 +65,13 @@ def ml_forecast_pipeline(forecast_start_date, purpose, time_type, sdate, edate, 
         prepare_data_week)
     time_series_forecast_week.container.set_image_pull_policy("Always")
 
+    # 天维度的特征生成
     sales_feature_daily = build_sales_feature_daily.build_sales_feature_daily(sdate, edate, col_qty).after(boxcox_file)
     sales_feature_daily.container.set_image_pull_policy("Always")
-
+    weather_feature_daily = build_weather_feature_daily.build_weather_feature_daily(sdate, edate, col_key,
+                                                                                    col_weather_list, dict_agg_func)
+    weather_feature_daily.container.set_image_pull_policy("Always")
+    # 周维度的特征生成
     sales_feature_weekly = build_sales_feature_weekly.build_sales_feature_weekly(sdate, edate, col_time, col_qty).after(
         sales_agg_week)
     sales_feature_weekly.container.set_image_pull_policy("Always")
@@ -76,15 +80,14 @@ def ml_forecast_pipeline(forecast_start_date, purpose, time_type, sdate, edate, 
                                                                                        col_key, join_key)
     weather_feature_weekly.container.set_image_pull_policy("Always")
 
-    weather_feature_daily = build_weather_feature_daily.build_weather_feature_daily(sdate, edate, col_key,
-                                                                                    col_weather_list, dict_agg_func)
-    weather_feature_daily.container.set_image_pull_policy("Always")
+    # 汇总到模型训练
 
     ml_train_task = ml_train.ml_model_train(sdate, edate).after(sales_feature_daily, weather_feature_daily,
                                                                 time_series_forecast_day, sales_feature_weekly,
                                                                 weather_feature_weekly)
 
     ml_train_task.container.set_image_pull_policy("Always")
+
 
 
 def upload_pipeline():
