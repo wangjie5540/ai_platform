@@ -3,18 +3,17 @@
 Copyright (c) 2021-2022 北京数势云创科技有限公司 <http://www.digitforce.com>
 All rights reserved. Unauthorized reproduction and use are strictly prohibited
 """
-import os
 try:
     import findspark #使用spark-submit 的cluster时要注释掉
     findspark.init()
 except:
     pass
-import sys
 import json
 import argparse
 import traceback
-from common.log import get_logger
-
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+from digitforce.aip.common.file_config import get_config
+import logging
 
 #为了开发测试用，正式环境记得删除
 def param_default():
@@ -43,7 +42,8 @@ def run():
     跑接口
     :return:
     """
-    logger_info = get_logger()
+    logger_info = setup_console_log(leve=logging.INFO)
+    setup_logging(info_log_file="", error_log_file="", info_log_file_level="INFO")
     logger_info.info("LOADING···")
     args = parse_arguments()
     param = args.param

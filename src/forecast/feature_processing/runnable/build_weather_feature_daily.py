@@ -1,82 +1,61 @@
 # -*- coding: utf-8 -*-
 # @Time : 2022/05/28
 # @Author : Arvin
-
 from forecast.feature_processing.sp.weather_features import build_weather_daily_feature
-
-try:
-    import findspark #使用spark-submit 的cluster时要注释掉
-    findspark.init()
-except:
-    pass
-import argparse
+import os
+import sys
 import traceback
-from forecast.common.log import get_logger
-from forecast.common.toml_helper import TomlOperation
+import logging
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+from digitforce.aip.common.file_config import get_config
 
 
-def load_params():
+def load_params(sdate, edate, col_key, col_weather_list, dict_agg_func):
     """运行run方法时"""
     param_cur = {
-        'mode_type': 'sp',
-        'sdate': '20210101',
-        'edate': '20220101',
-        'col_key': ['province','city','district'],
-        'col_weather_list': ['aqi','hightemperature'],
-        'dict_agg_func': "{'col_agg_last_days':(['mean','max'],[2,3]),'col_ptp_future_days':(['mean','max'],[2,3])}"
+        'sdate': sdate,#'20210101',
+        'edate': edate,#'20220101',
+        'col_key': col_key,#['province', 'city', 'district'],
+        'col_weather_list': col_weather_list,#['aqi', 'hightemperature'],
+        'dict_agg_func': dict_agg_func,#"{'col_agg_last_days':(['mean','max'],[2,3]),'col_ptp_future_days':(['mean','max'],[2,3])}"
     }
 
-    f = TomlOperation(os.getcwd()+"/forecast/feature_processing/config/param.toml")
-    params_all = f.read_file()
+    params_all = get_config(os.getcwd()+"/forecast/feature_processing/config/param.toml")
     # 获取项目1配置参数
     params = params_all['feature_param']
     params.update(param_cur)
     return params
 
 
-def parse_arguments():
-    """
-    #开发测试用
-    :return:
-    """
-    params = load_params()
-    parser = argparse.ArgumentParser(description='big order filter')
-    parser.add_argument('--param', default=params, help='arguments')
-    parser.add_argument('--spark', default=spark, help='spark')
-    args = parser.parse_args(args=[])
-    return args
-
-
-def run():
+def run(sdate, edate, col_key, col_weather_list, dict_agg_func, spark):
     """
     跑接口
     :return:
     """
-    logger_info = get_logger()
-    logger_info.info("LOADING···")
-    args = parse_arguments()
-    param = args.param
-    spark = args.spark
-
-    logger_info.info(str(param))
+    logger_info = setup_console_log()
+    setup_logging(info_log_file="build_weather_feature_daily.info", error_log_file="", info_log_file_level="INFO")
+    logging.info("LOADING···")
+    param = load_params(sdate, edate, col_key, col_weather_list, dict_agg_func)
+    logging.info(str(param))
     if 'mode_type' in param.keys():
         run_type = param['mode_type']
     else:
         run_type = 'sp'
     try:
         if run_type == 'sp':  # spark版本
-            logger_info.info("RUNNING···")
+            logging.info("RUNNING···")
             build_weather_daily_feature(spark, param)
         else:
             # pandas版本
             pass
         status = "SUCCESS"
-        logger_info.info("SUCCESS")
+        logging.info("SUCCESS")
     except Exception as e:
         status = "ERROR"
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
     return status
 
 
 if __name__ == "__main__":
-    run()
+    sdate, edate, col_key, col_weather_list, dict_agg_func = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
+    run(sdate, edate, col_key, col_weather_list, dict_agg_func)

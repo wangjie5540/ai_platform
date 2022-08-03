@@ -1,4 +1,6 @@
-from forecast.common.common_helper import *
+
+from forecast.common.reference_package import *
+from digitforce.aip.common.spark_helper import *
 
 
 
@@ -11,7 +13,7 @@ def isometric_binning(sparkdf_config, isometric_label, group_nums, partition_col
     :return: 分组后的值
     """
     if col_orderby == None:
-        col_orderby = rand(seed=10000)
+        col_orderby = random.rand(seed=10000)
     w = Window.partitionBy(partition_col).orderBy(col_orderby)  # 随机排序
     sparkdf_config = sparkdf_config.withColumn(isometric_label, (psf.row_number().over(w)) % group_nums)
     return sparkdf_config
@@ -60,16 +62,19 @@ def label_binning(sparkdf_config, label_list, col_group):
 def group_category(spark, params_model_grouping):
 
     group_conditions = params_model_grouping['group_condition']
-    col_key = params_model_grouping['col_key']
+    # col_key = params_model_grouping['col_key']
     col_apply_model = params_model_grouping['col_apply_model']
     isometric_label = params_model_grouping['isometric_label']
     frequency_label = params_model_grouping['frequency_label']
     label_label = params_model_grouping['label_label']
     group_label = params_model_grouping['group_label']
     shops = params_model_grouping['shop_list']
+    group_nums = params_model_grouping['group_nums']
+    task_id = params_model_grouping['task_id']
+    partition_values = params_model_grouping['partition_values']
     model_selection_table = params_model_grouping['model_selection_table']
     model_grouping_table = params_model_grouping['model_grouping_table']
-    sparkdf_config = read_table(spark, model_selection_table, partition_list = shops) #读取模型选择生成的表
+    sparkdf_config = read_table(spark, model_selection_table, partition_list=shops) #读取模型选择生成的表
     sparkdf_config = sparkdf_config.withColumn(group_label, lit(None))
     for group_condition in group_conditions:
         print(group_condition)
@@ -80,8 +85,8 @@ def group_category(spark, params_model_grouping):
                 for split_method in split_methods:
                     col_groups = []
                     if split_method == 'isometric':
-                        group_nums = 50 #sku数量去配置默认值
-                        partition_col = col_key[0]
+                        # group_nums = 50 #sku数量去配置默认值
+                        # partition_col = col_key[0]
                         col_orderby = None
                         if 'group_nums' in split_methods[split_method]:
                             group_nums = split_methods[split_method]['group_nums']
@@ -90,7 +95,7 @@ def group_category(spark, params_model_grouping):
                         if 'col_orderby' in split_methods[split_method]:
                             col_orderby = split_methods[split_method]['col_orderby']
                         sparkdf_config_group = isometric_binning(sparkdf_config_group, isometric_label, group_nums,
-                                                                 partition_col, col_orderby)
+                                                                 col_partition, col_orderby)
                         col_groups.append(isometric_label)
                     elif split_method == 'equal_frequency':
                         print("equal_frequency", split_methods[split_method])
@@ -107,5 +112,6 @@ def group_category(spark, params_model_grouping):
                         continue
             sparkdf_config_group = label_binning(sparkdf_config_group, col_groups, group_label)
             sparkdf_config = sparkdf_config_group.select(sparkdf_config_other.columns).unionAll(sparkdf_config_other)
-    save_table(spark, sparkdf_config, model_grouping_table, partition=["shop_id"]) #shop配置partionname 数据
+    sparkdf_config = sparkdf_config.withColumn("task_id", lit(task_id))
+    save_table(spark, sparkdf_config, model_grouping_table, partition=partition_values) #shop配置partionname 数据
     return 'SUCCESS'

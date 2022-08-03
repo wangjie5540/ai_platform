@@ -8,90 +8,70 @@ All rights reserved. Unauthorized reproduction and use are strictly prohibited
 include:
 大单过滤
 """
-from imp import reload
-
 import os
-import sys
-import forecast.data_processing.sp.sp_data_adjust
 from forecast.data_processing.sp.sp_data_adjust import sales_fill_zero
-
-try:
-    import findspark #使用spark-submit 的cluster时要注释掉
-    findspark.init()
-except:
-    pass
-import argparse
+import logging
+import sys
 import traceback
-from  forecast.common.log import get_logger
-from  forecast.common.toml_helper import TomlOperation
-# reload(sp.sp_sales_agg)
-# reload(sp.sp_data_adjust)
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+from digitforce.aip.common.file_config import get_config
+import zipfile
+from digitforce.aip.common.spark_init import forecast_spark_session
 
-def load_params():
+
+def load_params(sdate, edate, col_openinv, col_qty, join_key, fill_value):
     """运行run方法时"""
     param_cur = {
-        'mode_type': 'sp',
-        'sdate': '20210101',
-        'edate': '20220201',
-        'col_openinv': 'opening_inv',
-        'col_qty':'sum_qty',
-        'join_key':['shop_id','goods_id','dt'],
-        'fill_value': 0.0
+        'sdate': sdate, #'20210101',
+        'edate': edate, #'20220201',
+        'col_openinv': col_openinv, #'opening_inv',
+        'col_qty': col_qty, #'sum_qty',
+        'join_key': join_key, #['shop_id','goods_id','dt'],
+        'fill_value': fill_value #0.0
     }
-    f = TomlOperation(os.getcwd()+"/forecast/data_processing/config/param.toml")
-    params_all = f.read_file()
+    params_all = get_config(os.getcwd()+"/forecast/data_processing/config/param.toml")
     # 获取项目1配置参数
     params = params_all['filter_p1']
     params.update(param_cur)
     return params
 
 
-def parse_arguments():
-    """
-    #开发测试用
-    :return:
-    """
-    params = load_params()
-    parser = argparse.ArgumentParser(description='sales fill zero')
-    parser.add_argument('--param', default=params, help='arguments')
-    parser.add_argument('--spark', default=spark, help='spark')
-    args = parser.parse_args(args=[])
-    return args
-
-
-def run():
+def run(sdate, edate, col_openinv, col_qty, join_key, fill_value, spark):
     """
     跑接口
     :return:
     """
-    logger_info = get_logger()
-    logger_info.info("LOADING···")
-    args = parse_arguments()
-    param = args.param
-    spark = args.spark
-    print("args", args)
-    logger_info.info(str(param))
+    logger_info = setup_console_log()
+    setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
+    logging.info("LOADING···")
+    param = load_params(sdate, edate, col_openinv, col_qty, join_key, fill_value)
+    logging.info(str(param))
     if 'mode_type' in param.keys():
         run_type = param['mode_type']
     else:
         run_type = 'sp'
     try:
         if run_type == 'sp':  # spark版本
-            logger_info.info("RUNNING···")
-            sales_fill_zero(spark,param)
+            logging.info("RUNNING···")
+            sales_fill_zero(spark, param)
         else:
             # pandas版本
             pass
         status = "SUCCESS"
-        logger_info.info("SUCCESS")
+        logging.info("SUCCESS")
     except Exception as e:
         status = "ERROR"
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
     return status
 
 
 if __name__ == "__main__":
-    
-#     f = TomlOperation("param.toml")
-#     print(f.toml_file_path)
-    run()
+    files1 = zipfile.ZipFile('./forecast.zip', 'r')
+    files2 = zipfile.ZipFile('./digitforce.zip', 'r')
+    files1.extractall(os.getcwd())
+    files2.extractall(os.getcwd())
+    spark = forecast_spark_session("submit_test")
+    sdate, edate, col_openinv, col_qty, join_key, fill_value = sys.argv[1], sys.argv[2], sys.argv[3], \
+                                                                           sys.argv[4], sys.argv[5], sys.argv[6], \
+
+    run(sdate, edate, col_openinv, col_qty, join_key, fill_value)

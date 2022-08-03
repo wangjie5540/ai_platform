@@ -6,80 +6,105 @@ include:
     机器学习模型：对外提供的接口
 """
 import os
-try:
-    import findspark #使用spark-submit 的cluster时要注释掉
-    findspark.init()
-except:
-    pass
 import sys
+if 'ipykernel' in sys.modules:
+    import findspark  # 使用spark-submit 的cluster时要注释掉
+
+    findspark.init()
+else:
+    pass
 import json
 import argparse
 import traceback
-file_path=os.path.abspath(os.path.join(os.path.dirname(__file__),'../../'))
-sys.path.append(file_path)#解决不同位置调用依赖包路径问题
-from ml_model.sp.train_sp import train_sp
-from common.log import get_logger
+from forecast.ml_model.sp.train_sp import train_sp
+# from digitforce.aip.common.spark_helper import SparkHelper,forecast_spark_session
+from digitforce.aip.common.logging_config import setup_console_log, setup_logging
+import logging
+from digitforce.aip.common.spark_init import forecast_spark_session
+import zipfile
 
-def ml_model_train(param,spark=None):
+logger_info = setup_console_log()
+setup_logging(info_log_file="sales_fill_zero.info", error_log_file="", info_log_file_level="INFO")
+
+file_path = os.path.abspath(os.path.join(os.getcwd(), '../../'))
+sys.path.append(file_path)
+
+
+def ml_model_train(param, spark=None):
     """
     #机器学习模型预测
     :param param: 所需参数
     :param spark: spark，如果不传入则会内部启动一个运行完关闭
     :return:成功：True 失败：False
     """
-    logger_info=get_logger()
-    status=False
-    mode_type='sp'
+
+    status = False
+    mode_type = 'sp'
     if 'mode_type' in param.keys():
-        mode_type=param['mode_type']
+        mode_type = param['mode_type']
     try:
-        if mode_type=='sp':#spark版本
-            status=train_sp(param,spark)
-        else:#pandas版本
+        if mode_type == 'sp':  # spark版本
+            status = train_sp(param, spark)
+        else:  # pandas版本
             pass
-        logger_info.info(str(param))
+        logging.info(str(param))
     except Exception as e:
-        logger_info.info(traceback.format_exc())
+        logging.info(traceback.format_exc())
     return status
 
-#为了开发测试用，正式环境记得删除
+
+# 为了开发测试用，正式环境记得删除
 def param_default():
-    param={
-        'ts_model_list':['Integrated'],
-        'y_type_list':['c'],
+    param = {
+        'ts_model_list': ['lightgbm'],
+        'y_type_list': ['c'],
         'mode_type': 'sp',
-        'forcast_start_date':'20211009',
-        'predict_len':14,
-        'key_list':['shop_id','goods_id','y_type','apply_model'],
-        'apply_model_index':3,
-        'step_len':5,
-        'purpose':'predict'
+        'forcast_start_date': '20211009',
+        'predict_len': 14,
+        'col_keys': ['shop_id', 'group_category', 'apply_model'],
+        'apply_model_index': 2,
+        'step_len': 1,
+        'purpose': 'train'
     }
     return param
+
 
 def parse_arguments():
     """
     解析参数
     :return:
     """
-    param=param_default()#开发测试用
-    parser=argparse.ArgumentParser(description='time series predict')
-    parser.add_argument('--param',default=param,help='arguments')
-    parser.add_argument('--spark',default=None,help='spark')
-    args=parser.parse_args()
+    param = param_default()  # 开发测试用
+    parser = argparse.ArgumentParser(description='time series predict')
+    parser.add_argument('--param', default=param, help='arguments')
+    parser.add_argument('--spark', default=None, help='spark')
+    args = parser.parse_args()
     return args
 
-def run():
+
+def run(spark_, sdate, edate):
     """
     跑接口
     :return:
     """
-    args=parse_arguments()
-    param=args.param
-    spark=args.spark
+
+    param = param_default()
+    param['sdate'] = sdate
+    param['edate'] = edate
     if isinstance(param, str):
-        param=json.loads(param)
-    ml_model_train(param,spark)
+        param = json.loads(param)
+    ml_model_train(param, spark_)
+
 
 if __name__ == "__main__":
-    run()
+    files1 = zipfile.ZipFile('./forecast.zip', 'r')
+    files2 = zipfile.ZipFile('./digitforce.zip', 'r')
+    files1.extractall(os.getcwd())
+    files2.extractall(os.getcwd())
+    spark = forecast_spark_session("gaoxc_ml_train")
+    if 'ipykernel' in sys.modules:
+        sdate = '20201009'
+        edate = '20211009'
+    else:
+        sdate, edate = sys.argv[1].replace('-', ''), sys.argv[2].replace('-', '')
+    run(spark, sdate, edate)

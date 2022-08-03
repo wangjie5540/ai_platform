@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 # @Time : 2021/12/25
 # @Author : Arvin
-
-from forecast.common.common_helper import *
-import os
-import sys
-
+from forecast.common.reference_package import *
+from digitforce.aip.common.data_helper import *
+from digitforce.aip.common.spark_helper import *
 
 
 def adjust_by_interpolate(df, start_date, end_date, col_qty, method='linear'):
@@ -36,21 +34,20 @@ def sales_fill(qty_value, openinv_value, fill_value):
 
 def adjust_by_column(sales_sparkdf, stock_sparkdf, join_key, col_openinv, col_qty, sdate, edate, fill_value):
     """销售补零 要不要把销售连续起来？"""
-   
+
     sparkdf = stock_sparkdf.join(sales_sparkdf, on=join_key, how='left')
     sparkdf = sparkdf.withColumn("fill_tmp", psf.lit(fill_value))
     sales_fill_udf = udf(sales_fill, DoubleType())
-    sparkdf = sparkdf.withColumn("fill_{}".format(col_qty),sales_fill_udf(sparkdf[col_qty], sparkdf[col_openinv], sparkdf.fill_tmp))
-    return sparkdf.filter(date_filter_condition(sdate, edate))    
+    sparkdf = sparkdf.withColumn("fill_{}".format(col_qty), sales_fill_udf(sparkdf[col_qty], sparkdf[col_openinv], sparkdf.fill_tmp))
+    return sparkdf.filter(date_filter_condition(sdate, edate))
 
 
-
-def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, edate, replace_func, w=90, conn='and',
+def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, edate, replace_func, w_boxcox=90, w_replace=14,conn='and',
                     col_time='sdt'):
     """
     过去一段时间窗口w内 ，通过filter_func超出上下限的用replace_func的边界值替换
     """
-    windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w),
+    windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w_boxcox),
                                                                                     end=Window.currentRow)
     for dict_key in filter_func:
         func_up, func_low = globals()[dict_key](windowOpt, col_boxcox, filter_func[dict_key])
@@ -68,7 +65,7 @@ def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, e
 
     for dict_key in replace_func:
         func_up, func_low = globals()[dict_key](windowOpt, col_qty, replace_func[dict_key])
-        windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w),
+        windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w_replace),
                                                                                         end=Window.currentRow)
         sparkdf = sparkdf.withColumn("{}_replace_up".format(dict_key), func_up)
         sparkdf = sparkdf.withColumn("{}_replace_low".format(dict_key), func_low)
@@ -83,12 +80,12 @@ def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, e
     return sparkdf.filter(date_filter_condition(sdate, edate))
 
 
-def adjust_by_sales_days(df, edate, col_qty,col_key, col_time, w=2, agg_func='mean'):
+def adjust_by_sales_days(df, edate, col_qty, col_key, col_time, w=2, agg_func='mean'):
     """前后7天无异常销量均值填补 w:周数"""
     c_columns = df.columns
-    df = sales_continue(df, edate, col_qty, col_time,col_key)
+    df = sales_continue(df, edate, col_qty, col_time, col_key)
     df['corr_qty'] = df[col_qty].rolling(window=15, center=True, min_periods=0).agg(agg_func)
-    df['dayofweek'] = df.dt.apply(lambda x: x.weekday())
+    df['dayofweek'] = df[col_time].apply(lambda x: pd.to_datetime(x).weekday())
     df['corr_weekend_qty'] = df[df['dayofweek'].isin([5, 6])][col_qty].rolling(window=w * 2 + 1, center=True,
                                                                                min_periods=0).agg(agg_func)
     df['corr_weekdays_qty'] = df[~df['dayofweek'].isin([5, 6])][col_qty].rolling(window=w * 5 + 1, center=True,
@@ -100,24 +97,24 @@ def adjust_by_sales_days(df, edate, col_qty,col_key, col_time, w=2, agg_func='me
     return df[c_columns]
 
 
-def adjust_by_sales_growth(df, col_key, col_qty, c_category,col_time, w=2, agg_func='mean'):
+def adjust_by_sales_growth(df, col_key, col_qty, c_category, col_time, w=2, agg_func='mean'):
     """根据去年同期增长系数 同期范围定义 阴历 阳历 节假日 系数的倍数最大值最小值限制"""
     c_columns = df.columns
-    df['last_dt'] = df.dt.apply(lambda x: x.replace(year=x.year - 1))
-    col_key_last = col_key + [col_qty, 'dt']
-    last_df = df[col_key_last].rename(columns={col_qty: 'last_qty', 'dt': 'last_dt'})
+    df['last_dt'] = df[col_time].apply(lambda x: pd.to_datetime(x).replace(year=pd.to_datetime(x).year - 1).strftime('%Y%m%d'))
+    col_key_last = col_key + [col_qty, col_time]
+    last_df = df[col_key_last].rename(columns={col_qty: 'last_qty', col_time: 'last_dt'})
     df = pd.merge(df, last_df, left_on=col_key + ['last_dt'], right_on=col_key + ['last_dt'], how='left')
 
     df['last_qty_mean'] = df.groupby(col_key).last_qty.apply(
         lambda x: x.rolling(window=w * 7 + 1, center=True, min_periods=0).agg(agg_func))
 
-    category_df = df.groupby(['dt', c_category])[col_qty].sum().reset_index()
+    category_df = df.groupby([col_time, c_category])[col_qty].sum().reset_index()
     category_df['corr_qty'] = category_df[col_qty].rolling(window=w * 7 + 1, center=True, min_periods=0).agg(agg_func)
 
     category_last_df = df.groupby(['last_dt', c_category])['last_qty'].sum().reset_index()
     category_last_df['corr_last_qty'] = category_last_df['last_qty'].rolling(window=w * 7 + 1, center=True,
                                                                              min_periods=0).agg(agg_func)
-    df = pd.merge(df, category_df[[c_category, 'dt', 'corr_qty']], on=[c_category, 'dt'], how='left')
+    df = pd.merge(df, category_df[[c_category, col_time, 'corr_qty']], on=[c_category, col_time], how='left')
     df = pd.merge(df, category_last_df[[c_category, 'last_dt', 'corr_last_qty']], on=[c_category, 'last_dt'],
                   how='left')
     print(df.head(10))
@@ -125,9 +122,8 @@ def adjust_by_sales_growth(df, col_key, col_qty, c_category,col_time, w=2, agg_f
     df[col_qty] = df[[col_qty, 'last_qty_mean', 'ratio']].apply(lambda x: x[0] if not pd.isna(x[0]) else x[1] * x[2],
                                                                 axis=1)
     df[col_qty].fillna(0, inplace=True)
-    df[col_time] = df[col_time].apply(lambda x:x.strftime('%Y%m%d'))
-    
-    return df[c_columns] 
+    # df[col_time] = df[col_time].apply(lambda x: x.strftime('%Y%m%d'))
+    return df[c_columns]
 
 
 def key_process(x, key):
@@ -140,7 +136,7 @@ def sales_day_abnormal_by_day_stock(openinv_value, endinv_value, qty_values):
         return None
     else:
         return qty_values
-    
+
 def sales_check(ac_y_value,th_y_value):
     if (ac_y_value is not None and th_y_value is not None) and th_y_value < ac_y_value:
         return ac_y_value
@@ -149,10 +145,11 @@ def sales_check(ac_y_value,th_y_value):
 
 def adjust_by_common(rows, key, edate, col_qty, col_key, c_category, col_time, w):
     """通用填充"""
-    df = rdd_format_pdf(rows)
+    df = row_transform_to_dataFrame(rows)
+    print("df", df.head(10))
     df_step1 = adjust_by_sales_days(df, edate, col_qty, col_key, col_time, w)
-    result_df = adjust_by_sales_growth(df_step1,col_key, col_qty, c_category,col_time,w)
-    return pdf_format_rdd(result_df)
+    result_df = adjust_by_sales_growth(df_step1, col_key, col_qty, c_category, col_time, w)
+    return dataFrame_transform_to_row(result_df, data_type='sp')
 
 
 def no_sales_adjust(spark, param):
@@ -174,25 +171,29 @@ def no_sales_adjust(spark, param):
     input_sales_table = param['fill_zero_table']
     output_table = param['no_sales_adjust_table']
     input_stock_table = param['input_stock_table']
-    input_category_table=param['input_category_table']
-    select_list =join_key + [col_qty]
-    
+    stock_data_sql = param['stock_data_sql']
+    input_category_table = param['input_category_table']
+    category_data_sql = param['category_data_sql']
+    shops = param['shop_list']
+    col_origin_name = param['col_origin_name']
+    select_list = join_key + [col_qty]
+
     sales_df = read_table(spark, input_sales_table)
-    stock_df = read_origin_stock_table(spark, input_stock_table)
-    categorty_df = read_origin_category_table(spark,input_category_table)
-    sparkdf = sales_df.select(select_list).join(stock_df,on=join_key,how='left')
-    sparkdf = sparkdf.join(categorty_df,on=col_key,how='left')
+    stock_df = read_origin_table(spark, input_stock_table, stock_data_sql, col_origin_name, shops)
+    categorty_df = read_origin_table(spark, input_category_table, category_data_sql, col_origin_name, shops)
+    sparkdf = sales_df.select(select_list).join(stock_df, on=join_key, how='left')
+    sparkdf = sparkdf.join(categorty_df, on=col_key, how='left')
     sales_day_abnormal_by_day_stock_udf = udf(sales_day_abnormal_by_day_stock, DoubleType())
     sparkdf = sparkdf.withColumn("col_qty_tmp",
                                  sales_day_abnormal_by_day_stock_udf(sparkdf[col_openinv], sparkdf[col_endinv],
                                                                      sparkdf[col_qty]))
     sparkdf = sparkdf.rdd.map(lambda x: (key_process(x, col_key), x)).groupByKey().flatMap(
-    lambda x: adjust_by_common(x[1], x[0], edate, "col_qty_tmp", col_key, col_category, col_time,w)).toDF()
+        lambda x: adjust_by_common(x[1], x[0], edate, "col_qty_tmp", col_key, col_category, col_time, w)).toDF()
     sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))
     sparkdf = sparkdf.withColumnRenamed("col_qty_tmp", "th_y")
     sparkdf = sparkdf.withColumnRenamed(col_qty, "ac_y")
     sales_check_udf = udf(sales_check, DoubleType())
-    sparkdf = sparkdf.withColumn("th_y",sales_check_udf(sparkdf['ac_y'],sparkdf['th_y']))
+    sparkdf = sparkdf.withColumn("th_y", sales_check_udf(sparkdf['ac_y'], sparkdf['th_y']))
     save_table(spark, sparkdf, output_table)
     return 'SUCCESS'
 
@@ -321,7 +322,7 @@ def out_of_stock_adjust(spark, param):
 #                           "20191231", {'bound_mean': (1, 1)}, 90, 'and')
 # sparkdf.filter("qty>0 ").show(100)
 
-def sales_fill_zero(spark,param):
+def sales_fill_zero(spark, param):
     """标签过滤
           col_key：主键
           filter_func:过滤函数
@@ -341,8 +342,13 @@ def sales_fill_zero(spark,param):
     input_sales_table = param['qty_aggregation_table']
     input_stock_table = param['input_stock_table']
     output_table = param['fill_zero_table']
+    stock_data_sql = param['stock_data_sql']
+    col_origin_name = param['col_origin_name']
+    shops = param['shop_list']
+    print(stock_data_sql)
+    print(input_stock_table, col_origin_name, shops)
     sales_sparkdf = read_table(spark, input_sales_table)
-    stock_sparkdf = read_origin_stock_table(spark, input_stock_table)
+    stock_sparkdf = read_origin_table(spark, input_stock_table, stock_data_sql, col_origin_name, shops)
     sparkdf = adjust_by_column(sales_sparkdf, stock_sparkdf, join_key, col_openinv, col_qty, sdate, edate, fill_value)
-    save_table(spark,sparkdf, output_table)
+    save_table(spark, sparkdf, output_table)
     return "SUCCESS"

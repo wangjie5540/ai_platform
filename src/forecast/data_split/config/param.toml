@@ -12,21 +12,22 @@ threshold_proportion=0.15
 threshold_sales=14
 col_time = 'sdt'
 col_qty = 'th_y'
-col_sku_category = 'sales_category' #sku分类字段
-item_config_table = 'ai_dm_dev.item_config_table_0620'
-sales_table = 'ai_dm_dev.no_sales_adjust_0620'
-goods_class_table ='ai_dm_dev.goods_class_table_0620'
-config_tables = ['ai_dm_dev.itemlevel_config_table_0620','ai_dm_dev.sales_classify_0620']
+col_sku_category = ['sales_category','qty_avg'] #sku分类字段
+item_config_table = "f'{db_dev}.{pre_table_name}_item_config'"
+sales_table = "f'{db_dev}.{pre_table_name}_sales_boxcox'"
+goods_class_table ="f'{db_dev}.{pre_table_name}_goods_class'"
+config_tables = ["f'{db_dev}.{pre_table_name}_item_config'","f'{db_dev}.{pre_table_name}_sales_classify'"]
+mode_type='sp'
 
 [model_selection]
 model_selection_condition= ["{'lightgbm':[{'storage_life':'(180,]','sales_category':'normal','is_new':'0'},{'standard':'1','sale_period':'[10,60]','sales_category':'normal','is_new':'0'}]}","{'holt-winter':[{'standard':'1','storage_life':'[30,180]'},{'storage_life':'[1,1]'}]}"]
-col_selection = ['standard','sales_category','is_new','storage_life','sale_period']
+col_selection = ['standard','sales_category','is_new','storage_life','sale_period','qty_avg']
 col_bound = ['storage_life','sale_period']
 col_label = ['standard','sales_category','is_new']
 col_key = ['shop_id','goods_id']
 default_model='DMS'
 col_apply_model = 'apply_model'
-model_selection_table = 'ai_dm_dev.model_selection_0620'
+model_selection_table = "f'{db_dev}.{pre_table_name}_model_selection'"
 
 [model_grouping]
 col_key = ['shop_id','goods_id']
@@ -36,6 +37,8 @@ frequency_label = 'frequency_group'#等频
 label_label = 'label_group'#label列
 group_label = 'group_category' #最终的组别名
 shop_list = ['1004','1228']
-model_selection_table = 'ai_dm_dev.model_selection_0620'
-model_grouping_table = 'ai_dm_dev.model_selection_grouping_table_0620'
-group_condition = ["{'lightgbm':[{'isometric':{'group_nums':50,'col_partition':['shop_id'],'col_orderby':['sale_period']}},{'equal_frequency':{'storage_life':[10,30,50],'sale_period':[40,90,10]}},{'col_labels':['shop_id','sales_category']}]}","{'holtwinter':[{'equal_frequency':{'storage_life':[10,30,50],'sale_period':[40,90,10]}},{'col_labels':['shop_id','sales_category']}]}"]
+group_nums = 20
+partition_values = ['task_id','shop_id']
+model_selection_table = "f'{db_dev}.{pre_table_name}_model_selection'"
+model_grouping_table = "f'{db_dev}.{pre_table_name}_model_selection_grouping'"
+group_condition = ["{'lightgbm':[{'isometric':{'group_nums':20,'col_partition':['shop_id'],'col_orderby':['qty_avg']}}]}","{'holtwinter':[{'equal_frequency':{'storage_life':[10,30,50],'sale_period':[40,90,10]}},{'col_labels':['shop_id','sales_category']}]}"]

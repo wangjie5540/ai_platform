@@ -4,15 +4,10 @@
 # -*- coding: utf-8 -*-
 # @Time : 2021/12/25
 # @Author : Arvin
-# from pyspark.sql import Window
-# from pyspark.sql.functions import udf
-# import pyspark.sql.functions as psf
-# import pandas as pd
-# import numpy as np
-# from pyspark.sql.types import DoubleType
-from forecast.common.common_helper import *
-
-from pyspark.sql.functions import sum, count, lit,mean
+from forecast.common.reference_package import *
+from digitforce.aip.common.data_helper import *
+from digitforce.aip.common.spark_helper import *
+from pyspark.sql.functions import sum, mean, count, max, min
 
 
 def zero_turn_nan(col_value):
@@ -75,7 +70,7 @@ def col_gtz_count_days(sparkdf, col_key, col_qty, col_time, param):
         windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w - 1),
                                                                                         end=Window.currentRow)
         sparkdf = sparkdf.withColumn("{0}_{1}_{2}_{3}d".format(col_qty, 'gtz', 'count', w),
-                                     count(psf.col("{0}_copy".format(col_qty))).over(windowOpt))
+                                     psf.count(psf.col("{0}_copy".format(col_qty))).over(windowOpt))
     sparkdf = sparkdf.drop(*["{0}_copy".format(col_qty)])
     return sparkdf
 
@@ -122,8 +117,8 @@ def col_hb_days(sparkdf, col_key, col_qty, col_time, param):
                                                                                          end=Window.currentRow)
         windowOpt2 = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(2 * (w - 1)),
                                                                                          end=Window.currentRow)
-        sparkdf = sparkdf.withColumn("{0}_hb_{1}d".format(col_qty, w), sum(psf.col(col_qty)).over(windowOpt1) / (
-                    sum(psf.col(col_qty)).over(windowOpt2) - sum(psf.col(col_qty)).over(windowOpt1)))
+        sparkdf = sparkdf.withColumn("{0}_hb_{1}d".format(col_qty, w), psf.sum(psf.col(col_qty)).over(windowOpt1) / (
+                    psf.sum(psf.col(col_qty)).over(windowOpt2) - psf.sum(psf.col(col_qty)).over(windowOpt1)))
     return sparkdf
 
 
@@ -136,9 +131,9 @@ def col_tb_days(sparkdf, col_key, col_qty, col_time, param):
         windowOpt1 = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w - 1),
                                                                                          end=Window.currentRow)
         sparkdf_last = sparkdf_last.withColumn("{0}_tb_{1}_last".format(col_qty, w),
-                                               sum(psf.col(col_qty)).over(windowOpt1))
+                                               psf.sum(psf.col(col_qty)).over(windowOpt1))
         #         windowOpt2 = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w-1), end=Window.currentRow)
-        sparkdf = sparkdf.withColumn("{0}_tb_{1}_current".format(col_qty, w), sum(psf.col(col_qty)).over(windowOpt1))
+        sparkdf = sparkdf.withColumn("{0}_tb_{1}_current".format(col_qty, w), psf.sum(psf.col(col_qty)).over(windowOpt1))
         sparkdf = sparkdf.join(sparkdf_last.select("shop_id", "goods_id", "dt", "{0}_tb_{1}_last".format(col_qty, w)),
                                on=col_key + ["dt"], how='left_outer')
         sparkdf = sparkdf.withColumn("{0}_tb_{1}d".format(col_qty, w), (
@@ -174,6 +169,15 @@ def col_agg_weeks(sparkdf, col_key, col_qty, col_time, param):
     return sparkdf
 
 
+def col_agg_last_month(sparkdf, col_key, col_qty, col_time, param):
+    """过去第N月col_qty的agg"""
+    for w in param:
+        window = Window.orderBy(col_time).partitionBy(col_key)
+        #lead是第二行平移到第一行，lag是第一行平移到第二行，结合实际需求进行选择。
+        sparkdf = sparkdf.withColumn('last_{0}_{1}m'.format(col_qty, w), lag(psf.col(col_qty), w).over(window))
+    return sparkdf
+
+
 def build_sales_features_daily(spark, param):
     """
     dict_agg_func:字段聚合字典
@@ -188,11 +192,11 @@ def build_sales_features_daily(spark, param):
     dict_agg_func = eval(param['sales_feature_daily_func'])
     input_table = param['no_sales_adjust_table']
     output_table = param['sales_features_daily_table']
-    sparkdf = read_table(spark, input_table,sdt='N')
+    sparkdf = read_table(spark, input_table, sdt='N')
     for dict_key in dict_agg_func:
         sparkdf = globals()[dict_key](sparkdf, col_key, col_qty, col_time, dict_agg_func[dict_key])
     sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))    
-    save_table(spark,sparkdf, output_table)
+    save_table(spark, sparkdf, output_table)
     return 'SUCCESS'
 
 
@@ -203,13 +207,34 @@ def build_sales_features_weekly(spark, param):
     col_time = param['col_time']
     col_qty = param['col_qty']
     dict_agg_func = eval(param['sales_feature_weekly_func'])
-    input_table = param['qty_aggregation_weekly_table']
-    output_table = param['sales_features_weekly_table']
-    sparkdf = read_table(spark, input_table)
+    input_table = param['input_table']
+    output_table = param['output_table']
+    partition_name = param['partition_name']
+    shop_list = param['shop_list']
+    sparkdf = read_table(spark, input_table,  partition_name=partition_name, partition_list=shop_list)
     for dict_key in dict_agg_func:
         sparkdf = globals()[dict_key](sparkdf, col_key, col_qty, col_time, dict_agg_func[dict_key])
     sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))    
-    save_table(spark,sparkdf, output_table)
+    save_table(spark, sparkdf, output_table)
+    return 'SUCCESS'
+
+
+def build_sales_features_monthly(spark, param):
+    col_key = param['col_key']
+    sdate = param['sdate']
+    edate = param['edate']
+    col_time = param['col_time']
+    col_qty = param['col_qty']
+    dict_agg_func = eval(param['sales_feature_monthly_func'])
+    input_table = param['input_table']
+    output_table = param['output_table']
+    partition_name = param['partition_name']
+    shop_list = param['shop_list']
+    sparkdf = read_table(spark, input_table,  partition_name=partition_name, partition_list=shop_list)
+    for dict_key in dict_agg_func:
+        sparkdf = globals()[dict_key](sparkdf, col_key, col_qty, col_time, dict_agg_func[dict_key])
+    sparkdf = sparkdf.filter(date_filter_condition(sdate, edate))
+    save_table(spark, sparkdf, output_table)
     return 'SUCCESS'
 
 

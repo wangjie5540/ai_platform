@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 # @Time : 2022/12/25
 # @Author : Arvin
-from forecast.common.common_helper import *
+from forecast.common.reference_package import *
+from digitforce.aip.common.data_helper import days
+from digitforce.aip.common.spark_helper import read_table, save_table
+
 
 def compute_tail_sku(sparkdf_sales, col_qty, col_key, w_tail, col_time, threshold_count, threshold_proportion):
     windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w_tail - 1),
@@ -26,7 +29,7 @@ def compute_ls_sku(sparkdf_sales, col_qty, col_key, w_ls, col_time, edate, thres
     # 计算过去N天的销量
     spark_sales_sum = sparkdf_sales.filter(
         "{1} >  to_unix_timestamp( '{2}','yyyyMMdd') - {0}".format(days(w_ls - 1), col_time, edate)).groupby(
-        col_key).agg(psf.sum(psf.col(col_qty)).alias("qty_sum"))
+        col_key).agg(psf.sum(psf.col(col_qty)).alias("qty_sum"), psf.avg(psf.col(col_qty)).alias("qty_avg"))
     # 计算去年同期的销量
     spark_sales_sum_last = sparkdf_sales.filter(
         "{2} > '{3}' - {0} and {2} <= '{3}' - {1}".format(days(365 + w_ls), days(365), col_time, edate)).groupby(
@@ -85,6 +88,7 @@ def sales_classify(spark, param):
     input_partition_name = param['input_partition_name']
     partition_list = param['partition_list']
     output_partition_name = param['output_partition_names']
+    task_id = param['task_id']
     sparkdf_sales = read_table(spark, input_table, sdt='N', partition_name=input_partition_name, partition_list=partition_list)
     #1.读表、存表按照partition_name\partition_list
     #2.新创建数据分析文件夹，将销量分层的规则独立出来
@@ -92,6 +96,7 @@ def sales_classify(spark, param):
     sparkdf_classfiy = get_sku_classfication_info(sparkdf_sales, col_qty, col_key, w_tail, w_ls, edate, col_time,
                                                       threshold_count, threshold_proportion, threshold_sales,
                                                       col_sku_category)
+    sparkdf_classfiy = sparkdf_classfiy.withColumn("task_id", lit(task_id))
     save_table(spark, sparkdf_classfiy, output_table, partition=output_partition_name)
 
     return 'SUCCESS'
