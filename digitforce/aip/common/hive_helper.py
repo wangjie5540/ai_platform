@@ -67,3 +67,7 @@ df_hive_helper = HiveClient(host=HIVE_HOST, port=HIVE_PORT)
 if __name__ == '__main__':
     df = df_hive_helper.query_to_df("select * from algorithm.sku_profile limit 100")
     print(df)
+    from pyhiveConnection import hiveConnector
+
+    cursor = hiveConnector.connection("10.170.1.35:2181,10.170.1.40:2181", "/hiveserver2", "serverUri", "admin", None,
+                                      "tmp")
