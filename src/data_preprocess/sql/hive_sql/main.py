@@ -10,7 +10,10 @@ def main():
     sql = sys.argv[1]
     table_name = sys.argv[2]
     logging.info(sql)
-    df_hive_helper.query_to_table(sql, table_name, delete_tb=True)
+    delete_tb = False
+    if len(sys.argv) > 3:
+        delete_tb = sys.argv[3].lower() == "true"
+    df_hive_helper.query_to_table(sql, table_name, delete_tb=delete_tb)
 
 
 if __name__ == '__main__':

@@ -20,5 +20,5 @@ def ml_model_back_test(sdate, edate, image_tag="latest"):
                                       'spark.yarn.appMasterEnv.PYSPARK_PYTHON=./environment/ibs/bin/python',
                                       '--conf', 'spark.yarn.dist.archives=hdfs:///user/awg/ibs.zip#environment',
                                       '--driver-memory', '8G', '--py-files', './forecast.zip,digitforce.zip',
-                                      'forecast/ml_predict/runnable/sales_ml_back_test.py', str(sdate),
+                                      'forecast/ml_model/runnable/sales_ml_back_test.py', str(sdate),
                                       str(edate)])
