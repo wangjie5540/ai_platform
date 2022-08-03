@@ -37,6 +37,20 @@ def connect_mysql():
     return db
 
 
+def to_sql_conn():
+    """TO_SQL配置"""
+    file_path = os.getcwd() + "/forecast/common/config/environment.toml"
+    mysql_dict = get_config(file_path, 'mysql')  # spark的配置
+    mysql_host = mysql_dict['mysql_host']
+    mysql_port = mysql_dict['mysql_port']
+    mysql_user = mysql_dict['mysql_user']
+    mysql_password = mysql_dict['mysql_password']
+    mysql_db = mysql_dict['mysql_db']
+    conn = "mysql+pymysql://{0}:{1}@{2}:{3}/{4}?charset=utf8".format(mysql_user, mysql_password, mysql_host, mysql_port,
+                                                                     mysql_db)
+    return conn
+
+
 def get_data_from_mysql(query):
     """
     链接mysql

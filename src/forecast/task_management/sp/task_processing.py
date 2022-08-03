@@ -1,4 +1,6 @@
 from forecast.common.mysql import *
+
+
 def site_processing(x, df, col_sitelevel, col_shops, col_siteInclude, col_site):
     x = eval(x)
     if x[col_site] == 'shop':
@@ -28,6 +30,8 @@ def list_processing(x):
             if b is not None:
                 re.append(b)
     return list(set(re))
+
+
 def analysis_task_shop(spark, param):
     """
     新任务解析按门店插表
@@ -64,24 +68,38 @@ def analysis_task_shop(spark, param):
     df_shops = pd.DataFrame(data=newvalues[0], columns=df_shops.columns)
     res_df = pd.merge(df_shops, df_job, how='inner', on='pred_granularity')
     df_shop_status = get_data_from_mysql(query_shop_status)
-    print(res_df.head(2))
     res_df = pd.merge(res_df, df_shop_status, how='left', on=['task_id', 'shop_id','pred_granularity'])
-    res_df = res_df.fillna(1)
+    res_df = res_df.fillna(0)
     columns = get_table_columns(shop_status_table)
-    print("columns",columns)
-    print(res_df.dtypes)
-    conn='mysql+pymysql://digitforce_arch:arch123456@172.21.32.86:3306/ibs_replenish?charset=utf8'
 
-    res_df[columns].to_sql(shop_status_table, conn, if_exists="replace")
+    res_df[columns].to_sql(shop_status_table, conn=to_sql_conn(), if_exists="replace",index=False)
     return 'SUCCESS'
 
 
-def read_task_list():
-    """读取任务列表"""
-    pass
+def get_shops(param):
+    """
+    每天调度查询shop_list
+    """
+    shop_status_table = param['shop_status_table']
+    is_new_shop = param['is_new_shop']
+    shop_id = param['shop_id']
+    query_sql = """select * from {}""".format(shop_status_table)
+    df = get_data_from_mysql(query_sql)
+    return df[(df[is_new_shop] == 1)][shop_id].tolist()
 
 
-def pred_by_new_model():
+def update_shops(param):
     """
-    新生成的预测模型但没有进行预测的进行预测
+    更新shops表
     """
+    shop_status_table = param['shop_status_table']
+    is_new_shop = param['is_new_shop']
+    is_history = param['is_history']
+    query_sql = """select * from {}""".format(shop_status_table)
+    df = get_data_from_mysql(query_sql)
+    df_update = df[df[is_new_shop] == 0]
+    df_update[is_new_shop] = 1
+    df_update[is_history] = 1
+    columns = get_table_columns(shop_status_table)
+    df_update[columns].to_sql(shop_status_table, conn=to_sql_conn(), if_exists="replace", index=False)
+
