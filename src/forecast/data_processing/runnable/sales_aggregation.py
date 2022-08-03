@@ -75,4 +75,4 @@ if __name__ == "__main__":
     sdate, edate, input_table, output_table, agg_func, col_qty, agg_type = sys.argv[1], sys.argv[2], sys.argv[3], \
                                                                            sys.argv[4], \
                                                                            sys.argv[5], sys.argv[6], sys.argv[7]
-    run(sdate, edate, input_table, output_table, agg_func, col_qty, agg_type)
+    run(sdate, edate, input_table, output_table, agg_func, col_qty, agg_type, spark)
