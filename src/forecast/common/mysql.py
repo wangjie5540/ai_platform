@@ -53,3 +53,20 @@ def get_data_from_mysql(query):
     cur.close()
     db.close()
     return df
+
+
+def get_table_columns(table_name):
+    """
+    返回表的列名
+    """
+
+    query_sql = """
+    SELECT
+    COLUMN_NAME
+    FROM
+    INFORMATION_SCHEMA.COLUMNS
+    where
+    table_name  = '{0}'
+    """.format(table_name)
+    columns_name = get_data_from_mysql(query_sql)['COLUMN_NAME'].tolist()
+    return columns_name
