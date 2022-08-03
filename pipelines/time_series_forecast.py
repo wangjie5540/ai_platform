@@ -39,11 +39,16 @@ def time_series_forecast(forecast_start_date, purpose, time_type, sdate, edate, 
     boxcox_file = sales_boxcox_filter.sales_boxcox_filter(sdate, edate, col_qty).after(sales_fill)
     boxcox_file.container.set_image_pull_policy("Always")
 
+    # 周维度聚合
+    sales_agg_week = sales_aggregation.sales_aggregation(sdate, edate, input_table, output_table, agg_func, col_qty,
+                                                    agg_type).after(boxcox_file)
+    sales_agg_week.container.set_image_pull_policy("Always")
+
     # data_prepare
     prepare_data_day = data_prepare.data_prepare(sdate, edate).after(boxcox_file)
     prepare_data_day.container.set_image_pull_policy("Always")
 
-    prepare_data_week = data_prepare.data_prepare(sdate, edate).after(boxcox_file)
+    prepare_data_week = data_prepare.data_prepare(sdate, edate).after(sales_agg_week)
     prepare_data_week.container.set_image_pull_policy("Always")
 
     # time series forecast
