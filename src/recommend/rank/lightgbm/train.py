@@ -88,12 +88,12 @@ def train(file_path, model_path):
         preds = best_lgb_model.predict_proba(feats_test)[:, 1]
         auc = roc_auc_score(labels_test, preds)
         recall = recall_score(labels_test, np.around(preds, 0).astype(int))
-        logging.info('model_path: ', model_path)
+        logging.info(f'model_path: {model_path}')
         model_name = f'lgb__auc_{auc:.2f}__recall_{recall:.2f}.txt'
-        logging.info('model_name: ', model_name)
+        logging.info(f'model_name: {model_name}')
         logging.info(f"auc: {auc}, recall: {recall}")
         model_path = os.path.join(model_path, model_name)
-        logging.info('join_model_path: ', model_path)
+        logging.info(f'join_model_path: {model_path}')
         dir_name = os.path.dirname(model_path)
         logging.info(f"dir_name:{dir_name}")
         if dir_name and not os.path.exists(dir_name):
