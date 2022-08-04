@@ -9,18 +9,19 @@ from digitforce.aip.components.forecast.feature_processing import build_sales_fe
     build_date_feature_daily, build_date_feature_monthly, build_weather_feature_monthly, build_weather_feature_daily, \
     build_weather_feature_weekly, build_sales_feature_monthly
 from digitforce.aip.components.forecast.ml_model import ml_train
+from digitforce.aip.components.forecast.ml_model import ml_predict
 
-name = "ml_model_pipeline_train"
-description = 'ml_model_pipeline_train'
+name = "MachineLearningModelPipelinePredict"
+description = 'Predict'
 
 
 @dsl.pipeline(
     name=name,
     description=description,
 )
-def ml_model_pipeline_train(forecast_start_date, purpose, time_type, sdate, edate, col_qty, col_qty_1, col_qty_2,
-                            col_qty_3, col_openinv, join_key, fill_value, col_endinv, col_category, col_time, w,
-                            input_table, output_table, agg_func, col_key, col_weather_list, dict_agg_func):
+def ml_model_pipeline_predict(forecast_start_date, purpose, time_type, sdate, edate, col_qty, col_qty_1, col_qty_2,
+                              col_qty_3, col_openinv, join_key, fill_value, col_endinv, col_category, col_time, w,
+                              input_table, output_table, agg_func, col_key, col_weather_list, dict_agg_func):
     # 大单过滤
     big_order_filter_ = big_order_filter.forecast_big_order_filter(sdate, edate)
     big_order_filter_.container.set_image_pull_policy("Always")
@@ -81,18 +82,18 @@ def ml_model_pipeline_train(forecast_start_date, purpose, time_type, sdate, edat
                                                                                        col_key, join_key)
     weather_feature_weekly.container.set_image_pull_policy("Always")
 
-    # 汇总到模型训练
+    # 汇总到预测
 
-    ml_train_task = ml_train.ml_model_train(sdate, edate).after(sales_feature_daily, weather_feature_daily,
-                                                                time_series_forecast_day, sales_feature_weekly,
-                                                                weather_feature_weekly)
+    ml_predict_task = ml_predict.ml_model_predict(sdate, edate).after(sales_feature_daily, weather_feature_daily,
+                                                                      time_series_forecast_day, sales_feature_weekly,
+                                                                      weather_feature_weekly)
 
-    ml_train_task.container.set_image_pull_policy("Always")
+    ml_predict_task.container.set_image_pull_policy("Always")
 
 
 def upload_pipeline():
     pipeline_path = "/data/aip/pipelines/" + name + ".yaml"
-    kfp.compiler.Compiler().compile(ml_model_pipeline_train, pipeline_path)
+    kfp.compiler.Compiler().compile(ml_model_pipeline_predict, pipeline_path)
     client = kfp.Client()
     client.upload_pipeline(pipeline_path, name, description)
 
