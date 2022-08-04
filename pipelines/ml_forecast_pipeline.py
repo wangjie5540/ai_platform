@@ -19,8 +19,8 @@ description = 'ml_model_pipeline_train'
     description=description,
 )
 def ml_model_pipeline_train(forecast_start_date, purpose, time_type, sdate, edate, col_qty, col_qty_1, col_qty_2,
-                         col_qty_3, col_openinv, join_key, fill_value, col_endinv, col_category, col_time, w,
-                         input_table, output_table, agg_func, col_key, col_weather_list, dict_agg_func):
+                            col_qty_3, col_openinv, join_key, fill_value, col_endinv, col_category, col_time, w,
+                            input_table, output_table, agg_func, col_key, col_weather_list, dict_agg_func):
     # 大单过滤
     big_order_filter_ = big_order_filter.forecast_big_order_filter(sdate, edate)
     big_order_filter_.container.set_image_pull_policy("Always")
@@ -72,7 +72,8 @@ def ml_model_pipeline_train(forecast_start_date, purpose, time_type, sdate, edat
                                                                                     col_weather_list, dict_agg_func)
     weather_feature_daily.container.set_image_pull_policy("Always")
     # 周维度的特征生成
-    sales_feature_weekly = build_sales_feature_weekly.build_sales_feature_weekly(sdate, edate, col_time, col_qty).after(
+    sales_feature_weekly = build_sales_feature_weekly.build_sales_feature_weekly(sdate, edate, col_time, col_qty,
+                                                                                 input_table, output_table).after(
         sales_agg_week)
     sales_feature_weekly.container.set_image_pull_policy("Always")
 
