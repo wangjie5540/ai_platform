@@ -8,22 +8,19 @@ from digitforce.aip.common.spark_helper import *
 from digitforce.aip.common.data_helper import *
 
 
-def tran_boxcox_compute(x):
+def tran_boxcox_compute(x_list):
     """
     boxcox转化
     :param x: 要转化的值
     :return:
     """
-    if x<0:
-        x=0
-    tmp = 0.01  # 如果为0，那么默认加个临时数
-    x = x + 1  # 对x进行+1处理
-    tmp2 = 0.01  # 这是在boxcox转化的时候默认使用临时变量
-    if tmp2 == x:
-        tmp2 = x + 1
-    x_new = [x, tmp2]
-    y = stats.boxcox(np.array(x_new))[0].tolist()[0]
-    return y
+
+    x_list = [0 + 1 if i < 0 else i + 1 for i in x_list]
+    if len(set(x_list)) == 1:
+        return x_list
+    else:
+        y = stats.boxcox(x_list)[0]
+        return y
 
 
 def bound_sigma(windowOpt, col_value, paramter):
@@ -47,11 +44,12 @@ def bound_percentile(windowOpt, col_value, paramter):
     return percentile_up, percentile_low
 
 
-def bound_boxcox(sparkdf, col_qty, col_boxcox):
+def bound_boxcox(data, col_qty, col_boxcox):
     """boxcox变换"""
-    tran_boxcox = udf(tran_boxcox_compute, DoubleType())
-    sparkdf = sparkdf.withColumn(col_boxcox, tran_boxcox(sparkdf[col_qty]))
-    return sparkdf
+    df = row_transform_to_dataFrame(data)
+    df[col_boxcox] = tran_boxcox_compute(df[col_qty].tolist())
+    result_df = dataFrame_transform_to_row(df, data_type='sp')
+    return result_df
 
 
 def bound_iqr(windowOpt, col_value, paramter):
@@ -83,13 +81,16 @@ def bound_fix(windowOpt, col_value, paramter):
     return "{0}>={1} and {0}<={2}".format(col_value, low, up)
 
 
-def boxcox_tranform(sparkdf, col_qty, col_boxcox, sdate, edate):
+def boxcox_tranform(sparkdf, col_key, col_qty, col_boxcox, sdate, edate):
     """coxbox变换"""
-    sparkdf = bound_boxcox(sparkdf, col_qty, col_boxcox)
+
+    sparkdf = sparkdf.rdd.map(lambda x: (key_process(x, col_key), x)).groupByKey().flatMap(
+        lambda x: bound_boxcox(x[1], col_qty, col_boxcox)).toDF()
     return sparkdf.filter(date_filter_condition(sdate, edate))
 
 
-def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, edate, replace_func, w_boxcox=90, w_replace=14,conn='and',
+def adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, filter_func, sdate, edate, replace_func, w_boxcox=90,
+                    w_replace=14, conn='and',
                     col_time='sdt'):
     """
     过去一段时间窗口w内 ，通过filter_func超出上下限的用replace_func的边界值替换
@@ -142,20 +143,21 @@ def sales_filter_by_boxcox(spark, param):
     output_table = param['sales_boxcox_table']
     col_boxcox = param['col_boxcox']
     sparkdf = read_table(spark, input_table, sdt='N')
-    sparkdf = boxcox_tranform(sparkdf, col_qty, col_boxcox, sdate, edate)
+    sparkdf = boxcox_tranform(sparkdf, col_key, col_qty, col_boxcox, sdate, edate)
 
-    sparkdf = adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, func_dict_boxcox, sdate, edate, replace_func_boxcox,
-                          w_boxcox, w_replace, conn, col_time)
+    sparkdf = adjust_by_bound(sparkdf, col_key, col_boxcox, col_qty, func_dict_boxcox, sdate, edate,
+                              replace_func_boxcox,
+                              w_boxcox, w_replace, conn, col_time)
     save_table(spark, sparkdf, output_table)
     return 'SUCCESS'
-
 
 
 def sales_filter_by_bound(sparkdf, key, w, sdate, edate, col_qty, func_dict, conn='and', col_time='sdt'):
     """
     订单过滤by bound
     """
-    windowOpt = Window.partitionBy(key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w-1), end=Window.currentRow)
+    windowOpt = Window.partitionBy(key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w - 1),
+                                                                                end=Window.currentRow)
     for dict_key in func_dict:
         print(dict_key)
         func_up, func_low = globals()[dict_key](windowOpt, col_qty, func_dict[dict_key])
@@ -196,22 +198,23 @@ def sales_fliter_by_label_price(sparkdf, col_key, col_label, filter_value, col_p
                                 edate, col_time, w=90, conn='and'):
     """出清过滤特殊字段标识或者通过价格过滤"""
     if col_label != "":
-        sparkdf = sales_filter_by_label(sparkdf,col_label, filter_value, sdate, edate)
+        sparkdf = sales_filter_by_label(sparkdf, col_label, filter_value, sdate, edate)
     else:
-        windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w-1), end=Window.currentRow)
+        windowOpt = Window.partitionBy(col_key).orderBy(psf.col(col_time)).rangeBetween(start=-days(w - 1),
+                                                                                        end=Window.currentRow)
         for dict_key in price_func_dict:
-            func_up, func_low = globals()[dict_key](windowOpt,col_price,price_func_dict[dict_key])
+            func_up, func_low = globals()[dict_key](windowOpt, col_price, price_func_dict[dict_key])
             sparkdf = sparkdf.withColumn("{}_up".format(dict_key), func_up)
             sparkdf = sparkdf.withColumn("{}_low".format(dict_key), func_low)
         if conn == "and":
             filter_str = "1=1 "
             for dict_key in price_func_dict:
-                filter_str += "and {0}<={2}*{1}_up ".format(col_price,dict_key,discount)
-                filter_str += "and {0}>={1}_low ".format(col_price,dict_key)
+                filter_str += "and {0}<={2}*{1}_up ".format(col_price, dict_key, discount)
+                filter_str += "and {0}>={1}_low ".format(col_price, dict_key)
         else:
             for dict_key in price_func_dict:
-                filter_str += "or {0}<={1}_up ".format(col_price,dict_key)
-                filter_str += "or {0}>={1}_low ".format(col_price,dict_key)
+                filter_str += "or {0}<={1}_up ".format(col_price, dict_key)
+                filter_str += "or {0}>={1}_low ".format(col_price, dict_key)
         sparkdf = sparkdf.filter(filter_str)
     """落表"""
     return sparkdf.filter(date_filter_condition(sdate, edate))
@@ -330,9 +333,6 @@ def filter_by_label(spark, param):
     return sparkdf
 
 
-
-
-
 # sales_filter(sparkdf, ['shop_id', 'goods_id'], {'bound_sigma': (3, -3), 'boud_percentile': (0.99, 0.00)}, "20210101",
 #              "20210401", "sdt").show(10)
 # sales_clear_filter(sparkdf,col_key,col_label,filter_value,col_price,0.5,{'boud_percentile':(0.75, 0.00)},sdate,edate,30,conn)
@@ -340,8 +340,9 @@ def filter_by_label(spark, param):
 
 def sales_fill(qty_value, openinv_value, fill_value):
     """销售填充:有库存无销售填充fill_value"""
-#     return qty_value
-    if (qty_value is None or pd.isna(qty_value)) and (openinv_value is not None or not pd.isna(openinv_value)) and openinv_value > fill_value:
+    #     return qty_value
+    if (qty_value is None or pd.isna(qty_value)) and (
+            openinv_value is not None or not pd.isna(openinv_value)) and openinv_value > fill_value:
         return fill_value
     else:
         return qty_value
@@ -349,13 +350,14 @@ def sales_fill(qty_value, openinv_value, fill_value):
 
 def adjust_by_column(sales_sparkdf, stock_sparkdf, join_key, col_openinv, col_qty, sdate, edate, fill_value):
     """销售补零 要不要把销售连续起来？"""
-   
+
     sparkdf = stock_sparkdf.join(sales_sparkdf, on=join_key, how='left')
     sparkdf = sparkdf.withColumn("fill_tmp", psf.lit(fill_value))
-#     print("wwww", sparkdf.show(10))
+    #     print("wwww", sparkdf.show(10))
     sales_fill_udf = udf(sales_fill, DoubleType())
-    sparkdf = sparkdf.withColumn("fill_{}".format(col_qty),sales_fill_udf(sparkdf[col_qty], sparkdf[col_openinv], sparkdf.fill_tmp))
-    print("dsdsddsdsd",sparkdf.show(10))
+    sparkdf = sparkdf.withColumn("fill_{}".format(col_qty),
+                                 sales_fill_udf(sparkdf[col_qty], sparkdf[col_openinv], sparkdf.fill_tmp))
+    print("dsdsddsdsd", sparkdf.show(10))
     return sparkdf.filter(date_filter_condition(sdate, edate))
-                        
+
 

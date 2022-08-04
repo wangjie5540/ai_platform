@@ -74,4 +74,4 @@ if __name__ == "__main__":
     sdate, edate, col_openinv, col_qty, join_key, fill_value = sys.argv[1], sys.argv[2], sys.argv[3], \
                                                                            sys.argv[4], sys.argv[5], sys.argv[6], \
 
-    run(sdate, edate, col_openinv, col_qty, join_key, fill_value)
+    run(sdate, edate, col_openinv, col_qty, join_key, fill_value,spark)
