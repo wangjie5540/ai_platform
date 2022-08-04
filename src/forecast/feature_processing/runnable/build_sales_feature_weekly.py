@@ -73,4 +73,4 @@ if __name__ == "__main__":
     spark = forecast_spark_session("weather_featuer")
     sdate, edate, col_time, col_qty, input_table, output_table = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],\
                                                                  sys.argv[5], sys.argv[6]
-    run(sdate, edate, col_time, col_qty,spark)
+    run(sdate, edate, col_time, col_qty, input_table, output_table, spark)

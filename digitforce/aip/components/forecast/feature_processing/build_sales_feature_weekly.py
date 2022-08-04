@@ -14,7 +14,7 @@ from digitforce.aip.components.op_decorator import *
 
 
 @mount_data_pv
-def build_sales_feature_weekly(sdate, edate, col_time, col_qty, image_tag="latest"):
+def build_sales_feature_weekly(sdate, edate, col_time, col_qty, input_table, output_table, image_tag="latest"):
     """
     大单过滤
 
@@ -32,4 +32,4 @@ def build_sales_feature_weekly(sdate, edate, col_time, col_qty, image_tag="lates
                                       '--conf', 'spark.yarn.dist.archives=hdfs:///user/awg/ibs.zip#environment',
                                       '--driver-memory', '8G', '--py-files', './forecast.zip,digitforce.zip',
                                       'forecast/feature_processing/runnable/build_sales_feature_weekly.py', str(sdate),
-                                      str(edate),str(col_time),str(col_qty)])
+                                      str(edate),str(col_time),str(col_qty), str(input_table), str(output_table)])
