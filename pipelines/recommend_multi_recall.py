@@ -140,8 +140,9 @@ def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_da
     train_op = lightgbm_train_op(dataset_file_path, model_path, info_log_file, error_log_file).after(data_process_op)
 
     model_hdfs_path = f"/user/aip/recommend/rank/lgb/{run_datetime_str}"
-    df_model_manager.save_models_to_model_manage_system(
+    upload_model_op = df_model_manager.save_models_to_model_manage_system(
         solution_id, instance_id, model_path, model_hdfs_path, 'lgb_model').after(train_op)
+    upload_model_op.container.set_image_pull_policy("Always")
 
 
 def upload_pipeline():
