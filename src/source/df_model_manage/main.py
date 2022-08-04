@@ -1,5 +1,6 @@
 import glob
 import json
+import logging
 import os
 
 from digitforce.aip.common.hdfs_helper import dg_hdfs_client
@@ -31,6 +32,7 @@ def parse_metrics_from_model_file(model_file):
 
 
 def upload_file_model_to_hdfs(solution_id, instance_id, local_model_file, target_hdfs_file=None, model_name=None):
+    logging.info(f"begin upload {local_model_file} TO {target_hdfs_file}")
     if model_name is None:
         model_name = os.path.basename(local_model_file).split("__")[0].split(".")[0]
     if target_hdfs_file is None:
@@ -45,14 +47,17 @@ def upload_file_model_to_hdfs(solution_id, instance_id, local_model_file, target
                       "model_hdfs_path": target_hdfs_file,
                       "metrics": parse_metrics_from_model_file(local_model_file)}
     report_content_to_hdfs(report_content, model_name, solution_id, instance_id)
+    logging.info(f"report content-> {report_content}")
 
 
 def upload_dir_model_to_hdfs(solution_id, instance_id, local_model_dir_path, target_hdfs_dir=None, model_name=None):
+    logging.info(f"begin upload dir to hdfs... local_model_dir_path:{local_model_dir_path}")
     model_files = glob.glob(os.path.join(local_model_dir_path, "*"))
     for _ in model_files:
         model_file_name = os.path.basename(_)
         target_hdfs_file = os.path.join(target_hdfs_dir, model_file_name)
         upload_file_model_to_hdfs(solution_id, instance_id, _, target_hdfs_file, model_name)
+    logging.info(f"upload model dir finish... model file cnt:{len(model_files)}")
 
 
 def main():
