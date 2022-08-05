@@ -89,7 +89,7 @@ def train(file_path, model_path):
         auc = roc_auc_score(labels_test, preds)
         recall = recall_score(labels_test, np.around(preds, 0).astype(int))
         logging.info(f'model_path: {model_path}')
-        model_name = f'lgb__auc_{auc:.2f}__recall_{recall:.2f}.txt'
+        model_name = f'lgb__auc_{auc:.2f}__recall_{recall:.2f}.pk'
         logging.info(f'model_name: {model_name}')
         logging.info(f"auc: {auc}, recall: {recall}")
         model_path = os.path.join(model_path, model_name)
