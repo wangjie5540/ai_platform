@@ -10,7 +10,7 @@ from digitforce.aip.components.recommend.tmp import rank_data_process_op, lightg
 from digitforce.aip.components.source import df_model_manager
 from digitforce.aip.components.source import hive
 
-name = "RecommendMultiRecallAndRankMongo"
+name = "RecommendMultiRecallAndRank"
 description = '''{"source": [{"labelx.push_user": ["user_id", "gender", "age", "click_cnt", "city"]}, {"labelx.push_goods": ["sku", "category_l", "category_m", "category_s", "order_cnt"]}, {"labelx.push_traffic_behavior": ["event_time", "event_code", "user_id", "sku"]}]}'''
 
 
@@ -135,9 +135,9 @@ def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_da
         '''
     info_log_file = f"/data/recommend/rank/log/lgb/{run_datetime_str}.log"
     error_log_file = f"/data/recommend/rank/log/lgb/{run_datetime_str}.error"
-    user_features_file = f"/data/recommend/rank/log/lgb/{run_datetime_str}/{solution_id}/{instance_id}/user_features.jsonl"
-    item_features_file = f"/data/recommend/rank/log/lgb/{run_datetime_str}/{solution_id}/{instance_id}/item_features.jsonl"
-    config_file = f"/data/recommend/rank/log/lgb/{run_datetime_str}/{solution_id}/{instance_id}/config.jsonl"
+    user_features_file = f"/data/recommend/rank/data/{run_datetime_str}/{solution_id}/{instance_id}/user_features.jsonl"
+    item_features_file = f"/data/recommend/rank/data/{run_datetime_str}/{solution_id}/{instance_id}/item_features.jsonl"
+    config_file = f"/data/recommend/rank/data/{run_datetime_str}/{solution_id}/{instance_id}/config.jsonl"
     data_process_op = rank_data_process_op(_sql, dataset_file_path, info_log_file, error_log_file, config_file,
                                            user_features_file, item_features_file)
     model_path = f"/data/recommend/rank/lgb/model/{run_datetime_str}"
