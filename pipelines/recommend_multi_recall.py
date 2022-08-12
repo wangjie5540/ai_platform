@@ -5,7 +5,7 @@ from digitforce.aip.components.preprocess import dataset
 from digitforce.aip.components.preprocess import sql
 from digitforce.aip.components.recommend import hot
 from digitforce.aip.components.recommend import recall
-from digitforce.aip.components.recommend.tmp import rank_data_process_op, lightgbm_train_op
+from digitforce.aip.components.recommend.tmp import rank_data_process_op, lightgbm_train_op, jsonl_to_mongo
 from digitforce.aip.components.source import df_model_manager
 from digitforce.aip.components.source import hive
 
@@ -134,8 +134,20 @@ def recommend_multi_recall_and_rank_pipeline(train_data_start_date_str, train_da
         '''
     info_log_file = f"/data/recommend/rank/log/lgb/{run_datetime_str}.log"
     error_log_file = f"/data/recommend/rank/log/lgb/{run_datetime_str}.error"
-    data_process_op = rank_data_process_op(_sql, dataset_file_path, info_log_file, error_log_file)
+    user_features_file = f"/data/recommend/rank/data/{run_datetime_str}/{solution_id}/{instance_id}/user_features.jsonl"
+    item_features_file = f"/data/recommend/rank/data/{run_datetime_str}/{solution_id}/{instance_id}/item_features.jsonl"
+    config_file = f"/data/recommend/rank/data/{run_datetime_str}/{solution_id}/{instance_id}/config.jsonl"
+    data_process_op = rank_data_process_op(_sql, dataset_file_path, info_log_file, error_log_file, config_file,
+                                           user_features_file, item_features_file)
     model_path = f"/data/recommend/rank/lgb/model/{run_datetime_str}"
+    user_features_to_mongo_op = jsonl_to_mongo(mode=2, db_name='recommend', collection='rank_user_features',
+                                               file_name=user_features_file, info_log_file=info_log_file,
+                                               error_log_file=error_log_file, cond_key='user_id').after(data_process_op)
+    user_features_to_mongo_op.set_image_pull_policy("Always")
+    item_features_to_mongo_op = jsonl_to_mongo(mode=2, db_name='recommend', collection='rank_goods_features',
+                                               file_name=item_features_file, info_log_file=info_log_file,
+                                               error_log_file=error_log_file, cond_key='sku').after(data_process_op)
+    item_features_to_mongo_op.set_image_pull_policy("Always")
 
     train_op = lightgbm_train_op(dataset_file_path, model_path, info_log_file, error_log_file).after(data_process_op)
 
