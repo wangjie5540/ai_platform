@@ -20,6 +20,7 @@ def get_data(sql, output_file, config_file, user_features_file, item_features_fi
 
     config_dict = {'sex': sex_dict, 'province': province_dict, 'city': city_dict,
                    'cate': cate_dict, 'brand': brand_dict}
+    make_dir(user_features_file)
     with jsonlines.open(config_file, 'w') as writer:
         writer.write(config_dict)
 
