@@ -1,5 +1,5 @@
 import logging
-import json
+import jsonlines
 import argparse
 import pandas as pd
 
@@ -11,23 +11,16 @@ def insert_to_mango_db(db_name, collection, file_name):
     client = mongodb_client_cli
     client.set_db(db_name)
     client.set_collection(collection)
-    with open(file_name, 'r') as f:
-        data = json.load(f)
-        if isinstance(data, list):
-            logging.info('data is instance of list')
-            length = len(data)
-            logging.info(f"data length: {length}")
-            n = length // 1000
-            logging.info(f"batch num: {n+1}")
-            for i in range(n+1):
-                data_i = data[i * 1000: (i+1) * 1000]
-            client.insert_many(data_i)
-        elif isinstance(data, dict):
-            logging.info('data is instance of dict')
-            client.insert_one(data)
-        else:
-            logging.error('file content not support')
-            raise TypeError('file content not support')
+    with jsonlines.open(file_name, 'r') as reader:
+        batch = []
+        for line in reader:
+            batch.append(line)
+            if len(batch) % 1000 == 999:
+                client.insert_many(batch)
+                batch = []
+        if batch:
+            client.insert_many(batch)
+
     client.close()
 
 
@@ -36,19 +29,10 @@ def replace_to_mongo_db(db_name, collection, file_name, cond_key):
     client = mongodb_client_cli
     client.set_db(db_name)
     client.set_collection(collection)
-    with open(file_name, 'r') as f:
-        data = json.load(f)
-        if isinstance(data, list):
-            logging.info('data is instance of list')
-            for record in data:
-                value = record[cond_key]
-                client.replace_one({cond_key: value}, record, upsert=True)
-        elif isinstance(data, dict):
-            logging.info('data is instance of dict')
-            client.replace_one({cond_key: {'$exists': True}}, data, upsert=True)
-        else:
-            logging.error('file content not support')
-            raise TypeError('file content not support')
+    with jsonlines.open(file_name, 'r') as reader:
+        for record in reader:
+            value = record[cond_key]
+            client.replace_one({cond_key: value}, record, upsert=True)
     client.close()
 
 
@@ -84,3 +68,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # # insert_to_mango_db('recommend', 'user_test_feature', '../data_process/user.jsonl')
+    # replace_to_mongo_db('recommend', 'user_test_feature', '../data_process/user.jsonl', 'user_id')

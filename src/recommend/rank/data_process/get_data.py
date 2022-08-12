@@ -1,10 +1,8 @@
-import json
+import jsonlines
 import os
 import logging
 
-
 from digitforce.aip.common.hive_helper import df_hive_helper
-from digitforce.aip.common.redis_client import RedisClient
 
 
 def get_data(sql, output_file, config_file, user_features_file, item_features_file):
@@ -22,8 +20,8 @@ def get_data(sql, output_file, config_file, user_features_file, item_features_fi
 
     config_dict = {'sex': sex_dict, 'province': province_dict, 'city': city_dict,
                    'cate': cate_dict, 'brand': brand_dict}
-    with open(config_file, 'w') as f0:
-        json.dump(config_dict, f0)
+    with jsonlines.open(config_file, 'w') as writer:
+        writer.write(config_dict)
 
     u_sql = '''select user_id, sex, age, province, city, life_stage, consume_level, membership_level from 
                                 (select user_id, sex, age, life_stage, consume_level, province, city, membership_level,
@@ -34,7 +32,11 @@ def get_data(sql, output_file, config_file, user_features_file, item_features_fi
     user_info['sex'] = user_info['sex'].apply(lambda x: sex_dict.get(x, 0))
     user_info['province'] = user_info['province'].apply(lambda x: province_dict.get(x, 0))
     user_info['city'] = user_info['city'].apply(lambda x: city_dict.get(x, 0))
-    user_info.to_csv(user_features_file, index=False)
+    logging.info(f'user_info shape: {user_info.shape}')
+    make_dir(user_features_file)
+    with jsonlines.open(user_features_file, 'w') as user_writer:
+        for user_dict in user_info.to_dict('records'):
+            user_writer.write(user_dict)
 
     g_sql = f'''
                 select sku, cate, brand from(
@@ -45,7 +47,11 @@ def get_data(sql, output_file, config_file, user_features_file, item_features_fi
     goods_info = df_hive_helper.query_to_df(g_sql)
     goods_info['cate'] = goods_info['cate'].apply(lambda x: cate_dict.get(x, 0))
     goods_info['brand'] = goods_info['brand'].apply(lambda x: brand_dict.get(x, 0))
-    goods_info.to_csv(item_features_file, index=False)
+    logging.info(f'goods_info shape {goods_info.shape}')
+    make_dir(item_features_file)
+    with jsonlines.open(item_features_file, 'w') as goods_writer:
+        for goods_dict in goods_info.to_dict('records'):
+            goods_writer.write(goods_dict)
 
     logging.info("read data from hive")
     df = df_hive_helper.query_to_df(sql)
@@ -60,13 +66,9 @@ def get_data(sql, output_file, config_file, user_features_file, item_features_fi
     df = df[columns]
     logging.info("data processing end")
 
-    dir_name = os.path.dirname(output_file)
-    logging.info(f"dir_name: {dir_name}")
-    if dir_name and not os.path.exists(dir_name):
-        logging.info(f"mkdir -p {dir_name}")
-        os.system(f"mkdir -p {dir_name}")
-
+    make_dir(output_file)
     logging.info(f"write data to {output_file}")
+    logging.info(f'sample shape: {df.shape}')
     df.to_csv(output_file, index=False)
 
 
@@ -75,6 +77,14 @@ def get_dict(lt):
     for i, item in enumerate(lt):
         item_dict[item] = i + 1
     return item_dict
+
+
+def make_dir(file):
+    dir_name = os.path.dirname(file)
+    logging.info(f"dir_name: {dir_name}")
+    if dir_name and not os.path.exists(dir_name):
+        logging.info(f"mkdir -p {dir_name}")
+        os.system(f"mkdir -p {dir_name}")
 
 
 if __name__ == '__main__':
@@ -97,6 +107,6 @@ where dt in('2022-03-01', '2022-03-18', '2022-03-31')) t1
 where rk = 1)c
 on b.sku = c.sku
 '''
-    file = 'data.csv'
-    get_data(sql_test, file)
+    file1 = 'data.csv'
+    get_data(sql_test, file1, 'config.jsonl', 'user.jsonl', 'item.jsonl')
 
