@@ -3,6 +3,8 @@ import random
 
 import pandas as pd
 
+from digitforce.aip.common.file_helper import create_dir
+
 
 def user_profile_random_recall(user_profiles, profile_id_and_hot_item_map, recall_cnt=200):
     '''
@@ -36,6 +38,7 @@ def offline_recall(input_file, output_file, profile_and_hot_item_file):
                 profile_id = json_obj["profile_id"]
                 hot_item_ids = json_obj["hot_item_ids"]
                 profile_and_hot_item_ids[profile_id] = hot_item_ids
+    create_dir(output_file)
     fo = open(output_file, "w")
     with open(input_file) as fi:
         for line in fi:
@@ -60,6 +63,7 @@ def agg_hot_product_by_profile(hot_csv_profile, item_and_profile_map_file, profi
             hot_item_ids = profile_and_hot_item_map.get(profile_id, [])
             hot_item_ids.append(item_id)
             profile_and_hot_item_map[profile_id] = hot_item_ids
+    create_dir(profile_and_hot_item_file)
     with open(profile_and_hot_item_file, "w") as fo:
         for profile_id, hot_item_ids in profile_and_hot_item_map.items():
             fo.write(f"{json.dumps({'profile_id': profile_id, 'hot_item_ids': hot_item_ids})}\n")

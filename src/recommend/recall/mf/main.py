@@ -2,6 +2,7 @@ import json
 import logging
 
 from deep_mf import train
+from digitforce.aip.common.file_helper import create_dir
 
 
 def main():
@@ -15,6 +16,8 @@ def main():
 
     mf_model = train(input_file, 3)
 
+    create_dir(item_embeding_file)
+    create_dir(user_embeding_file)
     with open(item_embeding_file, "w") as fo:
         item_emb = mf_model.item_emb.weight.detach().to('cpu').numpy().tolist()
         for i, item_vec in enumerate(item_emb):

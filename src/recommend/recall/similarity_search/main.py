@@ -5,6 +5,8 @@ import faiss
 import numpy as np
 import pandas as pd
 
+from digitforce.aip.common.file_helper import create_dir
+
 
 def find_neighbor(user_vec_file, item_vec_file, output_file, topk=100):
     logging.info(f"begin find neighor... "
@@ -64,6 +66,7 @@ def main():
         item_and_id_map_file = sys.argv[6]
     output_file_tmp = output_file + ".tmp"
     find_neighbor(user_vec_file, item_vec_file, output_file_tmp, topk)
+    create_dir(output_file)
     fo = open(output_file, "w")
     if user_and_id_map_file:
         df = pd.read_csv(user_and_id_map_file, header=None, names=["user_id", "id"])
