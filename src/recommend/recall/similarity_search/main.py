@@ -30,6 +30,7 @@ def find_neighbor(user_vec_file, item_vec_file, output_file, topk=100):
 
     index = faiss.IndexFlatL2(vecs.shape[1])
     index.add(vecs)
+    create_dir(output_file)
     with open(output_file, "w") as fo:
         with open(user_vec_file) as fi:
             batch_user_id = []
