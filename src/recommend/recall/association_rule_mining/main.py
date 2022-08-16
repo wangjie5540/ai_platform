@@ -4,6 +4,8 @@ import sys
 
 from fpgrowth_py.utils import *
 
+from digitforce.aip.common.file_helper import create_dir
+
 
 def calculate_rule(input_file, result_file, min_sup=20, min_conf=0.01):
     itemSetList = []
@@ -45,6 +47,7 @@ def calculate_rule(input_file, result_file, min_sup=20, min_conf=0.01):
     res_rules = dict([(k, sorted(v, key=lambda t: t[1], reverse=True))[:10] for k, v in cat_rules.items()])
     if -1 in res_rules:
         res_rules.pop(-1)  # 去除 cat = -1 的项目
+    create_dir(result_file)
     with open(result_file, "w") as fo:
         for k, v in res_rules.items():
             fo.write(f"{json.dumps({'item': k, 'association_items': v})}\n")

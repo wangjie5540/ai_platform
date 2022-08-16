@@ -1,3 +1,4 @@
+from digitforce.aip.common.file_helper import create_dir
 from digitforce.aip.common.hive_helper import df_hive_helper
 
 
@@ -12,4 +13,5 @@ def calculate_hot_item(table_name, output_file):
     ORDER BY score DESC 
     '''
     df = df_hive_helper.query_to_df(ctr_sql)
+    create_dir(output_file)
     df.to_csv(output_file, index=False, header=None)

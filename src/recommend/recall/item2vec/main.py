@@ -7,6 +7,8 @@ import faiss
 import numpy as np
 from gensim.models import word2vec
 
+from digitforce.aip.common.file_helper import create_dir
+
 
 def item2vec(input_file, ouput_file, skip_gram, vec_size, recall_result_file=None, recall_cnt=2000, has_header=True):
     logging.info(f"run item2vec ...input:{input_file} out:{ouput_file} recall_result_file:{recall_result_file}")
@@ -43,6 +45,7 @@ def item2vec(input_file, ouput_file, skip_gram, vec_size, recall_result_file=Non
     wv_model = word2vec.Word2Vec(sentences, hs=1, sg=skip_gram, min_count=5, window=10, vector_size=vec_size,
                                  workers=4,
                                  negative=8)
+    create_dir(ouput_file)
     fo = open(ouput_file, "w")
     item_and_vec_map = {}
     for item_id in all_items:

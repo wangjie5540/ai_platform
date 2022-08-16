@@ -162,7 +162,10 @@ def upload_pipeline():
     kfp.compiler.Compiler().compile(recommend_multi_recall_and_rank_pipeline, pipeline_path)
     client = kfp.Client()
 
-    client.upload_pipeline(pipeline_path, name, description)
+    # client.upload_pipeline(pipeline_path, name, description)
+
+
+from kfp.compiler.compiler import *
 
 
 def main():
@@ -171,7 +174,19 @@ def main():
     #                                      namespace='kubeflow-user-example-com')
     # client = kfp.Client()
 
-    upload_pipeline()
+    # upload_pipeline()
+
+    pipeline_name = "aaa"
+    args_list = []
+    signature = inspect.signature(recommend_multi_recall_and_rank_pipeline)
+
+    for arg_name in signature.parameters:
+        arg_type = None
+
+        args_list.append(dsl.PipelineParam(sanitize_k8s_name(arg_name, True), param_type=arg_type))
+    with dsl.Pipeline(pipeline_name) as dsl_pipeline:
+        recommend_multi_recall_and_rank_pipeline(*args_list)
+    print("====")
 
 
 if __name__ == '__main__':
