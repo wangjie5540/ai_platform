@@ -63,10 +63,14 @@ def find_main_file(one_dir, result):
 
 def main():
     for _dir in [
+        "src/recommend/hot",
         "src/recommend/recall/recall_result_to_redis",
         "src/recommend/recall/mf",
         "src/recommend/recall/similarity_search",
         "src/recommend/recall",
+        "src/recommend/sample",
+        "src/recommend/user_profile",
+        "src/recommend/user_feature",
         "src/data_preprocess",
         "src/source",
         "src/test",
