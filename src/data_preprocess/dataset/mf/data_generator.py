@@ -3,6 +3,8 @@ import random
 
 import pandas as pd
 
+from digitforce.aip.common.file_helper import create_dir
+
 
 def deal_user_id_and_item_id(df, min_user_action_cnt=5):
     a = df["user_id"].value_counts()
@@ -33,6 +35,7 @@ def generate_train_data(input_file, output_file, user_and_id_map_file, item_and_
     df.save_cnt = df.save_cnt.astype(int)
     df.order_cnt = df.order_cnt.astype(int)
     df["score"] = df.apply(lambda x: sum([x["click_cnt"], x["save_cnt"], x["order_cnt"]]), axis=1)
+    create_dir(output_file)
     fo = open(output_file, "w")
     all_item_ids = list(set(df["item_id"]))
     cnt = 0
@@ -51,10 +54,12 @@ def generate_train_data(input_file, output_file, user_and_id_map_file, item_and_
             logging.info(f"deal user cnt:{cnt}")
     fo.close()
     logging.info(f"user_and_id_map_file:{user_and_id_map_file}")
+    create_dir(user_and_id_map_file)
     with open(user_and_id_map_file, "w") as fo:
         for user_id, _id in user_and_id_map.items():
             fo.write(f"{user_id},{_id}\n")
     logging.info(f"item_and_id_map_file:{item_and_id_map_file}")
+    create_dir(item_and_id_map_file)
     with open(item_and_id_map_file, "w") as fo:
         for item_id, _id in item_and_id_map.items():
             fo.write(f"{item_id},{_id}\n")

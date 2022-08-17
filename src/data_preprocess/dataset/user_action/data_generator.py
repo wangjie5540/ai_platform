@@ -1,3 +1,4 @@
+from digitforce.aip.common.file_helper import create_dir
 from digitforce.aip.common.hive_helper import df_hive_helper
 
 
@@ -16,4 +17,5 @@ def generate_train_data(input_table, output_file, profile_col_name):
     ORDER BY user_id, event_timestamp DESC
 '''
     df = df_hive_helper.query_to_df(sql)
+    create_dir(output_file)
     df.to_csv(output_file, index=False, header=None)
