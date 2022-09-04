@@ -1,8 +1,0 @@
-torch==1.11.0
-faiss-cpu==1.7.2
-gensim==4.2.0
-fpgrowth-py==1.0.0
-
-lightgbm==3.3.2
-datatable==1.0.0
-scikit-learn==1.1.1
