@@ -1,6 +1,7 @@
 # coding: utf-8
 
-COMPONENT_OUTPUT_PATH = '/tmp/component_output'
+AIP_CONFIG_PATH = '/usr/local/etc/aip_config.yaml'
+JSON_OUTPUT_PATH = '/tmp/out'
 MOUNT_NFS_DIR = '/mnt/nfs'
 IMAGE_REGISTRY = 'digit-force-docker.pkg.coding.net/marketing_algorithm'
 REGISTRY_DB = 'hello-world'
