@@ -1,4 +1,5 @@
 import datetime
+import math
 import traceback
 from typing import Dict
 from spark_env import SparkEnv, spark_read
@@ -9,6 +10,7 @@ import json
 from collections import Counter
 import pandas as pd
 from collections import defaultdict
+import pyhdfs
 import numpy as np
 import os
 import datetime
@@ -28,7 +30,7 @@ class CreateDataset:
         :Return type : DataFrame
         """
         spark = SparkEnv('test_lookalike_train').spark
-        logging.info("启动spark")
+        print("启动spark")
         if is_train:
             spark_read(spark, userData['tableName'], 'user_table_tmp_lookalike', 'dt', "2022-06-24", "2022-06-24")
             userData['tableName'] = 'user_table_tmp_lookalike'
@@ -36,12 +38,12 @@ class CreateDataset:
             bhData['tableName'] = 'bh_table_tmp_lookalike'
             spark_read(spark, orderData['tableName'], 'order_table_tmp_lookalike', 'dt', "2022-05-23", "2022-06-23")
             orderData['tableName'] = 'order_table_tmp_lookalike'
-            spark_read(spark, goodsData['tableName'], 'item_table_tmp_lookalike', 'dt', "2022-06-23", "2022-06-23")
+            spark_read(spark, goodsData['tableName'], 'item_table_tmp_lookalike', 'dt', "2022-09-05", "2022-09-05")
             goodsData['tableName'] = 'item_table_tmp_lookalike'
 
             cur_str = get_cur_date(spark, userData, bhData, orderData, goodsData)
 
-            logging.info("构建特征所使用数据日期为：{}".format(cur_str))
+            print("构建特征所使用数据日期为：{}".format(cur_str))
             #         cur_str = '2022-03-18'
             current_day = datetime.datetime.strptime(cur_str, "%Y-%m-%d")
             # last_3_day = (current_day - datetime.timedelta(days=2)).strftime("%Y-%m-%d")
@@ -52,7 +54,7 @@ class CreateDataset:
             user_dates_features = [last_1_month]
             item_dates_features = [last_1_month]
             samples = get_samples_train(spark, bhData, last_1_month, cur_str, eventCode)
-            logging.info("构建模型训练样本共计{}条".format(len(samples)))
+            print("构建模型训练样本共计{}条".format(len(samples)))
             user_features_of_order, item_features_of_order = get_order_features(spark, is_train, samples,
                                                                                 user_dates_features,
                                                                                 item_dates_features,
@@ -73,7 +75,7 @@ class CreateDataset:
         else:
             cur_str = get_cur_date(spark, userData, bhData, orderData, goodsData)
 
-            logging.info("构建特征所使用数据日期为：{}".format(cur_str))
+            print("构建特征所使用数据日期为：{}".format(cur_str))
             #         cur_str = '2022-03-18'
             current_day = datetime.datetime.strptime(cur_str, "%Y-%m-%d")
             # last_3_day = (current_day - datetime.timedelta(days=2)).strftime("%Y-%m-%d")
@@ -85,7 +87,7 @@ class CreateDataset:
             item_dates_features = [last_1_month]
 
             samples = get_user_list(spark, userData, "2022-06-24")
-            logging.info("构建全量用户样本共计{}条".format(len(samples)))
+            print("构建全量用户样本共计{}条".format(len(samples)))
             user_features_of_order, item_features_of_order = get_order_features(spark, is_train, samples,
                                                                                 user_dates_features,
                                                                                 item_dates_features,
@@ -116,7 +118,7 @@ def Filter_and_Construct(self, orderData, bhData, userData, goodsData, scene, ex
         goodsData['tableName'] = 'item_table_tmp_lookalike'
 
         cur_str = get_cur_date(spark, userData, bhData, orderData, goodsData)
-        logging.info("构建特征所使用数据日期为：" + cur_str)
+        print("构建特征所使用数据日期为：" + cur_str)
         current_day = datetime.datetime.strptime(cur_str, "%Y-%m-%d")
         #         last_3_day = (current_day - datetime.timedelta(days=2)).strftime("%Y-%m-%d")
         #         last_7_day = (current_day - datetime.timedelta(days=6)).strftime("%Y-%m-%d")
@@ -133,8 +135,8 @@ def Filter_and_Construct(self, orderData, bhData, userData, goodsData, scene, ex
         if len(samples) != 0 and scene != "1":
             samples = crowd_select_scence(spark, samples, orderData, goodsData, cur_str, scene, expansion_dimension)
     except:
-        logging.error('Raise error when filter samples')
-        logging.error(traceback.format_exc())
+        print('Raise error when filter samples')
+        print(traceback.format_exc())
         samples = None
     finally:
         spark.stop()
@@ -1105,10 +1107,9 @@ def get_item_features(spark, samples, goodsData, cur_str):
             left join
                 (select 
                     {0} as sku,
-                    max({1}) as cate 
+                    {1} as cate 
                 from {2}
-                where {3} = '{4}' 
-                group by sku) as b
+                where {3} = '{4}') as b
             on a.sku = b.sku
         '''.format(goodsData['sku'], goodsData['cate'], goodsData['tableName'], goodsData['dt'], cur_str)
         #         print('sql_cate' + sql_cate)
@@ -1129,10 +1130,9 @@ def get_item_features(spark, samples, goodsData, cur_str):
              left join
                  (select 
                      {0} as sku,
-                     max({1}) as brand 
+                     {1} as brand 
                  from {2}
-                 where {3} = '{4}' 
-                 group by sku) as b
+                 where {3} = '{4}') as b
              on a.sku = b.sku
          '''.format(goodsData['sku'], goodsData['brand'], goodsData['tableName'], goodsData['dt'], cur_str)
         brand_df = spark.sql(sql_brand).toPandas()
@@ -1301,7 +1301,7 @@ def upload_user_embedding(spark, taskid, user_embedding_df):
             taskid = '{0}'
     '''.format(taskid)
     lastest_version_df = spark.sql(sql_lastest_version).toPandas()
-    if len(lastest_version_df) == 0 or lastest_version_df.iloc[0, 0] is None:
+    if len(lastest_version_df) == 0 or lastest_version_df.iloc[0, 0] is None or math.isnan(lastest_version_df.iloc[0,0]):
         cur_version = 1
     else:
         cur_version = int(lastest_version_df.iloc[0, 0]) + 1
@@ -1341,6 +1341,19 @@ def download_user_embedding(spark, taskid):
     '''.format(taskid)
     user_embedding_df = spark.sql(sql_user_embedding).toPandas()
     return user_embedding_df
+
+def upload(filepath, taskId):
+    try:
+        cli = pyhdfs.HdfsClient(hosts="bigdata-server-08:9870")
+        target_file_path = os.path.join('hdfs:///user/ai/cdp/lookalike/parameter', str(taskId) + '.txt')
+        if cli.exists(target_file_path):
+            cli.delete(target_file_path)
+        cli.copy_from_local(filepath, target_file_path)
+        return target_file_path
+    except:
+        logging.error(traceback.format_exc())
+        return "-1"
+
 
 
 if __name__ == '__main__':

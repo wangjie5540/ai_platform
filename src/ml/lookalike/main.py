@@ -6,13 +6,15 @@ import json
 import torch
 import pandas as pd
 import logging
+import argparse
 
 from model.dssm import DSSM
 from preprocessing.utils import size_format
 from model_train import filter_features, get_train_test_input
-from construct_features import CreateDataset, upload_user_embedding
+from construct_features import CreateDataset, upload_user_embedding, upload
 from spark_env import SparkEnv
 from digitforce.aip.common.logging_config import setup_logging
+
 setup_logging("info.log", "error.log")
 
 path = os.getcwd()
@@ -21,16 +23,15 @@ setup_logging(os.path.join(path, 'train_info_log.log'), os.path.join(path, 'trai
 
 
 def start_model_train(data_dict):
-    logging.info("解析json")
+    print("解析json")
     taskid = data_dict.get("taskId")
     userData = data_dict.get("userData")
     bhData = data_dict.get("trafficData")
     orderData = data_dict.get("orderData")
     goodsData = data_dict.get("goodsData")
     eventCode = data_dict.get('eventCode').get(list(data_dict.get('eventCode').keys())[0])
-
     # 设置路径
-    task_path = "model/{}/".format(taskid)
+    task_path = os.path.join(path, "model", str(taskid))
     encoder_path = task_path + "encoder/"
     scaler_path = task_path + "scaler/"
     model_path = task_path + "model.pth"
@@ -53,7 +54,9 @@ def start_model_train(data_dict):
     with open(task_path + fname, 'w') as f:
         f.write(json.dumps(data_dict))
 
-    logging.info("根据参数构建训练所需数据集")
+    target_file_path = upload(task_path + fname, taskid)
+
+    print("根据参数构建训练所需数据集")
     cd = CreateDataset()
     is_train = True
     sample = cd.ConstructFeatures(is_train, userData, bhData, orderData, goodsData, eventCode)
@@ -74,11 +77,11 @@ def start_model_train(data_dict):
     #         if 'list' in i:
     #             user_list.loc[:,i] = '1|2|3'
 
-    logging.info("筛选构建模型所需特征")
+    print("筛选构建模型所需特征")
     sparse_features, dense_features, sequence_features, target, user_sparse_features, user_dense_features, item_sparse_features, item_dense_features, user_sequence_features, item_sequence_features = filter_features(
         sample.columns)
 
-    logging.info("构建模型所需数据、特征及相应输入")
+    print("构建模型所需数据、特征及相应输入")
     train, test, data, user_feature_columns, item_feature_columns, train_model_input, test_model_input = \
         get_train_test_input(sample, user_list, sparse_features, dense_features, sequence_features,
                              user_sparse_features, user_dense_features,
@@ -86,7 +89,7 @@ def start_model_train(data_dict):
                              user_sequence_features, item_sequence_features,
                              encoder_path, scaler_path)
 
-    logging.info("定义模型，训练、预测、评估")
+    print("定义模型，训练、预测、评估")
     device = 'cpu'
     use_cuda = True
     if use_cuda and torch.cuda.is_available():
@@ -97,12 +100,12 @@ def start_model_train(data_dict):
 
     model.compile("adam", "binary_crossentropy", metrics=['auc', 'accuracy', 'precision', 'recall', 'f1_score'])
 
-    logging.info("开始训练：")
+    print("开始训练：")
     start = time.time()
     os.makedirs('model_zoo', exist_ok=True)
     model.fit(train_model_input, train[target].values, epochs=3, verbose=2, validation_split=0.2)
     end = time.time()
-    logging.info("训练结束，共用时：{}秒".format(end - start))
+    print("训练结束，共用时：{}秒".format(end - start))
 
     # 评估
     eval_tr = model.evaluate(train_model_input, train[target].values)
@@ -119,7 +122,7 @@ def start_model_train(data_dict):
 
     # 4、计算用户向量
     # 训练过程保存了最佳模型，需要先加载模型
-    logging.info("计算用户向量")
+    print("计算用户向量")
     state_dict = torch.load("./model_zoo/model.pth")
 
     model = DSSM(user_feature_columns, item_feature_columns, task='binary', device=device)
@@ -144,35 +147,77 @@ def start_model_train(data_dict):
     for i in range(len(user_embedding)):
         k = user_id_list[i]
         user_embedding_dic[str(k)] = str(user_embedding[i].tolist())
-    logging.info("得到用户向量")
+    print("得到用户向量")
     user_embedding_df = pd.DataFrame.from_dict(user_embedding_dic, orient='index', columns=['embedding'])
     user_embedding_df = user_embedding_df.reset_index().rename(columns={'index': 'user_id'})
-    logging.info("上传用户向量")
+    print("上传用户向量")
     spark = SparkEnv("lookalike_train").spark
     upload_user_embedding(spark, taskid, user_embedding_df)
     return res, state_dict
 
 
 if __name__ == '__main__':
-    data_dict = {"taskId": 18, "userData": {"city": "", "sex": "sex_id", "consume_level": "", "yuliu_id": "",
-                                            "tableName": "labelx.push_rpt_member_labels", "dt": "dt",
-                                            "recent_view_day": "", "membership_level": "", "province": "",
-                                            "user_id": "vip_id", "online_signup_time": "", "life_stage": "",
-                                            "age": "age"},
-                 "trafficData": {"cart_remove": "", "cart_add": "", "click": "CLICK",
-                                 "tableName": "labelx.push_event_vip_traffic", "dt": "", "search": "",
-                                 "exposure": "EXPOSURE", "card_add": "BROWSE", "user_id": "vip_id",
-                                 "event_code": "event_code", "sku": "sku", "collect": "BROWSE",
-                                 "event_time": "event_time", "browse": ""},
-                 "orderData": {"user_id": "vip_id", "order_time": "order_time", "sku": "sku",
-                               "sale_quantity": "sale_quantity", "order_id": "order_id", "sale_amount": "sale_amount",
-                               "tableName": "labelx.push_event_vip_order"},
-                 "goodsData": {"dt": "dt", "cate": "category_large", "sku": "sku", "brand": "brand", "tags": "",
-                               "tableName": "labelx.push_event_vip_order"}, "eventCode": {
-            "event_code": {"search": "", "cart_remove": "", "exposure": "EXPOSURE", "cart_add": "", "click": "CLICK",
-                           "collect": "BROWSE", "browse": ""}}}
-    logging.info("启动训练")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--solution_id', type=str, default='', help='solution id')
+    parser.add_argument('--instance_id', type=str, default='', help='instance id')
+    args = parser.parse_args()
+    data_dict = {
+        "userData": {
+            "city": "",
+            "sex": "sex_id",
+            "consume_level": "",
+            "yuliu_id": "",
+            "tableName": "labelx.push_rpt_member_labels",
+            "dt": "dt",
+            "recent_view_day": "",
+            "membership_level": "",
+            "province": "",
+            "user_id": "vip_id",
+            "online_signup_time": "",
+            "life_stage": "",
+            "age": "age"},
+        "trafficData": {
+            "cart_remove": "",
+            "cart_add": "",
+            "click": "CLICK",
+            "tableName": "labelx.push_event_vip_traffic",
+            "dt": "",
+            "search": "",
+            "exposure": "EXPOSURE",
+            "card_add": "BROWSE",
+            "user_id": "vip_id",
+            "event_code": "event_code",
+            "sku": "sku",
+            "collect": "BROWSE",
+            "event_time": "event_time",
+            "browse": ""},
+        "orderData": {
+            "user_id": "vip_id",
+            "order_time": "order_time",
+            "sku": "sku",
+            "sale_quantity": "sale_quantity",
+            "order_id": "order_id",
+            "sale_amount": "sale_amount",
+            "tableName": "labelx.push_event_vip_order"},
+        "goodsData": {
+            "dt": "dt",
+            "cate": "cate",
+            "sku": "sku",
+            "brand": "brand",
+            "tags": "",
+            "tableName": "labelx.push_goods"},
+        "eventCode": {
+            "event_code": {
+                "search": "",
+                "cart_remove": "",
+                "exposure": "EXPOSURE",
+                "cart_add": "",
+                "click": "CLICK",
+                "collect": "BROWSE",
+                "browse": ""}},
+        'taskId': args.solution_id}
+    print("启动训练")
     res, model = start_model_train(data_dict)
-    # res: res = {'taskId': taskid, 'auc': auc, "fileSize": model_size, "generateTime": generateTime}
+    # res: res = {'solution_id': solution_id, 'auc': auc, "fileSize": model_size, "generateTime": generateTime}
     # model: 模型文件.pth
-    logging.info("返回结果")
+    print("返回结果")
