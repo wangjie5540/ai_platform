@@ -14,6 +14,7 @@ import logging
 import traceback
 import warnings
 import pyhdfs
+from param_test import hdfs_path
 warnings.filterwarnings("ignore")
 
 train_set = None
@@ -89,7 +90,7 @@ def lgb_cv(n_estimators, num_leaves, max_depth, learning_rate, reg_alpha, reg_la
     best_score = np.max(cv_res['auc-mean'])
     return best_score
 
-def train(input_params, output_model_name):
+def train(input_params, solutionId):
     """
     :param input_params: 输入配置参数
     {"taskid":11,"category":["女装","男装","童装"],"userData":{"dt":"dt","city":"city_code","user_id":"vip_id","online_signup_time":"signup_date","sex":"sex_id","age":"age","tableName":"labelx.push_rpt_member_labels"},"trafficData":{"duration":"duration","exposure":"EXPOSURE","card_add":"BROWSE","user_id":"vip_id","event_code":"event_code","sku":"sku","collect":"EXPOSURE","click":"CLICK","event_time":"event_time","tableName":"labelx.push_event_vip_traffic"},"orderData":{"user_id":"vip_id","order_time":"order_time","sku":"sku","sale_quantity":"sale_quantity","order_id":"order_id","sale_amount":"sale_amount","tableName":"labelx.push_event_vip_order"},"goodsData":{"dt":"dt","cate":"category_large","sku":"sku","tableName":"labelx.push_event_vip_order"},"trainingScope":"过去15天","forecastPeriod":"未来15天","eventCode":{"event_code":{}}}
@@ -120,15 +121,10 @@ def train(input_params, output_model_name):
                                     input_params['goodsData'],
                                     input_params['eventCode'][input_params['trafficData']['event_code']],
                                      None)
-        # dataset.to_csv("dataset_fugou_test.csv", index=False)
-        # res_target_path = os.path.join('hdfs:///usr/algorithm/cd/fugou/result', 'dataset_fugou_test.csv')
-        # upload_flag = upload_hdfs("dataset_fugou_test.csv", res_target_path)
-        # print(upload_flag)
 
-        # dataset = pd.read_csv(input_dataset_filepath)
         # 暂时处理
-        if (dataset.empty) or (len(dataset)==0):#可合并
-            logging.info("Empty dataset for traning!")
+        if (dataset.empty) or (len(dataset) == 0):#可合并
+            print("Empty dataset for traning!")
             return None
 
         if len(dataset[dataset['lab'] == 1]) == len(dataset):
@@ -137,7 +133,7 @@ def train(input_params, output_model_name):
             dataset.loc[:len(dataset) // 2, 'lab'] = 1
         print(dataset)
         if (len(dataset) == 0) or (len(dataset[dataset['lab']==0]) == len(dataset)) or (len(dataset[dataset['lab']==1]) == len(dataset)):
-            logging.info("Train dataset just has one class, however this task required 2 classes at least! Please try another parameters!")
+            print("Train dataset just has one class, however this task required 2 classes at least! Please try another parameters!")
             return None
         else:
             train_set, feats_train, labels_train, feats_test, labels_test = process_feats(dataset, 'lab')
@@ -163,8 +159,8 @@ def train(input_params, output_model_name):
             best_params['max_depth'] = int(best_params['max_depth'])
             best_params['bagging_freq'] = int(best_params['bagging_freq'])
 #             print(best_params)
-            logging.info('Bayes_optimalization for best_params:')
-            logging.info(best_params)
+            print('Bayes_optimalization for best_params:')
+            print(best_params)
             best_lgb_model = lgb.LGBMClassifier(n_jobs=-1, boosting_type='gbdt', objective='binary', random_state=42, **best_params)
             best_lgb_model.fit(feats_train, labels_train)
 
@@ -173,11 +169,23 @@ def train(input_params, output_model_name):
             print('The best model from Bayes optimization scores {:.5f} AUC ROC on the test set.'.format(auc))
 
             # store the model
-            filepath = str(output_model_name)+r".pkl"
-            print(filepath)
-            pickle.dump(best_lgb_model, open(filepath, 'wb'))
-            end = time.time()
-            return 'success'
+            modelfilepath = str(solutionId)+r".pkl"
+            print(modelfilepath)
+            pickle.dump(best_lgb_model, open(modelfilepath, 'wb'))
+            params_str = json.dumps(input_params, ensure_ascii=False)
+            paramfilepath = str(solutionId) + r'.txt'
+            with open(paramfilepath, 'w') as f:
+                f.write(params_str)
+            model_target_file_path = os.path.join(hdfs_path, str(solutionId) + '.pkl')
+            param_target_file_path = os.path.join(hdfs_path, str(solutionId) + '.txt')
+            upload_flag1 = upload_hdfs(modelfilepath, model_target_file_path)
+            upload_flag2 = upload_hdfs(paramfilepath, param_target_file_path)
+            if upload_flag1 and upload_flag2:
+                os.remove(modelfilepath)
+                os.remove(paramfilepath)
+                return 'success'
+            else:
+                return None
     except:
-        logging.error('Raise errors when response to platform',exc_info=1)
+        print('Raise errors when response to platform',exc_info=1)
         return None
