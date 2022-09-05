@@ -1,10 +1,4 @@
-#!/usr/bin/env python3
 # encoding: utf-8
-'''
-@file: main.py
-@time: 2022/4/14 17:39
-@desc:
-'''
 import os
 import time
 import json
