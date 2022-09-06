@@ -1339,7 +1339,7 @@ def download_user_embedding(spark, taskid):
     return user_embedding_df
 
 def upload(filepath, taskId):
-    cli = pyhdfs.HdfsClient(hosts="{}:{}".format(hdfs_config['host'],hdfs_config['port']))
+    cli = pyhdfs.HdfsClient(hosts=hdfs_config['hosts'])
     target_file_path = os.path.join('hdfs:///user/ai/cdp/lookalike/parameter', str(taskId) + '.txt')
     if cli.exists(target_file_path):
         cli.delete(target_file_path)
