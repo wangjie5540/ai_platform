@@ -216,6 +216,7 @@ if __name__ == '__main__':
                 "collect": "BROWSE",
                 "browse": ""}},
         'taskId': args.solution_id}
+    data_dict['taskId'] = 18
     print("启动训练")
     res, model = start_model_train(data_dict)
     # res: res = {'solution_id': solution_id, 'auc': auc, "fileSize": model_size, "generateTime": generateTime}
