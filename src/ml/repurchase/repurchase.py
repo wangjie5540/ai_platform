@@ -16,28 +16,20 @@ import warnings
 import pyhdfs
 from param_test import hdfs_path
 warnings.filterwarnings("ignore")
+import digitforce.aip.common.utils.config_helper as config_helper
+hdfs_config = config_helper.get_module_config("hdfs")
+
+
 
 train_set = None
 
 def upload_hdfs(filepath, target_file_path):
     try:
-        cli = pyhdfs.HdfsClient(hosts='bigdata-server-08:9870')
+        cli = pyhdfs.HdfsClient(hosts="{}:{}".format(hdfs_config['host'], hdfs_config['port']))
         if cli.exists(target_file_path):
             cli.delete(target_file_path)
         cli.copy_from_local(filepath, target_file_path)
         return target_file_path
-    except:
-        print(traceback.format_exc())
-        return None
-
-def download_hdfs(local_path, ModelFileUrl):
-    try:
-        cli = pyhdfs.HdfsClient(hosts='bigdata-server-08:9870', user_name='root')
-        if cli.exists(ModelFileUrl):
-            cli.copy_to_local(ModelFileUrl, local_path)
-            return local_path
-        else:
-            return None
     except:
         print(traceback.format_exc())
         return None
