@@ -25,7 +25,7 @@ train_set = None
 
 def upload_hdfs(filepath, target_file_path):
     try:
-        cli = pyhdfs.HdfsClient(hosts="{}:{}".format(hdfs_config['host'], hdfs_config['port']))
+        cli = pyhdfs.HdfsClient(hosts="{}".format(hdfs_config['hosts']))
         if cli.exists(target_file_path):
             cli.delete(target_file_path)
         cli.copy_from_local(filepath, target_file_path)
