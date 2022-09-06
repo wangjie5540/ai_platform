@@ -28,8 +28,7 @@ def upload_hdfs(filepath, target_file_path):
         return target_file_path
     except:
         print(traceback.format_exc())
-        #             logging.info(traceback.format_exc())
-        return ""
+        return None
 
 def download_hdfs(local_path, ModelFileUrl):
     try:
@@ -41,8 +40,7 @@ def download_hdfs(local_path, ModelFileUrl):
             return None
     except:
         print(traceback.format_exc())
-        #             logging.info(traceback.format_exc())
-        return ""
+        return None
 
 def process_feats(data, tag_name):
     labels = np.array(data[tag_name].astype(np.int32)).reshape((-1,))
@@ -97,95 +95,93 @@ def train(input_params, solutionId):
     :return:
     """
     global train_set
-    try:
-        create_data = CreateDataset()
-        cate_list = []
-        for cateid in input_params['category']:
-            cate = '"'+cateid+'"'
-            cate_list.append(cate)
-        catestr = "("+",".join(cate_list)+")"
+
+    create_data = CreateDataset()
+    cate_list = []
+    for cateid in input_params['category']:
+        cate = '"'+cateid+'"'
+        cate_list.append(cate)
+    catestr = "("+",".join(cate_list)+")"
 
 
-        dataset = create_data.ConstructFeatures(
-                                    input_params['trainingScope'],
-                                    input_params['forecastPeriod'],
-                                    catestr,
-                                    True,
-                                    input_params['orderData']['tableName'],
-                                    input_params['trafficData']['tableName'],
-                                    input_params['userData']['tableName'],
-                                    input_params['goodsData']['tableName'],
-                                    input_params['orderData'],
-                                    input_params['trafficData'],
-                                    input_params['userData'],
-                                    input_params['goodsData'],
-                                    input_params['eventCode'][input_params['trafficData']['event_code']],
-                                     None)
+    dataset = create_data.ConstructFeatures(
+                                input_params['trainingScope'],
+                                input_params['forecastPeriod'],
+                                catestr,
+                                True,
+                                input_params['orderData']['tableName'],
+                                input_params['trafficData']['tableName'],
+                                input_params['userData']['tableName'],
+                                input_params['goodsData']['tableName'],
+                                input_params['orderData'],
+                                input_params['trafficData'],
+                                input_params['userData'],
+                                input_params['goodsData'],
+                                input_params['eventCode'][input_params['trafficData']['event_code']],
+                                 None)
 
-        # 暂时处理
-        if (dataset.empty) or (len(dataset) == 0):#可合并
-            print("Empty dataset for traning!")
-            return None
+    # 暂时处理
+    if (dataset.empty) or (len(dataset) == 0):#可合并
+        print("Empty dataset for traning!")
+        return
 
-        if len(dataset[dataset['lab'] == 1]) == len(dataset):
-            dataset.loc[:len(dataset) // 2, 'lab'] = 0
-        elif len(dataset[dataset['lab'] == 0]) == len(dataset):
-            dataset.loc[:len(dataset) // 2, 'lab'] = 1
-        print(dataset)
-        if (len(dataset) == 0) or (len(dataset[dataset['lab']==0]) == len(dataset)) or (len(dataset[dataset['lab']==1]) == len(dataset)):
-            print("Train dataset just has one class, however this task required 2 classes at least! Please try another parameters!")
-            return None
-        else:
-            train_set, feats_train, labels_train, feats_test, labels_test = process_feats(dataset, 'lab')
-            lgb_opt = BayesianOptimization(
-                lgb_cv,
-                {
-                    'n_estimators': (10, 200),
-                    'num_leaves': (2, 100),
-                    'max_depth': (1, 40),
-                    'learning_rate': (0.1, 1),
-                    'reg_alpha': (0.1, 1),
-                    'reg_lambda': (0.1, 1),
-                    'bagging_fraction': (0.5, 1),
-                    'bagging_freq': (1, 5),
-                    'colsample_bytree': (0.6, 1)
-                }
-            )
+    if len(dataset[dataset['lab'] == 1]) == len(dataset):
+        dataset.loc[:len(dataset) // 2, 'lab'] = 0
+    elif len(dataset[dataset['lab'] == 0]) == len(dataset):
+        dataset.loc[:len(dataset) // 2, 'lab'] = 1
+    print(dataset)
+    if (len(dataset) == 0) or (len(dataset[dataset['lab']==0]) == len(dataset)) or (len(dataset[dataset['lab']==1]) == len(dataset)):
+        print("Train dataset just has one class, however this task required 2 classes at least! Please try another parameters!")
+        return
+    else:
+        train_set, feats_train, labels_train, feats_test, labels_test = process_feats(dataset, 'lab')
+        lgb_opt = BayesianOptimization(
+            lgb_cv,
+            {
+                'n_estimators': (10, 200),
+                'num_leaves': (2, 100),
+                'max_depth': (1, 40),
+                'learning_rate': (0.1, 1),
+                'reg_alpha': (0.1, 1),
+                'reg_lambda': (0.1, 1),
+                'bagging_fraction': (0.5, 1),
+                'bagging_freq': (1, 5),
+                'colsample_bytree': (0.6, 1)
+            }
+        )
 
-            lgb_opt.maximize()
-            best_params = lgb_opt.max['params']
-            best_params['n_estimators'] = int(best_params['n_estimators'])
-            best_params['num_leaves'] = int(best_params['num_leaves'])
-            best_params['max_depth'] = int(best_params['max_depth'])
-            best_params['bagging_freq'] = int(best_params['bagging_freq'])
+        lgb_opt.maximize()
+        best_params = lgb_opt.max['params']
+        best_params['n_estimators'] = int(best_params['n_estimators'])
+        best_params['num_leaves'] = int(best_params['num_leaves'])
+        best_params['max_depth'] = int(best_params['max_depth'])
+        best_params['bagging_freq'] = int(best_params['bagging_freq'])
 #             print(best_params)
-            print('Bayes_optimalization for best_params:')
-            print(best_params)
-            best_lgb_model = lgb.LGBMClassifier(n_jobs=-1, boosting_type='gbdt', objective='binary', random_state=42, **best_params)
-            best_lgb_model.fit(feats_train, labels_train)
+        print('Bayes_optimalization for best_params:')
+        print(best_params)
+        best_lgb_model = lgb.LGBMClassifier(n_jobs=-1, boosting_type='gbdt', objective='binary', random_state=42, **best_params)
+        best_lgb_model.fit(feats_train, labels_train)
 
-            preds = best_lgb_model.predict_proba(feats_test)[:, 1]
-            auc = roc_auc_score(labels_test, preds)
-            print('The best model from Bayes optimization scores {:.5f} AUC ROC on the test set.'.format(auc))
+        preds = best_lgb_model.predict_proba(feats_test)[:, 1]
+        auc = roc_auc_score(labels_test, preds)
+        print('The best model from Bayes optimization scores {:.5f} AUC ROC on the test set.'.format(auc))
 
-            # store the model
-            modelfilepath = str(solutionId)+r".pkl"
-            print(modelfilepath)
-            pickle.dump(best_lgb_model, open(modelfilepath, 'wb'))
-            params_str = json.dumps(input_params, ensure_ascii=False)
-            paramfilepath = str(solutionId) + r'.txt'
-            with open(paramfilepath, 'w') as f:
-                f.write(params_str)
-            model_target_file_path = os.path.join(hdfs_path, str(solutionId) + '.pkl')
-            param_target_file_path = os.path.join(hdfs_path, str(solutionId) + '.txt')
-            upload_flag1 = upload_hdfs(modelfilepath, model_target_file_path)
-            upload_flag2 = upload_hdfs(paramfilepath, param_target_file_path)
-            if upload_flag1 and upload_flag2:
-                os.remove(modelfilepath)
-                os.remove(paramfilepath)
-                return 'success'
-            else:
-                return None
-    except:
-        print('Raise errors when response to platform',exc_info=1)
-        return None
+        # store the model
+        modelfilepath = str(solutionId)+r".pkl"
+        pickle.dump(best_lgb_model, open(modelfilepath, 'wb'))
+        params_str = json.dumps(input_params, ensure_ascii=False)
+        paramfilepath = str(solutionId) + r'.txt'
+        with open(paramfilepath, 'w') as f:
+            f.write(params_str)
+        model_target_file_path = os.path.join(hdfs_path, str(solutionId) + '.pkl')
+        param_target_file_path = os.path.join(hdfs_path, str(solutionId) + '.txt')
+        upload_flag1 = upload_hdfs(modelfilepath, model_target_file_path)
+        upload_flag2 = upload_hdfs(paramfilepath, param_target_file_path)
+        if upload_flag1 and upload_flag2:
+            os.remove(modelfilepath)
+            os.remove(paramfilepath)
+            print('Success!!')
+        else:
+            print('Upload files failed!!')
+        return
+
