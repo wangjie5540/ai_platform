@@ -31,16 +31,18 @@ class CreateDataset:
         Function: get samples and features
         :Return type : DataFrame
         """
-        spark = SparkEnv('lookalike_train').spark
+        spark_env = SparkEnv('lookalike_train')
+        spark_client = spark_env.sparkClient
+        spark = spark_env.spark
         print("启动spark")
         if is_train:
-            spark_read(spark, userData['tableName'], 'user_table_tmp_lookalike', 'dt', "2022-06-24", "2022-06-24")
+            spark_read(spark_client, userData['tableName'], 'user_table_tmp_lookalike', 'dt', "2022-06-24", "2022-06-24")
             userData['tableName'] = 'user_table_tmp_lookalike'
-            spark_read(spark, bhData['tableName'], 'bh_table_tmp_lookalike', 'dt', "2022-05-23", "2022-06-23")
+            spark_read(spark_client, bhData['tableName'], 'bh_table_tmp_lookalike', 'dt', "2022-05-23", "2022-06-23")
             bhData['tableName'] = 'bh_table_tmp_lookalike'
-            spark_read(spark, orderData['tableName'], 'order_table_tmp_lookalike', 'dt', "2022-05-23", "2022-06-23")
+            spark_read(spark_client, orderData['tableName'], 'order_table_tmp_lookalike', 'dt', "2022-05-23", "2022-06-23")
             orderData['tableName'] = 'order_table_tmp_lookalike'
-            spark_read(spark, goodsData['tableName'], 'item_table_tmp_lookalike', 'dt', "2022-09-05", "2022-09-05")
+            spark_read(spark_client, goodsData['tableName'], 'item_table_tmp_lookalike', 'dt', "2022-09-05", "2022-09-05")
             goodsData['tableName'] = 'item_table_tmp_lookalike'
 
             cur_str = get_cur_date(spark, userData, bhData, orderData, goodsData)
