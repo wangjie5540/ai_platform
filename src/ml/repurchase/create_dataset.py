@@ -76,11 +76,11 @@ class CreateDataset:
                 cur_str = get_min_date_of_4_table(spark, user_table, order_table, item_table, bh_table, usinfo, odinfo,
                                                   itinfo, bhinfo)
                 feature_dates, train_date, predict_date = get_time_params(cur_str, train_period, predict_period)
-                print(feature_dates, train_date, predict_date)
+                # print(feature_dates, train_date, predict_date)
                 order_table, user_table, item_table, bh_table = 'order_table_tmp', 'user_table_tmp', 'item_table_tmp', 'bh_table_tmp'
                 samples = get_samples_predict(spark, order_table, odinfo, item_table, itinfo, cat_list, train_date,
                                               cur_str, where_sql, user_table, usinfo)
-            print(samples)
+            # print(samples)
             if len(samples) == 0:
                 spark.stop()
                 return samples
@@ -129,7 +129,7 @@ def get_min_date_of_4_table(spark, user_table: str, order_table: str, item_table
     dt2 = spark.sql(sql2).toPandas()
     dt3 = spark.sql(sql3).toPandas()
     dt4 = spark.sql(sql4).toPandas()
-    print(dt1, dt2, dt3, dt4)
+    # print(dt1, dt2, dt3, dt4)
     min_date = min([dt1.iloc[0, 0], dt2.iloc[0, 0], dt3.iloc[0, 0], dt4.iloc[0, 0]])
     print(min_date)
     return min_date
@@ -166,7 +166,7 @@ def get_time_params(cur_str: str, train_period: str, predict_period: str):
 
 def get_samples_train(spark, order_table, odinfo_map, item_table, itinfo_map, cur_str, train_date, cate_list,
                       predict_date):
-    print(order_table, odinfo_map, item_table, itinfo_map, cur_str, train_date, cate_list, predict_date)
+    # print(order_table, odinfo_map, item_table, itinfo_map, cur_str, train_date, cate_list, predict_date)
     sql = '''
         select 
             a.user_id,
@@ -220,10 +220,8 @@ def get_samples_train(spark, order_table, odinfo_map, item_table, itinfo_map, cu
         on a.user_id = b.user_id
     '''.format(odinfo_map['user_id'], odinfo_map['sku'], order_table, odinfo_map['order_time'], train_date, cur_str,
                itinfo_map['sku'], itinfo_map['cate'], item_table, itinfo_map['dt'], cate_list, predict_date)
-    print(sql)
+    # print(sql)
     samples = spark.sql(sql).toPandas()
-    #     print(samples.show(5))
-    #     samples = samples.toPandas()
     return samples
 
 
@@ -254,7 +252,7 @@ def get_samples_predict(spark, order_table, odinfo_map, item_table, itinfo_map, 
         group by a.user_id    
     '''.format(odinfo_map['user_id'], odinfo_map['sku'], order_table, odinfo_map['order_time'], train_date, cur_str,
                itinfo_map['sku'], item_table, itinfo_map['dt'], itinfo_map['cate'], cate_list)
-    print(sql)
+    # print(sql)
     samples = spark.sql(sql).toPandas()
     if where_sql:
         sql_where = '''
@@ -264,7 +262,7 @@ def get_samples_predict(spark, order_table, odinfo_map, item_table, itinfo_map, 
                 and {3} in (select max({3}) from {1})
         '''.format(usinfo['user_id'], user_table, where_sql, usinfo['dt'])
         samples1 = spark.sql(sql_where).toPandas()
-        print(not samples.empty, not samples1.empty)
+        # print(not samples.empty, not samples1.empty)
         if not samples.empty and not samples1.empty:
             samples = pd.merge(samples1, samples, how='inner', on='user_id')
 
@@ -622,7 +620,7 @@ def get_label_features(spark, samples: pd.DataFrame, user_table, usinfo_map, cur
             on a.user_id = b.user_id
 
         '''.format(usinfo_map['user_id'], usinfo_map['sex'], user_table, usinfo_map['dt'], cur_str)
-        print(sql_gender)
+        # print(sql_gender)
         gender_df = spark.sql(sql_gender).toPandas()
         gender_df.fillna(value=0, inplace=True)
         gender_df[['user_id', 'gender']] = gender_df[['user_id', 'gender']].astype(str)

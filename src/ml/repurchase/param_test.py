@@ -7,3 +7,5 @@ params_dict = {"taskid":11,
                "trainingScope":"过去15天",
                "forecastPeriod":"未来15天",
                "eventCode":{"event_code":{}}}
+
+hdfs_path = 'hdfs:///user/ai/cdp/fugou/model'
