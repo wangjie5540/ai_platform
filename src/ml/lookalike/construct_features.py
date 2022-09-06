@@ -16,8 +16,10 @@ import os
 import datetime
 import time
 from typing import List
+import digitforce.aip.common.utils.config_helper as config_helper
 from preprocessing.utils import Negative_Sample
 import logging
+hdfs_config = config_helper.get_module_config("hdfs")
 
 
 class CreateDataset:
@@ -29,7 +31,7 @@ class CreateDataset:
         Function: get samples and features
         :Return type : DataFrame
         """
-        spark = SparkEnv('test_lookalike_train').spark
+        spark = SparkEnv('lookalike_train').spark
         print("启动spark")
         if is_train:
             spark_read(spark, userData['tableName'], 'user_table_tmp_lookalike', 'dt', "2022-06-24", "2022-06-24")
@@ -104,10 +106,9 @@ class CreateDataset:
         return samples
 
 
-def Filter_and_Construct(self, orderData, bhData, userData, goodsData, scene, expansion_dimension,
-                         filter_condition):
-    spark = SparkEnv('test_lookalike_crowd')
-    try:
+    def Filter_and_Construct(self, orderData, bhData, userData, goodsData, scene, expansion_dimension,
+                             filter_condition):
+        spark = SparkEnv('lookalike_crowd').spark
         spark_read(spark, userData['tableName'], 'user_table_tmp_lookalike', 'dt', "2022-06-24", "2022-06-24")
         userData['tableName'] = 'user_table_tmp_lookalike'
         spark_read(spark, bhData['tableName'], 'bh_table_tmp_lookalike', 'dt', "2022-05-23", "2022-06-23")
@@ -134,12 +135,7 @@ def Filter_and_Construct(self, orderData, bhData, userData, goodsData, scene, ex
             samples = get_user_list(spark, userData, "2022-06-24")
         if len(samples) != 0 and scene != "1":
             samples = crowd_select_scence(spark, samples, orderData, goodsData, cur_str, scene, expansion_dimension)
-    except:
-        print('Raise error when filter samples')
-        print(traceback.format_exc())
-        samples = None
-    finally:
-        spark.stop()
+
         return samples
 
 
@@ -1343,18 +1339,10 @@ def download_user_embedding(spark, taskid):
     return user_embedding_df
 
 def upload(filepath, taskId):
-    try:
-        cli = pyhdfs.HdfsClient(hosts="bigdata-server-08:9870")
-        target_file_path = os.path.join('hdfs:///user/ai/cdp/lookalike/parameter', str(taskId) + '.txt')
-        if cli.exists(target_file_path):
-            cli.delete(target_file_path)
-        cli.copy_from_local(filepath, target_file_path)
-        return target_file_path
-    except:
-        logging.error(traceback.format_exc())
-        return "-1"
+    cli = pyhdfs.HdfsClient(hosts=hdfs_config['hosts'])
+    target_file_path = os.path.join('hdfs:///user/ai/cdp/lookalike/parameter', str(taskId) + '.txt')
+    if cli.exists(target_file_path):
+        cli.delete(target_file_path)
+    cli.copy_from_local(filepath, target_file_path)
+    return target_file_path
 
-
-
-if __name__ == '__main__':
-    pass
