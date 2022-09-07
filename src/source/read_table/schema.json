@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "default": {},
+  "title": "Root Schema",
+  "required": [
+    "selects",
+    "tables",
+    "where",
+    "dt"
+  ],
+  "properties": {
+    "selects": {
+      "type": "array",
+      "default": [],
+      "title": "The selects Schema",
+      "items": {
+        "type": "object",
+        "title": "A Schema",
+        "required": [
+          "column",
+          "as"
+        ],
+        "properties": {
+          "column": {
+            "type": "string",
+            "title": "The column Schema",
+            "examples": [
+              "aip.table_1.aaaa",
+              "aip.table_2.bbb",
+              "aip.table_3.cccc"
+            ]
+          },
+          "as": {
+            "type": "string",
+            "title": "The as Schema",
+            "examples": [
+              "aaaa",
+              "bbb",
+              "ccc"
+            ]
+          }
+        },
+        "examples": [
+          {
+            "column": "aip.table_1.aaaa",
+            "as": "aaaa"
+          },
+          {
+            "column": "aip.table_2.bbb",
+            "as": "bbb"
+          },
+          {
+            "column": "aip.table_3.cccc",
+            "as": "ccc"
+          }
+        ]
+      },
+      "examples": [
+        [
+          {
+            "column": "aip.table_1.aaaa",
+            "as": "aaaa"
+          },
+          {
+            "column": "aip.table_2.bbb",
+            "as": "bbb"
+          },
+          {
+            "column": "aip.table_3.cccc",
+            "as": "ccc"
+          }
+        ]
+      ]
+    },
+    "tables": {
+      "type": "object",
+      "default": {},
+      "title": "The tables Schema",
+      "required": [
+        "drive",
+        "driven"
+      ],
+      "properties": {
+        "drive": {
+          "type": "string",
+          "default": "",
+          "title": "The drive Schema",
+          "examples": [
+            "aip.table1"
+          ]
+        },
+        "driven": {
+          "type": "array",
+          "default": [],
+          "title": "The driven Schema",
+          "items": {
+            "type": "string",
+            "title": "A Schema",
+            "examples": [
+              "aip.table2",
+              "aip.table3"
+            ]
+          },
+          "examples": [
+            [
+              "aip.table2",
+              "aip.table3"
+            ]
+          ]
+        }
+      },
+      "examples": [
+        {
+          "drive": "aip.table1",
+          "driven": [
+            "aip.table2",
+            "aip.table3"
+          ]
+        }
+      ]
+    },
+    "where": {
+      "type": "string",
+      "default": "",
+      "title": "The where Schema",
+      "examples": [
+        "aaaa = 1 and bbbb = 2 and ccc != 3"
+      ]
+    },
+    "dt": {
+      "type": "object",
+      "default": {},
+      "title": "The dt Schema",
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "string",
+          "default": "",
+          "title": "The start Schema",
+          "examples": [
+            "2022-01-01"
+          ]
+        },
+        "end": {
+          "type": "string",
+          "default": "",
+          "title": "The end Schema",
+          "examples": [
+            "2022-08-08"
+          ]
+        }
+      },
+      "examples": [
+        {
+          "start": "2022-01-01",
+          "end": "2022-08-08"
+        }
+      ]
+    }
+  },
+  "examples": [
+    {
+      "selects": [
+        {
+          "column": "aip.table_1.aaaa",
+          "as": "aaaa"
+        },
+        {
+          "column": "aip.table_2.bbb",
+          "as": "bbb"
+        },
+        {
+          "column": "aip.table_3.cccc",
+          "as": "ccc"
+        }
+      ],
+      "tables": {
+        "drive": "aip.table1",
+        "driven": [
+          "aip.table2",
+          "aip.table3"
+        ]
+      },
+      "where": "aaaa = 1 and bbbb = 2 and ccc != 3",
+      "dt": {
+        "start": "2022-01-01",
+        "end": "2022-08-08"
+      }
+    }
+  ]
+}

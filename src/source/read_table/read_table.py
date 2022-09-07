@@ -61,21 +61,21 @@ def create_tmp_view(spark_client, dbtable):
     return view_name
 
 
-aaa = {
-    "selects": [
-        {
-            "dbtable": "aip.item",
-            "column": "item_id",
-            "as": "item_id"
-        },
-        {
-            "dbtable": "aip.item",
-            "column": "item_type",
-            "as": "item_type"
-        },
-    ],
-    "from": "aip.item",
-    "where": "1=1",
-}
+# aaa = {
+#     "selects": [
+#         {
+#             "dbtable": "aip.item",
+#             "column": "item_id",
+#             "as": "item_id"
+#         },
+#         {
+#             "dbtable": "aip.item",
+#             "column": "item_type",
+#             "as": "item_type"
+#         },
+#     ],
+#     "from": "aip.item",
+#     "where": "1=1",
+# }
 
-print(read_table_to_hive(aaa))
+# print(read_table_to_hive(aaa))

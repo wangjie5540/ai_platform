@@ -1,0 +1,34 @@
+pipeline_spec:
+  description: pipeline desc, use english
+  inputs:
+    - default: "[{\"intput_table\": \"aip.item\", \"select_columns\": \"item_type,item_id\"}]"
+      name: data_source
+      optional: true
+      type: JsonArray
+    - default: 123
+      name: test_int
+      optional: true
+      type: Integer
+  entrypoint: my-test-pipeline
+
+
+spec:
+  entrypoint: my-test-pipeline
+  templates:
+  - name: my-test-pipeline
+    dag:
+      tasks:
+      - {name: read-table, template: read-table}
+  - name: read-table
+    container:
+      args: [main.py, --input_table, aip.item, --select_columns, 'item_type,item_id']
+      command: [python]
+      image: digit-force-docker.pkg.coding.net/ai-platform/ai-components/source-read_table:latest
+    outputs:
+      artifacts:
+      - {name: read-table-out, path: /tmp/out}
+  arguments:
+    parameters:
+    - {name: data_source, value: '[{"intput_table": "aip.item", "select_columns":
+        "item_type,item_id"}]'}
+  serviceAccountName: pipeline-runner

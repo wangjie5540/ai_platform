@@ -1,0 +1,36 @@
+{
+    "selects": [
+        {
+            "dbtable": "aip.item",
+            "column": "aip.use.aaaa",
+            "as": "aaaa"
+        },
+        {
+            "dbtable": "aip.item",
+            "column": "aip.table_2.bbb",
+            "as": "bbb"
+        },
+        {
+            "dbtable": "aip.item",
+            "column": "aip.table_3.cccc",
+            "as": "ccc"
+        }
+    ],
+    "from": "aip.xxxxx",
+    "joins": [
+        {
+            "join": "aip.bbbbbbb",
+            "on": "aip.bbbb.cccc = aip.xxxx.aaaaa"
+        },
+        {
+            "join": "aip.fffffff",
+            "on": "aip.fffffff.cccc = aip.xxxx.aaaaa"
+        }
+    ],
+    "where": "aaaa = 1 and bbbb = 2 and ccc != 3",
+    "dt": {
+        "start": "2022-01-01",
+        "end": "2022-08-08",
+        "offset": -9
+    }
+}
