@@ -16,14 +16,13 @@ def ml_lookalike(train_data_start_date_str='', train_data_end_date_str='', run_d
         name="lookalike",
         image='digit-force-docker.pkg.coding.net/ai-platform/ai-components/ml-lookalike',
         command=['python', 'main.py'],
-        arguments=[],
+        arguments=['--solution_id', solution_id, '--instance_id', instance_id],
     )
 
 
 Compiler().compile(ml_lookalike, 'lookalike.yaml')
 
 client = kfp.Client(host='http://172.22.20.13:30000/pipeline',
-                    cookies="authservice_session=MTY2MjE4MTU2MHxOd3dBTkZsQlFrOVFUMFZUVEVKUE5ETk1RMHhNUkU1RVVVaEhTVUZEV2tOQ1REUlZRVU5PVTFSWlFUSTJNa2hIVkRaV1N6TTJRVUU9fNSimNe6oBlaG5aTARXO4D5vhdnJVQLELocoXU3YhcOT")
-client.upload_pipeline('/data/pycharm_project_768/pipelines/lookalike.yaml', pipeline_name='lookalike1',
-                       description='for dev')
+                    cookies="authservice_session=MTY2MjQ1MzQ3OXxOd3dBTkROS1ZFUkdNekpJUVVWT1JUUkNUMEkxUVZKUldEUkZUalEyVTBKWVdGQk9NMGRMVVZGWVJGTlVVMUpQVlZwVFR6VXlVbEU9fGskAOguKG0flNWKrk0EOtDuv0sCmRNQm27kvWpyn1mK")
+client.upload_pipeline('/data/pycharm_project_768/pipelines/lookalike.yaml', pipeline_name='lookalike')
 # client.create_run_from_pipeline_func(ml_lookalike, arguments={}, namespace='kubeflow-user-example-com', experiment_name='my_test')

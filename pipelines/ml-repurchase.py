@@ -8,7 +8,6 @@ from kfp.compiler import Compiler
 
 @dsl.pipeline(
     name="repurchase",
-    description="for dev"
 )
 def ml_repurchase(train_data_start_date_str='', train_data_end_date_str='', run_datetime_str='', solution_id='',
                   instance_id=''):
@@ -16,12 +15,11 @@ def ml_repurchase(train_data_start_date_str='', train_data_end_date_str='', run_
         name="repurchase",
         image='digit-force-docker.pkg.coding.net/ai-platform/ai-components/ml-repurchase:latest',
         command=['python', 'main.py'],
-        arguments=[],
+        arguments=['--solution_id', solution_id, '--instance_id', instance_id],
     )
 
 
-Compiler().compile(ml_repurchase, 'repurchase.yaml')
+    Compiler().compile(ml_repurchase, 'repurchase.yaml')
 client = kfp.Client(host='http://172.22.20.13:30000/pipeline',
-                    cookies="authservice_session=MTY2MjE4MjA3NHxOd3dBTkVnMFRVNVFXVWMwUlZWYVZVSkJSa1pGUTB4SlNUWkJOMWRCVFVKSE1sTk9RMVZLVlZWU1RVSXpTMUF6TWtVMFRFbFlOVkU9fDjYhy-YUVJHArEgdrjhVXMCa-WXnQE_9tlKgRTlaDIu")
-client.upload_pipeline('/data/pycharm_project_768/pipelines/repurchase.yaml', pipeline_name='repurchase',
-                       description='for dev')
+                    cookies="authservice_session=MTY2MjQ1MzQ3OXxOd3dBTkROS1ZFUkdNekpJUVVWT1JUUkNUMEkxUVZKUldEUkZUalEyVTBKWVdGQk9NMGRMVVZGWVJGTlVVMUpQVlZwVFR6VXlVbEU9fGskAOguKG0flNWKrk0EOtDuv0sCmRNQm27kvWpyn1mK")
+client.upload_pipeline('/data/pycharm_project_768/pipelines/repurchase.yaml', pipeline_name='repurchase')
