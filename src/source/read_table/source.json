@@ -1,36 +1,32 @@
 {
     "selects": [
         {
-            "dbtable": "aip.item",
-            "column": "aip.use.aaaa",
-            "as": "aaaa"
+            "table": "item",
+            "column": "item_id",
+            "as": "item_id"
         },
         {
-            "dbtable": "aip.item",
-            "column": "aip.table_2.bbb",
-            "as": "bbb"
+            "table": "item",
+            "column": "item_type",
+            "as": "item_type"
         },
         {
-            "dbtable": "aip.item",
-            "column": "aip.table_3.cccc",
-            "as": "ccc"
+            "table": "item1",
+            "column": "title",
+            "as": "title"
         }
     ],
-    "from": "aip.xxxxx",
-    "joins": [
-        {
-            "join": "aip.bbbbbbb",
-            "on": "aip.bbbb.cccc = aip.xxxx.aaaaa"
-        },
-        {
-            "join": "aip.fffffff",
-            "on": "aip.fffffff.cccc = aip.xxxx.aaaaa"
-        }
-    ],
-    "where": "aaaa = 1 and bbbb = 2 and ccc != 3",
+    "from": "item",
     "dt": {
         "start": "2022-01-01",
         "end": "2022-08-08",
         "offset": -9
-    }
+    },
+    "joins": [
+        {
+            "join": "item1",
+            "on": "item.item_id = item1.item_id"
+        }
+    ],
+    "where": "item.item_id != 'aaa'"
 }
