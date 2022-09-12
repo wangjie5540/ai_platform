@@ -62,39 +62,3 @@ def create_tmp_view(spark_client, table):
     df = spark_client.get_starrocks_table_df(table_name=f'aip.{table}')
     df.createTempView(view_name)
     return view_name
-
-
-# aaa = {
-#     "selects": [
-#         {
-#             "table": "item",
-#             "column": "item_id",
-#             "as": "item_id"
-#         },
-#         {
-#             "table": "item",
-#             "column": "item_type",
-#             "as": "item_type"
-#         },
-#         {
-#             "table": "item1",
-#             "column": "title",
-#             "as": "title"
-#         }
-#     ],
-#     "from": "item",
-#     # "dt": {
-#     #     "start": "2022-01-01",
-#     #     "end": "2022-08-08",
-#     #     "offset": -9
-#     # },
-#     "joins": [
-#         {
-#             "join": "item1",
-#             "on": "item.item_id = item1.item_id"
-#         }
-#     ],
-#     "where": "item.item_id != 'aaa'"
-# }
-#
-# print(read_table_to_hive(aaa))

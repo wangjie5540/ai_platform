@@ -17,11 +17,6 @@
         }
     ],
     "from": "item",
-    "dt": {
-        "start": "2022-01-01",
-        "end": "2022-08-08",
-        "offset": -9
-    },
     "joins": [
         {
             "join": "item1",

@@ -9,4 +9,4 @@ COPY . $COMPONENT_DIR
 #ENTRYPOINT ["python", "main.py"]
 # 编译命令
 # docker build --no-cache -t digit-force-docker.pkg.coding.net/ai-platform/ai-components/source-read_table:latest .
-# docker push  digit-force-docker.pkg.coding.net/ai-platform/ai-components/source-read_table:latest
+# docker push digit-force-docker.pkg.coding.net/ai-platform/ai-components/source-read_table:latest
