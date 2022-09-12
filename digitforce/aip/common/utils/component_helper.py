@@ -12,7 +12,7 @@ def write_output(parameters: dict):
         f.write(json.dumps(parameters))
 
 
-def read_input(input_path) -> dict:
+def read_input(input_path=global_constant.JSON_OUTPUT_PATH) -> dict:
     """
     读取上游组件入参
     :return:
