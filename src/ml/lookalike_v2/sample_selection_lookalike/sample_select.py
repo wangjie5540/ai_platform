@@ -68,10 +68,10 @@ def start_sample_selection(data_table_name, columns, event_code, pos_sample_prop
     neg_rdd = neg_rdd.filter(lambda x: x[2] <= neg_threshold).map(lambda x: (x[0], x[1], 0))
     sample = pos_rdd.union(neg_rdd)
     col = ['user_id', 'item_id', 'label']
-    hive_table_name = "algorithm.tmp_aip_sample"
+    sample_table_name = "algorithm.tmp_aip_sample"
     sample = sample.toDF(col)
-    sample.write.format("hive").mode("overwrite").saveAsTable(hive_table_name)
-    return hive_table_name, col
+    sample.write.format("hive").mode("overwrite").saveAsTable(sample_table_name)
+    return sample_table_name, col
 
 if __name__ == '__main__':
     pass
