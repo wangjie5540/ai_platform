@@ -12,7 +12,7 @@ def run():
     parser.add_argument("--global_params", type=str, required=True, help="全局参数")
     args = parser.parse_args()
     global_params = json.loads(args.global_params)
-    component_params = global_params["source.sample_comb_lookalike"]
+    component_params = global_params["preprocessing.sample_comb_lookalike"]
     sample_table_name = component_params["sample_table_name"]
     user_feature_table_name = component_params["user_feature_table_name"]
     item_feature_table_name = component_params["item_feature_table_name"]

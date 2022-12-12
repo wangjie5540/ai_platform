@@ -13,10 +13,11 @@ def run():
     parser.add_argument("--global_params", type=str, required=True, help="全局参数")
     args = parser.parse_args()
     global_params = json.loads(args.global_params)
-    component_params = global_params["source.feature_create_lookalike"]
+    component_params = global_params["feature_engineering.feature_create_lookalike"]
     data_table_name = component_params["data_table_name"]
     columns = component_params["columns"]
-    event_code = component_params["event_code"]  # 重复使用的参数如何放置？
+    # TODO：重复使用的参数如何放置？
+    event_code = component_params["event_code"]
     sample_table_name = component_params["sample_table_name"]
     user_feature_table_name, item_feature_table_name = feature_create(data_table_name, columns, event_code, sample_table_name)
     outputs = {
