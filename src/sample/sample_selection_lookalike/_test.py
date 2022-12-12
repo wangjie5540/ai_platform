@@ -10,5 +10,6 @@ from src.sample.sample_selection_lookalike.sample_select import start_sample_sel
 data_table_name = 'aip.read_table_4698160228885073921'
 columns = ['custom_id', 'fund_code', 'trade_type']
 event_code = {'buy': 'fund_buy'}
-table, col = start_sample_selection(data_table_name, columns, event_code, pos_sample_proportion=0.5, pos_sample_num=200000)
-print(table,col)
+table, col = start_sample_selection(data_table_name, columns, event_code, pos_sample_proportion=0.5,
+                                    pos_sample_num=200000)
+print(table, col)

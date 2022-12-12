@@ -8,6 +8,7 @@ import builtins
 import random
 import digitforce.aip.common.utils.spark_helper as spark_helper
 
+
 def start_sample_selection(data_table_name, columns, event_code, pos_sample_proportion=0.5, pos_sample_num=200000):
     spark_client = spark_helper.SparkClient()
     buy_code = event_code.get("buy")
@@ -27,8 +28,8 @@ def start_sample_selection(data_table_name, columns, event_code, pos_sample_prop
 
     # 正样本全量
     pos_rdd = data.select([user_id, item_id]).rdd \
-                    .map(lambda x: (x[0], [x[1]])) \
-                    .reduceByKey(lambda a, b: a + b)
+        .map(lambda x: (x[0], [x[1]])) \
+        .reduceByKey(lambda a, b: a + b)
 
     # 负样本全量
     item_counts = data.select([user_id, item_id]).rdd \
@@ -36,7 +37,7 @@ def start_sample_selection(data_table_name, columns, event_code, pos_sample_prop
         .reduceByKey(lambda a, b: a + b) \
         .sortBy(keyfunc=(lambda x: x[1]), ascending=False)
 
-    max_pos_counts = pos_rdd.map(lambda x: len(x[1])).reduce(lambda a, b: a if a>=b else b)
+    max_pos_counts = pos_rdd.map(lambda x: len(x[1])).reduce(lambda a, b: a if a >= b else b)
     item_list_counts = item_counts.count()
     max_top_n = np.min([5000, 0.5 * item_list_counts])
     min_top_n = np.max([1000, max_pos_counts * (pos_neg_relation + 1)])
@@ -50,7 +51,8 @@ def start_sample_selection(data_table_name, columns, event_code, pos_sample_prop
     #     item_list.append(f"P{i}")
     # 负样本候选集
     neg_rdd = pos_rdd.map(lambda x: (x[0], random.sample(list(set(item_list).difference(set(x[1]))),
-                                                       np.min([len(list(set(item_list).difference(set(x[1])))),math.ceil(len(x[1]) * pos_neg_relation)]))))
+                                                         np.min([len(list(set(item_list).difference(set(x[1])))),
+                                                                 math.ceil(len(x[1]) * pos_neg_relation)]))))
     # 随机采样构成正负样本集合
     pos_rdd = pos_rdd.flatMapValues(lambda x: x) \
         .map(lambda x: (x[0], x[1], random.random()))
@@ -67,6 +69,7 @@ def start_sample_selection(data_table_name, columns, event_code, pos_sample_prop
     sample = sample.toDF(col)
     sample.write.format("hive").mode("overwrite").saveAsTable(sample_table_name)
     return sample_table_name, col
+
 
 if __name__ == '__main__':
     pass
