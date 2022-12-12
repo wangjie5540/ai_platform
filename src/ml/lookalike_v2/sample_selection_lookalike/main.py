@@ -6,26 +6,27 @@
 @desc:
 '''
 import argparse
+import json
 from src.ml.lookalike_v2.sample_selection_lookalike.sample_select import start_sample_selection
-from digitforce.aip.common.argumen_helper import DigitforceAipCmdArgumentHelper
 
-if __name__ == '__main__':
-    helper = DigitforceAipCmdArgumentHelper()
-    helper.add_argument('--solution_id', type=str, default='', help='solution id')
-    helper.add_argument('--instance_id', type=str, default='', help='instance id')
-    helper.add_argument('--data_table_name', type=str, default='', help='data table name')
-    helper.add_argument('--columns', type=str, default='', help='data table columns')
-    helper.add_argument('--event_code', type=str, default='', help='data event type mapping')
-    solution_id = helper.get_argument("solution_id")
-    instance_id = helper.get_argument("instance_id")
-    data_table_name = helper.get_argument("data_table_name")
-    columns = helper.get_argument("columns")
-    event_code = helper.get_argument("event_code")
+
+def run():
+    # 参数解析
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--global_params", type=str, required=True, help="全局参数")
+    args = parser.parse_args()
+    global_params = json.loads(args.global_params)
+    component_params = global_params["source.sample_selection_lookalike"]
+    data_table_name = component_params["data_table_name"]
+    columns = component_params["columns"]
+    event_code = component_params["event_code"] # 重复使用的参数如何放置？
     table_name, columns = start_sample_selection(data_table_name, columns, event_code)
     outputs = {
         "type": "hive_table",
         "table_name": table_name,
         "column_list": columns
     }
-    print(outputs)
-    # components.out(outputs)
+    component_helper.write_output(outputs)
+
+if __name__ == '__main__':
+    run()
