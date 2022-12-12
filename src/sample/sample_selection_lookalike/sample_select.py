@@ -11,6 +11,7 @@ import digitforce.aip.common.utils.spark_helper as spark_helper
 
 def start_sample_selection(data_table_name, columns, event_code, pos_sample_proportion=0.5, pos_sample_num=200000):
     spark_client = spark_helper.SparkClient()
+    # TODO：后续event_code会统一规范
     buy_code = event_code.get("buy")
     user_id = columns[0]
     item_id = columns[1]
@@ -39,16 +40,14 @@ def start_sample_selection(data_table_name, columns, event_code, pos_sample_prop
 
     max_pos_counts = pos_rdd.map(lambda x: len(x[1])).reduce(lambda a, b: a if a >= b else b)
     item_list_counts = item_counts.count()
+    # TODO：合理选取item集合范围
     max_top_n = np.min([5000, 0.5 * item_list_counts])
     min_top_n = np.max([1000, max_pos_counts * (pos_neg_relation + 1)])
     if max_top_n < min_top_n:
         top_n = max_top_n
     top_n = int((max_top_n + min_top_n) / 2)
-    # top_n = 300000
     item_list = item_counts.map(lambda x: x[0]).take(top_n)
 
-    # for i in range(10000):
-    #     item_list.append(f"P{i}")
     # 负样本候选集
     neg_rdd = pos_rdd.map(lambda x: (x[0], random.sample(list(set(item_list).difference(set(x[1]))),
                                                          np.min([len(list(set(item_list).difference(set(x[1])))),
@@ -65,11 +64,8 @@ def start_sample_selection(data_table_name, columns, event_code, pos_sample_prop
     neg_rdd = neg_rdd.filter(lambda x: x[2] <= neg_threshold).map(lambda x: (x[0], x[1], 0))
     sample = pos_rdd.union(neg_rdd)
     col = ['user_id', 'item_id', 'label']
+    # TODO：后续改为动态表名
     sample_table_name = "algorithm.tmp_aip_sample"
     sample = sample.toDF(col)
     sample.write.format("hive").mode("overwrite").saveAsTable(sample_table_name)
     return sample_table_name, col
-
-
-if __name__ == '__main__':
-    pass
