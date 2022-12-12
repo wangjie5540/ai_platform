@@ -5,7 +5,7 @@
 @time: 2022/12/9 18:06
 @desc:
 '''
-from src.ml.lookalike_v2.feature_create_lookalike.feature_create import feature_create
+from src.feature_engineering.feature_create_lookalike.feature_create import feature_create
 
 data_table_name = "aip.read_table_4698160228885073921"
 columns = ['custom_id','trade_date','trade_type','fund_code','trade_money','fund_shares','fund_nav','dt',

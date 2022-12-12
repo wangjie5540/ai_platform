@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-'''
-@file: sample_comb.py
-@time: 2022/12/9 18:16
-@desc:
-'''
+
 import digitforce.aip.common.utils.spark_helper as spark_helper
 
 def sample_comb(sample_table_name, user_feature_table_name, item_feature_table_name):
@@ -31,5 +27,11 @@ def sample_comb(sample_table_name, user_feature_table_name, item_feature_table_n
 
     train_data_table_name = "algorithm.tmp_aip_train_data"
     train_data.write.format("hive").mode("overwrite").saveAsTable(train_data_table_name)
-    return train_data_table_name
 
+    columns = train_data.columns
+    encoder_hdfs_path = "test1234"
+
+    return train_data_table_name, columns, encoder_hdfs_path
+
+if __name__ == '__main__':
+    pass

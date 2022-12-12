@@ -5,7 +5,7 @@
 @time: 2022/12/7 17:49
 @desc:
 '''
-from src.ml.lookalike_v2.sample_selection_lookalike.sample_select import start_sample_selection
+from src.sample.sample_selection_lookalike.sample_select import start_sample_selection
 
 data_table_name = 'aip.read_table_4698160228885073921'
 columns = ['custom_id', 'fund_code', 'trade_type']

@@ -5,7 +5,7 @@
 @time: 2022/12/9 18:32
 @desc:
 '''
-from src.ml.lookalike_v2.sample_comb_lookalike.sample_comb import sample_comb
+from src.preprocessing.sample_comb_lookalike.sample_comb import sample_comb
 
 sample_table_name = "algorithm.tmp_aip_sample"
 user_feature_table_name = "algorithm.tmp_aip_user_feature"

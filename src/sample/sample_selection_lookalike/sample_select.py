@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-'''
-@file: sample_select.py
-@time: 2022/12/7 17:47
-@desc:
-'''
 
 
 import math

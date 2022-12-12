@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-'''
-@file: main.py
-@time: 2022/12/6 17:27
-@desc:
-'''
+
 import argparse
 import json
-from src.ml.lookalike_v2.sample_selection_lookalike.sample_select import start_sample_selection
+from src.sample.sample_selection_lookalike.sample_select import start_sample_selection
 
 
 def run():
