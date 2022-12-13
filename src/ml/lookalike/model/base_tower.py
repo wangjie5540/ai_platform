@@ -1,8 +1,5 @@
 from __future__ import print_function
 
-from copy import deepcopy
-import pickle
-
 import time
 import numpy as np
 import torch
@@ -13,10 +10,10 @@ from sklearn.metrics import *
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from preprocessing.inputs import SparseFeat, DenseFeat, VarLenSparseFeat, create_embedding_matrix, \
+from src.ml.lookalike.preprocessing.inputs import SparseFeat, DenseFeat, VarLenSparseFeat, create_embedding_matrix, \
     get_varlen_pooling_list, build_input_features
-from layers.core import PredictionLayer
-from preprocessing.utils import slice_arrays
+from src.ml.lookalike.layers.core import PredictionLayer
+from src.ml.lookalike.preprocessing.utils import slice_arrays
 
 
 class BaseTower(nn.Module):
@@ -185,7 +182,6 @@ class BaseTower(nn.Module):
                     'optimizer_state_dict': optim.state_dict(),
                 }
                 torch.save(checkpoint, "./model_zoo/model.pth")
-                # torch.save(model.state_dict(), "./model_zoo/model.pth")
                 print("save the best model !")
             else:
                 self._epoch_stop += 1
