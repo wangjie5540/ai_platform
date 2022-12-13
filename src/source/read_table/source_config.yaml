@@ -1,16 +1,12 @@
 selects:
-  - column: aip.table_1.aaaa
-    as: aaaa
-  - column: aip.table_2.bbb
-    as: bbb
-  - column: aip.table_3.cccc
-    as: ccc
-tables:
-  drive: aip.table1
-  driven:
-    - aip.table2
-    - aip.table3
-where: aaaa = 1 and bbbb = 2 and ccc != 3 and aip.table_1.ddd > 0
+  - column: item_id
+    as: item_id
+  - column: item_type
+    as: item_type
+  - column: title
+    as: title
+from: aip.item
+where: item_id != '1'
 dt:
   start: 2022-01-01
   end: 2022-08-08
