@@ -19,13 +19,15 @@ def run():
     # TODO：重复使用的参数如何放置？
     event_code = component_params["event_code"]
     sample_table_name = component_params["sample_table_name"]
-    user_feature_table_name, item_feature_table_name = feature_create(data_table_name, columns, event_code, sample_table_name)
+    user_feature_table_name, item_feature_table_name = feature_create(data_table_name, columns, event_code,
+                                                                      sample_table_name)
     outputs = {
         "type": "hive_table",
         "user_feature_table_name": user_feature_table_name,
         "item_feature_table_name": item_feature_table_name
     }
     component_helper.write_output(outputs)
+
 
 if __name__ == '__main__':
     run()

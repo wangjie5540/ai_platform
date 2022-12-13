@@ -65,7 +65,7 @@ def get_order_feature(data, sample, event_code, col_data, col_sample):
     # TODO: 构建不同时间段行为统计特征
     today = datetime.datetime.today().date()
     # TODO：数据原因，暂时取近一年构造特征
-    str_30d_ago = (datetime.datetime.today() + datetime.timedelta(days=-360)).strftime(DATE_FORMAT)
+    thirty_days_ago_str = (datetime.datetime.today() + datetime.timedelta(days=-360)).strftime(DATE_FORMAT)
     # TODO：后续统一规范event_code
     buy_code = event_code.get("buy")
     # 构建列名
@@ -81,7 +81,7 @@ def get_order_feature(data, sample, event_code, col_data, col_sample):
 
     user_buy_df = data.select(col_trade).filter(data[trade_type] == buy_code)
 
-    user_buy_counts_30d = user_buy_df.filter(user_buy_df[trade_date] >= str_30d_ago) \
+    user_buy_counts_30d = user_buy_df.filter(user_buy_df[trade_date] >= thirty_days_ago_str) \
         .groupby(user_id) \
         .agg(F.count(trade_money).alias('u_buy_counts_30d'), \
              F.sum(trade_money).alias('u_amount_sum_30d'), \
@@ -89,7 +89,7 @@ def get_order_feature(data, sample, event_code, col_data, col_sample):
              F.min(trade_money).alias('u_amount_min_30d'), \
              F.max(trade_money).alias('u_amount_max_30d'))
 
-    user_buy_days_30d = user_buy_df.filter(user_buy_df[trade_date] >= str_30d_ago) \
+    user_buy_days_30d = user_buy_df.filter(user_buy_df[trade_date] >= thirty_days_ago_str) \
         .select([user_id, trade_date]) \
         .groupby([user_id]) \
         .agg(countDistinct(trade_date), \
@@ -118,7 +118,7 @@ def get_order_feature(data, sample, event_code, col_data, col_sample):
         drop(item_id_sample)
     item_buy_df = item_df.select(col_trade).filter(item_df[trade_type] == buy_code)
 
-    item_buy_counts_30d = item_buy_df.filter(item_buy_df[trade_date] >= str_30d_ago) \
+    item_buy_counts_30d = item_buy_df.filter(item_buy_df[trade_date] >= thirty_days_ago_str) \
         .groupby(item_id) \
         .agg(F.count(trade_money).alias('i_buy_counts_30d'), \
              F.sum(trade_money).alias('i_amount_sum_30d'), \
