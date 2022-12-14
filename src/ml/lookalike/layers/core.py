@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from src.ml.lookalike.layers.activation import activation_layer
+from layers.activation import activation_layer
 
 
 class PredictionLayer(nn.Module):

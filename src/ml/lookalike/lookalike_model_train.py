@@ -2,23 +2,27 @@
 # encoding: utf-8
 
 import digitforce.aip.common.utils.spark_helper as spark_helper
-from src.ml.lookalike.preprocessing.inputs import SparseFeat, DenseFeat, VarLenSparseFeat
+from preprocessing.inputs import SparseFeat, DenseFeat, VarLenSparseFeat
 import pickle
 import numpy as np
 import time
 import torch
-from src.ml.lookalike.model.dssm import DSSM
+from model.dssm import DSSM
 from sklearn.preprocessing import LabelEncoder
 import torch.optim.adam as adam
 
 
 def start_model_train(train_data_table_name, test_data_table_name, user_data_table_name, hdfs_path,
+                      train_data_columns, user_data_columns,
                       dnn_hidden_units=(256, 128, 64), dnn_dropout=0.2,
                       batch_size=256, lr=0.01):
     spark_client = spark_helper.SparkClient()
-    train_data = spark_client.get_session().sql(f"select * from {train_data_table_name}").toPandas()
-    test_data = spark_client.get_session().sql(f"select * from {test_data_table_name}").toPandas()
-    user_data = spark_client.get_session().sql(f"select * from {user_data_table_name}").toPandas()
+    train_data = spark_client.get_session().sql(
+        f"""select {",".join(train_data_columns)} from {train_data_table_name}""").toPandas()
+    test_data = spark_client.get_session().sql(
+        f"""select {",".join(train_data_columns)} from {test_data_table_name}""").toPandas()
+    user_data = spark_client.get_session().sql(
+        f"""select {",".join(user_data_columns)} from {user_data_table_name}""").toPandas()
 
     feature_columns = train_data.columns
     sparse_features, dense_features, sequence_features, \

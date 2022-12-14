@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from src.ml.lookalike.layers.core import LocalActivationUnit
+from layers.core import LocalActivationUnit
 
 
 class SequencePoolingLayer(nn.Module):

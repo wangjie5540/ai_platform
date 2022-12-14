@@ -10,10 +10,10 @@ from sklearn.metrics import *
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from src.ml.lookalike.preprocessing.inputs import SparseFeat, DenseFeat, VarLenSparseFeat, create_embedding_matrix, \
+from preprocessing.inputs import SparseFeat, DenseFeat, VarLenSparseFeat, create_embedding_matrix, \
     get_varlen_pooling_list, build_input_features
-from src.ml.lookalike.layers.core import PredictionLayer
-from src.ml.lookalike.preprocessing.utils import slice_arrays
+from layers.core import PredictionLayer
+from preprocessing.utils import slice_arrays
 
 
 class BaseTower(nn.Module):
