@@ -4,7 +4,7 @@
 import argparse
 import json
 
-from src.sample.sample_selection_lookalike.sample_select import start_sample_selection
+from sample_select import start_sample_selection
 
 
 def run():

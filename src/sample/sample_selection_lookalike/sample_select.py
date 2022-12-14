@@ -14,10 +14,10 @@ def start_sample_selection(data_table_name, columns, event_code, pos_sample_prop
     # TODO：后续event_code会统一规范
     buy_code = event_code.get("buy")
     user_id = columns[0]
-    item_id = columns[1]
+    item_id = columns[3]
     trade_type = columns[2]
 
-    data = spark_client.get_session().sql(f"select * from {data_table_name}")
+    data = spark_client.get_session().sql(f"""select {",".join(columns)} from {data_table_name}""")
     data = data.filter(data[trade_type] == buy_code)
 
     # 确定采样总条数

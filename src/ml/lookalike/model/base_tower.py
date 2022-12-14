@@ -1,8 +1,5 @@
 from __future__ import print_function
 
-from copy import deepcopy
-import pickle
-
 import time
 import numpy as np
 import torch
@@ -185,7 +182,6 @@ class BaseTower(nn.Module):
                     'optimizer_state_dict': optim.state_dict(),
                 }
                 torch.save(checkpoint, "./model_zoo/model.pth")
-                # torch.save(model.state_dict(), "./model_zoo/model.pth")
                 print("save the best model !")
             else:
                 self._epoch_stop += 1

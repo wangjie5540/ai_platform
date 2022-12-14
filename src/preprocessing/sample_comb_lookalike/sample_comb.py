@@ -8,23 +8,25 @@ from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from torch.nn.utils.rnn import pad_sequence
 import pickle
 import collections
+from pyspark.ml.feature import StringIndexer, StringIndexerModel
+from pyspark.ml import Pipeline, PipelineModel
+from pyspark.ml.feature import MinMaxScaler as MinMaxScalerSpark, VectorAssembler
 
 
-def sample_comb(sample_table_name, user_feature_table_name, item_feature_table_name):
+def sample_comb(sample_table_name, sample_columns,
+                user_feature_table_name, user_columns,
+                item_feature_table_name, item_columns):
     spark_client = spark_helper.SparkClient()
-    sample = spark_client.get_session().sql(f"select * from {sample_table_name}")
-    user_feature = spark_client.get_session().sql(f"select * from {user_feature_table_name}")
-    item_feature = spark_client.get_session().sql(f"select * from {item_feature_table_name}")
+    sample = spark_client.get_session().sql(f"""select {",".join(sample_columns)} from {sample_table_name}""")
+    user_feature = spark_client.get_session().sql(f"""select {",".join(user_columns)} from {user_feature_table_name}""")
+    item_feature = spark_client.get_session().sql(f"""select {",".join(item_columns)} from {item_feature_table_name}""")
 
-    col_sample = sample.columns
-    user_id_sample = col_sample[0]
-    item_id_sample = col_sample[1]
+    user_id_sample = sample_columns[0]
+    item_id_sample = sample_columns[1]
 
-    col_user = user_feature.columns
-    user_id = col_user[0]
+    user_id = user_columns[0]
 
-    col_item = item_feature.columns
-    item_id = col_item[0]
+    item_id = item_columns[0]
 
     user_feature = user_feature.withColumnRenamed(user_id, user_id_sample)
     item_feature = item_feature.withColumnRenamed(item_id, item_id_sample)
@@ -52,7 +54,7 @@ def sample_comb(sample_table_name, user_feature_table_name, item_feature_table_n
     test_data = spark_client.get_session().createDataFrame(test_data)
     test_data.write.format("hive").mode("overwrite").saveAsTable(test_data_table_name)
 
-    user_data = user_data_preprocessing(user_data, col_user, hdfs_dir, sequence_feature_dic)
+    user_data = user_data_preprocessing(user_data, user_columns, hdfs_dir, sequence_feature_dic)
 
     user_data_table_name = "algorithm.tmp_aip_user_data"
     user_data = spark_client.get_session().createDataFrame(user_data)
@@ -111,10 +113,8 @@ def train_data_preprocessing(data, columns, hdfs_path):
         v_tmp = '_'.join(v.split('_')[0:2])
         data, sequence_feature_dic[v][v_tmp + '_key2index'], sequence_feature_dic[v][v_tmp + '_maxlen'] = \
             get_var_feature(data, v)
-    sequence_feature_dic = dict(sequence_feature_dic)
-    a = {}
     with open(hdfs_path + 'sequence_feature_dic.pkl', 'wb') as file:
-        pickle.dump(a, file)
+        pickle.dump(sequence_feature_dic, file)
 
     return data, sequence_feature_dic
 
@@ -152,7 +152,7 @@ def user_data_preprocessing(user_data, col_user, hdfs_path, sequence_feature_dic
         v_tmp = '_'.join(v.split('_')[0:2])
         user_data, sequence_feature_dic_test[v][v_tmp + '_key2index'], sequence_feature_dic_test[v][
             v_tmp + '_maxlen'] = get_var_feature(user_data, v, sequence_feature_dic[v][v_tmp + '_key2index'])
-    sequence_feature_dic_test = dict(sequence_feature_dic_test)
+
     with open(hdfs_path + 'sequence_feature_dic_test.pkl', 'wb') as file:
         pickle.dump(sequence_feature_dic_test, file)
 
@@ -179,3 +179,26 @@ def get_var_feature(data, col, key2index=None):
                          pad_sequence([torch.from_numpy(np.array(x)) for x in data[col]], batch_first=True).numpy()))
 
     return data, key2index, max_len
+
+# TODO：标签编码和归一化修改为spark方式
+def labelEncodeDF(df, dfColumn, inputColumn, outputColumn, savePath, flag=True):
+    '''
+    label编码
+    :param df: 数据框
+    :param inputColumn: 待转换列名
+    :param outputColumn: 编码后列名
+    :param savePath: 编码器保存路径
+    :param flag: 是否保存
+    :return:
+    '''
+    stringIndexer = StringIndexer(inputCol=inputColumn, outputCol=outputColumn).setHandleInvalid("keep")
+    label_model = stringIndexer.fit(df)
+    df = label_model.transform(df)
+    index = dfColumn.index(inputColumn)
+    dfColumn[index] = outputColumn
+    df = df.select(dfColumn).withColumnRenamed(outputColumn, inputColumn)
+    dfColumn[index] = inputColumn
+    if flag:
+        label_model.write().overwrite().save(savePath)
+
+    return df
