@@ -45,7 +45,8 @@ def start_sample_selection(data_table_name, columns, event_code, pos_sample_prop
     min_top_n = np.max([1000, max_pos_counts * (pos_neg_relation + 1)])
     if max_top_n < min_top_n:
         top_n = max_top_n
-    top_n = int((max_top_n + min_top_n) / 2)
+    else:
+        top_n = int((max_top_n + min_top_n) / 2)
     item_list = item_counts.map(lambda x: x[0]).take(top_n)
 
     # 负样本候选集
