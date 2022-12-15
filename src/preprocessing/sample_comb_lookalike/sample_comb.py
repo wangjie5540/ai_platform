@@ -100,7 +100,7 @@ def feat_label_encoder(data, cols, save_path, is_fit=True, flag=True):
             for feat in feats_list:
                 feats_map[feat] = index
                 index += 1
-            feats_map["unknown"] = index
+            feats_map["unknown"] = 0
             sparse_features_dict[col] = feats_map
     else:
         with open(save_path, "rb") as file:
@@ -170,7 +170,7 @@ def id_label_encoder(data, cols, save_path, is_fit=True, flag=True, only_user=Fa
             for feat in feats_list:
                 feats_map[feat] = index
                 index += 1
-            feats_map["unknown"] = index
+            feats_map["unknown"] = 0
             id_features_dict[col[0]] = feats_map
     else:
         with open(save_path, "rb") as file:
@@ -191,16 +191,26 @@ def id_label_encoder(data, cols, save_path, is_fit=True, flag=True, only_user=Fa
                 new_list.append(str(id_features_dict[col[0]][v]))
             return "|".join(new_list)
 
+        def pad_sequence(value_list):
+            value_list = value_list.split("|")
+            if len(value_list) != 5:
+                fill_count = 5 - len(value_list)
+                value_list = value_list + ["0"] * fill_count
+            return "|".join(value_list)
+
         udf_id_func = F.udf(label_encoder, IntegerType())
         udf_list_func = F.udf(list_label_encoder, StringType())
+        udf_padding_func = F.udf(pad_sequence, StringType())
 
         if len(col) == 1:
             data = data.withColumn(col[0], udf_id_func(col[0]))
         if len(col) == 2 and only_user:
             data = data.withColumn(col[1], udf_list_func(col[1]))
+            data = data.withColumn(col[1], udf_padding_func(col[1]))
         if len(col) == 2 and not only_user:
             data = data.withColumn(col[0], udf_id_func(col[0]))
             data = data.withColumn(col[1], udf_list_func(col[1]))
+            data = data.withColumn(col[1], udf_padding_func(col[1]))
 
     if flag:
         with open(save_path, "wb") as file:

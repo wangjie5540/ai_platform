@@ -88,6 +88,7 @@ def filter_features(features):
     :param features: 数据集特征
     :return: 构建双塔模型所需特征集合
     '''
+    # TODO：特征灵活配置
     sparse_features = ['user_id', 'item_id', 'i_fund_type', 'i_management', 'i_custodian', 'i_invest_type', 'u_gender',
                        'u_EDU', 'u_RSK_ENDR_CPY', 'u_NATN',
                        'u_OCCU', 'u_IS_VAIID_INVST']
@@ -129,40 +130,34 @@ def get_train_test_input(train_data, test_data, user_data,
                          item_sparse_features, item_dense_features,
                          user_sequence_feature, item_sequence_feature,
                          hdfs_path):
-    with open(hdfs_path + "sequence_feature_dic.pkl", "rb") as file:
-        sequence_feature_dic = pickle.load(file)
-    # labelencoder需要改为自定义字典，保存所有mapping和词典大小
-    for feat in sparse_features:
-        lbe = LabelEncoder()
-        lbe.fit(train_data[feat])
-        train_data[feat] = lbe.transform(train_data[feat])
-        lbe = LabelEncoder()
-        lbe.fit(test_data[feat])
-        test_data[feat] = lbe.transform(test_data[feat])
-    for feat in user_sparse_features:
-        lbe = LabelEncoder()
-        lbe.fit(user_data[feat])
-        user_data[feat] = lbe.transform(user_data[feat])
-    user_feature_columns = [SparseFeat(feat, train_data[feat].nunique(), embedding_dim=4)
+    mapping_dict = {"u_buy_list":"item_id"}
+
+    with open(hdfs_path + "sparse_features_dict.pkl", "rb") as file:
+        sparse_features_dict = pickle.load(file)
+    with open(hdfs_path + "id_features_dict.pkl", "rb") as file:
+        id_features_dic = pickle.load(file)
+    user_feature_columns = [SparseFeat(feat, len(sparse_features_dict[feat].keys()) if feat != "user_id" else len(id_features_dic[feat].keys()), embedding_dim=4)
                             for i, feat in enumerate(user_sparse_features)] + [DenseFeat(feat, 1, ) for feat in
                                                                                user_dense_features]
 
-    item_feature_columns = [SparseFeat(feat, train_data[feat].nunique(), embedding_dim=4)
+    item_feature_columns = [SparseFeat(feat, len(sparse_features_dict[feat].keys()) if feat != "item_id" else len(id_features_dic[feat].keys()), embedding_dim=4)
                             for i, feat in enumerate(item_sparse_features)] + [DenseFeat(feat, 1, ) for feat in
                                                                                item_dense_features]
     print("生成模型输入格式数据...")
     # 3.generate input data for model
     for user_v in user_sequence_feature:
-        v_tmp = '_'.join(user_v.split('_')[0:2])
+        maxlen = len(train_data[user_v][0].split("|"))
+        mapping_feat = mapping_dict.get(user_v)
         user_varlen_feature_columns = [
-            VarLenSparseFeat(SparseFeat(user_v, vocabulary_size=100000, embedding_dim=4),
-                             maxlen=sequence_feature_dic[user_v][v_tmp + '_maxlen'], combiner='mean', length_name=None)]
+            VarLenSparseFeat(SparseFeat(user_v, len(id_features_dic[mapping_feat].keys()), embedding_dim=4),
+                             maxlen=maxlen, combiner='mean', length_name=None)]
         user_feature_columns += user_varlen_feature_columns
     for item_v in item_sequence_feature:
-        v_tmp = '_'.join(item_v.split('_')[0:2])
+        maxlen = len(train_data[item_v][0].split("|"))
+        mapping_feat = mapping_dict.get(item_v)
         item_varlen_feature_columns = [
-            VarLenSparseFeat(SparseFeat(item_v, vocabulary_size=100000, embedding_dim=4),
-                             maxlen=sequence_feature_dic[item_v][v_tmp + '_maxlen'], combiner='mean', length_name=None)]
+            VarLenSparseFeat(SparseFeat(item_v, len(id_features_dic[mapping_feat].keys()), embedding_dim=4),
+                             maxlen=maxlen, combiner='mean', length_name=None)]
         item_feature_columns += item_varlen_feature_columns
 
     # add user history as user_varlen_feature_columns
