@@ -14,18 +14,16 @@ import datetime
 DATE_FORMAT = "%Y-%m-%d"
 
 
-def feature_create(data_table_name, columns, event_code, sample_table_name):
+def feature_create(data_table_name, data_columns, event_code, sample_table_name, sample_columns):
     spark_client = spark_helper.SparkClient()
-    data = spark_client.get_session().sql(f"select * from {data_table_name}")
-    sample = spark_client.get_session().sql(f"select * from {sample_table_name}")
+    data = spark_client.get_session().sql(f"""select {",".join(data_columns)} from {data_table_name}""")
+    sample = spark_client.get_session().sql(f"""select {",".join(sample_columns)} from {sample_table_name}""")
     # 构建列名
-    col_data = data.columns
-    user_id = col_data[0]
-    item_id = col_data[3]
+    user_id = data_columns[0]
+    item_id = data_columns[3]
 
-    col_sample = sample.columns
-    user_id_sample = col_sample[0]
-    item_id_sample = col_sample[1]
+    user_id_sample = sample_columns[0]
+    item_id_sample = sample_columns[1]
 
     # 1. 构建用户全集
     user_list = data.select(user_id).distinct()
@@ -33,9 +31,9 @@ def feature_create(data_table_name, columns, event_code, sample_table_name):
     item_list = sample.select(item_id_sample).distinct()
 
     # 3. 构造用户、物品特征
-    user_order_feature_list, item_order_feature_list = get_order_feature(data, sample, event_code, col_data, col_sample)
-    user_label_feature = get_user_feature(data, col_data)
-    item_label_feature = get_item_feature(data, sample, col_data, col_sample)
+    user_order_feature_list, item_order_feature_list = get_order_feature(data, sample, event_code, data_columns, sample_columns)
+    user_label_feature = get_user_feature(data, data_columns)
+    item_label_feature = get_item_feature(data, sample, data_columns, sample_columns)
 
     # 4. 拼接特征，存入hive表
     user_feature_list = user_list.join(user_order_feature_list, user_id)
