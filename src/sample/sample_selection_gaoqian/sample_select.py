@@ -6,7 +6,7 @@ import digitforce.aip.common.utils.spark_helper as spark_helper
 
 DATE_FORMAT = "%Y-%m-%d"
 
-def sample_create(data_table_name, columns, event_code_list, category_a, category_b, train_period, predict_period):
+def sample_create(data_table_name, columns, event_code_list, category_a, train_period, predict_period):
     spark_client = spark_helper.SparkClient()
     # data = [user_id, item_id, trade_type, fund_type, dt]
     user_id = columns[0]
@@ -28,8 +28,8 @@ def sample_create(data_table_name, columns, event_code_list, category_a, categor
     date_from_str = (datetime.datetime.strptime(date_mid_str, DATE_FORMAT) - datetime.timedelta(days=train_period)).strftime(DATE_FORMAT)
     date_end_str = (datetime.datetime.strptime(date_mid_str, DATE_FORMAT) + datetime.timedelta(days=predict_period)).strftime(DATE_FORMAT)
 
-    sample_a = data.filter((data[trade_date] >= date_from_str) & (data[trade_date] < date_mid_str) & (data[fund_type] == category_a))
-    sample_b = data.filter((data[trade_date] >= date_mid_str) & (data[trade_date] < date_end_str) & (data[fund_type] == category_b))
+    sample_a = data.filter((data[trade_date] >= date_from_str) & (data[trade_date] < date_mid_str) & (data[fund_type] != category_a))
+    sample_b = data.filter((data[trade_date] >= date_mid_str) & (data[trade_date] < date_end_str) & (data[fund_type] == category_a))
 
     if len(event_code_list) == 1:
         sample_a_rdd = sample_a.rdd.map(lambda x: (x[0], 0))\
