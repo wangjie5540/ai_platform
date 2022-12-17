@@ -5,6 +5,7 @@ import argparse
 import json
 
 from sample_select import start_sample_selection
+import digitforce.aip.common.utils.component_helper as component_helper
 
 
 def run():

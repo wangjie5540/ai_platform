@@ -29,6 +29,8 @@ ENV JAVA_HOME=/opt/jdk1.8.0_181-cloudera
 # 添加spark
 RUN mkdir -p /opt && cd /opt && $WGET_COMMAND/spark-2.4.8-bin-hadoop2.7.tgz && tar xvf spark-2.4.8-bin-hadoop2.7.tgz
 ENV SPARK_HOME=/opt/spark-2.4.8-bin-hadoop2.7
+# 添加hive环境配置
+COPY aip_config/$ENVIRONMENT/hdfs-site.xml $SPARK_HOME/conf
 # 添加依赖包
 ARG SPARK_JARS=/opt/spark-2.4.8-bin-hadoop2.7/jars
 RUN cd $SPARK_JARS \
@@ -42,6 +44,8 @@ RUN pip install xgboost -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 编译镜像
 # docker build --build-arg ENVIRONMENT=dev -t digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev -f algorithm-base.Dockerfile .
+# 上传镜像
+# docker push digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev
 # 启动容器
 # docker run --pull always -p 2222:22 -p 9999:8888  -d --name algorithm-dev --privileged=true --rm -it digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev /usr/sbin/init
 # 开发阶段-启动ssh和jupyter-notebook
