@@ -8,13 +8,13 @@ pipeline_name = 'lookalike'
 
 
 @dsl.pipeline(name=pipeline_name)
-def ml_lookalike(global_params: str, flag):
-    op_read_table = ReadTable(name='', global_params=global_params)
+def ml_lookalike(global_params: str, flag='TRAIN'):
+    op_read_table = ReadTable(global_params=global_params)
 
 
 Compiler().compile(ml_lookalike, f'{pipeline_name}.yaml')
 
-client = kfp.Client(host='http://172.22.20.13:30000/pipeline',
-                    cookies="authservice_session=MTY2MjQ1MzQ3OXxOd3dBTkROS1ZFUkdNekpJUVVWT1JUUkNUMEkxUVZKUldEUkZUalEyVTBKWVdGQk9NMGRMVVZGWVJGTlVVMUpQVlZwVFR6VXlVbEU9fGskAOguKG0flNWKrk0EOtDuv0sCmRNQm27kvWpyn1mK")
-client.upload_pipeline('/data/pycharm_project_768/pipelines/lookalike.yaml', pipeline_name='lookalike')
+client = kfp.Client(host='http://172.22.20.9:30000/pipeline',
+                    cookies="authservice_session=MTY3MTI0OTkyNHxOd3dBTkZoV1RVYzJWMWxSTTFwT1JVRmFORWhEVFU1V1drdFRVekpYVjFWVlREUlJTbFpDV1UxWVNFOVNWVVJPUjFwTVZqUktUMEU9fOm8vCcXXOgelqBzQ-4xXwi2ZE0SklfhPflyAjceGuWB")
+client.upload_pipeline('/data/pycharm_project_710/pipelines/customer_ai/securities/lookalike.yaml', pipeline_name='lookalike_wtg_test')
 # client.create_run_from_pipeline_func(ml_lookalike, arguments={}, namespace='kubeflow-user-example-com', experiment_name='my_test')
