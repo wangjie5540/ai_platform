@@ -14,12 +14,15 @@ def run():
     component_params = global_params['source.read_table']
     select_sql = component_params['select_sql']
     columns = component_params['columns']
+    print("select_sql: ", select_sql)
+    print("columns: ", columns)
     table_name = read_table.read_table_to_hive(select_sql)
     # 构造向下游组件的输出
+    columns_list = columns.split(",")
     outputs = {
         "type": "hive_table",
         "table_name": table_name,
-        "column_list": [columns]
+        "column_list": columns_list
     }
     component_helper.write_output(outputs)
 

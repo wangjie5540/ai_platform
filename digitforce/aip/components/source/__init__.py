@@ -11,6 +11,6 @@ class ReadTable(dsl.ContainerOp):
             name=name,
             image='digit-force-docker.pkg.coding.net/ai-platform/ai-components/source-read_table',
             command=['python', 'main.py'],
-            arguments=['--global_params', global_params, '--name', name],
+            arguments=['--global_params', global_params],
             file_outputs={"out": global_constant.JSON_OUTPUT_PATH}
         )

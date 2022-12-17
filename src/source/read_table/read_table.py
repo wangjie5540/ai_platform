@@ -11,7 +11,7 @@ def read_table_to_hive(select_sql):
     """
     # 使用spark的view进行表名替换
     spark_client = spark_helper.SparkClient()
-    df = spark_client.get_starrocks_table_df(table_name=f'({select_sql}) as t')
+    df = spark_client.get_starrocks_table_df(table_name=f"""({select_sql}) as t""")
     view_name = f'read_table_{id_helper.gen_uniq_id()}'
     df.createTempView(view_name)
     table_name = f'aip.{view_name}'

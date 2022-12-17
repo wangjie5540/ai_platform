@@ -44,6 +44,8 @@ RUN pip install xgboost -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 编译镜像
 # docker build --build-arg ENVIRONMENT=dev -t digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev -f algorithm-base.Dockerfile .
+# 上传镜像
+# docker push digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev
 # 启动容器
 # docker run --pull always -p 2222:22 -p 9999:8888  -d --name algorithm-dev --privileged=true --rm -it digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev /usr/sbin/init
 # 开发阶段-启动ssh和jupyter-notebook
