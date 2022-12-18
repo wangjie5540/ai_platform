@@ -9,7 +9,7 @@ hive:
     host: 172.21.32.74
     port: 10000
 hdfs:
-  hosts: HDFS8001206
+  hosts: 172.22.20.137:4008,172.22.20.110:4008
 spark:
   master_uri: k8s://https://172.22.20.16
   kubernetes_namespace: kubeflow-user-example-com
