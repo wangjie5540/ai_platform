@@ -1,40 +1,48 @@
-import math
-import builtins
-import random
 import datetime
 import digitforce.aip.common.utils.spark_helper as spark_helper
 
 DATE_FORMAT = "%Y-%m-%d"
 
-def sample_create(data_table_name, columns, event_code_list, category_a, train_period, predict_period):
+def sample_create(event_table_name, event_columns, item_table_name, item_columns, event_code_list, category_a, train_period, predict_period):
     spark_client = spark_helper.SparkClient()
-    # data = [user_id, item_id, trade_type, fund_type, dt]
-    user_id = columns[0]
-    item_id = columns[1]
-    trade_type = columns[2]
-    fund_type = columns[3]
-    trade_date = columns[4]
 
-    columns_str = ",".join(columns)
-    data = spark_client.get_session().sql(f'select {columns_str} from {data_table_name}')
-    if len(event_code_list) == 1:
-        data = data.filter(data[trade_type] == event_code_list[0])
-    else:
-        data = data.filter((data[trade_type] == event_code_list[0]) | (data[trade_type] == event_code_list[1]))
+    today = datetime.datetime.today().date()
+    one_year_ago = (today - datetime.timedelta(365)).strftime(DATE_FORMAT)
+    user_id = event_columns[0]
+    item_id = event_columns[2]
+    trade_date = event_columns[-1]
+    trade_type = event_columns[1]
+    item_id_item = item_columns[0]
+    fund_type = item_columns[1]
 
-    max_trade_date = data.select(trade_date).rdd.max()[0]
+    event_data = spark_client.get_starrocks_table_df(event_table_name)
+    event_data = event_data.select(event_columns)\
+        .filter((event_data[trade_date] >= one_year_ago) & (event_data[trade_date] < today))
+
+    item_data = spark_client.get_starrocks_table_df(item_table_name)
+    item_data = item_data.select(item_columns).distinct()
+
+    join_data = event_data.join(item_data.select([item_id_item, fund_type]), event_data[item_id] == item_data[item_id_item])
+
+    columns = [user_id, trade_type, trade_date, fund_type]
+    data = join_data.select(columns)
+
+    max_trade_date = data.filter((data[trade_type] == event_code_list[0]) & (data[fund_type] == category_a))\
+        .select(trade_date).rdd.max()[0]
     interval = max(train_period, predict_period)
     date_mid_str = (max_trade_date - datetime.timedelta(days=interval)).strftime(DATE_FORMAT)
     date_from_str = (datetime.datetime.strptime(date_mid_str, DATE_FORMAT) - datetime.timedelta(days=train_period)).strftime(DATE_FORMAT)
     date_end_str = (datetime.datetime.strptime(date_mid_str, DATE_FORMAT) + datetime.timedelta(days=predict_period)).strftime(DATE_FORMAT)
 
-    sample_a = data.filter((data[trade_date] >= date_from_str) & (data[trade_date] < date_mid_str) & (data[fund_type] != category_a))
-    sample_b = data.filter((data[trade_date] >= date_mid_str) & (data[trade_date] < date_end_str) & (data[fund_type] == category_a))
+    sample_a = data.filter((data[trade_date] >= date_from_str) & (data[trade_date] < date_mid_str))
+    sample_b = data.filter((data[trade_date] >= date_mid_str) & (data[trade_date] < date_end_str))
 
     if len(event_code_list) == 1:
-        sample_a_rdd = sample_a.rdd.map(lambda x: (x[0], 0))\
+        sample_a_rdd = sample_a.filter(~((sample_a[trade_type] == event_code_list[0]) & (sample_a[fund_type] == category_a))).rdd\
+            .map(lambda x: (x[0], 0))\
             .reduceByKey(lambda x, y: x + y)
-        sample_b_rdd = sample_b.rdd.map(lambda x: (x[0], 0))\
+        sample_b_rdd = sample_b.filter(((sample_a[trade_type] == event_code_list[0]) & (sample_a[fund_type] == category_a))).rdd\
+            .map(lambda x: (x[0], 0))\
             .reduceByKey(lambda x, y: x + y)
         sample_columns = ['user_id', 'label']
         sample_df = sample_a_rdd.map(lambda x: (x[0], 0))\
@@ -42,12 +50,13 @@ def sample_create(data_table_name, columns, event_code_list, category_a, train_p
             .reduceByKey(lambda x, y: x+y)\
             .toDF(sample_columns)
     else:
-        sample_a_rdd = sample_a.rdd.map(lambda x: (x[0], 0))\
-            .reduceByKey(lambda x, y: x + y)
-        sample_b_rdd1 = sample_b.filter(sample_b[trade_type] == event_code_list[0]).rdd \
+        sample_a_rdd = sample_a.filter(~(((sample_a[trade_type] == event_code_list[0]) | (sample_a[trade_type] == event_code_list[1])) & (sample_a[fund_type] == category_a))).rdd\
             .map(lambda x: (x[0], 0))\
             .reduceByKey(lambda x, y: x + y)
-        sample_b_rdd2 = sample_b.filter(sample_b[trade_type] == event_code_list[1]).rdd\
+        sample_b_rdd1 = sample_b.filter(((sample_b[trade_type] == event_code_list[0]) & (sample_b[fund_type] == category_a))).rdd \
+            .map(lambda x: (x[0], 0))\
+            .reduceByKey(lambda x, y: x + y)
+        sample_b_rdd2 = sample_b.filter(((sample_b[trade_type] == event_code_list[1]) & (sample_b[fund_type] == category_a))).rdd\
             .map(lambda x: (x[0], 0))\
             .reduceByKey(lambda x, y: x + y)
         sample_columns = ['user_id', 'label1', 'label2']
@@ -60,6 +69,7 @@ def sample_create(data_table_name, columns, event_code_list, category_a, train_p
 
     # todo: dynamic change table name
     sample_table_name = 'algorithm.tmp_aip_sample_gaoqian'
+    print(sample_df.show(20))
     sample_df.write.format("hive").mode("overwrite").saveAsTable(sample_table_name)
     return sample_table_name, sample_columns
 
