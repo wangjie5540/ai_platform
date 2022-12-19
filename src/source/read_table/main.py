@@ -9,9 +9,10 @@ def run():
     # 参数解析
     parser = argparse.ArgumentParser()
     parser.add_argument('--global_params', type=str, required=True, help='全局参数')
+    parser.add_argument('--name', type=str, required=True, help='名称')
     args = parser.parse_args()
     global_params = json.loads(args.global_params)
-    component_params = global_params['source.read_table']
+    component_params = global_params['source-read_table'][args.name]
     select_sql = component_params['select_sql']
     columns = component_params['columns']
     print("select_sql: ", select_sql)

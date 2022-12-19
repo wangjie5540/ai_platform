@@ -14,6 +14,6 @@ class SampleSelectionLookalike(dsl.ContainerOp):
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/sample-sample_selection_lookalike',
             command=['python', 'main.py'],
-            arguments=['--global_params', global_params, '--data_input', data_input],
+            arguments=['--name', name, '--global_params', global_params, '--data_input', data_input],
             file_outputs={output_name: global_constant.JSON_OUTPUT_PATH}
         )

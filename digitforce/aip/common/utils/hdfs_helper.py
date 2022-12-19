@@ -1,8 +1,7 @@
 import glob
-
 import pyhdfs
-
 import digitforce.aip.common.utils.config_helper as config_helper
+
 hdfs_config = config_helper.get_module_config("hdfs")
 
 
