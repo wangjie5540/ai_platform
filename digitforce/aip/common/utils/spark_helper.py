@@ -23,6 +23,7 @@ class SparkClient(object):
             .master(spark_config['master_uri']) \
             .config("spark.driver.host", client_host) \
             .config("spark.kubernetes.container.image", spark_config['kubernetes_runtime_image']) \
+            .config("spark.sql.autoBroadcastJoinThreshold", -1) \
             .config("hive.metastore.uris", spark_config['hive_uris']) \
             .enableHiveSupport().getOrCreate()
 
