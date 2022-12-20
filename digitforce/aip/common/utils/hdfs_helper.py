@@ -47,3 +47,6 @@ class HdfsClient:
     def copy_from_local_dir(self, local_dir, dest):
         self.mkdir_dirs(dest)
         files = glob.glob(local_dir)
+
+
+hdfs_client = HdfsClient()
