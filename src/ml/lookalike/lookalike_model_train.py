@@ -89,24 +89,24 @@ def filter_features(features):
     :return: 构建双塔模型所需特征集合
     '''
     # TODO：特征灵活配置
-    sparse_features = ['user_id', 'item_id', 'i_fund_type', 'i_management', 'i_custodian', 'i_invest_type', 'u_gender',
-                       'u_EDU', 'u_RSK_ENDR_CPY', 'u_NATN',
-                       'u_OCCU', 'u_IS_VAIID_INVST']
+    sparse_features = ['user_id', 'item_id', 'fund_type', 'management', 'custodian', 'invest_type', 'gender',
+                       'EDU', 'RSK_ENDR_CPY', 'NATN',
+                       'OCCU', 'IS_VAIID_INVST']
     dense_features = ['i_buy_counts_30d', 'i_amount_sum_30d', 'i_amount_avg_30d', 'i_amount_min_30d',
                       'i_amount_max_30d', 'u_buy_counts_30d',
                       'u_amount_sum_30d', 'u_amount_avg_30d', 'u_amount_min_30d', 'u_amount_max_30d', 'u_buy_days_30d',
                       'u_buy_avg_days_30d', 'u_last_buy_days_30d']
     sequence_features = ['u_buy_list']
     target = ['label']
-    user_sparse_features, user_dense_features = ['user_id', 'u_gender', 'u_EDU', 'u_RSK_ENDR_CPY', 'u_NATN',
-                                                 'u_OCCU', 'u_IS_VAIID_INVST'], ['u_buy_counts_30d',
+    user_sparse_features, user_dense_features = ['user_id', 'gender', 'EDU', 'RSK_ENDR_CPY', 'NATN',
+                                                 'OCCU', 'IS_VAIID_INVST'], ['u_buy_counts_30d',
                                                                                  'u_amount_sum_30d', 'u_amount_avg_30d',
                                                                                  'u_amount_min_30d', 'u_amount_max_30d',
                                                                                  'u_buy_days_30d',
                                                                                  'u_buy_avg_days_30d',
                                                                                  'u_last_buy_days_30d']
-    item_sparse_features, item_dense_features = ['item_id', 'i_fund_type', 'i_management', 'i_custodian',
-                                                 'i_invest_type'], ['i_buy_counts_30d', 'i_amount_sum_30d',
+    item_sparse_features, item_dense_features = ['item_id', 'fund_type', 'management', 'custodian',
+                                                 'invest_type'], ['i_buy_counts_30d', 'i_amount_sum_30d',
                                                                     'i_amount_avg_30d', 'i_amount_min_30d',
                                                                     'i_amount_max_30d']
     user_sequence_features, item_sequence_features = ['u_buy_list'], []

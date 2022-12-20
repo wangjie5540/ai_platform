@@ -27,6 +27,6 @@ columns = ['custom_id',
            'i_custodian',
            'i_invest_type']
 event_code = {'buy': 'fund_buy'}
-table, col = start_sample_selection(data_table_name, columns, event_code, pos_sample_proportion=0.5,
-                                    pos_sample_num=200000)
+table, col = start_sample_selection(event_code, pos_sample_proportion=0.5,
+                                    pos_sample_num=50000)
 print(table, col)

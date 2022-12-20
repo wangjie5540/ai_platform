@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-'''
-@file: feature_create.py
-@time: 2022/12/7 18:54
-@desc:
-'''
 import digitforce.aip.common.utils.spark_helper as spark_helper
+import digitforce.aip.common.utils.time_helper as time_helper
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
@@ -14,47 +10,58 @@ import datetime
 DATE_FORMAT = "%Y-%m-%d"
 
 
-def feature_create(data_table_name, data_columns, event_code, sample_table_name, sample_columns):
+def feature_create(event_code, sample_table_name, sample_columns):
     spark_client = spark_helper.SparkClient()
-    data = spark_client.get_session().sql(f"""select {",".join(data_columns)} from {data_table_name}""")
-    sample = spark_client.get_session().sql(f"""select {",".join(sample_columns)} from {sample_table_name}""")
+    user_table_columns = ['cust_id', 'gender', 'EDU', 'RSK_ENDR_CPY', 'NATN', 'OCCU', 'IS_VAIID_INVST']
+    item_table_columns = ['ts_code', 'fund_type', 'management', 'custodian', 'invest_type']
+    order_table_columns = ["custom_id", "trade_date", "trade_type", "fund_code", "trade_money", "fund_shares",
+                           "fund_nav"]
+
     # 构建列名
-    user_id = data_columns[0]
-    item_id = data_columns[3]
+    user_id = user_table_columns[0]
+    item_id = item_table_columns[0]
+    buy_code = event_code.get("buy")
+    order_user_id = order_table_columns[0]
+    trade_date = order_table_columns[1]
+    trade_type = order_table_columns[2]
+    order_item_id = order_table_columns[3]
+    trade_money = order_table_columns[4]
+    sample_user_id = sample_columns[0]
+    sample_item_id = sample_columns[1]
 
-    user_id_sample = sample_columns[0]
-    item_id_sample = sample_columns[1]
+    user_data = spark_client.get_starrocks_table_df('algorithm.user_info')
+    user_data = user_data.select(user_table_columns)
 
-    # 1. 构建用户全集
-    user_list = data.select(user_id).distinct()
-    # 2. 构建商品子集
-    item_list = sample.select(item_id_sample).distinct()
+    item_data = spark_client.get_starrocks_table_df('algorithm.zq_fund_basic')
+    # TODO：后续优化物品表没有分区，去重为临时方案
+    item_data = item_data.select(item_table_columns).distinct()
+
+    sample_data = spark_client.get_session().sql(f"""select {",".join(sample_columns)} from {sample_table_name}""")
+
+    order_table = spark_client.get_starrocks_table_df("algorithm.zq_fund_trade")
+    order_data = order_table.select(order_table_columns)
 
     # 3. 构造用户、物品特征
-    user_order_feature_list, item_order_feature_list = get_order_feature(data, sample, event_code, data_columns, sample_columns)
-    user_label_feature = get_user_feature(data, data_columns)
-    item_label_feature = get_item_feature(data, sample, data_columns, sample_columns)
+    user_order_feature_list, item_order_feature_list = get_order_feature(order_data, sample_data, event_code, order_table_columns,
+                                                                         sample_columns)
+
 
     # 4. 拼接特征，存入hive表
-    user_feature_list = user_list.join(user_order_feature_list, user_id)
-    user_feature_list = user_feature_list.join(user_label_feature, user_id)
-    user_feature_list = user_feature_list.withColumnRenamed(user_id, user_id_sample)
+    user_data = user_data.withColumnRenamed(user_id, sample_user_id)
+    user_order_feature_list = user_order_feature_list.withColumnRenamed(order_user_id, sample_user_id)
+    user_feature_table = user_data.join(user_order_feature_list, sample_user_id, "left")
 
-    item_feature_list = item_list.join(item_order_feature_list,
-                                       item_list[item_id_sample] == item_order_feature_list[item_id], "left").drop(
-        item_id)
-    item_feature_list = item_feature_list.join(item_label_feature,
-                                               item_feature_list[item_id_sample] == item_label_feature[item_id],
-                                               "left").drop(
-        item_id)
+    item_data = item_data.withColumnRenamed(item_id, sample_item_id)
+    item_order_feature_list = item_order_feature_list.withColumnRenamed(order_item_id, sample_item_id)
+    item_feature_table = item_data.join(item_order_feature_list, sample_item_id, "left")
 
     # TODO：动态hive表名
     user_feature_table_name = "algorithm.tmp_aip_user_feature"
-    user_feature_list.write.format("hive").mode("overwrite").saveAsTable(user_feature_table_name)
+    user_feature_table.write.format("hive").mode("overwrite").saveAsTable(user_feature_table_name)
 
     # TODO：动态hive表名
     item_feature_table_name = "algorithm.tmp_aip_item_feature"
-    item_feature_list.write.format("hive").mode("overwrite").saveAsTable(item_feature_table_name)
+    item_feature_table.write.format("hive").mode("overwrite").saveAsTable(item_feature_table_name)
 
     return user_feature_table_name, item_feature_table_name
 
@@ -67,7 +74,6 @@ def get_order_feature(data, sample, event_code, col_data, col_sample):
     # TODO：后续统一规范event_code
     buy_code = event_code.get("buy")
     # 构建列名
-    col_trade = [c for c in col_data if not c.startswith("u_") and not c.startswith("i_")]
     user_id = col_data[0]
     item_id = col_data[3]
     trade_type = col_data[2]
@@ -77,7 +83,7 @@ def get_order_feature(data, sample, event_code, col_data, col_sample):
 
     user_list = data.select(user_id).distinct()
 
-    user_buy_df = data.select(col_trade).filter(data[trade_type] == buy_code)
+    user_buy_df = data.select(col_data).filter(data[trade_type] == buy_code)
 
     user_buy_counts_30d = user_buy_df.filter(user_buy_df[trade_date] >= thirty_days_ago_str) \
         .groupby(user_id) \
@@ -114,7 +120,7 @@ def get_order_feature(data, sample, event_code, col_data, col_sample):
     item_list = sample.select(item_id_sample).distinct()
     item_df = data.join(item_list, data[item_id] == item_list[item_id_sample], "right"). \
         drop(item_id_sample)
-    item_buy_df = item_df.select(col_trade).filter(item_df[trade_type] == buy_code)
+    item_buy_df = item_df.select(col_data).filter(item_df[trade_type] == buy_code)
 
     item_buy_counts_30d = item_buy_df.filter(item_buy_df[trade_date] >= thirty_days_ago_str) \
         .groupby(item_id) \
@@ -129,19 +135,3 @@ def get_order_feature(data, sample, event_code, col_data, col_sample):
     return user_feature_list, item_feature_list
 
 
-def get_user_feature(data, col_data):
-    user_id = col_data[0]
-    user_feature_col = [c for c in col_data if c.startswith("u_")]
-    user_label_feature = data.select([user_id] + user_feature_col).distinct()
-    return user_label_feature
-
-
-def get_item_feature(data, sample, col_data, col_sample):
-    item_id = col_data[3]
-    item_id_sample = col_sample[1]
-    item_list = sample.select(item_id_sample).distinct()
-    item_df = data.join(item_list, data[item_id] == item_list[item_id_sample], "right"). \
-        drop(item_id_sample)
-    item_feature_col = [c for c in col_data if c.startswith("i_")]
-    item_label_feature = item_df.select([item_id] + item_feature_col).distinct()
-    return item_label_feature
