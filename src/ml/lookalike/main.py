@@ -10,9 +10,14 @@ def run():
     # 参数解析
     parser = argparse.ArgumentParser()
     parser.add_argument("--global_params", type=str, required=True, help="全局参数")
+    parser.add_argument("--name", type=str, required=True, help="名称")
+    parser.add_argument("--data_input", type=str, required=True, help="上游组件传输参数")
+    parser.add_argument("--data_input", type=str, required=True, help="上游组件传输参数")
+    parser.add_argument("--data_input", type=str, required=True, help="上游组件传输参数")
+    parser.add_argument("--data_input", type=str, required=True, help="上游组件传输参数")
     args = parser.parse_args()
     global_params = json.loads(args.global_params)
-    component_params = global_params["ml.lookalike"]
+    component_params = global_params["ml-lookalike"][args.name]
     train_data_table_name = component_params["train_data_table_name"]
     test_data_table_name = component_params["test_data_table_name"]
     user_data_table_name = component_params["user_data_table_name"]
