@@ -61,8 +61,7 @@ def feature_create(event_code, sample_table_name, sample_columns):
     item_feature_table_name = "algorithm.tmp_aip_item_feature"
     item_feature_table.write.format("hive").mode("overwrite").saveAsTable(item_feature_table_name)
 
-    return user_feature_table_name, user_feature_table_columns,\
-           item_feature_table_name, item_feature_table_columns
+    return user_feature_table_name, user_feature_table_columns, item_feature_table_name, item_feature_table_columns
 
 
 def get_order_feature(data, sample, event_code, col_data, col_sample):

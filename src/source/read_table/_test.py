@@ -1,5 +1,6 @@
 # coding: utf-8
 import read_table
+import digitforce.aip.common.utils.spark_helper as spark_helper
 
 select_sql = '''
 select
