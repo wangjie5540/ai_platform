@@ -28,7 +28,7 @@ def sample_comb(sample_table_name, sample_columns,
     user_feature = user_feature.withColumnRenamed(user_id, user_id_sample)
     item_feature = item_feature.withColumnRenamed(item_id, item_id_sample)
 
-    data = sample.join(item_feature, item_id_sample)
+    data = sample.join(item_feature, item_id_sample, "left")
     data = data.join(user_feature, user_id_sample, "left")
     columns = data.columns
 
@@ -56,9 +56,9 @@ def sample_comb(sample_table_name, sample_columns,
 
 
 def train_data_preprocessing(data, hdfs_path):
-    sparse_features = ['i_fund_type', 'i_management', 'i_custodian', 'i_invest_type', 'u_gender',
-                       'u_EDU', 'u_RSK_ENDR_CPY', 'u_NATN',
-                       'u_OCCU', 'u_IS_VAIID_INVST']
+    sparse_features = ['fund_type', 'management', 'custodian', 'invest_type', 'gender',
+                       'EDU', 'RSK_ENDR_CPY', 'NATN',
+                       'OCCU', 'IS_VAIID_INVST']
     dense_features = ['i_buy_counts_30d', 'i_amount_sum_30d', 'i_amount_avg_30d', 'i_amount_min_30d',
                       'i_amount_max_30d', 'u_buy_counts_30d',
                       'u_amount_sum_30d', 'u_amount_avg_30d', 'u_amount_min_30d', 'u_amount_max_30d', 'u_buy_days_30d',
@@ -73,8 +73,8 @@ def train_data_preprocessing(data, hdfs_path):
 
 
 def user_data_preprocessing(user_data, hdfs_path):
-    user_sparse_features, user_dense_features = ['u_gender', 'u_EDU', 'u_RSK_ENDR_CPY', 'u_NATN',
-                                                 'u_OCCU', 'u_IS_VAIID_INVST'], ['u_buy_counts_30d',
+    user_sparse_features, user_dense_features = ['gender', 'EDU', 'RSK_ENDR_CPY', 'NATN',
+                                                 'OCCU', 'IS_VAIID_INVST'], ['u_buy_counts_30d',
                                                                                  'u_amount_sum_30d', 'u_amount_avg_30d',
                                                                                  'u_amount_min_30d', 'u_amount_max_30d',
                                                                                  'u_buy_days_30d',

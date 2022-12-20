@@ -7,18 +7,26 @@ import numpy as np
 import builtins
 import random
 import digitforce.aip.common.utils.spark_helper as spark_helper
+import digitforce.aip.common.utils.time_helper as time_helper
 
 
-def start_sample_selection(data_table_name, columns, event_code, pos_sample_proportion=0.5, pos_sample_num=200000):
+def start_sample_selection(event_code, pos_sample_proportion=0.5, pos_sample_num=200000):
     spark_client = spark_helper.SparkClient()
+    columns = ["custom_id", "trade_date", "trade_type", "fund_code"]
     # TODO：后续event_code会统一规范
     buy_code = event_code.get("buy")
     user_id = columns[0]
-    item_id = columns[3]
+    trade_date = columns[1]
     trade_type = columns[2]
+    item_id = columns[3]
+    # TODO：数据取较大范围
+    today = time_helper.get_today_str()
+    thirty_days_ago = time_helper.n_days_ago_str(360)
 
-    data = spark_client.get_session().sql(f"""select {",".join(columns)} from {data_table_name}""")
-    data = data.filter(data[trade_type] == buy_code)
+    data = spark_client.get_starrocks_table_df("algorithm.zq_fund_trade")
+    data = data.select(columns) \
+        .filter((data[trade_date] >= thirty_days_ago) & (data[trade_date] <= today)) \
+        .filter(data[trade_type] == buy_code)
 
     # 确定采样总条数
     if data.count() < pos_sample_num:
