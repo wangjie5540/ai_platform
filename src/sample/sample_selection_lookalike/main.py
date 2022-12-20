@@ -13,20 +13,13 @@ def run():
     parser = argparse.ArgumentParser()
     parser.add_argument("--global_params", type=str, required=True, help="全局参数")
     parser.add_argument("--name", type=str, required=True, help="名称")
-    parser.add_argument("--data_input", type=str, required=True, help="上个组件传递过来的参数")
     args = parser.parse_args()
     global_params = json.loads(args.global_params)
-    data_input = json.loads(args.data_input)
     component_params = global_params["sample-sample_selection_lookalike"][args.name]
-    if data_input["type"] == "hive_table":
-        table_name = data_input["table_name"]
-        column_list = data_input["column_list"]
-    else:
-        raise Exception('data_input type error')
     # TODO: 重复使用的参数如何放置？
     event_code = component_params["event_code"]
     pos_sample_proportion = component_params["pos_sample_proportion"]
-    table_name, columns = start_sample_selection(table_name, column_list, event_code, pos_sample_proportion)
+    table_name, columns = start_sample_selection(event_code, pos_sample_proportion, pos_sample_num=200000)
     outputs = {
         "type": "hive_table",
         "table_name": table_name,

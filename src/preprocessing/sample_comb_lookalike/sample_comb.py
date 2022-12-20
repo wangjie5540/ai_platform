@@ -48,6 +48,9 @@ def sample_comb(sample_table_name, sample_columns,
     print("user data preprocessing")
     user_data = user_data_preprocessing(user_feature, hdfs_dir)
 
+    data_table_columns = data.columns
+    user_data_table_columns = user_data.columns
+
     print("train data saveAsTable")
     train_data_table_name = "algorithm.tmp_aip_train_data"
     train_data.write.format("hive").mode("overwrite").saveAsTable(train_data_table_name)
@@ -62,7 +65,7 @@ def sample_comb(sample_table_name, sample_columns,
 
     print("Mission Finished")
 
-    return train_data_table_name, test_data_table_name, user_data_table_name, hdfs_dir
+    return train_data_table_name, test_data_table_name, user_data_table_name, data_table_columns, user_data_table_columns, hdfs_dir
 
 
 def train_data_preprocessing(data, hdfs_path):
@@ -83,6 +86,7 @@ def train_data_preprocessing(data, hdfs_path):
         if feat == "u_last_buy_days_30d":
             fill_dic[feat] = 90
     fill_dic["u_buy_list"] = ""
+    data = data.fillna(fill_dic)
 
     data = feat_label_encoder(data, sparse_features, hdfs_path + f"sparse_features_dict.pkl", True, True)
     data = feat_minmax_scaler(data, dense_features, hdfs_path + f"dense_features_dict.pkl", True, True)
@@ -94,11 +98,11 @@ def train_data_preprocessing(data, hdfs_path):
 def user_data_preprocessing(user_data, hdfs_path):
     user_sparse_features, user_dense_features = ['gender', 'EDU', 'RSK_ENDR_CPY', 'NATN',
                                                  'OCCU', 'IS_VAIID_INVST'], ['u_buy_counts_30d',
-                                                                                 'u_amount_sum_30d', 'u_amount_avg_30d',
-                                                                                 'u_amount_min_30d', 'u_amount_max_30d',
-                                                                                 'u_buy_days_30d',
-                                                                                 'u_buy_avg_days_30d',
-                                                                                 'u_last_buy_days_30d']
+                                                                             'u_amount_sum_30d', 'u_amount_avg_30d',
+                                                                             'u_amount_min_30d', 'u_amount_max_30d',
+                                                                             'u_buy_days_30d',
+                                                                             'u_buy_avg_days_30d',
+                                                                             'u_last_buy_days_30d']
     id_features = [['user_id'], ['item_id', 'u_buy_list']]
 
     fill_dic = collections.defaultdict()
@@ -109,6 +113,7 @@ def user_data_preprocessing(user_data, hdfs_path):
         if feat == "u_last_buy_days_30d":
             fill_dic[feat] = 90
     fill_dic["u_buy_list"] = ""
+    user_data = user_data.fillna(fill_dic)
 
     user_data = feat_label_encoder(user_data, user_sparse_features, hdfs_path + f"sparse_features_dict.pkl", False,
                                    True)
