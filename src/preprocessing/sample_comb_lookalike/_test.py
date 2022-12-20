@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-'''
-@file: _test.py
-@time: 2022/12/9 18:32
-@desc:
-'''
+
 from sample_comb import sample_comb
 
 sample_table_name = "algorithm.tmp_aip_sample"

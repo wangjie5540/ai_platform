@@ -16,6 +16,7 @@ def sample_comb(sample_table_name, sample_columns,
                 user_feature_table_name, user_columns,
                 item_feature_table_name, item_columns):
     spark_client = spark_helper.SparkClient()
+    print("read data")
     sample = spark_client.get_session().sql(f"""select {",".join(sample_columns)} from {sample_table_name}""")
     user_feature = spark_client.get_session().sql(f"""select {",".join(user_columns)} from {user_feature_table_name}""")
     item_feature = spark_client.get_session().sql(f"""select {",".join(item_columns)} from {item_feature_table_name}""")
@@ -28,29 +29,38 @@ def sample_comb(sample_table_name, sample_columns,
     user_feature = user_feature.withColumnRenamed(user_id, user_id_sample)
     item_feature = item_feature.withColumnRenamed(item_id, item_id_sample)
 
+    print("data join")
     data = sample.join(item_feature, item_id_sample, "left")
     data = data.join(user_feature, user_id_sample, "left")
     columns = data.columns
 
+    print("train data preprocessing")
     # TODO：后续完善hdfs_helper组件
     hdfs_dir = "/data/pycharm_project_950/src/preprocessing/sample_comb_lookalike/dir/"
     data = train_data_preprocessing(data, hdfs_dir)
 
+    print("train test split")
     data = data.rdd.map(lambda x: (x, random.random()))
     train_test_threshold = 0.8
     train_data = data.filter(lambda x: x[1] < train_test_threshold).map(lambda x: x[0]).toDF(columns)
     test_data = data.filter(lambda x: x[1] >= train_test_threshold).map(lambda x: x[0]).toDF(columns)
 
+    print("user data preprocessing")
     user_data = user_data_preprocessing(user_feature, hdfs_dir)
 
+    print("train data saveAsTable")
     train_data_table_name = "algorithm.tmp_aip_train_data"
     train_data.write.format("hive").mode("overwrite").saveAsTable(train_data_table_name)
 
+    print("test data saveAsTable")
     test_data_table_name = "algorithm.tmp_aip_test_data"
     test_data.write.format("hive").mode("overwrite").saveAsTable(test_data_table_name)
 
+    print("user data saveAsTable")
     user_data_table_name = "algorithm.tmp_aip_user_data"
     user_data.write.format("hive").mode("overwrite").saveAsTable(user_data_table_name)
+
+    print("Mission Finished")
 
     return train_data_table_name, test_data_table_name, user_data_table_name, hdfs_dir
 
@@ -64,6 +74,15 @@ def train_data_preprocessing(data, hdfs_path):
                       'u_amount_sum_30d', 'u_amount_avg_30d', 'u_amount_min_30d', 'u_amount_max_30d', 'u_buy_days_30d',
                       'u_buy_avg_days_30d', 'u_last_buy_days_30d']
     id_features = [['user_id'], ['item_id', 'u_buy_list']]
+
+    fill_dic = collections.defaultdict()
+    for feat in sparse_features:
+        fill_dic[feat] = "unknown"
+    for feat in dense_features:
+        fill_dic[feat] = 0
+        if feat == "u_last_buy_days_30d":
+            fill_dic[feat] = 90
+    fill_dic["u_buy_list"] = ""
 
     data = feat_label_encoder(data, sparse_features, hdfs_path + f"sparse_features_dict.pkl", True, True)
     data = feat_minmax_scaler(data, dense_features, hdfs_path + f"dense_features_dict.pkl", True, True)
@@ -81,6 +100,15 @@ def user_data_preprocessing(user_data, hdfs_path):
                                                                                  'u_buy_avg_days_30d',
                                                                                  'u_last_buy_days_30d']
     id_features = [['user_id'], ['item_id', 'u_buy_list']]
+
+    fill_dic = collections.defaultdict()
+    for feat in user_sparse_features:
+        fill_dic[feat] = "unknown"
+    for feat in user_dense_features:
+        fill_dic[feat] = 0
+        if feat == "u_last_buy_days_30d":
+            fill_dic[feat] = 90
+    fill_dic["u_buy_list"] = ""
 
     user_data = feat_label_encoder(user_data, user_sparse_features, hdfs_path + f"sparse_features_dict.pkl", False,
                                    True)
