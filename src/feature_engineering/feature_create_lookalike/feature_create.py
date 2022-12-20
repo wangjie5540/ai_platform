@@ -20,12 +20,8 @@ def feature_create(event_code, sample_table_name, sample_columns):
     # 构建列名
     user_id = user_table_columns[0]
     item_id = item_table_columns[0]
-    buy_code = event_code.get("buy")
     order_user_id = order_table_columns[0]
-    trade_date = order_table_columns[1]
-    trade_type = order_table_columns[2]
     order_item_id = order_table_columns[3]
-    trade_money = order_table_columns[4]
     sample_user_id = sample_columns[0]
     sample_item_id = sample_columns[1]
 
@@ -55,6 +51,8 @@ def feature_create(event_code, sample_table_name, sample_columns):
     item_order_feature_list = item_order_feature_list.withColumnRenamed(order_item_id, sample_item_id)
     item_feature_table = item_data.join(item_order_feature_list, sample_item_id, "left")
 
+    user_feature_table_columns = user_feature_table.columns
+    item_feature_table_columns = item_feature_table.columns
     # TODO：动态hive表名
     user_feature_table_name = "algorithm.tmp_aip_user_feature"
     user_feature_table.write.format("hive").mode("overwrite").saveAsTable(user_feature_table_name)
@@ -63,7 +61,8 @@ def feature_create(event_code, sample_table_name, sample_columns):
     item_feature_table_name = "algorithm.tmp_aip_item_feature"
     item_feature_table.write.format("hive").mode("overwrite").saveAsTable(item_feature_table_name)
 
-    return user_feature_table_name, item_feature_table_name
+    return user_feature_table_name, user_feature_table_columns,\
+           item_feature_table_name, item_feature_table_columns
 
 
 def get_order_feature(data, sample, event_code, col_data, col_sample):
