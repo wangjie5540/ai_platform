@@ -13,27 +13,21 @@ from pyspark.sql.types import IntegerType, FloatType, StringType
 
 
 def sample_comb(sample_table_name, sample_columns,
-                user_feature_table_name, user_columns,
-                item_feature_table_name, item_columns):
+                user_feature_table_name, user_columns):
     spark_client = spark_helper.SparkClient()
     sample = spark_client.get_session().sql(f"""select {",".join(sample_columns)} from {sample_table_name}""")
     user_feature = spark_client.get_session().sql(f"""select {",".join(user_columns)} from {user_feature_table_name}""")
-    item_feature = spark_client.get_session().sql(f"""select {",".join(item_columns)} from {item_feature_table_name}""")
 
     user_id_sample = sample_columns[0]
-    item_id_sample = sample_columns[1]
     user_id = user_columns[0]
-    item_id = item_columns[0]
 
     user_feature = user_feature.withColumnRenamed(user_id, user_id_sample)
-    item_feature = item_feature.withColumnRenamed(item_id, item_id_sample)
 
-    data = sample.join(item_feature, item_id_sample)
-    data = data.join(user_feature, user_id_sample, "left")
+    data = sample.join(user_feature, user_id_sample, "left")
     columns = data.columns
 
     # TODO：后续完善hdfs_helper组件
-    hdfs_dir = "/data/pycharm_project_950/src/preprocessing/sample_comb_lookalike/dir/"
+    hdfs_dir = "/tmp/pycharm_project_19/src/preprocessing/sample_comb_gaoqian/"
     data = train_data_preprocessing(data, hdfs_dir)
 
     data = data.rdd.map(lambda x: (x, random.random()))
@@ -41,33 +35,29 @@ def sample_comb(sample_table_name, sample_columns,
     train_data = data.filter(lambda x: x[1] < train_test_threshold).map(lambda x: x[0]).toDF(columns)
     test_data = data.filter(lambda x: x[1] >= train_test_threshold).map(lambda x: x[0]).toDF(columns)
 
-    user_data = user_data_preprocessing(user_feature, hdfs_dir)
-
-    train_data_table_name = "algorithm.tmp_aip_train_data"
+    train_data_table_name = "algorithm.tmp_aip_train_data_gaoqian"
     train_data.write.format("hive").mode("overwrite").saveAsTable(train_data_table_name)
 
-    test_data_table_name = "algorithm.tmp_aip_test_data"
+    test_data_table_name = "algorithm.tmp_aip_test_data_gaoqian"
     test_data.write.format("hive").mode("overwrite").saveAsTable(test_data_table_name)
 
-    user_data_table_name = "algorithm.tmp_aip_user_data"
-    user_data.write.format("hive").mode("overwrite").saveAsTable(user_data_table_name)
 
-    return train_data_table_name, test_data_table_name, user_data_table_name, hdfs_dir
+    return train_data_table_name, test_data_table_name, hdfs_dir
 
 
 def train_data_preprocessing(data, hdfs_path):
-    sparse_features = ['i_fund_type', 'i_management', 'i_custodian', 'i_invest_type', 'u_gender',
-                       'u_EDU', 'u_RSK_ENDR_CPY', 'u_NATN',
-                       'u_OCCU', 'u_IS_VAIID_INVST']
-    dense_features = ['i_buy_counts_30d', 'i_amount_sum_30d', 'i_amount_avg_30d', 'i_amount_min_30d',
-                      'i_amount_max_30d', 'u_buy_counts_30d',
-                      'u_amount_sum_30d', 'u_amount_avg_30d', 'u_amount_min_30d', 'u_amount_max_30d', 'u_buy_days_30d',
-                      'u_buy_avg_days_30d', 'u_last_buy_days_30d']
-    id_features = [['user_id'], ['item_id', 'u_buy_list']]
+    sparse_features = ['gender',
+                       'EDU', 'RSK_ENDR_CPY', 'NATN',
+                       'OCCU', 'IS_VAIID_INVST']
+    dense_features = ['u_event1_counts_30d', 'u_event1_amount_sum_30d', 'u_event1_amount_avg_30d', 'u_event1_amount_min_30d',
+                      'u_event1_amount_max_30d',  'u_event1_days_30d',
+                      'u_event1_avg_days_30d', 'u_last_event1_days_30d']
+    # id_features = [['user_id'], ['item_id', 'u_buy_list']]
 
     data = feat_label_encoder(data, sparse_features, hdfs_path + f"sparse_features_dict.pkl", True, True)
     data = feat_minmax_scaler(data, dense_features, hdfs_path + f"dense_features_dict.pkl", True, True)
-    data = id_label_encoder(data, id_features, hdfs_path + f"id_features_dict.pkl", True, True, False)
+    #
+    # data = id_label_encoder(data, id_features, hdfs_path + f"id_features_dict.pkl", True, True, False)
 
     return data
 
