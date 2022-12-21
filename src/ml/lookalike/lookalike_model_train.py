@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import digitforce.aip.common.utils.spark_helper as spark_helper
+import digitforce.aip.common.utils.hdfs_helper as hdfs_helper
 from preprocessing.inputs import SparseFeat, DenseFeat, VarLenSparseFeat
 import pickle
 import numpy as np
@@ -10,6 +11,7 @@ import torch
 from model.dssm import DSSM
 from sklearn.preprocessing import LabelEncoder
 import torch.optim.adam as adam
+hdfs_client = hdfs_helper.HdfsClient()
 
 
 def start_model_train(train_data_table_name, test_data_table_name, user_data_table_name, hdfs_path,
@@ -81,6 +83,8 @@ def start_model_train(train_data_table_name, test_data_table_name, user_data_tab
 
     print(user_embedding[0])
 
+    hdfs_client.copy_from_local("./model_zoo/model.pth", hdfs_path+"model.pth")
+
 
 def filter_features(features):
     '''
@@ -132,9 +136,13 @@ def get_train_test_input(train_data, test_data, user_data,
                          hdfs_path):
     mapping_dict = {"u_buy_list":"item_id"}
 
-    with open(hdfs_path + "sparse_features_dict.pkl", "rb") as file:
+    hdfs_client.copy_to_local(hdfs_path + "sparse_features_dict.pkl",
+                              "./sparse_features_dict.pkl")
+    hdfs_client.copy_to_local(hdfs_path + "id_features_dict.pkl",
+                              "./id_features_dict.pkl")
+    with open("./sparse_features_dict.pkl", "rb") as file:
         sparse_features_dict = pickle.load(file)
-    with open(hdfs_path + "id_features_dict.pkl", "rb") as file:
+    with open("./id_features_dict.pkl", "rb") as file:
         id_features_dic = pickle.load(file)
     user_feature_columns = [SparseFeat(feat, len(sparse_features_dict[feat].keys()) if feat != "user_id" else len(id_features_dic[feat].keys()), embedding_dim=4)
                             for i, feat in enumerate(user_sparse_features)] + [DenseFeat(feat, 1, ) for feat in

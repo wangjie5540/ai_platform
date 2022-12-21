@@ -33,10 +33,11 @@ item_columns = ['item_id',
                 'i_amount_avg_30d',
                 'i_amount_min_30d',
                 'i_amount_max_30d']
-train_data_table_name, test_data_table_name, user_data_table_name, hdfs_dir = sample_comb(sample_table_name,
-                                                                                          sample_columns,
-                                                                                          user_feature_table_name,
-                                                                                          user_columns,
-                                                                                          item_feature_table_name,
-                                                                                          item_columns)
+train_data_table_name, test_data_table_name, user_data_table_name, data_table_columns, user_data_table_columns, hdfs_dir = sample_comb(
+    sample_table_name,
+    sample_columns,
+    user_feature_table_name,
+    user_columns,
+    item_feature_table_name,
+    item_columns)
 print(train_data_table_name, test_data_table_name, user_data_table_name, hdfs_dir)
