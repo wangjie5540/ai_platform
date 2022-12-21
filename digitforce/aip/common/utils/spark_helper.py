@@ -31,6 +31,7 @@ class SparkClient(object):
         return self._session
 
     def get_starrocks_table_df(self, table_name):
+        # TODO 数据量大后会出现OOM的情况
         return self._session.read.format("jdbc") \
             .option('url', starrocks_config['jdbc_url']) \
             .option('dbtable', table_name) \

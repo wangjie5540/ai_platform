@@ -8,7 +8,9 @@ import collections
 import random
 from pyspark.sql import functions as F
 from pyspark.sql.types import IntegerType, FloatType, StringType
+
 hdfs_client = hdfs_helper.HdfsClient()
+
 
 def sample_comb(sample_table_name, sample_columns,
                 user_feature_table_name, user_columns,

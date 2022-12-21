@@ -8,6 +8,6 @@ COPY . $COMPONENT_DIR
 
 #ENTRYPOINT ["python", "main.py"]
 # 编译命令
-# docker build --no-cache -t digit-force-docker.pkg.coding.net/ai-platform/ai-components/sample-sample_selection_lookalike .
+# docker build --no-cache -t digit-force-docker.pkg.coding.net/ai-platform/ai-components/feature_engineering-feature_create_lookalike:latest .
 # push命令
-# docker push digit-force-docker.pkg.coding.net/ai-platform/ai-components/sample-sample_selection_lookalike:latest
+# docker push digit-force-docker.pkg.coding.net/ai-platform/ai-components/feature_engineering-feature_create_lookalike:latest
