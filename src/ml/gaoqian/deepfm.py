@@ -12,6 +12,7 @@ warnings.filterwarnings("ignore")
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 
+
 class DeepFM(nn.Module):
     def __init__(self, cate_fea_nuniqs, nume_fea_size=0, emb_size=8,
                  hid_dims=[256, 128], num_classes=1, dropout=[0.2, 0.2]):

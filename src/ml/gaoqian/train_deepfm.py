@@ -32,27 +32,34 @@ def get_parameter_number(model):
     trainable_num = sum(p.numel() for p in model.parameters() if p.requires_grad)
     return {'Total': total_num, 'Trainable': trainable_num}
 
-def process_dataset(data, tag_name):
-    dense_features = [f for f in data.columns.tolist() if f[0] == "I"]
-    sparse_features = [f for f in data.columns.tolist() if f[0] == "C"]
+def filter_feature(data_columns):
+    sparse_features = ['gender',
+                       'EDU', 'RSK_ENDR_CPY', 'NATN',
+                       'OCCU', 'IS_VAIID_INVST']
+    dense_features = ['u_event1_counts_30d', 'u_event1_amount_sum_30d', 'u_event1_amount_avg_30d',
+                      'u_event1_amount_min_30d',
+                      'u_event1_amount_max_30d', 'u_event1_days_30d',
+                      'u_event1_avg_days_30d', 'u_last_event1_days_30d']
+    label = ['label', 'label1', 'label2']
+    sparse_features = list(np.intersect1d(data_columns, sparse_features))
+    dense_features = list(np.intersect1d(data_columns, sparse_features))
+    label = list(np.intersect1d(data_columns, label))
+    return sparse_features, dense_features, label
 
-    data[sparse_features] = data[sparse_features].fillna('-1000', )
-    data[dense_features] = data[dense_features].fillna(0, )
+def process_dataset(train_data, valid_data, hdfs_path):
+    data_columns = train_data.columns
+    dense_features, sparse_features, label = filter_feature(data_columns)
+    if len(label) == 1:
+        tag_name = 'label'
+    else:
+        tag_name = ['label1', 'label2']
 
-    ## 类别特征labelencoder
-    for feat in tqdm(sparse_features):
-        lbe = LabelEncoder()
-        data[feat] = lbe.fit_transform(data[feat])
+    with open(hdfs_path + "sparse_features_dict.pkl", "rb") as file:
+        sparse_features_dict = pickle.load(file)
 
-    ## 数值特征标准化
-    dense_feature_info_dict = {}
-    for feat in tqdm(dense_features):
-        mean = data[feat].mean()
-        std = data[feat].std()
-        data[feat] = (data[feat] - mean) / (std + 1e-12)  # 防止除零
-        dense_feature_info_dict[feat] = {'mean': mean, 'std': std}
+    cate_fea_nuniqs = [len(sparse_features_dict[feat]) for feat in sparse_features]
+    nume_fea_size = len(dense_features)
 
-    train_data, valid_data = train_test_split(data, test_size=0.2, random_state=2020)
     print(train_data.shape, valid_data.shape)
 
     train_dataset = Data.TensorDataset(torch.LongTensor(train_data[sparse_features].values),
@@ -68,9 +75,9 @@ def process_dataset(data, tag_name):
                                         )
     valid_loader = Data.DataLoader(dataset=valid_dataset, batch_size=4096, shuffle=False)
 
-    cate_fea_nuniqs = [data[f].nunique() for f in sparse_features]
-    nume_fea_size = len(dense_features)
-    return train_loader, valid_loader, cate_fea_nuniqs, nume_fea_size, dense_feature_info_dict
+
+
+    return train_loader, valid_loader, cate_fea_nuniqs, nume_fea_size
 
 
 def train_and_eval(model, train_loader, valid_loader, epochs, device, optimizer, loss_fcn, scheduler, model_path):
@@ -79,7 +86,7 @@ def train_and_eval(model, train_loader, valid_loader, epochs, device, optimizer,
         """训练部分"""
         model.train()
         print("Current lr : {}".format(optimizer.state_dict()['param_groups'][0]['lr']))
-        logging.info('Epoch: {}'.format(_ + 1))
+        print('Epoch: {}'.format(_ + 1))
         train_loss_sum = 0.0
         start_time = time.time()
         for idx, x in enumerate(train_loader):
@@ -94,7 +101,7 @@ def train_and_eval(model, train_loader, valid_loader, epochs, device, optimizer,
 
             train_loss_sum += loss.cpu().item()
             if (idx + 1) % 500 == 0 or (idx + 1) == len(train_loader):
-                logging.info("Epoch {:04d} | Step {:04d} / {} | Loss {:.4f} | Time {:.4f}".format(
+                print("Epoch {:04d} | Step {:04d} / {} | Loss {:.4f} | Time {:.4f}".format(
                     _ + 1, idx + 1, len(train_loader), train_loss_sum / (idx + 1), time.time() - start_time))
         scheduler.step()
         """推断部分"""
@@ -112,50 +119,34 @@ def train_and_eval(model, train_loader, valid_loader, epochs, device, optimizer,
         if cur_auc > best_auc:
             best_auc = cur_auc
             torch.save(model.state_dict(), model_path)
-        logging.info('Current AUC: %.6f, Best AUC: %.6f \n' % (cur_auc, best_auc))
+        print('Current AUC: %.6f, Best AUC: %.6f \n' % (cur_auc, best_auc))
     return best_auc
 
 
-def train(train_data_table_name, hdfs_path, train_data_columns):
+def start_train(train_data_table_name, train_data_columns, test_data_table_name, hdfs_path,
+          lr=0.005, weight_decay=0.001):
     spark_client = spark_helper.SparkClient()
-    dataset = spark_client.get_session().sql(f"select * from {train_data_table_name}").toPandas()
-    train_loader, valid_loader, cate_fea_nuniqs, nume_fea_size, dense_feature_info = process_dataset(dataset, 'label')
-    input_params['dense_feature_info'] = dense_feature_info
+    train_dataset = spark_client.get_session().sql(f"""select {",".join(train_data_columns)} from {train_data_table_name}""").toPandas()
+    valid_dataset = spark_client.get_session().sql(f"""select {",".join(train_data_columns)} from {test_data_table_name}""").toPandas()
+    hdfs_path = "/tmp/pycharm_project_19/src/preprocessing/sample_comb_gaoqian/"
+    train_loader, valid_loader, cate_fea_nuniqs, nume_fea_size = process_dataset(train_dataset, valid_dataset, hdfs_path)
+
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     model = DeepFM(cate_fea_nuniqs, nume_fea_size=nume_fea_size)
     model.to(device)
     loss_fcn = nn.BCELoss()  # Loss函数
     loss_fcn = loss_fcn.to(device)
-    optimizer = optim.Adam(model.parameters(), lr=0.005, weight_decay=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.8)
     epoches = 30
 
-    # store the model
-    # outputpath = os.path.join(path,"model")
-    model_local_path=str(input_params['taskid'])+r".pth"
-    # model_local_path = os.path.join(outputpath,fname)
+    # todo: upload to hdfs
+    hdfs_path = "/tmp/pycharm_project_19/src/ml/gaoqian"
+    model_path = os.path.join(hdfs_path, '/deepfm.pth')
 
-    auc = train_and_eval(model, train_loader, valid_loader, epoches, device, optimizer, loss_fcn, scheduler, model_local_path)
+    auc = train_and_eval(model, train_loader, valid_loader, epoches, device, optimizer, loss_fcn, scheduler, model_path)
 
-    # end = time.time()
-    # cur_time = datetime.datetime.now()
-    # statinfo = os.stat(filepath)
 
-    # upload model and parameters
-    model_target_file_path = os.path.join(hdfs_model_path, str(input_params['taskid'])+'.pth')
-    params_target_file_path = os.path.join(hdfs_model_path, str(input_params['taskid']) + '.txt')
-    params = json.dumps(input_params, ensure_ascii=False).encode('utf-8')
-    params_local_path = str(input_params['taskid']) + r'.txt'
-    with open(params_local_path, 'w') as f:
-        f.write(params)
-    upload_flag1 = upload_hdfs(model_local_path, model_target_file_path)
-    upload_flag2 = upload_hdfs(params_local_path, params_target_file_path)
-    if upload_flag1 and upload_flag2:
-        model_file_url = upload_flag1
-        os.remove(model_local_path)
-        os.remove(params_local_path)
-    else:
-        model_file_url = '-1'
-    print(f'model_file_path: {model_file_url}')
+
 
