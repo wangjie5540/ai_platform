@@ -2,15 +2,13 @@
 # encoding: utf-8
 
 import digitforce.aip.common.utils.spark_helper as spark_helper
-import numpy as np
-import torch
-from torch.nn.utils.rnn import pad_sequence
+import digitforce.aip.common.utils.hdfs_helper as hdfs_helper
 import pickle
 import collections
 import random
 from pyspark.sql import functions as F
 from pyspark.sql.types import IntegerType, FloatType, StringType
-
+hdfs_client = hdfs_helper.HdfsClient()
 
 def sample_comb(sample_table_name, sample_columns,
                 user_feature_table_name, user_columns,
@@ -36,7 +34,7 @@ def sample_comb(sample_table_name, sample_columns,
 
     print("train data preprocessing")
     # TODO：后续完善hdfs_helper组件
-    hdfs_dir = "/data/pycharm_project_950/src/preprocessing/sample_comb_lookalike/dir/"
+    hdfs_dir = '/user/ai/aip/lookalike/'
     data = train_data_preprocessing(data, hdfs_dir)
 
     print("train test split")
@@ -48,16 +46,16 @@ def sample_comb(sample_table_name, sample_columns,
     print("user data preprocessing")
     user_data = user_data_preprocessing(user_feature, hdfs_dir)
 
-    data_table_columns = data.columns
+    data_table_columns = train_data.columns
     user_data_table_columns = user_data.columns
 
     print("train data saveAsTable")
     train_data_table_name = "algorithm.tmp_aip_train_data"
-    train_data.write.format("hive").mode("overwrite").saveAsTable(train_data_table_name)
+    # train_data.write.format("hive").mode("overwrite").saveAsTable(train_data_table_name)
 
     print("test data saveAsTable")
     test_data_table_name = "algorithm.tmp_aip_test_data"
-    test_data.write.format("hive").mode("overwrite").saveAsTable(test_data_table_name)
+    # test_data.write.format("hive").mode("overwrite").saveAsTable(test_data_table_name)
 
     print("user data saveAsTable")
     user_data_table_name = "algorithm.tmp_aip_user_data"
@@ -124,6 +122,7 @@ def user_data_preprocessing(user_data, hdfs_path):
 
 
 def feat_label_encoder(data, cols, save_path, is_fit=True, flag=True):
+    dir = "./sparse_features_dict.pkl"
     if is_fit:
         sparse_features_dict = collections.defaultdict()
         for col in cols:
@@ -136,7 +135,8 @@ def feat_label_encoder(data, cols, save_path, is_fit=True, flag=True):
             feats_map["unknown"] = 0
             sparse_features_dict[col] = feats_map
     else:
-        with open(save_path, "rb") as file:
+        hdfs_client.copy_to_local(save_path, dir)
+        with open(dir, "rb") as file:
             sparse_features_dict = pickle.load(file)
 
     for col in cols:
@@ -149,13 +149,17 @@ def feat_label_encoder(data, cols, save_path, is_fit=True, flag=True):
         data = data.withColumn(col, udfsomefunc(col))
 
     if flag:
-        with open(save_path, "wb") as file:
+        with open(dir, "wb") as file:
             pickle.dump(sparse_features_dict, file)
+        if hdfs_client.exists(save_path):
+            hdfs_client.delete(save_path)
+        hdfs_client.copy_from_local(dir, save_path)
 
     return data
 
 
 def feat_minmax_scaler(data, cols, save_path, is_fit=True, flag=True):
+    dir = "./dense_features_dict.pkl"
     if is_fit:
         dense_features_dict = collections.defaultdict()
         for col in cols:
@@ -167,7 +171,8 @@ def feat_minmax_scaler(data, cols, save_path, is_fit=True, flag=True):
                             'max_value': feats_max}
             dense_features_dict[col] = feats_scaler
     else:
-        with open(save_path, "rb") as file:
+        hdfs_client.copy_to_local(save_path, dir)
+        with open(dir, "rb") as file:
             dense_features_dict = pickle.load(file)
 
     for col in cols:
@@ -182,13 +187,17 @@ def feat_minmax_scaler(data, cols, save_path, is_fit=True, flag=True):
         data = data.withColumn(col, udfsomefunc(col))
 
     if flag:
-        with open(save_path, "wb") as file:
+        with open(dir, "wb") as file:
             pickle.dump(dense_features_dict, file)
+        if hdfs_client.exists(save_path):
+            hdfs_client.delete(save_path)
+        hdfs_client.copy_from_local(dir, save_path)
 
     return data
 
 
 def id_label_encoder(data, cols, save_path, is_fit=True, flag=True, only_user=False):
+    dir = "./id_features_dict.pkl"
     if is_fit:
         id_features_dict = collections.defaultdict()
         for col in cols:
@@ -206,7 +215,8 @@ def id_label_encoder(data, cols, save_path, is_fit=True, flag=True, only_user=Fa
             feats_map["unknown"] = 0
             id_features_dict[col[0]] = feats_map
     else:
-        with open(save_path, "rb") as file:
+        hdfs_client.copy_to_local(save_path, dir)
+        with open(dir, "rb") as file:
             id_features_dict = pickle.load(file)
 
     for col in cols:
@@ -246,6 +256,9 @@ def id_label_encoder(data, cols, save_path, is_fit=True, flag=True, only_user=Fa
             data = data.withColumn(col[1], udf_padding_func(col[1]))
 
     if flag:
-        with open(save_path, "wb") as file:
+        with open(dir, "wb") as file:
             pickle.dump(id_features_dict, file)
+        if hdfs_client.exists(save_path):
+            hdfs_client.delete(save_path)
+        hdfs_client.copy_from_local(dir, save_path)
     return data
