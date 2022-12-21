@@ -51,11 +51,11 @@ def sample_comb(sample_table_name, sample_columns,
 
     print("train data saveAsTable")
     train_data_table_name = "algorithm.tmp_aip_train_data"
-    # train_data.write.format("hive").mode("overwrite").saveAsTable(train_data_table_name)
+    train_data.write.format("hive").mode("overwrite").saveAsTable(train_data_table_name)
 
     print("test data saveAsTable")
     test_data_table_name = "algorithm.tmp_aip_test_data"
-    # test_data.write.format("hive").mode("overwrite").saveAsTable(test_data_table_name)
+    test_data.write.format("hive").mode("overwrite").saveAsTable(test_data_table_name)
 
     print("user data saveAsTable")
     user_data_table_name = "algorithm.tmp_aip_user_data"
