@@ -24,6 +24,14 @@ class SparkClient(object):
             .config("spark.driver.host", client_host) \
             .config("spark.kubernetes.container.image", spark_config['kubernetes_runtime_image']) \
             .config("spark.sql.autoBroadcastJoinThreshold", -1) \
+            .config("spark.executor.instances", "10") \
+            .config("spark.debug.maxToStringFields", 100)\
+            .config("spark.executor.cores", "2")\
+            .config("spark.executor.memory", "10g")\
+            .config("spark.driver.memory", "10g")\
+            .config("spark.driver.cores", "2") \
+            .config("spark.driver.maxResultSize", "8g") \
+            .config("spark.sql.shuffle.partitions", "600")\
             .config("hive.metastore.uris", spark_config['hive_uris']) \
             .enableHiveSupport().getOrCreate()
 
