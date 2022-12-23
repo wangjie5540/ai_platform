@@ -17,16 +17,19 @@ def run():
     parser.add_argument("--other_data", type=str, required=True, help="其他数据")
     args = parser.parse_args()
     global_params = json.loads(args.global_params)
-    component_params = global_params["ml-lookalike"][args.name]
-    dnn_hidden_units = component_params["dnn_hidden_units"]
+    train_data = json.loads(args.train_data)
+    test_data = json.loads(args.test_data)
+    user_data = json.loads(args.user_data)
+    other_data = json.loads(args.other_data)
+    component_params = global_params[args.name]
     dnn_dropout = component_params["dnn_dropout"]
     batch_size = component_params["batch_size"]
     lr = component_params["lr"]
 
     # TODO：讨论返回参数，user_embedding存储方式
-    start_model_train(args.train_data['table_name'], args.test_data['table_name'], args.user_data['table_name'],
-                      args.other_data['path'], args.train_data['column_list'], args.user_data['column_list'],
-                      dnn_hidden_units, dnn_dropout, batch_size, lr)
+    start_model_train(train_data['table_name'], test_data['table_name'], user_data['table_name'],
+                      other_data['path'], train_data['column_list'], user_data['column_list'],
+                      dnn_dropout=dnn_dropout, batch_size=batch_size, lr=lr)
 
     outputs = {
 

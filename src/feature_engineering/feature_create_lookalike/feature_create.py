@@ -10,7 +10,7 @@ import datetime
 DATE_FORMAT = "%Y-%m-%d"
 
 
-def feature_create(event_code, sample_table_name, sample_columns):
+def feature_create(event_code_buy, sample_table_name, sample_columns):
     spark_client = spark_helper.SparkClient()
     user_table_columns = ['cust_id', 'gender', 'EDU', 'RSK_ENDR_CPY', 'NATN', 'OCCU', 'IS_VAIID_INVST']
     item_table_columns = ['ts_code', 'fund_type', 'management', 'custodian', 'invest_type']
@@ -38,7 +38,7 @@ def feature_create(event_code, sample_table_name, sample_columns):
     order_data = order_table.select(order_table_columns)
 
     # 3. 构造用户、物品特征
-    user_order_feature_list, item_order_feature_list = get_order_feature(order_data, sample_data, event_code, order_table_columns,
+    user_order_feature_list, item_order_feature_list = get_order_feature(order_data, sample_data, event_code_buy, order_table_columns,
                                                                          sample_columns)
 
 
@@ -64,13 +64,13 @@ def feature_create(event_code, sample_table_name, sample_columns):
     return user_feature_table_name, user_feature_table_columns, item_feature_table_name, item_feature_table_columns
 
 
-def get_order_feature(data, sample, event_code, col_data, col_sample):
+def get_order_feature(data, sample, event_code_buy, col_data, col_sample):
     # TODO: 构建不同时间段行为统计特征
     today = datetime.datetime.today().date()
     # TODO：数据原因，暂时取近一年构造特征
     thirty_days_ago_str = (datetime.datetime.today() + datetime.timedelta(days=-360)).strftime(DATE_FORMAT)
     # TODO：后续统一规范event_code
-    buy_code = event_code.get("buy")
+    buy_code = event_code_buy
     # 构建列名
     user_id = col_data[0]
     item_id = col_data[3]
