@@ -12,7 +12,6 @@ import digitforce.aip.common.utils.time_helper as time_helper
 
 def start_sample_selection(event_code_buy, pos_sample_proportion=0.5, pos_sample_num=200000):
     columns = ["custom_id", "trade_date", "trade_type", "fund_code"]
-    # TODO：后续event_code会统一规范
     buy_code = event_code_buy
     user_id = columns[0]
     trade_date = columns[1]
@@ -20,13 +19,12 @@ def start_sample_selection(event_code_buy, pos_sample_proportion=0.5, pos_sample
     item_id = columns[3]
     # TODO：数据取较大范围
     today = time_helper.get_today_str()
-    thirty_days_ago = time_helper.n_days_ago_str(360)
+    thirty_days_ago = time_helper.n_days_ago_str(120)
 
     data = spark_client.get_starrocks_table_df("algorithm.zq_fund_trade")
     data = data.select(columns) \
         .filter((data[trade_date] >= thirty_days_ago) & (data[trade_date] <= today)) \
         .filter(data[trade_type] == buy_code)
-
     # 确定采样总条数
     if data.count() < pos_sample_num:
         pos_sample_num = data.count()
@@ -48,8 +46,8 @@ def start_sample_selection(event_code_buy, pos_sample_proportion=0.5, pos_sample
     max_pos_counts = pos_rdd.map(lambda x: len(x[1])).reduce(lambda a, b: a if a >= b else b)
     item_list_counts = item_counts.count()
     # TODO：合理选取item集合范围
-    max_top_n = np.min([5000, 0.5 * item_list_counts])
-    min_top_n = np.max([1000, max_pos_counts * (pos_neg_relation + 1)])
+    max_top_n = np.min([5000, int(0.5 * item_list_counts)])
+    min_top_n = np.max([1000, int(max_pos_counts * (pos_neg_relation + 1))])
     if max_top_n < min_top_n:
         top_n = max_top_n
     else:

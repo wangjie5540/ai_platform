@@ -68,7 +68,7 @@ def get_order_feature(data, sample, event_code_buy, col_data, col_sample):
     # TODO: 构建不同时间段行为统计特征
     today = datetime.datetime.today().date()
     # TODO：数据原因，暂时取近一年构造特征
-    thirty_days_ago_str = (datetime.datetime.today() + datetime.timedelta(days=-360)).strftime(DATE_FORMAT)
+    thirty_days_ago_str = (datetime.datetime.today() + datetime.timedelta(days=-120)).strftime(DATE_FORMAT)
     # TODO：后续统一规范event_code
     buy_code = event_code_buy
     # 构建列名
