@@ -24,7 +24,7 @@ def run():
     test_data = json.loads(args.test_data)
     user_data = json.loads(args.user_data)
     other_data = json.loads(args.other_data)
-    is_train = json.loads(args.is_train)
+    is_train = args.is_train
     if is_train == 'True':
         global_params = json.loads(args.global_params)
         component_params = global_params[args.name]
@@ -32,13 +32,13 @@ def run():
         batch_size = component_params["batch_size"]
         lr = component_params["lr"]
     else:
-        dnn_dropout = json.loads(args.dnn_dropout)
-        batch_size = json.loads(args.batch_size)
-        lr = json.loads(args.lr)
+        dnn_dropout = args.dnn_dropout
+        batch_size = args.batch_size
+        lr = args.lr
 
     # TODO：讨论返回参数，user_embedding存储方式
     start_model_train(train_data['table_name'], test_data['table_name'], user_data['table_name'],
-                      other_data['path'], args.train_data['column_list'], args.user_data['column_list'],
+                      other_data['path'], train_data['column_list'], user_data['column_list'],
                       dnn_dropout=dnn_dropout, batch_size=batch_size, lr=lr, is_train=is_train)
 
     outputs = {
