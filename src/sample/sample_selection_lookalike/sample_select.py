@@ -10,10 +10,10 @@ from digitforce.aip.common.utils.spark_helper import spark_client
 import digitforce.aip.common.utils.time_helper as time_helper
 
 
-def start_sample_selection(event_code, pos_sample_proportion=0.5, pos_sample_num=200000):
+def start_sample_selection(event_code_buy, pos_sample_proportion=0.5, pos_sample_num=200000):
     columns = ["custom_id", "trade_date", "trade_type", "fund_code"]
     # TODO：后续event_code会统一规范
-    buy_code = event_code.get("buy")
+    buy_code = event_code_buy
     user_id = columns[0]
     trade_date = columns[1]
     trade_type = columns[2]

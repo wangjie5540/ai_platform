@@ -16,8 +16,8 @@ def run():
     parser.add_argument("--sample", type=str, required=True, help="样本数据")
     args = parser.parse_args()
     global_params = json.loads(args.global_params)
-    component_params = global_params["feature_engineering-feature_create_lookalike"][args.name]
-    event_code = component_params["event_code"]
+    component_params = global_params[args.name]
+    event_code = component_params["event_code_buy"]
     # 获取样本数据
     sample_data = json.loads(args.sample)
     if sample_data["type"] == "hive_table":

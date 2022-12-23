@@ -49,12 +49,10 @@ user_data_columns = ['user_id',
                      'NATN',
                      'OCCU',
                      'IS_VAIID_INVST']
-dnn_hidden_units = (256, 128, 64)
+# dnn_hidden_units = (256, 128, 64)
 dnn_dropout = 0.2
 batch_size = 256
 lr = 0.01
 start_model_train(train_data_table_name, test_data_table_name, user_data_table_name, hdfs_path,
                   train_data_columns, user_data_columns,
-                  dnn_hidden_units=dnn_hidden_units, dnn_dropout=dnn_dropout,
-                  batch_size=batch_size, lr=lr
-                  )
+                  dnn_dropout=dnn_dropout, batch_size=batch_size, lr=lr)

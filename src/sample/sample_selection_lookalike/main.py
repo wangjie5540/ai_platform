@@ -15,8 +15,8 @@ def run():
     parser.add_argument("--name", type=str, required=True, help="名称")
     args = parser.parse_args()
     global_params = json.loads(args.global_params)
-    component_params = global_params["sample-sample_selection_lookalike"][args.name]
-    event_code = component_params["event_code"]
+    component_params = global_params[args.name]
+    event_code = component_params["event_code_buy"]
     pos_sample_proportion = component_params["pos_sample_proportion"]
     table_name, columns = start_sample_selection(event_code, pos_sample_proportion, pos_sample_num=200000)
     outputs = {
