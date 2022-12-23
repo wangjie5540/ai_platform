@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import os
 import time
 import numpy as np
 import torch
@@ -181,6 +182,8 @@ class BaseTower(nn.Module):
                     'model_state_dict': model.state_dict(),
                     'optimizer_state_dict': optim.state_dict(),
                 }
+                if not os.path.exists('./model_zoo'):
+                    os.makedirs('./model_zoo')
                 torch.save(checkpoint, "./model_zoo/model.pth")
                 print("save the best model !")
             else:
