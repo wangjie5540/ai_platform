@@ -3,32 +3,40 @@
 
 import argparse
 import json
-
-from src.feature_engineering.feature_create_gaoqian.feature_create import feature_create
-
+from feature_create import feature_create
+from digitforce.aip.common.utils import component_helper
 
 def run():
     # 参数解析
     parser = argparse.ArgumentParser()
     parser.add_argument("--global_params", type=str, required=True, help="全局参数")
+    parser.add_argument("--name", type=str, required=True, help="名称")
+    parser.add_argument("--sample", type=str, required=True, help="样本数据")
     args = parser.parse_args()
     global_params = json.loads(args.global_params)
-    component_params = global_params["feature_engineering.feature_create_lookalike"]
-    event_table_name = component_params["event_table_name"]
-    event_columns = component_params["event_columns"]
-    item_table_name = component_params["item_table_name"]
-    item_columns = component_params["item_columns"]
-    user_table_name = component_params["user_table_name"]
-    user_columns = component_params["user_columns"]
+    component_params = global_params["feature_engineering-feature_create_gaoqian"][args.name]
+    event_table_name = 'algorithm.zq_fund_trade'
+    item_table_name = 'algorithm.zq_fund_basic'
+    user_table_name = 'algorithm.user_info'
+    event_columns = ['custom_id', 'trade_type', 'fund_code', 'trade_money', 'dt']
+    item_columns = ['ts_code', 'fund_type']
+    user_columns = ['CUST_ID', 'gender', 'EDU', 'RSK_ENDR_CPY', 'NATN', 'OCCU', 'IS_VAIID_INVST', ]
     event_code_list = component_params["event_code"]
-    sample_table_name = component_params["sample_table_name"]
     category = component_params['category']
-    user_feature_table_name = feature_create(event_table_name, event_columns, item_table_name, item_columns, user_table_name, user_columns, event_code_list, category, sample_table_name)
+
+    sample_data = json.loads(args.sample)
+    if sample_data['type'] == 'hive_table':
+        sample_table_name = sample_data["table_name"]
+    else:
+        raise Exception('sample data type error!')
+
+    user_feature_table_name, user_feature_columns = feature_create(event_table_name, event_columns, item_table_name, item_columns, user_table_name, user_columns, event_code_list, category, sample_table_name)
     outputs = {
         "type": "hive_table",
-        "user_feature_table_name": user_feature_table_name
+        "table_name": user_feature_table_name,
+        "column_list": user_feature_columns
     }
-    component_helper.write_output(outputs)
+    component_helper.write_output('user_feature', outputs)
 
 
 if __name__ == '__main__':

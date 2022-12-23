@@ -41,7 +41,7 @@ def feature_create(event_table_name, event_columns, item_table_name, item_column
     user_feature_table_name = "algorithm.tmp_aip_user_feature_gaoqian"
     user_feature_list.write.format("hive").mode("overwrite").saveAsTable(user_feature_table_name)
 
-    return user_feature_table_name
+    return user_feature_table_name, user_feature_list.columns
 
 
 def get_order_feature(event_table_name, event_columns, item_table_name, item_columns, sample, event_code_list, category_a):

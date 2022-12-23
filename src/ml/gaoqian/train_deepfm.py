@@ -46,7 +46,7 @@ def filter_feature(data_columns):
     label = list(np.intersect1d(data_columns, label))
     return sparse_features, dense_features, label
 
-def process_dataset(train_data, valid_data, hdfs_path):
+def process_dataset(train_data, valid_data, hdfs_path, batch_size=2048):
     data_columns = train_data.columns
     dense_features, sparse_features, label = filter_feature(data_columns)
     if len(label) == 1:
@@ -67,13 +67,13 @@ def process_dataset(train_data, valid_data, hdfs_path):
                                        torch.FloatTensor(train_data[tag_name].values),
                                        )
 
-    train_loader = Data.DataLoader(dataset=train_dataset, batch_size=2048, shuffle=True)
+    train_loader = Data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 
     valid_dataset = Data.TensorDataset(torch.LongTensor(valid_data[sparse_features].values),
                                        torch.FloatTensor(valid_data[dense_features].values),
                                        torch.FloatTensor(valid_data[tag_name].values),
                                         )
-    valid_loader = Data.DataLoader(dataset=valid_dataset, batch_size=4096, shuffle=False)
+    valid_loader = Data.DataLoader(dataset=valid_dataset, batch_size=batch_size, shuffle=False)
 
 
 
@@ -123,13 +123,12 @@ def train_and_eval(model, train_loader, valid_loader, epochs, device, optimizer,
     return best_auc
 
 
-def start_train(train_data_table_name, train_data_columns, test_data_table_name, hdfs_path,
-          lr=0.005, weight_decay=0.001):
+def start_train(train_data_table_name, train_data_columns, test_data_table_name, hdfs_path, lr=0.005, weight_decay=0.001, batch_size=2048):
     spark_client = spark_helper.SparkClient()
     train_dataset = spark_client.get_session().sql(f"""select {",".join(train_data_columns)} from {train_data_table_name}""").toPandas()
     valid_dataset = spark_client.get_session().sql(f"""select {",".join(train_data_columns)} from {test_data_table_name}""").toPandas()
     hdfs_path = "/tmp/pycharm_project_19/src/preprocessing/sample_comb_gaoqian/"
-    train_loader, valid_loader, cate_fea_nuniqs, nume_fea_size = process_dataset(train_dataset, valid_dataset, hdfs_path)
+    train_loader, valid_loader, cate_fea_nuniqs, nume_fea_size = process_dataset(train_dataset, valid_dataset, hdfs_path, batch_size)
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 

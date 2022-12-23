@@ -42,7 +42,7 @@ def sample_comb(sample_table_name, sample_columns,
     test_data.write.format("hive").mode("overwrite").saveAsTable(test_data_table_name)
 
 
-    return train_data_table_name, test_data_table_name, hdfs_dir
+    return train_data_table_name, test_data_table_name, hdfs_dir, train_data.columns
 
 
 def train_data_preprocessing(data, hdfs_path):

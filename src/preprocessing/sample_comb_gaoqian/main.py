@@ -3,33 +3,46 @@
 
 import argparse
 import json
-from src.preprocessing.sample_comb_gaoqian.combination import sample_comb
-
+from combination import sample_comb
+from digitforce.aip.common.utils import component_helper
 
 def run():
     # 参数解析
     parser = argparse.ArgumentParser()
-    parser.add_argument("--global_params", type=str, required=True, help="全局参数")
+    parser.add_argument("--sample", type=str, required=True, help="样本")
+    parser.add_argument("--user_feature", type=str, required=True, help="用户特征")
+
     args = parser.parse_args()
-    global_params = json.loads(args.global_params)
-    component_params = global_params["preprocessing.sample_comb_lookalike"]
-    sample_table_name = component_params["sample_table_name"]
-    user_feature_table_name = component_params["user_feature_table_name"]
-    sample_columns = component_params["sample_columns"]
-    user_columns = component_params["user_columns"]
-    train_data_table_name, test_data_table_name, user_data_table_name, hdfs_dir = sample_comb(sample_table_name,
+    sample = json.loads(args.sample)
+    user_feature = json.loads(args.user_feature)
+
+    sample_table_name = sample["table_name"]
+    user_feature_table_name = user_feature["table_name"]
+    sample_columns = sample["column_list"]
+    user_columns = user_feature["column_list"]
+    train_data_table_name, test_data_table_name, user_data_table_name, hdfs_dir, data_columns = sample_comb(sample_table_name,
                                                                                           sample_columns,
                                                                                           user_feature_table_name,
                                                                                           user_columns
                                                                                             )
 
-    outputs = {
+    train_data_outputs = {
         "type": "hive_table",
-        "train_data_table_name": train_data_table_name,
-        "test_data_table_name": test_data_table_name,
-        "hdfs_dir": hdfs_dir
+        "table_name": train_data_table_name,
+        "column_list": data_columns
     }
-    component_helper.write_output(outputs)
+    test_data_outputs = {
+        "type": "hive_table",
+        "table_name": test_data_table_name,
+        "column_list": data_columns
+    }
+    hdfs_outputs = {
+        "type": "hdfs",
+        "path": hdfs_dir
+    }
+    component_helper.write_output("train_data", train_data_outputs)
+    component_helper.write_output("test_data", test_data_outputs)
+    component_helper.write_output("other_data", hdfs_outputs)
 
 
 if __name__ == '__main__':
