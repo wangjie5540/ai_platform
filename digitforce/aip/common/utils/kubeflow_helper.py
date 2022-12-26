@@ -6,6 +6,7 @@ from urllib.parse import urlsplit
 def get_istio_auth_session(url: str, username: str, password: str) -> dict:
     """
     Determine if the specified URL is secured by Dex and try to obtain a session cookie.
+    参考：https://www.kubeflow.org/docs/components/pipelines/v1/sdk/connect-api/#full-kubeflow-subfrom-outside-clustersub
     WARNING: only Dex `staticPasswords` and `LDAP` authentication are currently supported
              (we default default to using `staticPasswords` if both are enabled)
 
