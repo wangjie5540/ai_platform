@@ -2,6 +2,7 @@
 # encoding: utf-8
 import datetime
 import digitforce.aip.common.utils.spark_helper as spark_helper
+import digitforce.aip.common.utils.id_helper as id_helper
 
 from pyspark.sql import functions as F
 from pyspark.sql.functions import *
@@ -11,7 +12,7 @@ from pyspark.sql.types import *
 DATE_FORMAT = "%Y-%m-%d"
 
 
-def calculate_raw_item_feature(raw_item_feature_table_name):
+def calculate_raw_item_feature():
     spark_client = spark_helper.SparkClient()
     item_table_columns = ['ts_code', 'fund_type', 'management', 'custodian', 'invest_type']
     order_table_columns = ["custom_id", "trade_date", "trade_type", "fund_code", "trade_money", "fund_shares",
@@ -34,8 +35,10 @@ def calculate_raw_item_feature(raw_item_feature_table_name):
 
     # TODO：动态hive表名
     item_feature_table = item_feature_table.withColumnRenamed("fund_code", "item_id")
-    item_feature_table.write.format("hive").mode("overwrite").saveAsTable(raw_item_feature_table_name)
-    return raw_item_feature_table_name
+    # output_table = f'raw_item_feature_{id_helper.gen_uniq_id()}'
+    output_table = 'algorithm.tmp_raw_item_feature_table_name'
+    item_feature_table.write.format("hive").mode("overwrite").saveAsTable(output_table)
+    return output_table
 
 
 def calculate_raw_item_feature_from_order_table(standard_fund_trade_dataframe):
