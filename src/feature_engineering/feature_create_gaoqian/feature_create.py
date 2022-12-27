@@ -125,8 +125,7 @@ def get_order_feature(event_table_name, event_columns, item_table_name, item_col
         (user_event_df[trade_type] == event_code_list[0]) & (user_event_df[trade_date] >= one_year_ago)) \
         .groupby([user_id, fund_type]) \
         .agg(F.count(user_id).alias('u_event1_counts'))
-    w = Window.partitionBy(user_event1_category_counts[user_id]).orderBy(
-        user_event1_category_counts['u_event1_counts'].desc())
+    w = Window.partitionBy(user_event1_category_counts[user_id]).orderBy(user_event1_category_counts['u_event1_counts'].desc())
     top = user_event1_category_counts.withColumn('rank', F.row_number().over(w)).where('rank<=3')
     df1 = top.groupby(top[user_id]).agg(F.collect_list(top[fund_type]))
 
