@@ -2,16 +2,14 @@
 # encoding: utf-8
 import datetime
 
+from digitforce.aip.common.utils.spark_helper import spark_client
 from pyspark.sql import functions as F
 from pyspark.sql.functions import *
 
-import digitforce.aip.common.utils.spark_helper as spark_helper
-
-DATE_FORMAT = "%Y-%m-%d"
+from digitforce.aip.common.utils.time_helper import *
 
 
 def calculate_raw_user_feature(raw_user_feature_table_name):
-    spark_client = spark_helper.SparkClient()
     user_table_columns = ['cust_id', 'gender', 'EDU', 'RSK_ENDR_CPY', 'NATN', 'OCCU', 'IS_VAIID_INVST']
     order_table_columns = ["custom_id", "trade_date", "trade_type", "fund_code", "trade_money", "fund_shares",
                            "fund_nav"]
@@ -41,7 +39,7 @@ def calculate_raw_user_feature_from_order_feature(standard_order_dataframe):
     # TODO: 构建不同时间段行为统计特征
     today = datetime.datetime.today().date()
     # TODO：数据原因，暂时取近一年构造特征
-    thirty_days_ago_str = (datetime.datetime.today() + datetime.timedelta(days=-120)).strftime(DATE_FORMAT)
+    thirty_days_ago_str = n_days_ago_str(120)
     # TODO：后续统一规范event_code
     buy_code = "fund_buy"
     # 构建列名

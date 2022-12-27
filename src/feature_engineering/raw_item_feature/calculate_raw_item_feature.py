@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 import datetime
-import digitforce.aip.common.utils.spark_helper as spark_helper
-import digitforce.aip.common.utils.id_helper as id_helper
-
+from digitforce.aip.common.utils.spark_helper import spark_client
+from digitforce.aip.common.utils.time_helper import  *
 from pyspark.sql import functions as F
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 
 
-DATE_FORMAT = "%Y-%m-%d"
-
 
 def calculate_raw_item_feature():
-    spark_client = spark_helper.SparkClient()
     item_table_columns = ['ts_code', 'fund_type', 'management', 'custodian', 'invest_type']
     order_table_columns = ["custom_id", "trade_date", "trade_type", "fund_code", "trade_money", "fund_shares",
                            "fund_nav"]
@@ -45,7 +41,7 @@ def calculate_raw_item_feature_from_order_table(standard_fund_trade_dataframe):
     # TODO: 构建不同时间段行为统计特征
     today = datetime.datetime.today().date()
     # TODO：数据原因，暂时取近一年构造特征
-    thirty_days_ago_str = (datetime.datetime.today() + datetime.timedelta(days=-120)).strftime(DATE_FORMAT)
+    thirty_days_ago_str = n_days_ago_str(120)
     # TODO：后续统一规范event_code
 
     item_id = "fund_code"
