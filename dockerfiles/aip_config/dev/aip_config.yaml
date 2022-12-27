@@ -6,8 +6,8 @@ starrocks:
   load_url: 172.21.32.16:8030
 hive:
   server2:
-    host: 172.21.32.74
-    port: 10000
+    host: 172.22.20.57
+    port: 7001
 hdfs:
   hosts: 172.22.20.137:4008,172.22.20.110:4008
 spark:
