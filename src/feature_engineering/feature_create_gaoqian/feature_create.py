@@ -9,6 +9,7 @@ import digitforce.aip.common.utils.spark_helper as spark_helper
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
+from pyspark.sql import Window
 import datetime
 
 DATE_FORMAT = "%Y-%m-%d"
@@ -119,9 +120,37 @@ def get_order_feature(event_table_name, event_columns, item_table_name, item_col
 
     # todo: 分别统计两个品类相关特征
 
+    # 用户行为涉及最多的top3个品类
+    user_event1_category_counts = user_event_df.filter(
+        (user_event_df[trade_type] == event_code_list[0]) & (user_event_df[trade_date] >= one_year_ago)) \
+        .groupby([user_id, fund_type]) \
+        .agg(F.count(user_id).alias('u_event1_counts'))
+    w = Window.partitionBy(user_event1_category_counts[user_id]).orderBy(
+        user_event1_category_counts['u_event1_counts'].desc())
+    top = user_event1_category_counts.withColumn('rank', F.row_number().over(w)).where('rank<=3')
+    df1 = top.groupby(top[user_id]).agg(F.collect_list(top[fund_type]))
+
+    def paddle_zero(x, index):
+        if len(x) < 3:
+            for j in range(3 - len(x)):
+                x.append('0')
+        return x[index]
+
+    def paddle_zero_udf(index):
+        return F.udf(lambda x: paddle_zero(x, index))
+
+    top_list = ['u_event1_cat_top1', 'u_event1_cat_top2', 'u_event1_cat_top3']
+    for i in range(3):
+        df1 = df1.withColumn(top_list[i], paddle_zero_udf(i)(df1[f'collect_list({fund_type})']))
+
+    user_event1_top_cat = df1.select([user_id, 'u_event1_cat_top1', 'u_event1_cat_top2', 'u_event1_cat_top3'])
+
     # 拼接用户特征
-    user_feature_list = user_list.join(user_event1_counts_30d, user_list[user_id_sample] == user_event1_counts_30d[user_id], 'left').drop(user_id_sample)
+    user_feature_list = user_list.join(user_event1_counts_30d,
+                                       user_list[user_id_sample] == user_event1_counts_30d[user_id], 'left').drop(
+        user_id_sample)
     user_feature_list = user_feature_list.join(user_event1_days_30d, user_id, 'left')
+    user_feature_list = user_feature_list.join(user_event1_top_cat, user_id, 'left')
     if len(event_code_list) == 2:
         user_feature_list = user_feature_list.join(user_event2_counts_30d, user_id)
         user_feature_list = user_feature_list.join(user_event2_days_30d, user_id)
