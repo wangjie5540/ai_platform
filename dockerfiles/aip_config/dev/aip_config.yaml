@@ -17,4 +17,8 @@ spark:
   hive_uris: thrift://172.22.20.137:7004,thrift://172.22.20.110:7004
   java_home: /opt/jdk1.8.0_181-cloudera
   spark_home: /opt/spark-2.4.8-bin-hadoop2.7
+kubeflow:
+  url: http://172.22.20.9:30000/pipeline
+  username: admin@example.com
+  password: password
 

@@ -1,6 +1,9 @@
 import re
 import requests
 from urllib.parse import urlsplit
+import digitforce.aip.common.utils.config_helper as config_helper
+from kfp.compiler import Compiler
+import kfp
 
 
 def get_istio_auth_session(url: str, username: str, password: str) -> dict:
@@ -99,3 +102,13 @@ def get_istio_auth_session(url: str, username: str, password: str) -> dict:
         auth_session["session_cookie"] = "; ".join([f"{c.name}={c.value}" for c in s.cookies])
 
     return auth_session
+
+
+def upload_pipeline(pipeline_func, pipeline_name):
+    kubeflow_config = config_helper.get_module_config("kubeflow")
+    pipeline_path = f"/tmp/{pipeline_name}.yaml"
+    Compiler().compile(pipeline_func=pipeline_func, package_path=pipeline_path)
+    client = kfp.Client(host=kubeflow_config['url'], cookies=get_istio_auth_session(
+        url=kubeflow_config['url'], username=kubeflow_config['username'],
+        password=kubeflow_config['password'])['session_cookie'])
+    client.upload_pipeline(pipeline_path, pipeline_name=pipeline_name)
