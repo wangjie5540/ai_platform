@@ -1,0 +1,7 @@
+[distutils]
+index-servers =
+ coding-pypi
+[coding-pypi]
+repository: https://digit-force-pypi.pkg.coding.net/ai-platform/aip
+username: aip-1657944326963
+password: d069d6cd37088a7317821ebfbff9faf3b80fe880

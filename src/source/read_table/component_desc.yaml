@@ -1,0 +1,11 @@
+name: source-read_table
+image: digit-force-docker.pkg.coding.net/ai-platform/ai-components/source-read_table:latest
+type: source
+inputs:
+  - name: source1
+    type: source
+  - name: source2
+    type: source
+
+outputs:
+  - type: table

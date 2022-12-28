@@ -6,3 +6,7 @@
 *.iml
 out
 gen
+*__pycache__
+build
+dist
+digitforce_aip.egg-info

@@ -1,1 +1,0 @@
-FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/miniconda3-base:latest

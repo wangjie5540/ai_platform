@@ -1,0 +1,12 @@
+# 统一创建算法平台的pvc
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: kubeflow-user-example-com
+  name: ai-platform-pvc
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      # 默认4个G，后续按照需求调整
+      storage: 4Gi

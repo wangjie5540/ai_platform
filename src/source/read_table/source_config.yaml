@@ -1,0 +1,12 @@
+selects:
+  - column: item_id
+    as: item_id
+  - column: item_type
+    as: item_type
+  - column: title
+    as: title
+from: aip.item
+where: item_id != '1'
+dt:
+  start: 2022-01-01
+  end: 2022-08-08
