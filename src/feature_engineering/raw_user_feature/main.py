@@ -8,9 +8,11 @@ from digitforce.aip.common.utils.argument_helper import df_argument_helper
 
 def run():
     # for test
-    # os.environ["global_params"] = json.dumps(
-    #     {"raw_user_feature": {"raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name_1"}})
-    # os.environ["name"] = "raw_user_feature"
+    import os
+    import json
+    os.environ["global_params"] = json.dumps(
+        {"raw_user_feature": {"raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name"}})
+    os.environ["name"] = "raw_user_feature"
     # 参数解析
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="name")

@@ -73,10 +73,8 @@ def train_data_preprocessing(data, hdfs_path):
                        'EDU', 'RSK_ENDR_CPY', 'NATN',
                        'OCCU', 'IS_VAIID_INVST']
     dense_features = ['i_buy_counts_30d', 'i_amount_sum_30d', 'i_amount_avg_30d', 'i_amount_min_30d',
-                      'i_amount_max_30d', 'u_buy_counts_30d',
-                      'u_amount_sum_30d', 'u_amount_avg_30d', 'u_amount_min_30d', 'u_amount_max_30d', 'u_buy_days_30d',
-                      'u_buy_avg_days_30d', 'u_last_buy_days_30d']
-    id_features = [['user_id'], ['item_id', 'u_buy_list']]
+                      'i_amount_max_30d', ]
+    id_features = [ ['item_id']]
 
     fill_dic = collections.defaultdict()
     for feat in sparse_features:
