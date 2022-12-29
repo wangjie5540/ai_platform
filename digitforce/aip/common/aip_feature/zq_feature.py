@@ -1,4 +1,4 @@
-from digitforce.aip.common.aip_feature.feature import CategoryFeatureEncoder, NumberFeature
+from digitforce.aip.common.aip_feature.feature import *
 from digitforce.aip.common.utils.time_helper import *
 
 USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_raw_user_feature_table_name"
@@ -43,44 +43,44 @@ class UserISVAIIDINVSTEncoder(CategoryFeatureEncoder):
         super().__init__("is_vaiid_invst", version, 0, source_table_name)
 
 
-# NumberFeature
+# NumberFeatureEncoder
 
-class UserBUY_COUNTS_30D(NumberFeature):
+class UserBUY_COUNTS_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("u_buy_counts_30d", version, 0, source_table_name)
 
 
-class UserAMOUNT_SUM_30D(NumberFeature):
+class UserAMOUNT_SUM_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("u_amount_sum_30d", version, 0, source_table_name)
 
 
-class UserAMOUNT_AVG_30D(NumberFeature):
+class UserAMOUNT_AVG_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("u_amount_avg_30d", version, 0, source_table_name)
 
 
-class UserAMOUNT_MIN_30D(NumberFeature):
+class UserAMOUNT_MIN_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("u_amount_min_30d", version, 0, source_table_name)
 
 
-class UserAMOUNT_MAX_30D(NumberFeature):
+class UserAMOUNT_MAX_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("u_amount_max_30d", version, 0, source_table_name)
 
 
-class UserBUY_DAYS_30D(NumberFeature):
+class UserBUY_DAYS_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("u_buy_days_30d", version, 0, source_table_name)
 
 
-class UserBUY_AVG_DAYS_30D(NumberFeature):
+class UserBUY_AVG_DAYS_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("u_buy_avg_days_30d", version, 0, source_table_name)
 
 
-class UserLAST_BUY_DAYS_30D(NumberFeature):
+class UserLAST_BUY_DAYS_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("u_last_buy_days_30d", version, 0, source_table_name)
 
@@ -112,27 +112,27 @@ class FundInvestTypeEncoder(CategoryFeatureEncoder):
         super().__init__("invest_type", version, 0, source_table_name)
 
 
-class ItemBUY_COUNTS_30D(NumberFeature):
+class ItemBUY_COUNTS_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("i_buy_counts_30d", version, 0, source_table_name)
 
 
-class ItemAMOUNT_SUM_30D(NumberFeature):
+class ItemAMOUNT_SUM_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("i_amount_sum_30d", version, 0, source_table_name)
 
 
-class ItemAMOUNT_AVG_30D(NumberFeature):
+class ItemAMOUNT_AVG_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("i_amount_avg_30d", version, 0, source_table_name)
 
 
-class ItemAMOUNT_MIN_30D(NumberFeature):
+class ItemAMOUNT_MIN_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("i_amount_min_30d", version, 0, source_table_name)
 
 
-class ItemAMOUNT_MAX_30D(NumberFeature):
+class ItemAMOUNT_MAX_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("i_amount_max_30d", version, 0, source_table_name)
 
@@ -148,30 +148,27 @@ class EncoderFactory:
         self.source_table_name = source_table_name
         self.version = version
 
-    def build_all_encoder(self):
-        if self._factory is not None:
-            return
-        self._factory = {}
-        for _ in self.encoder_cls:
-            encoder = _(self.source_table_name, self.version)
-            if isinstance(encoder, NumberFeature):
-                if encoder.std is None or encoder.mean is None:
-                    encoder.generate_mean_and_std()
-            elif isinstance(encoder, CategoryFeatureEncoder):
-                if encoder.vocabulary is None:
-                    encoder.generate_vocabulary()
-            else:
-                raise TypeError(f"the encoder cls is wanted {NumberFeature} or {CategoryFeatureEncoder}"
-                                f" but {type(encoder)} instance {encoder}")
-            self._factory[encoder.name] = encoder
-
     def get_encoder(self, name):
-        self.build_all_encoder()
         return self._factory.get(name, None)
 
     def get_encoder_names(self):
-        self.build_all_encoder()
         return self._factory.keys()
+
+
+def full_factory(encoder_factory):
+    encoder_factory._factory = {}
+    for _ in encoder_factory.encoder_cls:
+        encoder = _(encoder_factory.source_table_name, encoder_factory.version)
+        if isinstance(encoder, NumberFeatureEncoder):
+            if encoder.std and encoder.mean:
+                NumberFeatureEncoderCalculator.load_encoder(encoder)
+        elif isinstance(encoder, CategoryFeatureEncoder):
+            if not encoder.vocabulary:
+                CategoryFeatureEncoderCalculator.load_encoder(encoder)
+        else:
+            raise TypeError(f"the encoder cls is wanted {NumberFeatureEncoder} or {CategoryFeatureEncoder}"
+                            f" but {type(encoder)} instance {encoder}")
+        encoder_factory._factory[encoder.name] = encoder
 
 
 class UserEncoderFactory(EncoderFactory):
@@ -218,11 +215,14 @@ class ItemEncoderFactory(EncoderFactory):
         super(ItemEncoderFactory, self).__init__(source_table_name, version, self.encoder_cls)
 
 
+user_feature_factory = UserEncoderFactory(USER_RAW_FEATURE_TABLE_NAME)
+full_factory(user_feature_factory)
+item_feature_factory = ItemEncoderFactory(ITEM_RAW_FEATURE_TABLE_NAME)
+full_factory(item_feature_factory)
+
+
 def main():
-    user_feature_factory = UserEncoderFactory(USER_RAW_FEATURE_TABLE_NAME)
-    print(user_feature_factory.get_encoder_names())
-    item_feature_factory = ItemEncoderFactory(ITEM_RAW_FEATURE_TABLE_NAME)
-    print(item_feature_factory.get_encoder_names())
+    pass
 
 
 if __name__ == '__main__':
