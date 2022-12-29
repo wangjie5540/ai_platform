@@ -19,10 +19,12 @@ class SparkClient(object):
     def __init__(self, client_host=None):
         if client_host is None:
             client_host = ip_helper.get_local_ip()
+        # 动态分区配置参考：https://blog.csdn.net/lovetechlovelife/article/details/114544073
         self._session = SparkSession.builder.appName(component_helper.get_component_app_name()) \
             .master(spark_config['master_uri']) \
             .config("spark.driver.host", client_host) \
             .config("spark.kubernetes.container.image", spark_config['kubernetes_runtime_image']) \
+            .config("spark.kubernetes.container.image.pullPolicy", "Always") \
             .config("spark.sql.autoBroadcastJoinThreshold", -1) \
             .config("spark.executor.instances", "4") \
             .config("spark.debug.maxToStringFields", 100)\
@@ -31,6 +33,7 @@ class SparkClient(object):
             .config("spark.driver.memory", "6g")\
             .config("spark.driver.cores", "1") \
             .config("spark.driver.maxResultSize", "4g") \
+            .config("spark.sql.sources.partitionOverwriteMode", "DYNAMIC") \
             .config("hive.metastore.uris", spark_config['hive_uris']) \
             .enableHiveSupport().getOrCreate()
 
