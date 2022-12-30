@@ -39,3 +39,7 @@ def get_path(date_time):
 
 def get_path_hour(date_time):
     return date_time.strftime(PATH_DATE_HOUR_FORMAT)
+
+
+def add_days(one_date, days=1):
+    return one_date + datetime.timedelta(days=days)
