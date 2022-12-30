@@ -100,6 +100,7 @@ def train(train_data_table_name, test_data_table_name,
         user_vec_df["user_vec"] = [_.tolist() for _ in list(user_embedding)]
         from digitforce.aip.common.utils.spark_helper import spark_client
         print("upload user_vec to hive")
+        # todo 测试一下 pandasDF -> 保存成csv-> 传到hdfs-> 转成sparkDataframe-> 存表
         user_vec_dataframe = spark_client.get_session().createDataFrame(user_vec_df)
         if user_vec_table_name is None:
             user_vec_table_name = "algorithm.lookalike_user_vec_table"
