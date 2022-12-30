@@ -31,7 +31,7 @@ def start_model_train(train_data_table_name, test_data_table_name,
     print("get train test input")
     show_all_encoder()
 
-    user_sequence_feature_and_max_len_map = {"u_buy_list": 50}
+    user_sequence_feature_and_max_len_map = {"u_buy_list": 5}
     user_feature_columns, item_feature_columns = get_dssm_feature_columns(user_sequence_feature_and_max_len_map)
     feature_columns = user_feature_columns + item_feature_columns
     feature_names = [_.name for _ in feature_columns]
@@ -53,11 +53,14 @@ def start_model_train(train_data_table_name, test_data_table_name,
     model.load_state_dict(state_dict['model_state_dict'], strict=False)
 
     pred_ts = model.predict(test_model_input, batch_size=batch_size)
-    print("test-logloss={:.4f}, test-auc={:.4f}".format(log_loss(test_data[target].values, pred_ts),
-                                                        roc_auc_score(test_data[target].values, pred_ts)))
+    print("test-logloss={:.4f}, test-auc={:.4f}".format(log_loss(test_data["label"].values, pred_ts),
+                                                        roc_auc_score(test_data["label"].values, pred_ts)))
 
     if is_train:
-        hdfs_client.copy_from_local("./model_zoo/model.pth", "/user/aip/aip/lookalike" + "model.pth")
+        model_hdfs_path = "/user/aip/aip/lookalike" + "model.pth"
+        if hdfs_client.exists(model_hdfs_path):
+            hdfs_client.delete(model_hdfs_path)
+        hdfs_client.copy_from_local("./model_zoo/model.pth", model_hdfs_path)
         # todo save user embeding to hive
 
 
@@ -124,7 +127,7 @@ def get_dssm_feature_columns(user_sequence_feature_and_max_len_map):
     ## sequence feature
     # user sequence feature
 
-    for user_v , maxlen in user_sequence_feature_and_max_len_map:  # [u_buy_list]
+    for user_v , maxlen in user_sequence_feature_and_max_len_map.items():  # [u_buy_list]
         user_varlen_feature = \
             VarLenSparseFeat(SparseFeat(user_v, len(user_feature_factory.get_encoder("user_id").vocabulary)),
                              maxlen=maxlen, combiner='mean', length_name=None)
