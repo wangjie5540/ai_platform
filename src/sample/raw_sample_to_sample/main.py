@@ -8,14 +8,14 @@ from to_sample import raw_sample_to_sample
 
 def run():
     # for test
-    import os
-    import json
-    os.environ["global_params"] = json.dumps(
-        {"op_name": {
-            "raw_sample_table_name": "algorithm.tmp_aip_sample",
-            "model_sample_table_name": "algorithm.tmp_aip_model_sample",
-        }})
-    os.environ["name"] = "op_name"
+    # import os
+    # import json
+    # os.environ["global_params"] = json.dumps(
+    #     {"op_name": {
+    #         "raw_sample_table_name": "algorithm.tmp_aip_sample",
+    #         "model_sample_table_name": "algorithm.tmp_aip_model_sample",
+    #     }})
+    # os.environ["name"] = "op_name"
     # 参数解析
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="name")
