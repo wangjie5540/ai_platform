@@ -3,7 +3,7 @@
 import argparse
 import json
 
-from lookalike_model_train import start_model_train
+from lookalike_model_train import train
 
 
 def run():
@@ -40,9 +40,9 @@ def run():
         lr = args.lr
 
     # TODO：讨论返回参数，user_embedding存储方式
-    start_model_train(train_data['table_name'], test_data['table_name'], user_data['table_name'],
-                      other_data['path'], train_data['column_list'], user_data['column_list'],
-                      dnn_dropout=dnn_dropout, batch_size=batch_size, lr=lr, is_train=is_train)
+    train(train_data['table_name'], test_data['table_name'], user_data['table_name'],
+          other_data['path'], train_data['column_list'], user_data['column_list'],
+          dnn_dropout=dnn_dropout, batch_size=batch_size, lr=lr, is_automl=is_train)
 
     outputs = {
 

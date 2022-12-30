@@ -497,17 +497,10 @@ def raw_item_feature_to_model_item_feature(raw_feature: dict) -> dict:
         model_feature_value = encoder.get_model_feature_value(raw_feature_value)
         model_feature[feature_name] = model_feature_value
     # # category list feature
-    # for feature_name in ["u_buy_list"]:
-    #     encoder = item_encoder_factory.get_encoder(feature_name)
-    #     raw_feature_value = user_raw_feature.get(feature_name, "")
-    #     if raw_feature_value in [None, "None", "null", "NULL"]:
-    #         raw_feature_value = ""
-    #     model_value = []
-    #     for c in raw_feature_value.split("|"):
-    #         model_value.append(encoder.get_model_feature_value(c))
-    #     model_value = to_array_string(model_value)
-    #     model_user_feature[feature_name] = model_value
-
+    # 保留 raw_id
+    for _ in ["item_id", ]:
+        if _ in raw_feature:
+            model_feature[_ + "_raw"] = raw_feature[_]
     return model_feature
 
 

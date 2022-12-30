@@ -507,6 +507,10 @@ def raw_user_feature_to_model_user_feature(user_raw_feature: dict) -> dict:
     for feature_name in user_raw_feature.keys():
         if feature_name not in model_feature and feature_name.lower() not in model_feature:
             model_feature[feature_name] = user_raw_feature[feature_name]
+    # 保留 raw_id
+    for _ in ["user_id",]:
+        if _ in user_raw_feature:
+            model_feature[_+"_raw"] = user_raw_feature[_]
 
     return model_feature
 

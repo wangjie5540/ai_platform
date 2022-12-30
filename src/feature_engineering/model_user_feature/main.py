@@ -9,6 +9,8 @@ from raw_user_feature_to_model_user_feature import \
 
 def run():
     # for test
+    # import os
+    # import json
     # os.environ["global_params"] = json.dumps(
     #     {"op_name": {"raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name",
     #     "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name"}})
