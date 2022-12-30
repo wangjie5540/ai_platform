@@ -4,12 +4,11 @@ from pyhive import hive
 
 import digitforce.aip.common.utils.config_helper as config_helper
 
-hive_config = config_helper.get_module_config("hive")
-
 
 class HiveClient:
     def __init__(self, host=None, port=None, username='root'):
         if host is None or port is None:
+            hive_config = config_helper.get_module_config("hive")
             host = hive_config['server2']['host']
             port = hive_config['server2']['port']
         self.conn = hive.Connection(host=host, port=port, username=username)
@@ -51,4 +50,5 @@ class HiveClient:
         self.conn = None
 
 
-hive_client = HiveClient()
+# hive_client = HiveClient()
+hive_client = HiveClient(host="172.22.20.57", port=7001)

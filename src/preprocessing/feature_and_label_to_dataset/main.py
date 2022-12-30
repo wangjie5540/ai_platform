@@ -5,7 +5,7 @@ import argparse
 import json
 
 from digitforce.aip.common.utils import component_helper
-from sample_comb import sample_comb
+from feature_and_label_to_dataset import feature_and_label_to_dataset
 
 
 def run():
@@ -18,7 +18,7 @@ def run():
     sample = json.loads(args.sample)
     user_feature = json.loads(args.user_feature)
     item_feature = json.loads(args.item_feature)
-    train_data_table_name, test_data_table_name, user_data_table_name, data_table_columns, user_data_table_columns, hdfs_dir = sample_comb(
+    train_data_table_name, test_data_table_name, user_data_table_name, data_table_columns, user_data_table_columns, hdfs_dir = feature_and_label_to_dataset(
         sample['table_name'], sample['column_list'],
         user_feature['table_name'], user_feature['column_list'],
         item_feature['table_name'], item_feature['column_list'])

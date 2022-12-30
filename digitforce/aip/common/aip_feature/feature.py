@@ -1,17 +1,14 @@
-import logging
-import os.path
-import pickle
-
 import glob
+import logging
 import os
+import os.path
 import pickle
 import uuid
 
-import pyhdfs
 # coding: utf-8
 import pandas as pd
+import pyhdfs
 from pyhive import hive
-
 
 
 class HiveClient:
@@ -56,7 +53,6 @@ class HiveClient:
 
 
 hive_client = HiveClient(host="172.22.20.57", port=7001)
-
 
 
 class HdfsClient:
@@ -131,6 +127,7 @@ class HdfsClient:
 
 hdfs_client = HdfsClient("172.22.20.137:4008,172.22.20.110:4008")
 
+
 class FeatureEncoder(object):
     def __init__(self, name, version, default=None, source_table_name=None):
         self.source_table_name = source_table_name
@@ -157,6 +154,7 @@ class CategoryFeatureEncoder(FeatureEncoder):
 class NumberFeatureEncoder(FeatureEncoder):
     def __init__(self, name, version, default=None, source_table_name=None):
         super(NumberFeatureEncoder, self).__init__(name, version, default, source_table_name)
+        self.default = float(self.default)
         self.mean = None
         self.std = None
 
@@ -197,6 +195,8 @@ class FeatureEncoderCalculator:
         if hdfs_client.exists(cls.get_save_path(encoder)) and use_hdfs:
             encoder = cls.read_from_hdfs(encoder)
             return encoder
+        logging.info(f"begin calculate feature encoder: {encoder.name} version:{encoder.version} "
+                     f"source_table_name:{encoder.source_table_name}")
         cls.calculate(encoder)
         cls.save_to_hdfs(encoder)
 
