@@ -21,6 +21,7 @@ def run():
                                     type=str, required=False, help="样本数据")
 
     raw_user_feature_table_name = df_argument_helper.get_argument("raw_user_feature_table_name")
+    print(f"raw_user_feature_table_name:{raw_user_feature_table_name}")
     raw_user_feature_table_name = calculate_raw_user_feature(raw_user_feature_table_name)
 
     component_helper.write_output("raw_user_feature_table_name", raw_user_feature_table_name)
