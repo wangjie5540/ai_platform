@@ -60,8 +60,11 @@ client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_h
 import json
 
 global_params = json.dumps({
-    "model_item_feature": "{}"
+    "model_item_feature": {},
+    "sample_select": {},
+    "raw-item-feature": {"raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name_1"},
+    "model-item-feature":{"model_item_feature_table_name":"algorithm.tmp_model_item_feature_table_name"}
 })
-client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": "{}"},
+client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params},
                                      experiment_name="recommend",
                                      namespace='kubeflow-user-example-com')

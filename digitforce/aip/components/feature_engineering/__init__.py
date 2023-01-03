@@ -29,7 +29,7 @@ class RawUserFeatureOp(dsl.ContainerOp):
         super(RawUserFeatureOp, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/src-feature_engineering-{RawUserFeatureOp.OUTPUT_KEY_RAW_USER_FEATURE}',
+                  f'/src-feature_engineering-raw_user_feature-new',
             arguments=[
                 '--name', name,
                 '--global_params', global_params,
@@ -68,7 +68,7 @@ class ModelUserFeatureOp(dsl.ContainerOp):
         super(ModelUserFeatureOp, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/src-feature_engineering-model_user_feature',
+                  f'/feature_engineering-model_user_feature',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_user_feature_table_name', raw_user_feature_table,
