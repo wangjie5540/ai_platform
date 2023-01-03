@@ -547,7 +547,9 @@ def run():
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="name")
     df_argument_helper.add_argument("--raw_user_feature_table_name", type=str, required=False, help="原始特征")
-    df_argument_helper.add_argument("--model_user_feature_table_name", type=str, required=False, help="模型的特征")
+    df_argument_helper.add_argument("--model_user_feature_table_name",
+                                    default="algorithm.tmp_model_user_feature_table_name",
+                                    type=str, required=False, help="模型的特征")
 
     # todo model_user_feature_table_name 的key 从组件中获取
     raw_user_feature_table_name = df_argument_helper.get_argument("raw_user_feature_table_name")

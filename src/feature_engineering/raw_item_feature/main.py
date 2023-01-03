@@ -18,7 +18,9 @@ def run():
     os.environ["name"] = "container_name"
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="name")
-    df_argument_helper.add_argument("--raw_item_feature_table_name", type=str, required=False,
+    df_argument_helper.add_argument("--raw_item_feature_table_name",
+                                    default="algorithm.tmp_raw_item_feature_table_name",
+                                    type=str, required=False,
                                     help="raw_item_feature_table_name")
 
     raw_item_feature_table_name = df_argument_helper.get_argument("raw_item_feature_table_name")

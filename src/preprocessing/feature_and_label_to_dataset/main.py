@@ -29,8 +29,10 @@ def run():
     df_argument_helper.add_argument("--label_table_name", type=str, required=False, help="样本数据")
     df_argument_helper.add_argument("--model_user_feature_table_name", type=str, required=False, help="样本数据")
     df_argument_helper.add_argument("--model_item_feature_table_name", type=str, required=False, help="样本数据")
-    df_argument_helper.add_argument("--train_dataset_table_name", type=str, required=False, help="样本数据")
-    df_argument_helper.add_argument("--test_dataset_table_name", type=str, required=False, help="样本数据")
+    df_argument_helper.add_argument("--train_dataset_table_name", default="algorithm.tmp_train_dataset_table_name",
+                                    type=str, required=False, help="样本数据")
+    df_argument_helper.add_argument("--test_dataset_table_name", default="algorithm.tmp_test_dataset_table_name",
+                                    type=str, required=False, help="样本数据")
     df_argument_helper.add_argument("--train_p", type=str, required=False, help="样本数据")
 
     label_table_name = df_argument_helper.get_argument("label_table_name")

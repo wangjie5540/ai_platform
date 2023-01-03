@@ -515,11 +515,13 @@ def raw_feature2model_feature(raw_feature_table_name, model_feature_table):
 #     raw_feature2model_feature("algorithm.tmp_raw_item_feature_table_name",
 #                               "algorithm.tmp_model_item_feature_table_name")
 
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 # encoding: utf-8
 
 import digitforce.aip.common.utils.component_helper as component_helper
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
+
+
 # from raw_item_feature_to_model_item_feature import *
 
 
@@ -535,7 +537,9 @@ def run():
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="name")
     df_argument_helper.add_argument("--raw_item_feature_table_name", type=str, required=False, help="原始特征")
-    df_argument_helper.add_argument("--model_item_feature_table_name", type=str, required=False, help="模型的特征")
+    df_argument_helper.add_argument("--model_item_feature_table_name",
+                                    default="algorithm.tmp_model_item_feature_table_name",
+                                    type=str, required=False, help="模型的特征")
 
     # todo model_user_feature_table_name 的key 从组件中获取
     raw_user_feature_table_name = df_argument_helper.get_argument("raw_item_feature_table_name")
