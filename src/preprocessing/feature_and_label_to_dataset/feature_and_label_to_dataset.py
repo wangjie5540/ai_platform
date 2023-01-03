@@ -3,10 +3,10 @@
 
 import logging
 
-from pyspark.sql.functions import rand
 
 import digitforce.aip.common.utils.hdfs_helper as hdfs_helper
 from digitforce.aip.common.utils.spark_helper import spark_client
+from pyspark.sql.functions import rand
 
 hdfs_client = hdfs_helper.HdfsClient()
 
