@@ -11,7 +11,7 @@ import json
 """
 
 
-def create(table_name, transform_rules, name):
+def create(table_name, transform_rules):
     """
     创建转换器
     :return:
@@ -38,11 +38,11 @@ def create(table_name, transform_rules, name):
             transformer_dict[rule['input_col']] = l
     df = spark_session.sql(f"select * from {table_name}")
     pipeline_model = Pipeline(stages=stages).fit(df)
-    pipeline_model.save(
-        f"{config_helper.get_module_config('hdfs')['base_url']}/user/ai/aip/feature_engineering/{name}")
-    hdfs_helper.hdfs_client.hdfs_client.create(
-        path=f"/user/ai/aip/feature_engineering/{name}/transformers",
-        data=json.dumps(transformer_dict), overwrite=True)
+    pipeline_model_save_path = f"{config_helper.get_module_config('hdfs')['base_url']}/user/ai/aip/feature_engineering/user_feature_transformers"
+    pipeline_model.save(pipeline_model_save_path)
+    transformers_save_path = f"/user/ai/aip/feature_engineering/user_feature_transformers/transformers"
+    hdfs_helper.hdfs_client.hdfs_client.create(transformers_save_path)
+    return pipeline_model_save_path, transformers_save_path
 
 
 def transform(table_name, transformers, name):
@@ -62,4 +62,6 @@ def transform(table_name, transformers, name):
     for transformer_name in transformers:
         stage_indexes = transformer_dict[transformer_name]
         stages.extend([pipeline_model.stages[i] for i in stage_indexes])
-    PipelineModel(stages=stages).transform(df).show()
+    save_table_name = f"algorithm.user_feature"
+    PipelineModel(stages=stages).transform(df).write.saveAsTable(save_table_name, mode='overwrite')
+    return save_table_name
