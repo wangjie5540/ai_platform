@@ -62,13 +62,13 @@ class RawItemFeatureOp(dsl.ContainerOp):
 
 
 class ModelUserFeatureOp(dsl.ContainerOp):
-    OUTPUT_KEY_MODEL_USER_FEATURE = 'raw_user_feature_table_name'
+    OUTPUT_KEY_MODEL_USER_FEATURE = 'model_item_feature_table_name'
 
     def __init__(self, name, global_params, raw_user_feature_table):
         super(ModelUserFeatureOp, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/feature_engineering-{ModelUserFeatureOp.OUTPUT_KEY_MODEL_USER_FEATURE}',
+                  f'/feature_engineering-model_user_feature',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_user_feature_table_name', raw_user_feature_table,
@@ -81,13 +81,13 @@ class ModelUserFeatureOp(dsl.ContainerOp):
 
 
 class ModelItemFeatureOp(dsl.ContainerOp):
-    OUTPUT_KEY_RAW_ITEM_FEATURE = 'raw_item_feature_table_name'
+    OUTPUT_KEY_RAW_ITEM_FEATURE = 'model_item_feature_table_name'
 
     def __init__(self, name, global_params, raw_item_feature_table):
         super(ModelItemFeatureOp, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/feature_engineering-{ModelItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE}',
+                  f'/feature_engineering-model_item_feature',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_item_feature_table_name', raw_item_feature_table,

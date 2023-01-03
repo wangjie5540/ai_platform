@@ -3,28 +3,28 @@
 
 import argparse
 import json
+import os
 
+from digitforce.aip.common.utils.argument_helper import df_argument_helper
 from sample_select import start_sample_selection
 import digitforce.aip.common.utils.component_helper as component_helper
 
 
 def run():
     # 参数解析
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--global_params", type=str, required=True, help="全局参数")
-    parser.add_argument("--name", type=str, required=True, help="名称")
-    args = parser.parse_args()
-    global_params = json.loads(args.global_params)
-    component_params = global_params[args.name]
-    event_code_buy = component_params["event_code_buy"]
-    pos_sample_proportion = component_params["pos_sample_proportion"]
+    os.environ["event_code_buy"] = "fund_buy"
+    os.environ["pos_sample_proportion"] = "0.5"
+    # 参数解析
+    df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
+    df_argument_helper.add_argument("--name", type=str, required=False, help="name")
+    df_argument_helper.add_argument("--event_code_buy", type=str, required=False, help="")
+    df_argument_helper.add_argument("--pos_sample_proportion", type=str, required=False, help="")
+
+    event_code_buy = df_argument_helper.get_argument("event_code_buy")
+    pos_sample_proportion = float(df_argument_helper.get_argument("pos_sample_proportion"))
     table_name, columns = start_sample_selection(event_code_buy, pos_sample_proportion, pos_sample_num=10000)
-    outputs = {
-        "type": "hive_table",
-        "table_name": table_name,
-        "column_list": columns
-    }
-    component_helper.write_output("sample", outputs)
+
+    component_helper.write_output("sample", table_name)
 
 
 if __name__ == '__main__':
