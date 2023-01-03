@@ -1,4 +1,8 @@
+import kfp
 import kfp.dsl as dsl
+from kfp.compiler import Compiler
+
+from digitforce.aip.common.utils import config_helper
 from kfp.dsl import Condition
 from digitforce.aip.components.sample import SampleSelectionLookalike
 from digitforce.aip.components.feature_engineering import FeatureCreateLookalike
@@ -30,6 +34,7 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
     model_item_feature_op.after(raw_item_feature_op)
 
     op_sample_selection = SampleSelectionLookalike(name='sample_select', global_params=global_params)
+    op_sample_selection.container.set_image_pull_policy("Always")
     model_sample_op = RawSample2ModelSample(name="raw_sample2model_sample", global_params=global_params,
                                             raw_sample_table_name="algorithm.tmp_aip_sample")  # todo
     model_sample_op.after(op_sample_selection)
@@ -48,5 +53,11 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
     to_dataset_op.after(model_sample_op)
 
 
+kubeflow_config = config_helper.get_module_config("kubeflow")
+client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
+    url=kubeflow_config['url'], username=kubeflow_config['username'],
+    password=kubeflow_config['password'])['session_cookie'])
 
-kubeflow_helper.upload_pipeline(ml_lookalike, pipeline_name)
+client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": "{}"},
+                                     experiment_name="recommend",
+                                     namespace='kubeflow-user-example-com')

@@ -39,6 +39,7 @@ def generate_docker_file(one_dir, bottom_image_name=None, tag="latest"):
     if not os.path.exists(dockerfile_path):
         with open(dockerfile_path, mode='w', encoding='utf-8') as fo:
             fo.write(get_dockerfile_content(one_dir, bottom_image_name))
+            print(get_dockerfile_content(one_dir, bottom_image_name))
 
     image_name = "digit-force-docker.pkg.coding.net/ai-platform/ai-components" \
                  "/{0}:{1}".format(one_dir.replace('/', '-'), tag)
@@ -48,6 +49,8 @@ def generate_docker_file(one_dir, bottom_image_name=None, tag="latest"):
     os.system(build_cmd)
     push_cmt = "docker push {0}".format(image_name)
     os.system(push_cmt)
+    print(build_cmd)
+    print(push_cmt)
 
 
 def find_main_file(one_dir, result):
@@ -67,7 +70,7 @@ def find_main_file(one_dir, result):
 def main():
     os.system("docker login -u ai-components-1672712149820 -p 30dd16ad7d172c138cdc4475133ba6d67b8fae09 digit-force-docker.pkg.coding.net")
     for _dir in [
-        "src/feature_engineering",
+        # "src/feature_engineering",
         "src/sample",
 
     ]:
