@@ -24,7 +24,7 @@ def run():
     raw_item_feature_table_name = df_argument_helper.get_argument("raw_item_feature_table_name")
     raw_item_feature_table_name = calculate_raw_item_feature(raw_item_feature_table_name)
 
-    component_helper.write_output(RawItemFeatureOp.OUTPUT_RAW_ITEM_FEATURE, raw_item_feature_table_name)
+    component_helper.write_output(RawItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE, raw_item_feature_table_name)
 
 
 if __name__ == '__main__':
