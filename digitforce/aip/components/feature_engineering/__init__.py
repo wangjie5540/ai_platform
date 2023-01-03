@@ -97,3 +97,23 @@ class ModelItemFeatureOp(dsl.ContainerOp):
                     self.OUTPUT_KEY_RAW_ITEM_FEATURE)
             }
         )
+
+
+class FeatureTransformerOp(dsl.ContainerOp):
+    OUTPUT_PIPELINE_MODEL = 'pipeline_model'
+    OUTPUT_TRANSFORMERS = 'transformers'
+    OUTPUT_FEATURE_TABLE = 'feature_table'
+
+    def __init__(self, name, global_params):
+        super(FeatureTransformerOp, self).__init__(
+            name=name,
+            image=f'digit-force-docker.pkg.coding.net/'
+                  f'ai-platform/ai-components/feature_engineering-feature_transformer',
+            command=['python', 'main.py'],
+            arguments=['--name', name, '--global_params', global_params],
+            file_outputs={
+                self.OUTPUT_PIPELINE_MODEL: component_helper.generate_output_path(self.OUTPUT_PIPELINE_MODEL),
+                self.OUTPUT_TRANSFORMERS: component_helper.generate_output_path(self.OUTPUT_TRANSFORMERS),
+                self.OUTPUT_FEATURE_TABLE: component_helper.generate_output_path(self.OUTPUT_FEATURE_TABLE)
+            }
+        )
