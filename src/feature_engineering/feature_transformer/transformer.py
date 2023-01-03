@@ -1,37 +1,65 @@
 # coding: utf-8
-
-
-from digitforce.aip.common.utils.spark_helper import spark_client, spark_session
+from digitforce.aip.common.utils.spark_helper import spark_session
 from pyspark.ml.feature import StandardScaler, StringIndexer, VectorAssembler
 from pyspark.ml import Pipeline, PipelineModel
 import digitforce.aip.common.utils.config_helper as config_helper
-import digitforce.aip.common.utils.id_helper as id_helper
+import digitforce.aip.common.utils.hdfs_helper as hdfs_helper
+import json
+
+"""
+# 参考：https://spark.apache.org/docs/3.3.1/api/python/reference/api/pyspark.ml.feature.StringIndexer.html
+"""
 
 
-def transform(table_name, transform_rules):
+def create(table_name, transform_rules, name):
+    """
+    创建转换器
+    :return:
+    """
     stages = list()
-    index_rules = list()
-    scale_rules = list()
-    need_keep_cols = list()
-    for rule in transform_rules:
+    transformer_dict = dict()
+    for i in range(len(transform_rules)):
+        rule = transform_rules[i]
         if rule['type'] == 'string_indexer':
-            index_rules.append(rule)
+            indexer = StringIndexer(inputCol=rule['input_col'], outputCol=rule['output_col'], handleInvalid='skip')
+            stages.append(indexer)
+            l = list()
+            l.append(len(stages) - 1)
+            transformer_dict[rule['input_col']] = l
         elif rule['type'] == 'standard_scaler':
-            scale_rules.append(rule)
-        if rule['need_keep']:
-            need_keep_cols.append(rule['input_col'])
+            l = list()
+            vector_assembler = VectorAssembler(
+                inputCols=[rule['input_col']], outputCol=rule['input_col'] + '_vector', handleInvalid='skip')
+            stages.append(vector_assembler)
+            l.append(len(stages) - 1)
+            scaler = StandardScaler(inputCol=rule['input_col'] + '_vector', outputCol=rule['output_col'])
+            stages.append(scaler)
+            l.append(len(stages) - 1)
+            transformer_dict[rule['input_col']] = l
+    df = spark_session.sql(f"select * from {table_name}")
+    pipeline_model = Pipeline(stages=stages).fit(df)
+    pipeline_model.save(
+        f"{config_helper.get_module_config('hdfs')['base_url']}/user/ai/aip/feature_engineering/{name}")
+    hdfs_helper.hdfs_client.hdfs_client.create(
+        path=f"/user/ai/aip/feature_engineering/{name}/transformers",
+        data=json.dumps(transformer_dict), overwrite=True)
 
-    for rule in index_rules:
-        stages.append(StringIndexer(inputCol=rule['input_col'], outputCol=rule['output_col']))
-    input_scale_cols = [rule['input_col'] for rule in scale_rules]
-    output_scale_cols = [rule['output_col'] for rule in scale_rules]
-    stages.append(VectorAssembler(inputCols=input_scale_cols, outputCol='feature_vector'))
-    stages.append(StandardScaler(inputCol='feature_vector', outputCol='scaled_features'))
-    df = spark_session.sql(f"select * from {table_name} where u_amount_sum_30d is not null")
-    pipeline = Pipeline(stages=stages)
-    pipeline.fit(df).save(f"{config_helper.get_module_config('hdfs')['base_url']}/user/ai/aip/wtg_test")
-    # vector转column的功能可参考：https://www.youtube.com/watch?v=5f49EVqljH0
-    indexed_output_cols = [rule['output_col'] for rule in index_rules]
-    PipelineModel.load(f"{config_helper.get_module_config('hdfs')['base_url']}/user/ai/aip/wtg_test") \
-        .transform(df).rdd.map(lambda x: [x[c] for c in need_keep_cols + indexed_output_cols] + [float(y) for y in x['scaled_features']]) \
-        .toDF(need_keep_cols + indexed_output_cols + output_scale_cols).show()
+
+def transform(table_name, transformers, name):
+    """
+    使用已有的编码器进行特征编码
+    :param table_name: 表名
+    :param transformers: 编码规则
+    :param name: 编码器名称
+    :return:
+    """
+    df = spark_session.sql(f"select * from {table_name}")
+    with hdfs_helper.hdfs_client.hdfs_client.open(f'/user/ai/aip/feature_engineering/{name}/transformers') as f:
+        transformer_dict = json.loads(f.read())
+    pipeline_model = PipelineModel.load(
+        f"{config_helper.get_module_config('hdfs')['base_url']}/user/ai/aip/feature_engineering/{name}")
+    stages = list()
+    for transformer_name in transformers:
+        stage_indexes = transformer_dict[transformer_name]
+        stages.extend([pipeline_model.stages[i] for i in stage_indexes])
+    PipelineModel(stages=stages).transform(df).show()
