@@ -7,6 +7,7 @@ def get_dockerfile_content(image_dir, bottom_image_name=None):
     if bottom_image_name is None:
         bottom_image_name = "digit-force-docker.pkg.coding.net/ai-platform/base-images/miniconda3-base:latest"
     return """FROM {0}
+RUN pip install digitforce-aip -i https://aip-1657964384920:546b044f44ad6936fef609faa512a53b3fa8b12f@digit-force-pypi.pkg.coding.net/ai-platform/aip/simple
 
 ARG PROJECT_DIR=/app/digit-force-kubeflow-pipeline-component-image
 
