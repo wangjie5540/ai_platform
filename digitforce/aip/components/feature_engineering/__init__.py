@@ -49,7 +49,7 @@ class RawItemFeatureOp(dsl.ContainerOp):
         super(RawItemFeatureOp, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/src-feature_engineering-{RawItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE}',
+                  f'/src-feature_engineering-raw_item_feature',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params,
 

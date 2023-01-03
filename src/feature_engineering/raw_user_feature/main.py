@@ -24,7 +24,7 @@ def run():
     print(f"raw_user_feature_table_name:{raw_user_feature_table_name}")
     raw_user_feature_table_name = calculate_raw_user_feature(raw_user_feature_table_name)
 
-    component_helper.write_output("raw_user_feature_table_name", raw_user_feature_table_name)
+    component_helper.write_output("raw_user_feature", raw_user_feature_table_name)
 
 
 if __name__ == '__main__':
