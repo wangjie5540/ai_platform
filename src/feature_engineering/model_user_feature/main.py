@@ -554,6 +554,8 @@ def run():
     # todo model_user_feature_table_name 的key 从组件中获取
     raw_user_feature_table_name = df_argument_helper.get_argument("raw_user_feature_table_name")
     model_user_feature_table_name = df_argument_helper.get_argument("model_user_feature_table_name")
+    print(f"raw_user_feature_table_name:{raw_user_feature_table_name}"
+          f"model_user_feature_table_name:{model_user_feature_table_name}")
     raw_feature2model_feature(raw_user_feature_table_name, model_user_feature_table_name)
 
     component_helper.write_output("model_user_feature_table_name", model_user_feature_table_name)

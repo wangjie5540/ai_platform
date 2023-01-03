@@ -61,6 +61,7 @@ import json
 
 global_params = json.dumps({
     "model_item_feature": {},
+    "model_user_feature": {},
     "sample_select": {},
     "raw_user_feature": {"raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name_1"},
     "raw-item-feature": {"raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name_1"},
