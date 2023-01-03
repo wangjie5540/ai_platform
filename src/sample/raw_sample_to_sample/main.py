@@ -497,6 +497,7 @@ def raw_sample_to_sample(raw_sample_table_name, sample_table_name):
     model_sample_rdd = raw_sample_dataframe.toJSON().map(model_sample_map_fn)
     model_sample_dataframe = spark_client.get_session().createDataFrame(model_sample_rdd)
     model_sample_dataframe.write.format("hive").mode("overwrite").saveAsTable(sample_table_name)
+    return raw_sample_table_name
 
 
 # def main():
