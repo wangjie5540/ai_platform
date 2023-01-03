@@ -63,7 +63,8 @@ global_params = json.dumps({
     "model_item_feature": {},
     "sample_select": {},
     "raw-item-feature": {"raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name_1"},
-    "model-item-feature":{"model_item_feature_table_name":"algorithm.tmp_model_item_feature_table_name"}
+    "model-item-feature": {"model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"},
+    "raw_sample2model_sample": {"model_sample_table_name": "algorithm.tmp_aip_model_sample"}
 })
 client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params},
                                      experiment_name="recommend",
