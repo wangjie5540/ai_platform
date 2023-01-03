@@ -3,8 +3,7 @@
 
 import digitforce.aip.common.utils.component_helper as component_helper
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
-from raw_item_feature_to_model_item_feature import \
-    raw_feature2model_feature
+from raw_item_feature_to_model_item_feature import *
 
 
 def run():
