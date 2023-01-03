@@ -10,7 +10,7 @@ class FeatureCreateLookalike(dsl.ContainerOp):
 
     def __init__(self, name, global_params, sample):
         image_name = f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/' \
-                     f'feature_engineering-feature_create_lookalike'
+                     f'src-feature_engineering-feature_create_lookalike'
         super(FeatureCreateLookalike, self).__init__(
             image=image_name,
             name=name,
@@ -29,7 +29,7 @@ class RawUserFeatureOp(dsl.ContainerOp):
         super(RawUserFeatureOp, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/feature_engineering-{RawUserFeatureOp.OUTPUT_KEY_RAW_USER_FEATURE}',
+                  f'/src-feature_engineering-{RawUserFeatureOp.OUTPUT_KEY_RAW_USER_FEATURE}',
             arguments=[
                 '--name', name,
                 '--global_params', global_params,
@@ -49,7 +49,7 @@ class RawItemFeatureOp(dsl.ContainerOp):
         super(RawItemFeatureOp, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/feature_engineering-{RawItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE}',
+                  f'/src-feature_engineering-{RawItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE}',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params,
 
@@ -68,7 +68,7 @@ class ModelUserFeatureOp(dsl.ContainerOp):
         super(ModelUserFeatureOp, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/feature_engineering-model_user_feature',
+                  f'/src-feature_engineering-model_user_feature',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_user_feature_table_name', raw_user_feature_table,
@@ -87,7 +87,7 @@ class ModelItemFeatureOp(dsl.ContainerOp):
         super(ModelItemFeatureOp, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/feature_engineering-model_item_feature',
+                  f'/src-feature_engineering-model_item_feature',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_item_feature_table_name', raw_item_feature_table,

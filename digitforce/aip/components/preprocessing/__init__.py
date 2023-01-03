@@ -35,7 +35,7 @@ class ModelFeature2Dataset(dsl.ContainerOp):
         super(ModelFeature2Dataset, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
-                  f'preprocessing-feature_and_label_to_dataset',
+                  f'src-preprocessing-feature_and_label_to_dataset',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params,
                        '--label_table_name', label_table_name,

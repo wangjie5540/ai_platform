@@ -26,7 +26,7 @@ class RawSample2ModelSample(dsl.ContainerOp):
         super(RawSample2ModelSample, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/feature_engineering-{RawSample2ModelSample.OUTPUT_KEY_MODEL_SAMPLE}',
+                  f'/src-feature_engineering-{RawSample2ModelSample.OUTPUT_KEY_MODEL_SAMPLE}',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_sample_table_name', raw_sample_table_name,
