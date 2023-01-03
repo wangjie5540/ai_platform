@@ -1,1 +1,1 @@
-digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev:latest
+digit-force-docker.pkg.coding.net/ai-platform/base-images/spark-k8s-runtime-with-jars:2.4.8
