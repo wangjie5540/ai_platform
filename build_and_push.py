@@ -34,8 +34,9 @@ def generate_docker_file(one_dir, bottom_image_name=None, tag="latest"):
                 if _:
                     bottom_image_name = _.strip()
 
-    with open(dockerfile_path, mode='w', encoding='utf-8') as fo:
-        fo.write(get_dockerfile_content(one_dir, bottom_image_name))
+    if not os.path.exists(dockerfile_path):
+        with open(dockerfile_path, mode='w', encoding='utf-8') as fo:
+            fo.write(get_dockerfile_content(one_dir, bottom_image_name))
 
     image_name = "digit-force-docker.pkg.coding.net/ai-platform/ai-components" \
                  "/{0}:{1}".format(one_dir.replace('/', '-'), tag)
