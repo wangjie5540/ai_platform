@@ -42,41 +42,22 @@ def run():
     dnn_dropout = float(df_argument_helper.get_argument("dnn_dropout"))
     is_automl = df_argument_helper.get_argument("is_automl")
     is_automl = str(is_automl).lower() not in ["", "none", "false"]
+
+    user_vec_table_name = df_argument_helper.get_argument("user_vec_table_name")
+    model_user_feature_table_name = df_argument_helper.get_argument("model_user_feature_table_name")
+
     train(train_data_table_name=train_dataset_table_name,
           test_data_table_name=test_dataset_table_name,
           batch_size=batch_size, lr=lr,
           dnn_dropout=dnn_dropout,
 
           is_automl=is_automl,
-          model_user_feature_table_name=None,
-          user_vec_table_name=None
+          model_user_feature_table_name=model_user_feature_table_name,
+          user_vec_table_name=user_vec_table_name
           )
 
-    if is_train == 'True':
-        global_params = json.loads(args.global_params)
-        component_params = global_params[args.name]
-        dnn_dropout = component_params["dnn_dropout"]
-        batch_size = component_params["batch_size"]
-        lr = component_params["lr"]
-    else:
-        dnn_dropout = args.dnn_dropout
-        batch_size = args.batch_size
-        lr = args.lr
-
-    component_helper.write_output("train_dataset_table_name", train_dataset_table_name)
-    component_helper.write_output("test_dataset_table_name", test_dataset_table_name)
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("--global_params", type=str, required=True, help="全局参数")
-    # parser.add_argument("--name", type=str, required=True, help="名称")
-    # parser.add_argument("--train_data", type=str, required=True, help="训练数据")
-    # parser.add_argument("--test_data", type=str, required=True, help="测试数据")
-    # parser.add_argument("--user_data", type=str, required=True, help="用户数据")
-    # parser.add_argument("--other_data", type=str, required=True, help="其他数据")
-    #
-    # parser.add_argument("--dnn_dropout", type=float, required=False, help="dnn_dropout")
-    # parser.add_argument("--batch_size", type=int, required=False, help="batch_size")
-    # parser.add_argument("--lr", type=float, required=False, help="lr")
-    # parser.add_argument("--is_train", type=str, default="True", required=False, help="训练标识")
+    component_helper.write_output("user_vec_table_name", user_vec_table_name)
+    component_helper.write_output("model_user_feature_table_name", model_user_feature_table_name)
 
 
 if __name__ == '__main__':
