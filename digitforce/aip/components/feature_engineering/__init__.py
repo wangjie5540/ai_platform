@@ -33,6 +33,7 @@ class RawUserFeatureOp(dsl.ContainerOp):
             arguments=[
                 '--name', name,
                 '--global_params', global_params,
+                # '--raw_user_feature_table_name', raw_user_feature_table_name
             ],
             file_outputs={
                 self.OUTPUT_KEY_RAW_USER_FEATURE: component_helper.generate_output_path(
@@ -50,7 +51,9 @@ class RawItemFeatureOp(dsl.ContainerOp):
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
                   f'/feature_engineering-{RawItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE}',
             command=['python', 'main.py'],
-            arguments=['--name', name, '--global_params', global_params],
+            arguments=['--name', name, '--global_params', global_params,
+
+                       ],
             file_outputs={
                 self.OUTPUT_KEY_RAW_ITEM_FEATURE: component_helper.generate_output_path(
                     self.OUTPUT_KEY_RAW_ITEM_FEATURE)
@@ -59,15 +62,17 @@ class RawItemFeatureOp(dsl.ContainerOp):
 
 
 class ModelUserFeatureOp(dsl.ContainerOp):
-    OUTPUT_KEY_MODEL_USER_FEATURE = 'model_user_feature'
+    OUTPUT_KEY_MODEL_USER_FEATURE = 'raw_user_feature_table_name'
 
-    def __init__(self, name, global_params):
+    def __init__(self, name, global_params, raw_user_feature_table):
         super(ModelUserFeatureOp, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
                   f'/feature_engineering-{ModelUserFeatureOp.OUTPUT_KEY_MODEL_USER_FEATURE}',
             command=['python', 'main.py'],
-            arguments=['--name', name, '--global_params', global_params],
+            arguments=['--name', name, '--global_params', global_params,
+                       '--raw_user_feature_table_name', raw_user_feature_table,
+                       ],
             file_outputs={
                 self.OUTPUT_KEY_MODEL_USER_FEATURE: component_helper.generate_output_path(
                     self.OUTPUT_KEY_MODEL_USER_FEATURE)
@@ -76,15 +81,17 @@ class ModelUserFeatureOp(dsl.ContainerOp):
 
 
 class ModelItemFeatureOp(dsl.ContainerOp):
-    OUTPUT_KEY_RAW_ITEM_FEATURE = 'model_item_feature'
+    OUTPUT_KEY_RAW_ITEM_FEATURE = 'raw_item_feature_table_name'
 
-    def __init__(self, name, global_params):
+    def __init__(self, name, global_params, raw_item_feature_table):
         super(ModelItemFeatureOp, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
                   f'/feature_engineering-{ModelItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE}',
             command=['python', 'main.py'],
-            arguments=['--name', name, '--global_params', global_params],
+            arguments=['--name', name, '--global_params', global_params,
+                       '--raw_item_feature_table_name', raw_item_feature_table,
+                       ],
             file_outputs={
                 self.OUTPUT_KEY_RAW_ITEM_FEATURE: component_helper.generate_output_path(
                     self.OUTPUT_KEY_RAW_ITEM_FEATURE)
