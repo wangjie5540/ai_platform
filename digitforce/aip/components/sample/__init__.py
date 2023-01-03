@@ -17,3 +17,16 @@ class SampleSelectionLookalike(dsl.ContainerOp):
             arguments=['--name', name, '--global_params', global_params],
             file_outputs={output_name: component_helper.generate_output_path(output_name)}
         )
+
+class SampleSelectionLiushi(dsl.ContainerOp):
+    """
+    数据源-读取表组件
+    """
+    def __init__(self, name, global_params):
+        super(SampleSelectionLookalike, self).__init__(
+            name=name,
+            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/sample-sample_selection_liushi',
+            command=['python', 'main.py'],
+            arguments=['--name', name, '--global_params', global_params],
+            file_outputs={output_name: component_helper.generate_output_path(output_name)}
+        )

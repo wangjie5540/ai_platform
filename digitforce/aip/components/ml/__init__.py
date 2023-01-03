@@ -14,3 +14,16 @@ class Lookalike(dsl.ContainerOp):
             file_outputs={
             }
         )
+
+
+class Liushi(dsl.ContainerOp):
+    def __init__(self, name, global_params, train_data, test_data,):
+        super(Lookalike, self).__init__(
+            name=name,
+            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/ml-lookalike',
+            command=['python', 'main.py'],
+            arguments=['--name', name, '--global_params', global_params, '--train_data', train_data,
+                       '--test_data', test_data],
+            file_outputs={
+            }
+        )

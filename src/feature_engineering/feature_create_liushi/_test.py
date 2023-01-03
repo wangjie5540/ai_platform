@@ -3,8 +3,8 @@
 from feature_create import feature_create
 
 sample_table_name = "algorithm.aip_zq_liushi_custom_label"
-active_before_days = 1
-active_after_days = 3
+active_before_days = 3
+active_after_days = 5
 start_date = "20221201"
 mid_date = "20221218"
 end_date = "20221220"

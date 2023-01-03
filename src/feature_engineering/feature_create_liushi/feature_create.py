@@ -134,7 +134,7 @@ def feature_create(sample_table_name,
                                                                       dict_province.get(x[1][51]),
                                                                       dict_edu.get(x[1][52])] + x[1][53:]))
 
-    feature_cols = ["dt", "label", "last_jy_days", "last_jy_money", "3_jy_cnt", "3_jy_money", "3_jy_gp_cnt",
+    feature_cols = ["label", "last_jy_days", "last_jy_money", "3_jy_cnt", "3_jy_money", "3_jy_gp_cnt",
                     "3_jy_gp_money", "3_jy_jj_cnt", "3_jy_jj_money", "7_jy_cnt", "7_jy_money", "7_jy_gp_cnt",
                     "7_jy_gp_money", "7_jy_jj_cnt", "7_jy_jj_money", "15_jy_cnt", "15_jy_money", "15_jy_gp_cnt",
                     "15_jy_gp_money", "15_jy_jj_cnt", "15_jy_jj_money", "30_jy_cnt", "30_jy_money", "30_jy_gp_cnt",
@@ -143,25 +143,25 @@ def feature_create(sample_table_name,
                     "7_zj_zc_cnt", "7_zj_zr_cnt", "15_zj_zc_money", "15_zj_zr_money", "15_zj_zc_cnt", "15_zj_zr_cnt",
                     "30_zj_zc_money", "30_zj_zr_money", "30_zj_zc_cnt", "30_zj_zr_cnt", "3_login_cnt", "7_login_cnt",
                     "15_login_cnt", "30_login_cnt", "age", "sex", "city", "province", "edu", "now_zc", "now_fuzhai",
-                    "now_zc_jj", "now_zc_gp", "now_zj", "now_zc_cp"]
+                    "now_zc_jj", "now_zc_gp", "now_zj", "now_zc_cp", "dt"]
 
     # dt(今天,分区), lable, 最近一次...
     data_test = merge_feature7.filter(lambda x: int(x[0][1]) >= int(mid_date)). \
-        map(lambda x: [today, x[0][2]] + x[1])
+        map(lambda x: [x[0][2]] + x[1] + [today])
     print(f"data_test : {data_test.count()}")
     data_test_df = spark_client.get_session().createDataFrame(data_test, feature_cols)
 
     data_train = merge_feature7.filter(lambda x: int(x[0][1]) < int(mid_date)). \
-        map(lambda x: [today, x[0][2]] + x[1])
+        map(lambda x: [x[0][2]] + x[1] + [today])
     print(f"data_train : {data_train.count()}")
     data_train_df = spark_client.get_session().createDataFrame(data_train, feature_cols)
 
-    train_data_table_name = "algorithm.aip_zq_liushi_custom_feature_train"
-    test_data_table_name = "algorithm.aip_zq_liushi_custom_feature_test"
-    write_hive(data_train_df, train_data_table_name, "dt")
-    write_hive(data_test_df, test_data_table_name, "dt")
+    train_table_name = "algorithm.aip_zq_liushi_custom_feature_train"
+    test_table_name = "algorithm.aip_zq_liushi_custom_feature_test"
+    write_hive(data_train_df, train_table_name, "dt")
+    write_hive(data_test_df, test_table_name, "dt")
 
-    return train_data_table_name, test_data_table_name
+    return train_table_name, test_table_name
 
 
 

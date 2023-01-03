@@ -22,13 +22,13 @@ def run():
     mid_date = component_params["mid_date"]
     end_date = component_params["end_date"]
     sample_table_name = args.sample
-    train_data_table_name, test_data_table_name = feature_create(sample_table_name,
+    train_table_name, test_table_name = feature_create(sample_table_name,
                                                                  active_before_days, active_after_days,
                                                                  start_date, mid_date, end_date,
                                                                  feature_days=30)
 
-    component_helper.write_output("train_data_table_name", train_data_table_name)
-    component_helper.write_output("test_data_table_name", test_data_table_name)
+    component_helper.write_output("train_feature_table_name", train_table_name)
+    component_helper.write_output("test_feature__table_name", test_table_name)
 
 
 if __name__ == '__main__':
