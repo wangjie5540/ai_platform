@@ -1,8 +1,9 @@
 # coding: utf-8
 import argparse
-import digitforce.aip.common.utils.component_helper as component_helper
 import json
 import transformer
+from digitforce.aip.components.feature_engineering import *
+import digitforce.aip.common.utils.component_helper as component_helper
 
 
 def run():
@@ -21,12 +22,12 @@ def run():
             'type': 'hdfs_file',
             'path': pipeline_model_path
         }
-        component_helper.write_output('pipeline_model', params)
+        component_helper.write_output(FeatureTransformerOp.OUTPUT_PIPELINE_MODEL, params)
         params = {
             'type': 'hdfs_file',
             'path': transformers_path
         }
-        component_helper.write_output('transformers', params)
+        component_helper.write_output(FeatureTransformerOp.OUTPUT_TRANSFORMERS, params)
     transform_params = component_params.get('transform', None)
     if transform_params is not None:
         save_table_name = transformer.transform(table_name=transform_params['table_name'],
@@ -37,7 +38,7 @@ def run():
             'table_name': save_table_name,
             'column_list': []
         }
-        component_helper.write_output('feature_table', params)
+        component_helper.write_output(FeatureTransformerOp.OUTPUT_FEATURE_TABLE, params)
 
 
 if __name__ == '__main__':
