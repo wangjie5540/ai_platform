@@ -18,7 +18,8 @@ ENV PYTHONPATH=$PROJECT_DIR
 RUN mkdir -p $PROJECT_DIR/digitforce/aip
 COPY ./digitforce/__init__.py $PROJECT_DIR/digitforce/__init__.py
 COPY ./digitforce/aip/__init__.py $PROJECT_DIR/digitforce/aip/__init__.py
-
+RUN mkdir -p /usr/local/etc/
+COPY aip_config.yaml /usr/local/etc/aip_config.yaml
 COPY ./digitforce/aip/common $PROJECT_DIR/digitforce/aip/common
 COPY ./digitforce/aip/components $PROJECT_DIR/digitforce/aip/components
 
