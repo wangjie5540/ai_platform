@@ -57,7 +57,11 @@ kubeflow_config = config_helper.get_module_config("kubeflow")
 client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
     url=kubeflow_config['url'], username=kubeflow_config['username'],
     password=kubeflow_config['password'])['session_cookie'])
+import json
 
+global_params = json.dumps({
+    "model_item_feature": "{}"
+})
 client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": "{}"},
                                      experiment_name="recommend",
                                      namespace='kubeflow-user-example-com')
