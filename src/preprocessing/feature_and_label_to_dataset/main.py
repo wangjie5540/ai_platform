@@ -40,6 +40,10 @@ def run():
     model_item_feature_table_name = df_argument_helper.get_argument("model_item_feature_table_name")
     train_dataset_table_name = df_argument_helper.get_argument("train_dataset_table_name")
     test_dataset_table_name = df_argument_helper.get_argument("test_dataset_table_name")
+    print("======================================")
+    print(label_table_name, model_user_feature_table_name, model_item_feature_table_name)
+    print(train_dataset_table_name, test_dataset_table_name)
+    print("======================================")
     train_dataset_table_name, test_dataset_table_name = feature_and_label_to_dataset(label_table_name,
                                                                                      model_user_feature_table_name,
                                                                                      model_item_feature_table_name,
