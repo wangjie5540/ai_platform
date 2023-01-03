@@ -23,7 +23,7 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
         RawUserFeatureOp(name='raw_user_feature', global_params=global_params)  # todo 第一个组件生成的表名
     raw_item_feature_op = RawItemFeatureOp(name='raw_item_feature', global_params=global_params)  # todo 第一个组件生成的表名
 
-    model_user_feature_op = ModelUserFeatureOp(name='raw_user_feature', global_params=global_params,
+    model_user_feature_op = ModelUserFeatureOp(name='model_user_feature', global_params=global_params,
                                                raw_user_feature_table=raw_user_feature_op.outputs[
                                                    RawUserFeatureOp.OUTPUT_KEY_RAW_USER_FEATURE], )
     model_user_feature_op.after(raw_user_feature_op)

@@ -30,10 +30,10 @@ class RawUserFeatureOp(dsl.ContainerOp):
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
                   f'/feature_engineering-raw_user_feature-new',
+            command=['python', 'main.py'],
             arguments=[
                 '--name', name,
                 '--global_params', global_params,
-                # '--raw_user_feature_table_name', raw_user_feature_table_name
             ],
             file_outputs={
                 self.OUTPUT_KEY_RAW_USER_FEATURE: component_helper.generate_output_path(
