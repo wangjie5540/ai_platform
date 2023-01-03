@@ -535,6 +535,10 @@ def run():
 
     raw_sample_table_name = df_argument_helper.get_argument("raw_sample_table_name")
     model_sample_table_name = df_argument_helper.get_argument("model_sample_table_name")
+    # todo for test
+    if not model_sample_table_name:
+        model_sample_table_name = "algorithm.tmp_aip_model_sample"
+    print(f"raw_sample_table_name:{raw_sample_table_name}, model_sample_table_name:{model_sample_table_name}")
     model_sample_table_name = raw_sample_to_sample(raw_sample_table_name, model_sample_table_name)
 
     component_helper.write_output("model_sample_table_name", model_sample_table_name)
