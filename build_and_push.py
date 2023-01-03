@@ -22,7 +22,7 @@ COPY ./digitforce/aip/__init__.py $PROJECT_DIR/digitforce/aip/__init__.py
 COPY ./digitforce/aip/common $PROJECT_DIR/digitforce/aip/common
 COPY ./digitforce/aip/components $PROJECT_DIR/digitforce/aip/components
 
-COPY {1}/*py $PROJECT_DIR/""".format(bottom_image_name, image_dir)
+COPY {1}/ $PROJECT_DIR/""".format(bottom_image_name, image_dir)
 
 
 def generate_docker_file(one_dir, bottom_image_name=None, tag="latest"):
