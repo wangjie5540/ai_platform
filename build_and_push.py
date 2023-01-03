@@ -24,7 +24,7 @@ COPY aip_config.yaml /usr/local/etc/aip_config.yaml
 COPY ./digitforce/aip/common $PROJECT_DIR/digitforce/aip/common
 COPY ./digitforce/aip/components $PROJECT_DIR/digitforce/aip/components
 
-RUN cp -r {1}/* $PROJECT_DIR""".format(bottom_image_name, image_dir)
+COPY {1}/ $PROJECT_DIR""".format(bottom_image_name, image_dir)
 
 
 def generate_docker_file(one_dir, bottom_image_name=None, tag="latest"):
@@ -70,7 +70,7 @@ def find_main_file(one_dir, result):
 def main():
     os.system("docker login -u ai-components-1672712149820 -p 30dd16ad7d172c138cdc4475133ba6d67b8fae09 digit-force-docker.pkg.coding.net")
     for _dir in [
-        # "src/feature_engineering",
+        "src/feature_engineering",
         "src/sample",
 
     ]:
