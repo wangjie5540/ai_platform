@@ -75,7 +75,7 @@ def main():
         "src/preprocessing",
         "src/feature_engineering",
         "src/sample",
-        "src/ml",
+        "src/ml/lookalike",
 
     ]:
         result = []
