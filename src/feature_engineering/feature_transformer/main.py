@@ -24,13 +24,13 @@ def run():
             'path': pipeline_model_path
         }
         # component_helper.write_output(FeatureTransformerOp.OUTPUT_PIPELINE_MODEL, params)
-        component_helper.write_output('pipeline_model', params)
+        component_helper.write_output('pipeline_model', params, need_json_dump=True)
         params = {
             'type': 'hdfs_file',
             'path': transformers_path
         }
         # component_helper.write_output(FeatureTransformerOp.OUTPUT_TRANSFORMERS, params)
-        component_helper.write_output('transformers', params)
+        component_helper.write_output('transformers', params, need_json_dump=True)
     transform_params = component_params.get('transform', None)
     if transform_params is not None:
         save_table_name = transformer.transform(table_name=transform_params['table_name'],
@@ -42,7 +42,7 @@ def run():
             'column_list': []
         }
         # component_helper.write_output(FeatureTransformerOp.OUTPUT_FEATURE_TABLE, params)
-        component_helper.write_output('feature_table', params)
+        component_helper.write_output('feature_table', params, need_json_dump=True)
 
 
 if __name__ == '__main__':
