@@ -13,6 +13,9 @@ findspark.init()
 from pyspark.sql import SparkSession
 import digitforce.aip.common.utils.ip_helper as ip_helper
 import digitforce.aip.common.utils.component_helper as component_helper
+import zipfile
+
+SUBMIT_ZIP_PATH = 'submit.zip'
 
 
 class SparkClient(object):
@@ -27,14 +30,16 @@ class SparkClient(object):
             .config("spark.kubernetes.container.image.pullPolicy", "Always") \
             .config("spark.sql.autoBroadcastJoinThreshold", -1) \
             .config("spark.executor.instances", "4") \
-            .config("spark.debug.maxToStringFields", 100)\
-            .config("spark.executor.cores", "1")\
-            .config("spark.executor.memory", "6g")\
-            .config("spark.driver.memory", "6g")\
+            .config("spark.debug.maxToStringFields", 100) \
+            .config("spark.executor.cores", "1") \
+            .config("spark.executor.memory", "6g") \
+            .config("spark.rpc.message.maxSize", 1000) \
+            .config("spark.driver.memory", "6g") \
             .config("spark.driver.cores", "1") \
             .config("spark.driver.maxResultSize", "4g") \
             .config("spark.sql.sources.partitionOverwriteMode", "DYNAMIC") \
             .config("hive.metastore.uris", spark_config['hive_uris']) \
+            .config("spark.submit.pyFiles", SUBMIT_ZIP_PATH) \
             .enableHiveSupport().getOrCreate()
 
     def get_session(self):
@@ -49,6 +54,32 @@ class SparkClient(object):
             .option('password', starrocks_config['password']) \
             .load()
 
+
+# 定义递归函数，用于打包目录及其子目录中的文件和文件夹
+def zipdir(zip_file_obj, path):
+    # 获取当前目录的文件和文件夹列表
+    files = os.listdir(path)
+
+    # 遍历文件和文件夹
+    for file in files:
+        if file == SUBMIT_ZIP_PATH:
+            continue
+        # 拼接文件/文件夹的完整路径
+        full_path = os.path.join(path, file)
+        # 如果是文件夹，递归调用 zipdir 函数
+        if os.path.isdir(full_path):
+            zipdir(zip_file_obj, full_path)
+        # 如果是文件，打包文件
+        else:
+            zip_file_obj.write(full_path)
+
+
+# 创建 zip 压缩包
+zip_file = zipfile.ZipFile(SUBMIT_ZIP_PATH, 'w')
+
+# 打包当前目录及其子目录中的文件和文件夹
+zipdir(zip_file, '.')
+zip_file.close()
 
 spark_client = SparkClient()
 spark_session = spark_client.get_session()

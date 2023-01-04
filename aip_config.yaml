@@ -22,4 +22,3 @@ kubeflow:
   url: http://172.22.20.9:30000/pipeline
   username: admin@example.com
   password: password
-

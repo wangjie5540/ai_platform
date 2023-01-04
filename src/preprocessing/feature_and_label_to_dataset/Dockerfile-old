@@ -9,6 +9,6 @@ COPY . $COMPONENT_DIR
 
 #ENTRYPOINT ["python", "main.py"]
 # 编译命令
-# docker build --no-cache -t digit-force-docker.pkg.coding.net/ai-platform/ai-components/preprocessing-sample_comb_lookalike .
+# docker build --no-cache -t digit-force-docker.pkg.coding.net/ai-platform/ai-components/preprocessing-feature_and_label_to_dataset .
 # push命令
-# docker push digit-force-docker.pkg.coding.net/ai-platform/ai-components/preprocessing-sample_comb_lookalike:latest
+# docker push digit-force-docker.pkg.coding.net/ai-platform/ai-components/preprocessing-feature_and_label_to_dataset:latest

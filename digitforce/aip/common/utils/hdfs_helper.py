@@ -7,12 +7,11 @@ import pyhdfs
 
 import digitforce.aip.common.utils.config_helper as config_helper
 
-hdfs_config = config_helper.get_module_config("hdfs")
-
 
 class HdfsClient:
     def __init__(self, hosts=None, user_name="root"):
         if hosts is None:
+            hdfs_config = config_helper.get_module_config("hdfs")
             hosts = hdfs_config['hosts']
         self.hdfs_client = pyhdfs.HdfsClient(hosts=hosts, user_name=user_name)
 
@@ -66,6 +65,7 @@ class HdfsClient:
             self.copy_to_local(dest, local_path)
 
     def write_to_hdfs(self, content, dest_path):
+        self.delete(dest_path)
         tmp_file = f"/tmp/{uuid.uuid4()}"
         with open(tmp_file, "wb") as fo:
             fo.write(content)
@@ -81,4 +81,5 @@ class HdfsClient:
         return obj
 
 
-hdfs_client = HdfsClient()
+# hdfs_client = HdfsClient()
+hdfs_client = HdfsClient("172.22.20.137:4008,172.22.20.110:4008")
