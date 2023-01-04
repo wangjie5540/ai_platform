@@ -1,14 +1,9 @@
 import kfp
-import kfp.dsl as dsl
-from kfp.compiler import Compiler
 
-from digitforce.aip.common.utils import config_helper
-from kfp.dsl import Condition
-from digitforce.aip.components.sample import SampleSelectionLookalike
-from digitforce.aip.components.feature_engineering import FeatureCreateLookalike
-from digitforce.aip.components.preprocessing import SampleCombLookalike, ModelFeature2Dataset
-from digitforce.aip.components.ml import Lookalike, LookalikeModel
 import digitforce.aip.common.utils.kubeflow_helper as kubeflow_helper
+from digitforce.aip.common.utils import config_helper
+from digitforce.aip.components.ml import LookalikeModel
+from digitforce.aip.components.preprocessing import ModelFeature2Dataset
 from digitforce.aip.components.sample import *
 
 pipeline_name = 'lookalike_zxr'
@@ -64,15 +59,17 @@ client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_h
 import json
 
 global_params = json.dumps({
-    "model_item_feature": {},
-    "model_user_feature": {},
+    "model_item_feature": {"model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"},
+    "model_user_feature": {"model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name"},
     "sample_select": {},
     "raw_user_feature": {"raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name_1"},
     "raw-item-feature": {"raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name_1"},
     "model-item-feature": {"model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"},
     "raw_sample2model_sample": {"model_sample_table_name": "algorithm.tmp_aip_model_sample"},
     "feature_and_label_to_dataset": {},
-    "model": {"lr": 0.01, "dnndropout": 0.5, "batch_size":1024}
+    "model": {"lr": 0.01, "dnn_dropout": 0.5, "batch_size": 1024, "is_automl": True,
+              "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name",
+              "user_vec_table_name": "algorithm.tmp_user_vec_table_name"}
 })
 client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params},
                                      experiment_name="recommend",

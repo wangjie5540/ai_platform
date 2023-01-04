@@ -22,8 +22,8 @@ def run():
     # os.environ["name"] = "op_name"
 
     # todo tmp
-    os.environ["train_dataset_table_name"] = "algorithm.train_dataset_table_name"
-    os.environ["test_dataset_table_name"] = "algorithm.test_dataset_table_name"
+    # os.environ["train_dataset_table_name"] = "algorithm.train_dataset_table_name"
+    # os.environ["test_dataset_table_name"] = "algorithm.test_dataset_table_name"
     # 参数解析
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="name")
