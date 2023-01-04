@@ -22,7 +22,7 @@ class LookalikeModel(dsl.ContainerOp):
         super(LookalikeModel, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
-                  f'src-ml-lookalike',
+                  f'ml-lookalike',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params,
                        '--train_dataset_table_name', train_dataset_table_name,

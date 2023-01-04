@@ -30,6 +30,9 @@ def run():
     df_argument_helper.add_argument("--train_dataset_table_name", type=str, required=False, help="训练集")
     df_argument_helper.add_argument("--test_dataset_table_name", type=str, required=False, help="测试集")
 
+    df_argument_helper.add_argument("--is_automl", type=str, required=False, help="测试集")
+    df_argument_helper.add_argument("--user_vec_table_name", type=str, required=False, help="测试集")
+
     df_argument_helper.add_argument("--batch_size", type=str, required=False, help="样本数据")
     df_argument_helper.add_argument("--lr", type=str, required=False, help="样本数据")
     df_argument_helper.add_argument("--dnn_dropout", type=str, required=False, help="样本数据")
@@ -59,7 +62,7 @@ def run():
           user_vec_table_name=user_vec_table_name
           )
 
-    component_helper.write_output("user_vec_table_name", user_vec_table_name)
+    component_helper.write_output("user_vec_table_name", str(user_vec_table_name))
 
 
 if __name__ == '__main__':
