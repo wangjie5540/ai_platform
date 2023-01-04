@@ -1,6 +1,7 @@
 # coding:utf-8
 
 import os
+import subprocess
 
 
 def main():
@@ -8,8 +9,8 @@ def main():
     component_path = os.path.join('src', *component_name.split('-'))
     print(component_path)
     os.chdir(component_path)
-    os.system(
-        f"docker build -t digit-force-docker.pkg.coding.net/ai-platform/ai-components/{component_name} .")
+    command = f"docker build -t digit-force-docker.pkg.coding.net/ai-platform/ai-components/{component_name} ."
+    subprocess.check_call(command, shell=True)
 
 
 if __name__ == '__main__':
