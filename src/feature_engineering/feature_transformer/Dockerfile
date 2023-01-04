@@ -4,7 +4,7 @@ RUN pip install digitforce-aip -i https://aip-1657964384920:546b044f44ad6936fef6
 ARG COMPONENT_DIR=/component
 RUN mkdir -p $COMPONENT_DIR
 WORKDIR $COMPONENT_DIR
-COPY . $COMPONENT_DIR
+COPY src/feature_engineering/feature_transformer/ $COMPONENT_DIR
 
 #ENTRYPOINT ["python", "main.py"]
 # 编译命令
