@@ -13,7 +13,7 @@ class SampleSelectionLookalike(dsl.ContainerOp):
         super(SampleSelectionLookalike, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
-                  f'src-sample-sample_selection_lookalike',
+                  f'sample-sample_selection_lookalike',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params],
             file_outputs={output_name: component_helper.generate_output_path(output_name)}
@@ -27,7 +27,7 @@ class RawSample2ModelSample(dsl.ContainerOp):
         super(RawSample2ModelSample, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/src-sample-raw_sample_to_sample',
+                  f'/sample-raw_sample_to_sample',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_sample_table_name', raw_sample_table_name,
