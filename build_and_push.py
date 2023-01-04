@@ -44,7 +44,7 @@ def generate_docker_file(one_dir, bottom_image_name=None, tag="latest"):
     image_name = "digit-force-docker.pkg.coding.net/ai-platform/ai-components" \
                  "/{0}:{1}".format(one_dir.replace('/', '-'), tag)
     # remove src in image_name
-    image_name = image_name.replace("src", "")
+    image_name = image_name.replace("src-", "")
     build_cmd = "docker build -t " \
                 "{0}" \
                 " -f {1} .".format(image_name, dockerfile_path)
