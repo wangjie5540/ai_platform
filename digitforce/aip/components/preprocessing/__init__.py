@@ -30,6 +30,8 @@ class SampleCombLookalike(dsl.ContainerOp):
 
 
 class ModelFeature2Dataset(dsl.ContainerOp):
+    OUTPUT_KEY_TRAIN_DATASET = "train_dataset_table_name"
+    OUTPUT_KEY_TEST_DATASET = "test_dataset_table_name"
     def __init__(self, name, global_params, label_table_name, model_user_feature_table_name,
                  model_item_feature_table_name):
         super(ModelFeature2Dataset, self).__init__(
@@ -43,8 +45,10 @@ class ModelFeature2Dataset(dsl.ContainerOp):
                        '--model_item_feature_table_name', model_item_feature_table_name,
                        ],
             file_outputs={
-                "train_dataset_table_name": component_helper.generate_output_path("train_dataset_table_name"),
-                "test_dataset_table_name": component_helper.generate_output_path("test_dataset_table_name"),
+                ModelFeature2Dataset.OUTPUT_KEY_TRAIN_DATASET:
+                    component_helper.generate_output_path(ModelFeature2Dataset.OUTPUT_KEY_TRAIN_DATASET),
+                ModelFeature2Dataset.OUTPUT_KEY_TEST_DATASET: component_helper.generate_output_path(
+                    ModelFeature2Dataset.OUTPUT_KEY_TEST_DATASET),
 
             }
         )

@@ -7,7 +7,7 @@ from kfp.dsl import Condition
 from digitforce.aip.components.sample import SampleSelectionLookalike
 from digitforce.aip.components.feature_engineering import FeatureCreateLookalike
 from digitforce.aip.components.preprocessing import SampleCombLookalike, ModelFeature2Dataset
-from digitforce.aip.components.ml import Lookalike
+from digitforce.aip.components.ml import Lookalike, LookalikeModel
 import digitforce.aip.common.utils.kubeflow_helper as kubeflow_helper
 from digitforce.aip.components.sample import *
 
@@ -48,9 +48,13 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
                                              ModelItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE
                                          ]
                                          )
-    to_dataset_op.after(model_item_feature_op)
-    to_dataset_op.after(model_user_feature_op)
-    to_dataset_op.after(model_sample_op)
+
+    lookalike_model_op = LookalikeModel("model", global_params,
+                                        train_dataset_table_name=to_dataset_op.outputs[
+                                            ModelFeature2Dataset.OUTPUT_KEY_TRAIN_DATASET],
+                                        test_dataset_table_name=to_dataset_op.outputs[
+                                            ModelFeature2Dataset.OUTPUT_KEY_TEST_DATASET
+                                        ])
 
 
 kubeflow_config = config_helper.get_module_config("kubeflow")
@@ -66,7 +70,9 @@ global_params = json.dumps({
     "raw_user_feature": {"raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name_1"},
     "raw-item-feature": {"raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name_1"},
     "model-item-feature": {"model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"},
-    "raw_sample2model_sample": {"model_sample_table_name": "algorithm.tmp_aip_model_sample"}
+    "raw_sample2model_sample": {"model_sample_table_name": "algorithm.tmp_aip_model_sample"},
+    "feature_and_label_to_dataset": {},
+    "model": {"lr": 0.01, "dnndropout": 0.5, "batch_size":1024}
 })
 client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params},
                                      experiment_name="recommend",
