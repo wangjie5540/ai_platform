@@ -11,12 +11,13 @@ def run():
     parser = argparse.ArgumentParser()
     parser.add_argument('--global_params', type=str, required=True, help='全局参数')
     parser.add_argument('--name', type=str, required=True, help='名称')
+    parser.add_argument('--table_name', type=str, required=True, help='表名')
     args = parser.parse_args()
     global_params = json.loads(args.global_params)
     component_params = global_params[args.name]
     create_params = component_params.get('create', None)
     if create_params is not None:
-        pipeline_model_path, transformers_path = transformer.create(table_name=create_params['table_name'],
+        pipeline_model_path, transformers_path = transformer.create(table_name=args.table_name,
                                                                     transform_rules=create_params['transform_rules'])
         params = {
             'type': 'hdfs_file',
