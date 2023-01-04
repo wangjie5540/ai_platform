@@ -32,10 +32,12 @@ def run():
 
     df_argument_helper.add_argument("--is_automl", type=str, required=False, help="测试集")
     df_argument_helper.add_argument("--user_vec_table_name", type=str, required=False, help="测试集")
+    df_argument_helper.add_argument("--model_user_feature_table_name", type=str, required=False, help="样本数据")
 
     df_argument_helper.add_argument("--batch_size", type=str, required=False, help="样本数据")
     df_argument_helper.add_argument("--lr", type=str, required=False, help="样本数据")
     df_argument_helper.add_argument("--dnn_dropout", type=str, required=False, help="样本数据")
+
 
     train_dataset_table_name = df_argument_helper.get_argument("train_dataset_table_name")
     test_dataset_table_name = df_argument_helper.get_argument("test_dataset_table_name")
