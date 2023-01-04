@@ -9,10 +9,10 @@ def main():
     component_path = os.path.join('src', *component_name.split('-'))
     print(component_path)
     os.chdir(component_path)
-    command = f"docker build -t digit-force-docker.pkg.coding.net/ai-platform/ai-components/{component_name} ."
+    command = "docker build -t digit-force-docker.pkg.coding.net/ai-platform/ai-components/{component_name} .".format(
+        component_name=component_name)
     print(command)
     # subprocess.check_call(command, shell=True)
 
-
-if __name__ == '__main__':
-    main()
+    if __name__ == '__main__':
+        main()
