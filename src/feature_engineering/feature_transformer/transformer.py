@@ -21,7 +21,7 @@ def create(table_name, transform_rules):
     for i in range(len(transform_rules)):
         rule = transform_rules[i]
         if rule['type'] == 'string_indexer':
-            indexer = StringIndexer(inputCol=rule['input_col'], outputCol=rule['output_col'], handleInvalid='skip')
+            indexer = StringIndexer(inputCol=rule['input_col'], outputCol=rule['output_col'], handleInvalid='keep')
             stages.append(indexer)
             l = list()
             l.append(len(stages) - 1)
@@ -41,7 +41,7 @@ def create(table_name, transform_rules):
     pipeline_model_save_path = f"{config_helper.get_module_config('hdfs')['base_url']}/user/ai/aip/feature_engineering/user_feature_transformers"
     pipeline_model.save(pipeline_model_save_path)
     transformers_save_path = f"/user/ai/aip/feature_engineering/user_feature_transformers/transformers"
-    hdfs_helper.hdfs_client.hdfs_client.create(transformers_save_path)
+    hdfs_helper.hdfs_client.hdfs_client.create(transformers_save_path, json.dumps(transformer_dict))
     return pipeline_model_save_path, transformers_save_path
 
 
