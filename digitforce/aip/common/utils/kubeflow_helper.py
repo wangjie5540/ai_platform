@@ -112,3 +112,12 @@ def upload_pipeline(pipeline_func, pipeline_name):
         url=kubeflow_config['url'], username=kubeflow_config['username'],
         password=kubeflow_config['password'])['session_cookie'])
     client.upload_pipeline(pipeline_path, pipeline_name=pipeline_name)
+
+
+def create_run_directly(pipeline_func, experiment_name, arguments):
+    kubeflow_config = config_helper.get_module_config("kubeflow")
+    client = kfp.Client(host=kubeflow_config['url'], cookies=get_istio_auth_session(
+        url=kubeflow_config['url'], username=kubeflow_config['username'],
+        password=kubeflow_config['password'])['session_cookie'])
+    client.create_run_from_pipeline_func(
+        pipeline_func, arguments=arguments, experiment_name=experiment_name, namespace='kubeflow-user-example-com')
