@@ -10,6 +10,7 @@ def main():
     os.chdir(component_path)
     command = "docker build -t digit-force-docker.pkg.coding.net/ai-platform/ai-components/{component_name} .".format(
         component_name=component_name)
+    raise Exception(command)
     subprocess.check_call(command, shell=True)
 
     if __name__ == '__main__':
