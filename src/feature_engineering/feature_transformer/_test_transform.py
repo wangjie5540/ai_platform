@@ -1,5 +1,12 @@
 import transformer
 
-transformers = ['user_id', 'gender', 'EDU', 'u_amount_sum_30d', 'u_amount_avg_30d']
-transformer.transform('algorithm.tmp_raw_user_feature_table_name_1', transformers=transformers,
-                      name='user_feature_transformers')
+transformers = [
+    'user_id',
+    # 'gender',
+    # 'EDU',
+    # 'u_amount_sum_30d',
+    # 'u_amount_avg_30d',
+]
+transformer.transform('algorithm.wtg_test_feature', transformers=transformers,
+                      pipeline_model_path='hdfs://HDFS8001206/user/ai/aip/feature_engineering/feature_transformer_4708259252090703873',
+                      transformers_path='/user/ai/aip/feature_engineering/feature_transformer_4708259252090703873/transformers')
