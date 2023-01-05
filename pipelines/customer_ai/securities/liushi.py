@@ -57,7 +57,7 @@ pipeline_name = 'liushi_predict'
 pipeline_path = f'/tmp/{pipeline_name}.yaml'
 @dsl.pipeline(name=pipeline_name)
 def ml_liushi_predict(global_params: str, flag='TRAIN'):
-    predict_feature_op = FeatureCreateLiushiPredict(name="feature_create_predict",global_params=global_params)
+    predict_feature_op = FeatureCreateLiushiPredict(name="feature_create_predict", global_params=global_params)
     liushi_predict_op = LiushiPredict(name="model-predict", global_params=global_params,
                                       predict_table_name=predict_feature_op.outputs[
                                           predict_feature_op.OUTPUT_PREDICT_FEATURE
