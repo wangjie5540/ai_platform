@@ -15,22 +15,22 @@ pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 @dsl.pipeline(name=pipeline_name)
 def ml_liushi(global_params: str, flag='TRAIN'):
-    # op_sample_selection = SampleSelectionLiushi(name='sample_select', global_params=global_params)
-    #
-    # op_feature_create = FeatureCreateLiushi(name='feature_create', global_params=global_params,
-    #                                         sample=op_sample_selection.outputs['sample_table_name'])
-    #
-    # with Condition(flag == 'TRAIN', name="is_train"):
-    #     op_sample_comb = LiushiModel(name="model", global_params=global_params,
-    #                                  train_data=op_feature_create.outputs[
-    #                                      op_feature_create.OUTPUT_TRAIN_FEATURE
-    #                                  ],
-    #                                  test_data=op_feature_create.outputs[
-    #                                      op_feature_create.OUTPUT_TEST_FEATURE
-    #                                  ])
-    op_sample_comb = LiushiModel(name="model", global_params=global_params,
-                                 train_data="algorithm.aip_zq_liushi_custom_feature_train",
-                                 test_data="algorithm.aip_zq_liushi_custom_feature_test")
+    op_sample_selection = SampleSelectionLiushi(name='sample_select', global_params=global_params)
+
+    op_feature_create = FeatureCreateLiushi(name='feature_create', global_params=global_params,
+                                            sample=op_sample_selection.outputs['sample_table_name'])
+
+    with Condition(flag == 'TRAIN', name="is_train"):
+        op_sample_comb = LiushiModel(name="model", global_params=global_params,
+                                     train_data=op_feature_create.outputs[
+                                         op_feature_create.OUTPUT_TRAIN_FEATURE
+                                     ],
+                                     test_data=op_feature_create.outputs[
+                                         op_feature_create.OUTPUT_TEST_FEATURE
+                                     ])
+    # op_sample_comb = LiushiModel(name="model", global_params=global_params,
+    #                              train_data="algorithm.aip_zq_liushi_custom_feature_train",
+    #                              test_data="algorithm.aip_zq_liushi_custom_feature_test")
 
 kubeflow_config = config_helper.get_module_config("kubeflow")
 client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(

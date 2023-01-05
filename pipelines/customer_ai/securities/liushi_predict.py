@@ -17,7 +17,8 @@ def ml_liushi_predict(global_params: str, flag='TRAIN'):
                                       predict_table_name=predict_feature_op.outputs[
                                           predict_feature_op.OUTPUT_PREDICT_FEATURE
                                       ])
-
+    # liushi_predict_op = LiushiPredict(name="model-predict", global_params=global_params,
+    #                                   predict_table_name="algorithm.aip_zq_liushi_custom_feature_predict")
 
 kubeflow_config = config_helper.get_module_config("kubeflow")
 client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
@@ -27,14 +28,15 @@ import json
 
 global_params = json.dumps({
     "model-predict": {
-        "predict_table_name": 3,
-        "model_hdfs_path": 5,
+        "predict_table_name": "algorithm.aip_zq_liushi_custom_feature_predict",
+        "model_hdfs_path": "/user/ai/aip/zq/liushi/model/lasted.model",
     },
 
     "feature_create_predict": {"active_before_days": 3, "active_after_days": 5, "start_date": "20221211",
                                "end_date": "20221220", "sample": "algorithm.aip_zq_liushi_custom_predict"},
 
 })
+predict_table_name = "algorithm.aip_zq_liushi_custom_feature_predict"
 client.create_run_from_pipeline_func(ml_liushi_predict, arguments={"global_params": global_params},
                                      experiment_name="recommend",
                                      namespace='kubeflow-user-example-com')
