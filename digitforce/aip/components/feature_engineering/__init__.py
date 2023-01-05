@@ -40,6 +40,23 @@ class FeatureCreateLiushi(dsl.ContainerOp):
         )
 
 
+class FeatureCreateLiushiPredict(dsl.ContainerOp):
+    OUTPUT_PREDICT_FEATURE = 'predict_feature_table_name'
+
+    def __init__(self, name, global_params):
+        super(FeatureCreateLiushiPredict, self).__init__(
+            name=name,
+            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
+                  f'feature_engineering-feature_create_liushi_predict',
+            command=['python', 'main.py'],
+            arguments=['--name', name, '--global_params', global_params, ],
+            file_outputs={
+                self.OUTPUT_PREDICT_FEATURE: component_helper.generate_output_path(self.OUTPUT_PREDICT_FEATURE),
+
+            }
+        )
+
+
 class RawUserFeatureOp(dsl.ContainerOp):
     OUTPUT_KEY_RAW_USER_FEATURE = 'raw_user_feature'
 
