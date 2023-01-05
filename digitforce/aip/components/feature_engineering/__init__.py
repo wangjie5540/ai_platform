@@ -64,7 +64,7 @@ class RawItemFeatureOp(dsl.ContainerOp):
 class ModelUserFeatureOp(dsl.ContainerOp):
     OUTPUT_KEY_MODEL_USER_FEATURE = 'model_user_feature_table_name'
 
-    def __init__(self, name, global_params, raw_user_feature_table):
+    def __init__(self, name, global_params, raw_user_feature_table, raw_item_feature_table):
         super(ModelUserFeatureOp, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
@@ -72,11 +72,27 @@ class ModelUserFeatureOp(dsl.ContainerOp):
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_user_feature_table_name', raw_user_feature_table,
+                       '--raw_item_feature_table_name', raw_item_feature_table,
                        ],
             file_outputs={
                 self.OUTPUT_KEY_MODEL_USER_FEATURE: component_helper.generate_output_path(
                     self.OUTPUT_KEY_MODEL_USER_FEATURE)
             }
+        )
+
+
+class ZqFeatureEncoderCalculator(dsl.ContainerOp):
+    def __init__(self, name, global_params, raw_user_feature_table, raw_item_feature_table):
+        super(ZqFeatureEncoderCalculator, self).__init__(
+            name=name,
+            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
+                  f'/feature_engineering-zq_feature_calculator',
+            command=['python', 'main.py'],
+            arguments=['--name', name, '--global_params', global_params,
+                       '--raw_user_feature_table_name', raw_user_feature_table,
+                       '--raw_item_feature_table_name', raw_item_feature_table,
+                       ],
+
         )
 
 
@@ -102,6 +118,7 @@ class ModelItemFeatureOp(dsl.ContainerOp):
 class FeatureTransformerOp(dsl.ContainerOp):
     OUTPUT_PIPELINE_MODEL = 'pipeline_model'
     OUTPUT_TRANSFORMERS = 'transformers'
+
     # OUTPUT_FEATURE_TABLE = 'feature_table'
 
     def __init__(self, name, global_params, raw_user_feature_table):

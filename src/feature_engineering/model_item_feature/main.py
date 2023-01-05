@@ -476,6 +476,16 @@ item_feature_factory = ItemEncoderFactory(ITEM_RAW_FEATURE_TABLE_NAME)
 full_factory(item_feature_factory)
 
 
+def init_feature_encoder_factory(raw_user_feature_table=USER_RAW_FEATURE_TABLE_NAME,
+                                 raw_item_feature_table=ITEM_RAW_FEATURE_TABLE_NAME):
+    global user_feature_factory, item_feature_factory
+    user_feature_factory = UserEncoderFactory(raw_user_feature_table)
+    full_factory(user_feature_factory)
+    item_feature_factory = ItemEncoderFactory(raw_item_feature_table)
+    full_factory(item_feature_factory)
+    return user_feature_factory, item_feature_factory
+
+
 def to_array_string(array):
     result = ""
     for _ in array:
@@ -542,10 +552,10 @@ def run():
                                     type=str, required=False, help="模型的特征")
 
     # todo model_user_feature_table_name 的key 从组件中获取
-    raw_user_feature_table_name = df_argument_helper.get_argument("raw_item_feature_table_name")
+    raw_item_feature_table_name = df_argument_helper.get_argument("raw_item_feature_table_name")
     model_user_feature_table_name = df_argument_helper.get_argument("model_item_feature_table_name")
-    raw_feature2model_feature(raw_user_feature_table_name, model_user_feature_table_name)
-
+    init_feature_encoder_factory(raw_item_feature_table=raw_item_feature_table_name)
+    raw_feature2model_feature(raw_item_feature_table_name, model_user_feature_table_name)
     component_helper.write_output("model_item_feature_table_name", model_user_feature_table_name)
 
 

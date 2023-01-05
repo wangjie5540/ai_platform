@@ -472,6 +472,16 @@ item_feature_factory = ItemEncoderFactory(ITEM_RAW_FEATURE_TABLE_NAME)
 full_factory(item_feature_factory)
 
 
+def init_feature_encoder_factory(raw_user_feature_table=USER_RAW_FEATURE_TABLE_NAME,
+                                 raw_item_feature_table=ITEM_RAW_FEATURE_TABLE_NAME):
+    global user_feature_factory, item_feature_factory
+    user_feature_factory = UserEncoderFactory(raw_user_feature_table)
+    full_factory(user_feature_factory)
+    item_feature_factory = ItemEncoderFactory(raw_item_feature_table)
+    full_factory(item_feature_factory)
+    return user_feature_factory, item_feature_factory
+
+
 def to_array_string(array):
     result = ""
     for _ in array:
@@ -508,9 +518,9 @@ def raw_user_feature_to_model_user_feature(user_raw_feature: dict) -> dict:
         if feature_name not in model_feature and feature_name.lower() not in model_feature:
             model_feature[feature_name] = user_raw_feature[feature_name]
     # 保留 raw_id
-    for _ in ["user_id",]:
+    for _ in ["user_id", ]:
         if _ in user_raw_feature:
-            model_feature[_+"_raw"] = user_raw_feature[_]
+            model_feature[_ + "_raw"] = user_raw_feature[_]
 
     return model_feature
 
@@ -527,11 +537,13 @@ def raw_feature2model_feature(raw_feature_table_name, model_feature_table):
 #     raw_feature2model_feature("algorithm.tmp_raw_user_feature_table_name",
 #                               "algorithm.tmp_model_user_feature_table_name")
 
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 # encoding: utf-8
 
 import digitforce.aip.common.utils.component_helper as component_helper
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
+
+
 # from raw_user_feature_to_model_user_feature import *
 
 
@@ -546,16 +558,23 @@ def run():
     # 参数解析
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="name")
-    df_argument_helper.add_argument("--raw_user_feature_table_name", type=str, required=False, help="原始特征")
+    df_argument_helper.add_argument("--raw_user_feature_table_name", type=str, required=False, help="")
+    df_argument_helper.add_argument("--raw_item_feature_table_name", type=str, required=False, help="")
     df_argument_helper.add_argument("--model_user_feature_table_name",
                                     default="algorithm.tmp_model_user_feature_table_name",
                                     type=str, required=False, help="模型的特征")
 
     # todo model_user_feature_table_name 的key 从组件中获取
     raw_user_feature_table_name = df_argument_helper.get_argument("raw_user_feature_table_name")
+    raw_item_feature_table_name = df_argument_helper.get_argument("raw_item_feature_table_name")
     model_user_feature_table_name = df_argument_helper.get_argument("model_user_feature_table_name")
-    print(f"raw_user_feature_table_name:{raw_user_feature_table_name}"
-          f"model_user_feature_table_name:{model_user_feature_table_name}")
+    print(f"raw_user_feature_table_name:{raw_user_feature_table_name} "
+          f"model_user_feature_table_name:{model_user_feature_table_name} "
+          f"raw_item_feature_table_name:{raw_item_feature_table_name}")
+
+    init_feature_encoder_factory(raw_user_feature_table=raw_user_feature_table_name,
+                                 raw_item_feature_table=raw_item_feature_table_name)
+
     raw_feature2model_feature(raw_user_feature_table_name, model_user_feature_table_name)
 
     component_helper.write_output("model_user_feature_table_name", model_user_feature_table_name)

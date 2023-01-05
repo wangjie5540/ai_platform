@@ -18,18 +18,29 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
         RawUserFeatureOp(name='raw_user_feature', global_params=global_params)  # todo 第一个组件生成的表名
     raw_item_feature_op = RawItemFeatureOp(name='raw_item_feature', global_params=global_params)  # todo 第一个组件生成的表名
 
+
+    zq_feature_op = ZqFeatureEncoderCalculator(name="zq_feature_calculator", global_params=global_params,
+                                               raw_user_feature_table=raw_user_feature_op.outputs[
+                                                   RawUserFeatureOp.OUTPUT_KEY_RAW_USER_FEATURE],
+                                               raw_item_feature_table=raw_item_feature_op.oupts[
+                                                   RawItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE
+                                               ])
+
+
     model_user_feature_op = ModelUserFeatureOp(name='model_user_feature', global_params=global_params,
                                                raw_user_feature_table=raw_user_feature_op.outputs[
-                                                   RawUserFeatureOp.OUTPUT_KEY_RAW_USER_FEATURE], )
-    model_user_feature_op.after(raw_user_feature_op)
+                                                   RawUserFeatureOp.OUTPUT_KEY_RAW_USER_FEATURE],
+                                               raw_item_feature_table=raw_item_feature_op.oupts[
+                                                   RawItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE
+                                               ])
+    model_user_feature_op.after(zq_feature_op)
     model_item_feature_op = ModelItemFeatureOp(name="model_item_feature", global_params=global_params,
                                                raw_item_feature_table=raw_item_feature_op.outputs[
                                                    RawItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE
                                                ])
-    model_item_feature_op.after(raw_item_feature_op)
-
+    model_item_feature_op.after(zq_feature_op)
+    # todo remove table
     op_sample_selection = SampleSelectionLookalike(name='sample_select', global_params=global_params)
-    op_sample_selection.container.set_image_pull_policy("Always")
     model_sample_op = RawSample2ModelSample(name="raw_sample2model_sample", global_params=global_params,
                                             raw_sample_table_name="algorithm.tmp_aip_sample")  # todo
     model_sample_op.after(op_sample_selection)
@@ -69,7 +80,23 @@ global_params = json.dumps({
     "feature_and_label_to_dataset": {},
     "model": {"lr": 0.01, "dnn_dropout": 0.5, "batch_size": 1024, "is_automl": True,
               "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name",
-              "user_vec_table_name": "algorithm.tmp_user_vec_table_name"}
+              "user_vec_table_name": "algorithm.tmp_user_vec_table_name"},
+    "user_feature_trans": {
+        "create": {
+            "transform_rules": [
+                {
+                    "type": "string_indexer",
+                    "input_col": "user_id",
+                    "output_col": "user_id_index"
+                },
+                {
+                    "type": "string_indexer",
+                    "input_col": "gender",
+                    "output_col": "gender_index"
+                }
+            ]
+        }
+    }
 })
 client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params},
                                      experiment_name="recommend",
