@@ -36,7 +36,14 @@ def run():
     df_argument_helper.add_argument("--active_after_days", type=str, required=False, help="样本数据")
     df_argument_helper.add_argument("--start_date", type=str, required=False, help="样本数据")
     df_argument_helper.add_argument("--end_date", type=str, required=False, help="样本数据")
-
+    print("===================================================================")
+    print(f"global_params {df_argument_helper.get_argument('global_params')}")
+    print(f"name {df_argument_helper.get_argument('name')}")
+    print(f"active_before_days {df_argument_helper.get_argument('active_before_days')}")
+    print(f"active_after_days {df_argument_helper.get_argument('active_after_days')}")
+    print(f"start_date {df_argument_helper.get_argument('start_date')}")
+    print(f"sample {df_argument_helper.get_argument('sample')}")
+    print("===================================================================")
     active_before_days = int(df_argument_helper.get_argument("active_before_days"))
     active_after_days = int(df_argument_helper.get_argument("active_after_days"))
 
