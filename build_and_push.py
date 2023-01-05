@@ -72,10 +72,10 @@ def find_main_file(one_dir, result):
 def main():
     os.system("docker login -u ai-components-1672712149820 -p 30dd16ad7d172c138cdc4475133ba6d67b8fae09 digit-force-docker.pkg.coding.net")
     for _dir in [
-        "src/preprocessing",
-        "src/feature_engineering",
-        "src/sample",
-        "src/ml/lookalike",
+        # "src/preprocessing",
+        "src/feature_engineering/feature_create_liushi",
+        "src/sample/sample_selection_liushi",
+        "src/ml/liushi",
 
     ]:
         result = []
