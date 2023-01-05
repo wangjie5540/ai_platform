@@ -1,6 +1,5 @@
 # coding: utf-8
 import kfp.dsl as dsl
-import digitforce.aip.common.utils.component_helper as component_helper
 
 
 class Lookalike(dsl.ContainerOp):
@@ -33,11 +32,12 @@ class LookalikeModel(dsl.ContainerOp):
         )
 
 
-class Liushi(dsl.ContainerOp):
-    def __init__(self, name, global_params, train_data, test_data,):
-        super(Lookalike, self).__init__(
+class LiushiModel(dsl.ContainerOp):
+    def __init__(self, name, global_params, train_data, test_data, ):
+        super(LiushiModel, self).__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/ml-lookalike',
+            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
+                  f'ml-liushi',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params, '--train_data', train_data,
                        '--test_data', test_data],
