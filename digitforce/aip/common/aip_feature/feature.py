@@ -2,6 +2,7 @@ import logging
 import os
 import os.path
 import pickle
+import uuid
 
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 from digitforce.aip.common.utils.hive_helper import hive_client
@@ -68,7 +69,11 @@ class FeatureEncoderCalculator:
     @classmethod
     def read_from_hdfs(cls, encoder):
         hdfs_path = cls.get_save_path(encoder)
-        pickle_encoder = hdfs_client.read_pickle_from_hdfs(hdfs_path)
+        tmp_file = f"tmp-{uuid.uuid4()}"
+        hdfs_client.copy_to_local(hdfs_path, tmp_file)
+        with open(tmp_file, "rb") as fi:
+            pickle_encoder = pickle.load(fi)
+        os.remove(tmp_file)
         return pickle_encoder
 
     @classmethod
