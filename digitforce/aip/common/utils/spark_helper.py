@@ -33,6 +33,7 @@ class SparkClient(object):
             .config("spark.debug.maxToStringFields", 100) \
             .config("spark.executor.cores", "1") \
             .config("spark.executor.memory", "6g") \
+            .config("spark.rpc.message.maxSize", 1000) \
             .config("spark.driver.memory", "6g") \
             .config("spark.driver.cores", "1") \
             .config("spark.driver.maxResultSize", "4g") \
