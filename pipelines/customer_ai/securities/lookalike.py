@@ -22,7 +22,7 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
     zq_feature_op = ZqFeatureEncoderCalculator(name="zq_feature_calculator", global_params=global_params,
                                                raw_user_feature_table=raw_user_feature_op.outputs[
                                                    RawUserFeatureOp.OUTPUT_KEY_RAW_USER_FEATURE],
-                                               raw_item_feature_table=raw_item_feature_op.oupts[
+                                               raw_item_feature_table=raw_item_feature_op.outputs[
                                                    RawItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE
                                                ])
 
@@ -30,7 +30,7 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
     model_user_feature_op = ModelUserFeatureOp(name='model_user_feature', global_params=global_params,
                                                raw_user_feature_table=raw_user_feature_op.outputs[
                                                    RawUserFeatureOp.OUTPUT_KEY_RAW_USER_FEATURE],
-                                               raw_item_feature_table=raw_item_feature_op.oupts[
+                                               raw_item_feature_table=raw_item_feature_op.outputs[
                                                    RawItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE
                                                ])
     model_user_feature_op.after(zq_feature_op)
