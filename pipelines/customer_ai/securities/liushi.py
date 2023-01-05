@@ -8,6 +8,7 @@ from digitforce.aip.components.feature_engineering import FeatureCreateLiushi, F
 from digitforce.aip.components.ml import Lookalike, LiushiModel, LiushiPredict
 from digitforce.aip.components.preprocessing import SampleCombLookalike
 from digitforce.aip.components.sample import SampleSelectionLiushi
+
 #
 # pipeline_name = 'liushi'
 # pipeline_path = f'/tmp/{pipeline_name}.yaml'
@@ -55,6 +56,8 @@ from digitforce.aip.components.sample import SampleSelectionLiushi
 
 pipeline_name = 'liushi_predict'
 pipeline_path = f'/tmp/{pipeline_name}.yaml'
+
+
 @dsl.pipeline(name=pipeline_name)
 def ml_liushi_predict(global_params: str, flag='TRAIN'):
     predict_feature_op = FeatureCreateLiushiPredict(name="feature_create_predict", global_params=global_params)
@@ -62,8 +65,6 @@ def ml_liushi_predict(global_params: str, flag='TRAIN'):
                                       predict_table_name=predict_feature_op.outputs[
                                           predict_feature_op.OUTPUT_PREDICT_FEATURE
                                       ])
-
-
 
 
 kubeflow_config = config_helper.get_module_config("kubeflow")
@@ -75,11 +76,13 @@ import json
 
 
 global_params = json.dumps({
-    "model-predict": {"active_before_days": 3, "active_after_days": 5, "start_date": "20221211",
-                      "end_date": "20221220"},
+    "model-predict": {
+        "predict_table_name": 3,
+        "model_hdfs_path": 5,
+    },
 
-    "predict_feature_op": {"active_before_days": 3, "active_after_days": 5, "start_date": "20221211",
-                       "end_date": "20221220", "mid_date": "20221218"},
+    "feature_create_predict": {"active_before_days": 3, "active_after_days": 5, "start_date": "20221211",
+                               "end_date": "20221220", "sample": "algorithm.aip_zq_liushi_custom_predict"},
 
 })
 client.create_run_from_pipeline_func(ml_liushi_predict, arguments={"global_params": global_params},
