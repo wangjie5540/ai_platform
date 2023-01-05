@@ -1,204 +1,214 @@
 #!/usr/bin/env python3
 # encoding: utf-8
+import time
+from digitforce.aip.common.utils.hive_helper import hive_client
+
+import numpy as np
+import torch
+import torch.optim.adam as adam
 from sklearn.metrics import log_loss, roc_auc_score
 
-import digitforce.aip.common.utils.spark_helper as spark_helper
-import digitforce.aip.common.utils.hdfs_helper as hdfs_helper
-from preprocessing.inputs import SparseFeat, DenseFeat, VarLenSparseFeat
-import pickle
-import numpy as np
-import time
-import torch
+from digitforce.aip.common.aip_feature.zq_feature import *
 from model.dssm import DSSM
-from sklearn.preprocessing import LabelEncoder
-import torch.optim.adam as adam
+from preprocessing.inputs import SparseFeat, DenseFeat, VarLenSparseFeat
 
-hdfs_client = hdfs_helper.HdfsClient()
 dnn_hidden_units = (256, 128, 64)
+DEVICE = 'cpu'
+use_cuda = True
+if use_cuda and torch.cuda.is_available():
+    logging.info('cuda ready...')
+    DEVICE = 'cuda:0'
 
 
-def start_model_train(train_data_table_name, test_data_table_name, user_data_table_name, hdfs_path,
-                      train_data_columns, user_data_columns,
-                      dnn_dropout=0.2,
-                      batch_size=256, lr=0.01,
-                      is_train=True):
-    print("start model train")
-    spark_client = spark_helper.SparkClient()
-    print("read train data and test data")
-    train_data = spark_client.get_session().sql(
-        f"""select {",".join(train_data_columns)} from {train_data_table_name}""").toPandas()
-    test_data = spark_client.get_session().sql(
-        f"""select {",".join(train_data_columns)} from {test_data_table_name}""").toPandas()
+def train(train_data_table_name, test_data_table_name,
+          dnn_dropout=0.2,
+          batch_size=256, lr=0.01,
+          is_automl=False,
+          model_user_feature_table_name=None,
+          user_vec_table_name=None):
+    if not is_automl and model_user_feature_table_name is None:
+        raise ValueError(
+            f"train model on TRAIN the model_user_feature_table_name must be set... {model_user_feature_table_name}")
+    print(f"begin key args "
+          f"train_data_table_name:{train_data_table_name}, "
+          f"test_data_table_name:{test_data_table_name,}, "
+          f"is_automl:{is_automl}, "
+          f"model_user_feature_table_name:{model_user_feature_table_name}")
+    print("read train dataset")
+    train_data = hive_client.query_to_df(
+        f"""select * from {train_data_table_name}""")
+    train_data.columns = [_.split(".")[-1] for _ in train_data.columns]
+    print("read test dataset")
+    test_data = hive_client.query_to_df(
+        f"""select * from {test_data_table_name}""")
+    test_data.columns = [_.split(".")[-1] for _ in test_data.columns]
 
-    feature_columns = train_data.columns
-    sparse_features, dense_features, sequence_features, \
-    target, user_sparse_features, user_dense_features, \
-    item_sparse_features, item_dense_features, \
-    user_sequence_features, item_sequence_features = filter_features(
-        feature_columns)
-    print("get train test input")
-    user_feature_columns, item_feature_columns, train_model_input, test_model_input = \
-        get_train_test_input(train_data, test_data,
-                             sparse_features, dense_features, sequence_features,
-                             user_sparse_features, user_dense_features,
-                             item_sparse_features, item_dense_features,
-                             user_sequence_features, item_sequence_features,
-                             hdfs_path)
+    print("show user_feature_encoder and item_feature_encoder")
+    show_all_encoder()
 
-    print("model building")
-    device = 'cpu'
-    use_cuda = True
-    if use_cuda and torch.cuda.is_available():
-        print('cuda ready...')
-        device = 'cuda:0'
-    model = DSSM(user_feature_columns, item_feature_columns, dnn_hidden_units=dnn_hidden_units,
-                 dnn_dropout=dnn_dropout, task='binary', device=device)
-    optim = adam.Adam(model.parameters(), lr=lr)
-    model.compile(optim, "binary_crossentropy", metrics=['auc'])
+    user_sequence_feature_and_max_len_map = {"u_buy_list": 5}
+    print(f"build DSSM model_feature...")
+    user_feature_columns, item_feature_columns = get_dssm_feature_columns(user_sequence_feature_and_max_len_map)
+    feature_columns = user_feature_columns + item_feature_columns
+    feature_names = [_.name for _ in feature_columns]
+    print(f"feature names:{feature_names}")
+    print(f"dataset to model input...")
+    train_model_input = dataset_to_dssm_model_input(train_data, feature_names, user_sequence_feature_and_max_len_map)
+    test_model_input = dataset_to_dssm_model_input(test_data, feature_names, user_sequence_feature_and_max_len_map)
 
-    print("model fit")
+    print("build DSSM model with feature and super params")
+    model = build_model(user_feature_columns, item_feature_columns, dnn_dropout, lr)
+
+    print("begin fit model...")
     start = time.time()
-    model.fit(train_model_input, train_data[target].values, batch_size=batch_size,
+    model.fit(train_model_input, train_data["label"].values, batch_size=batch_size,
               epochs=3, verbose=2, validation_split=0.2)
     end = time.time()
     print("model training takes {} seconds".format(end - start))
 
-    print("model evaluate")
+    print("begin  evaluate model...")
     # 评估
     state_dict = torch.load("./model_zoo/model.pth")
-    model = DSSM(user_feature_columns, item_feature_columns, dnn_hidden_units=dnn_hidden_units,
-                 dnn_dropout=dnn_dropout, task='binary', device=device)
-    optim = adam.Adam(model.parameters(), lr=lr)
-    model.compile(optim, "binary_crossentropy", metrics=['auc'])
     model.load_state_dict(state_dict['model_state_dict'], strict=False)
 
     pred_ts = model.predict(test_model_input, batch_size=batch_size)
-    print("test-logloss={:.4f}, test-auc={:.4f}".format(log_loss(test_data[target].values, pred_ts),
-                                                        roc_auc_score(test_data[target].values, pred_ts)))
+    print("test-logloss={:.4f}, test-auc={:.4f}".format(log_loss(test_data["label"].values, pred_ts),
+                                                        roc_auc_score(test_data["label"].values, pred_ts)))
 
-    if is_train:
-        user_data = spark_client.get_session().sql(
-            f"""select {",".join(user_data_columns)} from {user_data_table_name}""").toPandas()
-
-        # 全量用户
-        user_model_input = {name: user_data[name] for name in user_sparse_features + user_dense_features}
-        for v in user_sequence_features:
-            user_model_input[v] = np.array(
-                list(user_data['u_buy_list'].map(lambda x: [int(i) for i in x.split("|")]).values))
-
-        dict_trained = model.state_dict()  # trained model
+    if not is_automl:
         # 获取单塔 user tower
-        model_user = DSSM(user_feature_columns, [], dnn_hidden_units=dnn_hidden_units,
-                          dnn_dropout=dnn_dropout, task='binary', device=device)
-        dict_user = model_user.state_dict()
+        dict_trained = model.state_dict()
+        user_tower_model = DSSM(user_feature_columns, [], dnn_hidden_units=dnn_hidden_units,
+                                dnn_dropout=dnn_dropout, task='binary', device=DEVICE)
+        dict_user = user_tower_model.state_dict()
+        # todo 读model_user_feature 表
+        print(f"begin predict all user in {model_user_feature_table_name}")
+        print(f"begin read model_user_feature_table ")
+        model_user_feature_dataset = hive_client.query_to_df(
+            f"""select * from {model_user_feature_table_name}""")
+        model_user_feature_dataset.columns = [_.split(".")[-1] for _ in model_user_feature_dataset.columns]
+        all_user_model_input = dataset_to_dssm_model_input(model_user_feature_dataset,
+                                                           [_.name for _ in user_feature_columns],
+                                                           user_sequence_feature_and_max_len_map)
+
         for key in dict_user:
             dict_user[key] = dict_trained[key]
-        model_user.load_state_dict(dict_user, strict=False)  # load trained model parameters of user tower
+        user_tower_model.load_state_dict(dict_user, strict=False)  # load trained model parameters of user tower
 
-        user_embedding = model_user.predict(user_model_input, batch_size=batch_size)
+        user_embedding = user_tower_model.predict(all_user_model_input, batch_size=batch_size)
+        user_vec_df = model_user_feature_dataset[["user_id_raw"]]
+        user_vec_df["user_vec"] = [_.tolist() for _ in list(user_embedding)]
+        from digitforce.aip.common.utils.spark_helper import spark_client
+        print("upload user_vec to hive")
+        # todo 测试一下 pandasDF -> 保存成csv-> 传到hdfs-> 转成sparkDataframe-> 存表
+        user_vec_dataframe = spark_client.get_session().createDataFrame(user_vec_df)
+        if user_vec_table_name is None:
+            user_vec_table_name = "algorithm.lookalike_user_vec_table"
+        user_vec_dataframe.write.format("hive").mode("overwrite").saveAsTable(user_vec_table_name)
+        model_hdfs_path = "/user/aip/aip/lookalike" + "model.pth"
 
-        print(user_embedding[0])
-
-        if hdfs_client.exists(hdfs_path + "model.pth"):
-            hdfs_client.delete(hdfs_path + "model.pth")
-        hdfs_client.copy_from_local("./model_zoo/model.pth", hdfs_path + "model.pth")
+        if hdfs_client.exists(model_hdfs_path):
+            hdfs_client.delete(model_hdfs_path)
+        hdfs_client.copy_from_local("./model_zoo/model.pth", model_hdfs_path)
 
 
-def filter_features(features):
-    '''
-    用于筛选构建双塔特征所需特征集合
-    :param features: 数据集特征
-    :return: 构建双塔模型所需特征集合
-    '''
-    # TODO：特征灵活配置
-    sparse_features = ['user_id', 'item_id', 'fund_type', 'management', 'custodian', 'invest_type', 'gender',
-                       'EDU', 'RSK_ENDR_CPY', 'NATN',
-                       'OCCU', 'IS_VAIID_INVST']
-    dense_features = ['i_buy_counts_30d', 'i_amount_sum_30d', 'i_amount_avg_30d', 'i_amount_min_30d',
-                      'i_amount_max_30d', 'u_buy_counts_30d',
-                      'u_amount_sum_30d', 'u_amount_avg_30d', 'u_amount_min_30d', 'u_amount_max_30d', 'u_buy_days_30d',
-                      'u_buy_avg_days_30d', 'u_last_buy_days_30d']
-    sequence_features = ['u_buy_list']
-    target = ['label']
-    user_sparse_features, user_dense_features = ['user_id', 'gender', 'EDU', 'RSK_ENDR_CPY', 'NATN',
-                                                 'OCCU', 'IS_VAIID_INVST'], ['u_buy_counts_30d',
-                                                                             'u_amount_sum_30d', 'u_amount_avg_30d',
-                                                                             'u_amount_min_30d', 'u_amount_max_30d',
-                                                                             'u_buy_days_30d',
-                                                                             'u_buy_avg_days_30d',
-                                                                             'u_last_buy_days_30d']
-    item_sparse_features, item_dense_features = ['item_id', 'fund_type', 'management', 'custodian',
-                                                 'invest_type'], ['i_buy_counts_30d', 'i_amount_sum_30d',
-                                                                  'i_amount_avg_30d', 'i_amount_min_30d',
-                                                                  'i_amount_max_30d']
-    user_sequence_features, item_sequence_features = ['u_buy_list'], []
-    sparse_features = list(np.intersect1d(features, sparse_features))
-    dense_features = list(np.intersect1d(features, dense_features))
-    sequence_features = list(np.intersect1d(features, sequence_features))
-    user_sparse_features = list(np.intersect1d(features, user_sparse_features))
-    user_dense_features = list(np.intersect1d(features, user_dense_features))
-    item_sparse_features = list(np.intersect1d(features, item_sparse_features))
-    item_dense_features = list(np.intersect1d(features, item_dense_features))
-    user_sequence_features = list(np.intersect1d(features, user_sequence_features))
-    item_sequence_features = list(np.intersect1d(features, item_sequence_features))
-
-    return sparse_features, dense_features, sequence_features, target, user_sparse_features, user_dense_features, item_sparse_features, item_dense_features, user_sequence_features, item_sequence_features
+def build_model(user_feature_columns, item_feature_columns, dnn_dropout, lr):
+    logging.info("model building")
+    model = DSSM(user_feature_columns, item_feature_columns, dnn_hidden_units=dnn_hidden_units,
+                 dnn_dropout=dnn_dropout, task='binary', device=DEVICE)
+    optim = adam.Adam(model.parameters(), lr=lr)
+    model.compile(optim, "binary_crossentropy", metrics=['auc'])
+    return model
 
 
 # 获取训练集、测试集输入
-def get_train_test_input(train_data, test_data,
-                         sparse_features, dense_features, sequence_feature,
-                         user_sparse_features, user_dense_features,
-                         item_sparse_features, item_dense_features,
-                         user_sequence_feature, item_sequence_feature,
-                         hdfs_path):
-    mapping_dict = {"u_buy_list": "item_id"}
+def __sequence_to_fixed_len_sequence(x, length):
+    res = [int(i) for i in x.split("|")]
+    if len(res) < length:
+        for _ in range(length - len(res)):
+            res.append(0)
+    return res
 
-    hdfs_client.copy_to_local(hdfs_path + "sparse_features_dict.pkl",
-                              "./sparse_features_dict.pkl")
-    hdfs_client.copy_to_local(hdfs_path + "id_features_dict.pkl",
-                              "./id_features_dict.pkl")
-    with open("./sparse_features_dict.pkl", "rb") as file:
-        sparse_features_dict = pickle.load(file)
-    with open("./id_features_dict.pkl", "rb") as file:
-        id_features_dic = pickle.load(file)
-    user_feature_columns = [SparseFeat(feat, len(sparse_features_dict[feat].keys()) if feat != "user_id" else len(
-        id_features_dic[feat].keys()), embedding_dim=4)
-                            for i, feat in enumerate(user_sparse_features)] + [DenseFeat(feat, 1, ) for feat in
-                                                                               user_dense_features]
 
-    item_feature_columns = [SparseFeat(feat, len(sparse_features_dict[feat].keys()) if feat != "item_id" else len(
-        id_features_dic[feat].keys()), embedding_dim=4)
-                            for i, feat in enumerate(item_sparse_features)] + [DenseFeat(feat, 1, ) for feat in
-                                                                               item_dense_features]
-    print("生成模型输入格式数据...")
-    # 3.generate input data for model
-    for user_v in user_sequence_feature:
-        maxlen = len(train_data[user_v][0].split("|"))
-        mapping_feat = mapping_dict.get(user_v)
-        user_varlen_feature_columns = [
-            VarLenSparseFeat(SparseFeat(user_v, len(id_features_dic[mapping_feat].keys()), embedding_dim=4),
-                             maxlen=maxlen, combiner='mean', length_name=None)]
-        user_feature_columns += user_varlen_feature_columns
-    for item_v in item_sequence_feature:
-        maxlen = len(train_data[item_v][0].split("|"))
-        mapping_feat = mapping_dict.get(item_v)
-        item_varlen_feature_columns = [
-            VarLenSparseFeat(SparseFeat(item_v, len(id_features_dic[mapping_feat].keys()), embedding_dim=4),
-                             maxlen=maxlen, combiner='mean', length_name=None)]
-        item_feature_columns += item_varlen_feature_columns
+def get_dssm_feature_columns(user_sequence_feature_and_max_len_map):
+    # user dense and sparse feature
+    user_model_feature_names = user_feature_factory.get_encoder_names()
+    user_parse_feature_names = []
+    user_dense_feature_names = []
+    for user_feature_name in user_model_feature_names:
+        encoder = user_feature_factory.get_encoder(user_feature_name)
+        if isinstance(encoder, CategoryFeatureEncoder):
+            user_parse_feature_names.append(user_feature_name)
+        elif isinstance(encoder, NumberFeatureEncoder):
+            user_dense_feature_names.append(user_feature_name)
 
-    # add user history as user_varlen_feature_columns
-    train_model_input = {name: train_data[name] for name in sparse_features + dense_features}
-    for v in sequence_feature:
-        train_model_input[v] = np.array(
-            list(train_data['u_buy_list'].map(lambda x: [int(i) for i in x.split("|")]).values))
+    user_feature_columns = []
+    for feat in user_parse_feature_names:
+        pf = SparseFeat(feat, len(user_feature_factory.get_encoder(feat).vocabulary) + 1, embedding_dim=4)
+        user_feature_columns.append(pf)
+    user_feature_columns += [DenseFeat(feat, 1, ) for feat in
+                             user_dense_feature_names]
 
-    # 测试集
-    test_model_input = {name: test_data[name] for name in
-                        sparse_features + dense_features}
-    for v in sequence_feature:
-        test_model_input[v] = np.array(
-            list(test_data['u_buy_list'].map(lambda x: [int(i) for i in x.split("|")]).values))
+    # item dense and sparse feature todo 代码重复
+    item_model_feature_names = item_feature_factory.get_encoder_names()
+    item_parse_feature_names = []
+    item_dense_feature_names = []
+    for feature_name in item_model_feature_names:
+        encoder = item_feature_factory.get_encoder(feature_name)
+        if isinstance(encoder, CategoryFeatureEncoder):
+            item_parse_feature_names.append(feature_name)
+        elif isinstance(encoder, NumberFeatureEncoder):
+            item_dense_feature_names.append(feature_name)
 
-    return user_feature_columns, item_feature_columns, train_model_input, test_model_input
+    item_feature_columns = []
+    for feat in item_parse_feature_names:
+        pf = SparseFeat(feat, len(item_feature_factory.get_encoder(feat).vocabulary) + 1, embedding_dim=4)
+        item_feature_columns.append(pf)
+    item_feature_columns += \
+        [DenseFeat(feat, 1, ) for feat in
+         item_dense_feature_names]
+    ## sequence feature
+    # user sequence feature
+
+    for user_v, maxlen in user_sequence_feature_and_max_len_map.items():  # [u_buy_list]
+        user_varlen_feature = \
+            VarLenSparseFeat(SparseFeat(user_v, len(user_feature_factory.get_encoder("user_id").vocabulary)),
+                             maxlen=maxlen, combiner='mean', length_name=None)
+        user_feature_columns.append(user_varlen_feature)
+
+    return user_feature_columns, item_feature_columns
+
+
+def dataset_to_dssm_model_input(dataset, feature_names, user_sequence_feature_and_max_len_map):
+    # build dssm model input
+    model_input = {name: dataset[name] for name in feature_names}
+    for user_v, max_len in user_sequence_feature_and_max_len_map.items():
+        model_input[user_v] = np.array(
+            list(dataset[user_v].map(lambda x: __sequence_to_fixed_len_sequence(x, max_len)).values))
+    return model_input
+
+
+def main():
+    # !/usr/bin/env python3
+    # encoding: utf-8
+
+    train_data_table_name = "algorithm.tmp_aip_train_data"
+    test_data_table_name = "algorithm.tmp_aip_test_data"
+    model_user_feature_table_name = "algorithm.tmp_model_user_feature_table_name"
+    user_vec_table_name = "algorithm.tmp_user_vec_table_name"
+    dnn_hidden_units = (256, 128, 64)
+    dnn_dropout = 0.2
+    batch_size = 256
+    lr = 0.01
+    train(train_data_table_name, test_data_table_name,
+          dnn_dropout=dnn_dropout,
+          batch_size=batch_size, lr=lr,
+          is_automl=False,
+          model_user_feature_table_name=model_user_feature_table_name,
+          user_vec_table_name=user_vec_table_name
+          )
+
+
+if __name__ == '__main__':
+    main()
+

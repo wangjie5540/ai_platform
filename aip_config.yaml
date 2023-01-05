@@ -1,0 +1,24 @@
+starrocks:
+  user: root
+  password: ''
+  fenodes: 172.21.32.16:8030
+  jdbc_url: jdbc:mysql://dev-common-starrocks-n1.digitforce.com:9030,dev-common-starrocks-n2.digitforce.com:9030,dev-common-starrocks-n3.digitforce.com:9030
+  load_url: 172.21.32.16:8030
+hive:
+  server2:
+    host: 172.22.20.57
+    port: 7001
+hdfs:
+  hosts: 172.22.20.137:4008,172.22.20.110:4008
+  base_url: hdfs://HDFS8001206
+spark:
+  master_uri: k8s://https://172.22.20.16
+  kubernetes_namespace: kubeflow-user-example-com
+  kubernetes_runtime_image: digit-force-docker.pkg.coding.net/ai-platform/base-images/spark-k8s-runtime-with-jars:2.4.8
+  hive_uris: thrift://172.22.20.137:7004,thrift://172.22.20.110:7004
+  java_home: /opt/jdk1.8.0_181-cloudera
+  spark_home: /opt/spark-2.4.8-bin-hadoop2.7
+kubeflow:
+  url: http://172.22.20.9:30000/pipeline
+  username: admin@example.com
+  password: password
