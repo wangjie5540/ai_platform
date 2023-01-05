@@ -34,7 +34,7 @@ class SampleSelectionLiushi(dsl.ContainerOp):
                   f'sample-sample_selection_liushi',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params],
-            file_outputs={output_name: component_helper.generate_output_path(output_name)}
+            file_outputs={"sample_table_name": component_helper.generate_output_path("sample_table_name")}
         )
 
 

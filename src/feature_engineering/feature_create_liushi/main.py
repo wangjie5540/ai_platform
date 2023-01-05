@@ -28,7 +28,7 @@ def run():
                                                                  feature_days=30)
 
     component_helper.write_output("train_feature_table_name", train_table_name)
-    component_helper.write_output("test_feature__table_name", test_table_name)
+    component_helper.write_output("test_feature_table_name", test_table_name)
 
 
 if __name__ == '__main__':
