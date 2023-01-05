@@ -40,3 +40,5 @@ predict_table_name = "algorithm.aip_zq_liushi_custom_feature_predict"
 client.create_run_from_pipeline_func(ml_liushi_predict, arguments={"global_params": global_params},
                                      experiment_name="recommend",
                                      namespace='kubeflow-user-example-com')
+
+# kubeflow_helper.upload_pipeline(ml_liushi_predict, "liushi-predict-prod")

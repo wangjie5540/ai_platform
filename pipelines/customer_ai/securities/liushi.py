@@ -32,6 +32,7 @@ def ml_liushi(global_params: str, flag='TRAIN'):
     #                              train_data="algorithm.aip_zq_liushi_custom_feature_train",
     #                              test_data="algorithm.aip_zq_liushi_custom_feature_test")
 
+
 kubeflow_config = config_helper.get_module_config("kubeflow")
 client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
     url=kubeflow_config['url'], username=kubeflow_config['username'],
@@ -52,3 +53,4 @@ global_params = json.dumps({
 client.create_run_from_pipeline_func(ml_liushi, arguments={"global_params": global_params},
                                      experiment_name="recommend",
                                      namespace='kubeflow-user-example-com')
+# kubeflow_helper.upload_pipeline(ml_liushi, "liushi-prod")
