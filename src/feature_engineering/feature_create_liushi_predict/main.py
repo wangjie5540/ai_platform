@@ -20,12 +20,12 @@ def run():
     df_argument_helper.add_argument("--start_date", type=str, required=False, help="样本数据")
     df_argument_helper.add_argument("--end_date", type=str, required=False, help="样本数据")
 
-    active_before_days = int(df_argument_helper.get("active_before_days"))
-    active_after_days = int(df_argument_helper.get("active_after_days"))
+    active_before_days = int(df_argument_helper.get_argument("active_before_days"))
+    active_after_days = int(df_argument_helper.get_argument("active_after_days"))
 
-    start_date = df_argument_helper.get("start_date")
-    end_date = df_argument_helper.get("end_date")
-    sample_table_name = df_argument_helper.get("sample")
+    start_date = df_argument_helper.get_argument("start_date")
+    end_date = df_argument_helper.get_argument("end_date")
+    sample_table_name = df_argument_helper.get_argument("sample")
     predict_feature_table_name = feature_create(sample_table_name,
                                                 active_before_days, active_after_days,
                                                 start_date, end_date,
