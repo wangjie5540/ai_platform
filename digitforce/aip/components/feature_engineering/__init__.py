@@ -21,14 +21,16 @@ class FeatureCreateLookalike(dsl.ContainerOp):
             }
         )
 
+
 class FeatureCreateLiushi(dsl.ContainerOp):
     OUTPUT_TRAIN_FEATURE = 'train_feature_table_name'
-    OUTPUT_TEST_FEATURE = 'train_feature_table_name'
+    OUTPUT_TEST_FEATURE = 'test_feature_table_name'
 
     def __init__(self, name, global_params, sample):
-        super(FeatureCreateLookalike, self).__init__(
+        super(FeatureCreateLiushi, self).__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/feature_engineering-feature_create_liushi',
+            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
+                  f'feature_engineering-feature_create_liushi',
             command=['python', 'main.py'],
             arguments=['--name', name, '--global_params', global_params, '--sample', sample],
             file_outputs={
