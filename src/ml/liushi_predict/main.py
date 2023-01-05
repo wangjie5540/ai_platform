@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 import argparse
+import os
+
 from model_predict import start_model_predict
 
 from digitforce.aip.common.utils.argument_helper import df_argument_helper

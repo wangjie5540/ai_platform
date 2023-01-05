@@ -11,7 +11,24 @@ from digitforce.aip.common.utils.argument_helper import df_argument_helper
 
 def run():
     # 参数解析
-
+#     import json
+#     import os
+#     global_params = json.dumps({
+#   "model-predict": {
+#     "predict_table_name": 3,
+#     "model_hdfs_path": 5
+#   },
+#   "feature_create_predict": {
+#     "active_before_days": 3,
+#     "active_after_days": 5,
+#     "start_date": "20221211",
+#     "end_date": "20221220",
+#     "sample": "algorithm.aip_zq_liushi_custom_predict"
+#   }
+# })
+#     name = "feature_create_predict"
+#     os.environ["global_params"] = global_params
+#     os.environ["name"] = name
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="名称")
     df_argument_helper.add_argument("--sample", type=str, required=False, help="样本数据")
