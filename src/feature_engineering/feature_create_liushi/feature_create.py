@@ -8,11 +8,19 @@ import utils
 DATE_FORMAT = "%Y%m%d"
 today = datetime.datetime.today().strftime(DATE_FORMAT)
 
+
 def feature_create(sample_table_name,
                    active_before_days, active_after_days,
-                   start_date, mid_date, end_date,
                    feature_days=30):
-
+    window_test_days = 5
+    window_train_days = 30
+    now = datetime.datetime.now()
+    end_date = now - datetime.timedelta(days=active_after_days + 2)
+    mid_date = end_date - datetime.timedelta(days=window_test_days)
+    start_date = mid_date - datetime.timedelta(days=window_train_days)
+    end_date = end_date.strftime(DATE_FORMAT)
+    mid_date = mid_date.strftime(DATE_FORMAT)
+    start_date = start_date.strftime(DATE_FORMAT)
 
     # 活跃度数据起始日期：基于start_date，过去n天，即 start_date - n
     active_start_date = (datetime.datetime.strptime(start_date, '%Y%m%d') - datetime.timedelta(
@@ -164,8 +172,6 @@ def feature_create(sample_table_name,
     return train_table_name, test_table_name
 
 
-
-
 # 写hdfs，覆盖写！
 def write_hdfs_path(local_path, hdfs_path, hdfs_client):
     if hdfs_client.exists(hdfs_path):
@@ -184,8 +190,6 @@ def write_hdfs_dict(content, file_name, hdfs_client):
     write_hdfs_path(local_path, hdfs_path, hdfs_client)
 
 
-
-
 def write_hive(inp_df, table_name, partition_col):
     check_table = spark_client.get_session()._jsparkSession.catalog().tableExists(table_name)
 
@@ -196,4 +200,3 @@ def write_hive(inp_df, table_name, partition_col):
     else:  # 如果不存在
         print("table:{} not exist......".format(table_name))
         inp_df.write.format("orc").mode("overwrite").partitionBy(partition_col).saveAsTable(table_name)
-

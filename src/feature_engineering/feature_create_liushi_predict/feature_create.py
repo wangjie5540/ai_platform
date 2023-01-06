@@ -10,9 +10,16 @@ today = datetime.datetime.today().strftime(DATE_FORMAT)
 
 def feature_create(predict_samples_table_name,
                    active_before_days, active_after_days,
-                   start_date, end_date,
                    feature_days=30):
-
+    window_test_days = 5
+    window_train_days = 30
+    now = datetime.datetime.now()
+    end_date = now - datetime.timedelta(days=active_after_days + 2)
+    mid_date = end_date - datetime.timedelta(days=window_test_days)
+    start_date = mid_date - datetime.timedelta(days=window_train_days)
+    end_date = end_date.strftime(DATE_FORMAT)
+    mid_date = mid_date.strftime(DATE_FORMAT)
+    start_date = start_date.strftime(DATE_FORMAT)
 
     # 活跃度数据起始日期：基于start_date，过去n天，即 start_date - n
     active_start_date = (datetime.datetime.strptime(start_date, '%Y%m%d') - datetime.timedelta(

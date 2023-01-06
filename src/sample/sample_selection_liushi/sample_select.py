@@ -11,8 +11,16 @@ DATE_FORMAT = "%Y%m%d"
 
 
 def start_sample_selection(active_before_days, active_after_days,
-                           start_date, end_date,
                            label_count=300000):
+    window_test_days = 5
+    window_train_days = 30
+    now = datetime.datetime.now()
+    end_date = now - datetime.timedelta(days=active_after_days + 2)
+    mid_date = end_date - datetime.timedelta(days=window_test_days)
+    start_date = mid_date - datetime.timedelta(days=window_train_days)
+    end_date = end_date.strftime(DATE_FORMAT)
+    mid_date = mid_date.strftime(DATE_FORMAT)
+    start_date = start_date.strftime(DATE_FORMAT)
     today = get_today_str(DATE_FORMAT)
 
     # 活跃度数据起始日期：基于start_date，过去n天，即 start_date - n

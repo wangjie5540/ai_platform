@@ -17,10 +17,7 @@ def run():
     component_params = global_params[args.name]
     active_before_days = component_params["active_before_days"]
     active_after_days = component_params["active_after_days"]
-    start_date = component_params["start_date"]
-    end_date = component_params["end_date"]
-    sample_table_name = start_sample_selection(active_before_days, active_after_days,
-                           start_date, end_date, label_count=300000)
+    sample_table_name = start_sample_selection(active_before_days, active_after_days, label_count=300000)
     component_helper.write_output("sample_table_name", sample_table_name)
 
 
