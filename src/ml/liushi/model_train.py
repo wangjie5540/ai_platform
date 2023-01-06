@@ -4,13 +4,13 @@ import datetime
 import random
 
 import joblib
+from digitforce.aip.common.utils.spark_helper import spark_client
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, precision_score, recall_score, log_loss
 from xgboost import XGBClassifier
 
 from digitforce.aip.common.utils.aip_model_manage_helper import report_to_aip
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
-from digitforce.aip.common.utils.spark_helper import spark_client
-
+from digitforce.aip.common.utils.hive_helper import hive_client
 DATE_FORMAT = "%Y%m%d"
 today = datetime.datetime.today().strftime(DATE_FORMAT)
 
@@ -20,10 +20,13 @@ def start_model_train(train_table_name, test_table_name,
                       is_automl=True,
                       model_and_metrics_data_hdfs_path=None):
     df_train = spark_client.get_session().sql(
-        "select * from {} where dt = {}".format(train_table_name, today)).toPandas()
+        "select * from {} where dt = {}  limit 1000000".format(train_table_name, today)).toPandas()
+    # df_train = hive_client.query_to_df("select * from {} where dt = {} limit 1000000".format(train_table_name, today))
+    print(f"read train_dataset success train_data len:{len(df_train)}")
     df_test = spark_client.get_session().sql(
         "select * from {} where dt = {}".format(test_table_name, today)).toPandas()
-
+    # df_test = hive_client.query_to_df("select * from {} where dt = {} limit 1000000".format(test_table_name, today))
+    print(f"read test_dataset success test_data len:{len(df_train)}")
     for col in df_train.columns:
         if df_train[col].dtypes == "object":
             df_train[col] = df_train[col].astype(float)
