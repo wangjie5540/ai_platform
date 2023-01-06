@@ -4,41 +4,45 @@ import argparse
 import json
 
 from model_train import start_model_train
+from digitforce.aip.common.utils.argument_helper import df_argument_helper
 
 
 def run():
     # 参数解析
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--global_params", type=str, required=True, help="全局参数")
-    parser.add_argument("--name", type=str, required=True, help="名称")
-    parser.add_argument("--train_data", type=str, required=True, help="训练数据")
-    parser.add_argument("--test_data", type=str, required=True, help="测试数据")
-    parser.add_argument("--learning_rate", type=float, required=False, help="learning_rate")
-    parser.add_argument("--n_estimators", type=int, required=False, help="n_estimators")
-    parser.add_argument("--max_depth", type=int, required=False, help="max_depth")
-    parser.add_argument("--scale_pos_weight", type=float, required=False, help="scale_pos_weight")
-    parser.add_argument("--is_train", type=str, default="True", required=False, help="训练标识")
 
-    args = parser.parse_args()
-    is_train = args.is_train
 
-    if is_train == 'True':
-        global_params = json.loads(args.global_params)
-        component_params = global_params[args.name]
-        learning_rate = component_params["learning_rate"]
-        n_estimators = component_params["n_estimators"]
-        max_depth = component_params["max_depth"]
-        scale_pos_weight = component_params["scale_pos_weight"]
-    else:
-        learning_rate = args.learning_rate
-        n_estimators = args.n_estimators
-        max_depth = args.max_depth
-        scale_pos_weight = args.scale_pos_weight
+    # todo tmp
+    # os.environ["train_dataset_table_name"] = "algorithm.train_dataset_table_name"
+    # os.environ["test_dataset_table_name"] = "algorithm.test_dataset_table_name"
+    df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
+    df_argument_helper.add_argument("--name", type=str, required=False, help="名称")
+    df_argument_helper.add_argument("--train_data", type=str, required=False, help="训练数据")
+    df_argument_helper.add_argument("--test_data", type=str, required=False, help="测试数据")
+    df_argument_helper.add_argument("--learning_rate", type=str, required=False, help="learning_rate")
+    df_argument_helper.add_argument("--n_estimators", type=str, required=False, help="n_estimators")
+    df_argument_helper.add_argument("--max_depth", type=str, required=False, help="max_depth")
+    df_argument_helper.add_argument("--scale_pos_weight", type=str, required=False, help="scale_pos_weight")
+    df_argument_helper.add_argument("--is_automl", type=str, default=False, required=False, help="训练标识")
+    df_argument_helper.add_argument("--model_and_metrics_data_hdfs_path", type=str,
+                                    required=False, help="模型管理")
 
-    start_model_train(args.train_data, args.test_data,
+    is_automl = df_argument_helper.get_argument("is_automl")
+    is_automl = str(is_automl).lower() == "true"
+
+    learning_rate = float(df_argument_helper.get_argument("learning_rate"))
+    n_estimators = int(df_argument_helper.get_argument("n_estimators"))
+    max_depth = int(df_argument_helper.get_argument("max_depth"))
+    scale_pos_weight = float(df_argument_helper.get_argument("scale_pos_weight"))
+
+    train_data = df_argument_helper.get_argument("train_data")
+    test_data = df_argument_helper.get_argument("test_data")
+
+    model_and_metrics_data_hdfs_path = df_argument_helper.get_argument("model_and_metrics_data_hdfs_path")
+    start_model_train(train_data, test_data,
                       learning_rate=learning_rate, n_estimators=n_estimators, max_depth=max_depth,
                       scale_pos_weight=scale_pos_weight,
-                      is_train=is_train)
+                      is_automl=is_automl,
+                      model_and_metrics_data_hdfs_path=model_and_metrics_data_hdfs_path)
 
     outputs = {
 
