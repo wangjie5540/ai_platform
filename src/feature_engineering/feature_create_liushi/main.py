@@ -19,12 +19,13 @@ def run():
     active_before_days = component_params["active_before_days"]
     active_after_days = component_params["active_after_days"]
     sample_table_name = args.sample
+    feature_days = 30
     # todo
     print("===================================================")
     print("the dev model .... skip....")
     print(sample_table_name,
           active_before_days, active_after_days,
-          feature_days=30)
+          feature_days)
     train_table_name = "algorithm.aip_zq_liushi_custom_feature_train"
     test_table_name = "algorithm.aip_zq_liushi_custom_feature_test"
     component_helper.write_output("train_feature_table_name", train_table_name)
