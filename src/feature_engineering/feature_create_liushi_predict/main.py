@@ -35,12 +35,14 @@ def run():
     df_argument_helper.add_argument("--active_before_days", type=str, required=False, help="过去活跃天数")
     df_argument_helper.add_argument("--active_after_days", type=str, required=False, help="未来不活跃天数")
     print("===================================================================")
+    print("run on dev env")
     print(f"global_params {df_argument_helper.get_argument('global_params')}")
     print(f"name {df_argument_helper.get_argument('name')}")
     print(f"active_before_days {df_argument_helper.get_argument('active_before_days')}")
     print(f"active_after_days {df_argument_helper.get_argument('active_after_days')}")
     print(f"sample {df_argument_helper.get_argument('sample')}")
     print("===================================================================")
+    return
     active_before_days = int(df_argument_helper.get_argument("active_before_days"))
     active_after_days = int(df_argument_helper.get_argument("active_after_days"))
 
