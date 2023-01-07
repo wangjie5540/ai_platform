@@ -13,7 +13,9 @@ def run():
     parser.add_argument("--global_params", type=str, required=True, help="全局参数")
     parser.add_argument("--name", type=str, required=True, help="名称")
     args = parser.parse_args()
-    global_params = json.loads(args.global_params)
+    global_params = args.global_params
+    global_params = json.loads(global_params)
+    name = args.name
     component_params = global_params[args.name]
     active_before_days = component_params["active_before_days"]
     active_after_days = component_params["active_after_days"]
