@@ -10,16 +10,18 @@ from digitforce.aip.components.ml import LiushiModel
 from digitforce.aip.components.ml import LiushiPredict
 from digitforce.aip.components.sample import SampleSelectionLiushi
 
-pipeline_name = 'liushi'
+pipeline_name = '"loss_warning-v1-dev"'
 pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 
 @dsl.pipeline(name=pipeline_name)
-def ml_liushi(global_params: str, flag='TRAIN', RUN_ENV="dev"):
+def ml_loss_warning(global_params: str, flag='TRAIN', RUN_ENV="dev"):
     op_sample_selection = SampleSelectionLiushi(name='sample_select', global_params=global_params, tag=RUN_ENV)
+    op_sample_selection.container.set_image_pull_policy("Always")
 
     op_feature_create = FeatureCreateLiushi(name='feature_create', global_params=global_params, tag=RUN_ENV,
                                             sample=op_sample_selection.outputs['sample_table_name'])
+    op_feature_create.container.set_image_pull_policy("Always")
 
     with Condition(flag == 'TRAIN', name="is_train"):
         op_sample_comb = LiushiModel(name="model", global_params=global_params, tag=RUN_ENV,
@@ -29,6 +31,7 @@ def ml_liushi(global_params: str, flag='TRAIN', RUN_ENV="dev"):
                                      test_data=op_feature_create.outputs[
                                          op_feature_create.OUTPUT_TEST_FEATURE
                                      ])
+        op_sample_comb.container.set_image_pull_policy("Always")
     with Condition(flag == "PREDICT", name="is_predict"):
         predict_feature_op = FeatureCreateLiushiPredict(name="feature_create_predict", global_params=global_params,
                                                         tag=RUN_ENV)
@@ -36,12 +39,13 @@ def ml_liushi(global_params: str, flag='TRAIN', RUN_ENV="dev"):
                                           predict_table_name=predict_feature_op.outputs[
                                               predict_feature_op.OUTPUT_PREDICT_FEATURE
                                           ])
+        liushi_predict_op.container.set_image_pull_policy("Always")
 
 
-kubeflow_config = config_helper.get_module_config("kubeflow")
+
 client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
-    url=kubeflow_config['url'], username=kubeflow_config['username'],
-    password=kubeflow_config['password'])['session_cookie'])
+    url="http://172.22.20.9:30000/pipeline", username="admin@example.com",
+    password="password")['session_cookie'])
 import json
 
 global_params = json.dumps({
@@ -66,18 +70,18 @@ global_params = json.dumps({
 # client.create_run_from_pipeline_func(ml_liushi, arguments={"global_params": global_params},
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')
-kubeflow_helper.upload_pipeline(ml_liushi, "liushi-v1.1-dev")
-client.create_run_from_pipeline_func(ml_liushi, arguments={"global_params": global_params,
+kubeflow_helper.upload_pipeline(ml_loss_warning, pipeline_name)
+client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
                                                            "flag": "TRAIN"},
                                      experiment_name="recommend",
                                      namespace='kubeflow-user-example-com')
 
-client.create_run_from_pipeline_func(ml_liushi, arguments={"global_params": global_params,
+client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
                                                            "flag": "PREDICT"},
                                      experiment_name="recommend",
                                      namespace='kubeflow-user-example-com')
 
-client.create_run_from_pipeline_func(ml_liushi, arguments={"global_params": global_params,
+client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
                                                            "flag": "AUTOML"},
                                      experiment_name="recommend",
                                      namespace='kubeflow-user-example-com')
