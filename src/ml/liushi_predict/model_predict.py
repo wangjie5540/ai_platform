@@ -13,8 +13,9 @@ hdfs_client = hdfs_helper.HdfsClient()
 
 
 def start_model_predict(predict_table_name, model_hdfs_path):
+    dt = "20230103" #todo read latest partition
     df_predict = spark_client.get_session().sql(
-        "select * from {} where dt = {}".format(predict_table_name, today)).toPandas()
+        "select * from {} where dt = {}".format(predict_table_name, dt)).toPandas()
 
     for col in df_predict.columns:
         if df_predict[col].dtypes == "object":
