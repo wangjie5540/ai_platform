@@ -41,7 +41,11 @@ def run():
     print(f"active_before_days {df_argument_helper.get_argument('active_before_days')}")
     print(f"active_after_days {df_argument_helper.get_argument('active_after_days')}")
     print(f"sample {df_argument_helper.get_argument('sample')}")
+    predict_feature_table_name = "algorithm.aip_zq_liushi_custom_feature_predict"
+    print(f"predict_feature_table_name:{predict_feature_table_name}")
     print("===================================================================")
+    component_helper.write_output("predict_feature_table_name", predict_feature_table_name)
+
     return
     active_before_days = int(df_argument_helper.get_argument("active_before_days"))
     active_after_days = int(df_argument_helper.get_argument("active_after_days"))
