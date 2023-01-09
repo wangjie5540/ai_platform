@@ -27,7 +27,7 @@ def report_to_aip(model_and_metrics_data_hdfs_path,
     metrics_data = json.dumps({"model_name": model_name,
                                "type": model_type,
                                "model_hdfs_path": model_hdfs_path,
-                               "metrics": metrics_info})
+                               "metrics": metrics_info}, ensure_ascii=False)
     metrics_data_local_path = f"tmp-{uuid.uuid4()}"
     with open(metrics_data_local_path, "w") as fo:
         fo.write(metrics_data)
