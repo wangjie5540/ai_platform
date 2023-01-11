@@ -1,0 +1,88 @@
+dataSource:
+  - table_name: algorithm.sample_llxw
+    table_cname: 流量行为表
+    columns:
+      - name: cust_code
+        cname: 客户号
+        type: string
+        required: true
+      - name: dt
+        cname: 日期
+        type: date
+        required: true
+      - name: is_login
+        cname: 是否登录
+        type: string
+        required: true
+  - table_name: algorithm.sample_jcbq
+    table_cname: 基础标签表
+    columns:
+      - name: cust_code
+        cname: 客户号
+        type: string
+        required: true
+      - name: dt
+        cname: 日期
+        type: date
+        required: true
+      - name: age
+        cname: 年龄
+        type: string
+        required: true
+
+trainSample:
+  - label: 事件选择
+    itemList:
+      - type: select
+        attributeName: event_code_login
+        prefixText: 登录app事件
+        description: 介绍
+        required: true
+        optionType: 1
+        optionItems:
+          - label: 登录
+            value: login
+  - label: 沉默流失定义
+    itemList:
+      - type: input-number
+        attributeName: sample_select__active_before_days
+        prefixText: 过去
+        placeholder: 请输入天数
+        suffixText: 天至少有一天活跃
+        required: true
+      - type: input-number
+        attributeName: sample_select__active_after_days
+        prefixText: 未来
+        placeholder: 请输入天数
+        suffixText: 天连续不活跃
+        required: true
+modelHyperParameter:
+  - label: 模型参数
+    itemList:
+      - type: input-number
+        attributeName: model__max_depth
+        prefixText: 最大深度(max_depth)
+        description: 树模型的最大深度
+        placeholder: 5
+        required: true
+      - type: input-number
+        attributeName: model__scale_pos_weight
+        prefixText: 正负类别比例(scale_pos_weight)
+        description: 负类别数与正类别数之比，辅助处理类别不平衡的情况，帮助模型更快收敛
+        placeholder: 0.5
+        errorMessage: 请输入正确的批次大小
+        required: true
+      - type: input-number
+        attributeName: model__n_estimators
+        prefixText: 子模型个数(n_estimators)
+        description: 弱学习器个数
+        placeholder: 200
+        errorMessage: 请输入正确的学习率
+        required: true
+      - type: input-number
+        attributeName: model__learning_rate
+        prefixText: 学习率(learning_rate)
+        description: 每个迭代产生的模型的权重
+        placeholder: 0.05
+        errorMessage: 请输入正确的学习率
+        required: true
