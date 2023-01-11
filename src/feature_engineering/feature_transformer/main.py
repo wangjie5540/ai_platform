@@ -9,16 +9,18 @@ import digitforce.aip.common.utils.component_helper as component_helper
 def run():
     # 参数解析
     parser = argparse.ArgumentParser()
-    parser.add_argument('--global_params', type=str, required=True, help='全局参数')
+    parser.add_argument('--mode', type=str, required=True, help='模式')
     parser.add_argument('--name', type=str, required=True, help='名称')
-    parser.add_argument('--table_name', type=str, required=True, help='表名')
+    parser.add_argument('--global_params', type=str, required=True, help='全局参数')
+    parser.add_argument('--table_name', type=str, required=False, help='表名')
+    parser.add_argument('--pipeline_model', type=str, required=False, help='pipeline_model')
+    parser.add_argument('--transformers', type=str, required=False, help='transformers')
     args = parser.parse_args()
     global_params = json.loads(args.global_params)
     component_params = global_params[args.name]
-    create_params = component_params.get('create', None)
-    if create_params is not None:
-        pipeline_model_path, transformers_path = transformer.create(table_name=args.table_name,
-                                                                    transform_rules=create_params['transform_rules'])
+    if args.mode == 'create':
+        pipeline_model_path, transformers_path = transformer.create(
+            table_name=args.table_name, transform_rules=component_params['transform_rules'])
         params = {
             'type': 'hdfs_file',
             'path': pipeline_model_path
@@ -31,11 +33,15 @@ def run():
         }
         # component_helper.write_output(FeatureTransformerOp.OUTPUT_TRANSFORMERS, params)
         component_helper.write_output('transformers', params, need_json_dump=True)
-    transform_params = component_params.get('transform', None)
-    if transform_params is not None:
-        save_table_name = transformer.transform(table_name=transform_params['table_name'],
-                                                transformers=transform_params['transformers'],
-                                                name=transform_params['name'])
+    elif args.mode == 'do_transform':
+        pipeline_model_path = json.loads(args.pipeline_model)['path']
+        transformers_path = json.loads(args.transformers)['path']
+        save_table_name = transformer.do_transform(
+            table_name=component_params['table_name'],
+            transformers=component_params['transformers'],
+            pipeline_model_path=pipeline_model_path,
+            transformers_path=transformers_path
+        )
         params = {
             'type': 'hive_table',
             'table_name': save_table_name,
