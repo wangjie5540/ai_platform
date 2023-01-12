@@ -10,7 +10,7 @@ spec:
     - name: algorithm-dev
       image: digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev
       command: ["/usr/sbin/init"]
-      imagePullPolicy: IfNotPresent
+      imagePullPolicy: Always
       securityContext:
         privileged: true
 ---
