@@ -1,0 +1,13 @@
+{
+  "model-predict": {
+    "type": "pk",
+    "model_hdfs_path": "/user/ai/aip/tmp/model.pk"
+  },
+  "feature_create_predict": {
+    "active_before_days": 3,
+    "active_after_days": 5,
+    "start_date": "20221211",
+    "end_date": "20221220",
+    "sample": "algorithm.aip_zq_liushi_custom_predict"
+  }
+}
