@@ -45,14 +45,12 @@ class SparkClient(object):
     def get_session(self):
         return self._session
 
-    def get_starrocks_table_df(self, table_name):
-        # TODO 数据量大后会出现OOM的情况
-        return self._session.read.format("jdbc") \
-            .option('url', starrocks_config['jdbc_url']) \
-            .option('dbtable', table_name) \
-            .option('user', starrocks_config['user']) \
-            .option('password', starrocks_config['password']) \
-            .load()
+    def get_starrocks_table_df_new(self, table_name):
+        return self._session.read.format('starrocks')\
+            .option('starrocks.table.identifier', f'{table_name}')\
+            .option('starrocks.fenodes', f'{starrocks_config["fenodes"]}')\
+            .option('user', f"{starrocks_config['user']}")\
+            .option('password', f"{starrocks_config['password']}").load()
 
 
 # 定义递归函数，用于打包目录及其子目录中的文件和文件夹
