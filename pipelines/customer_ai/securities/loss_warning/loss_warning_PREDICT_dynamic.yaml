@@ -1,0 +1,20 @@
+- label: 预测结果筛选
+  itemList:
+    - type: input
+      attributeName: xxxxxxxxx
+      prefixText: Top
+      suffixText: "% 的客户"
+      pattern: "^1\\d{0,10}$"
+      placeholder: 请输入百分比
+      errorMessage: 请输入正确的百分比
+      required: true
+      multiple: false
+    - type: input
+      attributeName: xxxxxxxxx
+      prefixText: Top
+      suffixText: "个客户"
+      pattern: "^1\\d{0,10}$"
+      placeholder: 请输入客户数
+      errorMessage: 请输入正确的客户数
+      required: true
+      multiple: false

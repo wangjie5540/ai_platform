@@ -49,7 +49,7 @@ def create(table_name, transform_rules):
     return pipeline_model_save_path, transformers_save_path
 
 
-def transform(table_name, transformers, pipeline_model_path, transformers_path):
+def do_transform(table_name, transformers, pipeline_model_path, transformers_path):
     """
     使用已有的编码器进行特征编码
     :param table_name: 表名
