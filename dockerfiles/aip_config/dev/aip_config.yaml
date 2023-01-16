@@ -22,4 +22,9 @@ kubeflow:
   url: http://172.22.20.9:30000/pipeline
   username: admin@example.com
   password: password
+cos:
+  bucket: algorithm-1308011215
+  secret_id: AKIDeNpeP0PaU87uSo7HFxFCwaBYpwue9VbS
+  secret_key: kEWEjyxiDaw7C4jDTfh0FKF1fBUedQ3U
+  base_url: https://algorithm-1308011215.cos.ap-beijing.myqcloud.com
 
