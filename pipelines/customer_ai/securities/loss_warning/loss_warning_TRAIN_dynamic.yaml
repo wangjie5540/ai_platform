@@ -1,4 +1,35 @@
 dataSource:
+  - table_name: algorithm.sample_jcbq
+    table_cname: 基础标签表
+    columns:
+      - name: cust_code
+        cname: 客户号
+        type: string
+        required: true
+      - name: dt
+        cname: 日期
+        type: date
+        required: true
+      - name: age
+        cname: 年龄
+        type: int
+        required: false
+      - name: gender
+        cname: 性别
+        type: string
+        required: false
+      - name: city_name
+        cname: 城市
+        type: string
+        required: false
+      - name: province
+        cname: 省份
+        type: string
+        required: false
+      - name: educational_degree
+        cname: 教育程度
+        type: string
+        required: false
   - table_name: algorithm.sample_llxw
     table_cname: 流量行为表
     columns:
@@ -14,8 +45,8 @@ dataSource:
         cname: 是否登录
         type: string
         required: true
-  - table_name: algorithm.sample_jcbq
-    table_cname: 基础标签表
+  - table_name: algorithm.sample_zjls
+    table_cname: 资金流水表
     columns:
       - name: cust_code
         cname: 客户号
@@ -25,30 +56,111 @@ dataSource:
         cname: 日期
         type: date
         required: true
-      - name: age
-        cname: 年龄
+      - name: zr_money
+        cname: 资金转入金额
+        type: float
+        required: true
+      - name: zc_money
+        cname: 资金转出金额
+        type: float
+        required: true
+      - name: zr_cnt
+        cname: 资金转入笔数
+        type: int
+        required: true
+      - name: zc_cnt
+        cname: 资金转出笔数
+        type: int
+        required: true
+  - table_name: algorithm.sample_sgsh
+    table_cname: 申购赎回表
+    columns:
+      - name: cust_code
+        cname: 客户号
         type: string
         required: true
-
+      - name: dt
+        cname: 日期
+        type: date
+        required: true
+      - name: jy_rmb
+        cname: 交易金额
+        type: float
+        required: true
+      - name: jy_num
+        cname: 交易笔数
+        type: int
+        required: true
+      - name: jygp_num
+        cname: 股票交易笔数
+        type: int
+        required: false
+      - name: jygp_rmb
+        cname: 股票交易金额
+        type: float
+        required: false
+      - name: jyjj_num
+        cname: 基金交易笔数
+        type: int
+        required: false
+      - name: jyjj_rmb
+        cname: 基金交易金额
+        type: float
+        required: false
+  - table_name: algorithm.sample_zcsj
+    table_cname: 资产事件表
+    columns:
+      - name: cust_code
+        cname: 客户号
+        type: string
+        required: true
+      - name: dt
+        cname: 日期
+        type: date
+        required: true
+      - name: ast_total
+        cname: 总资产
+        type: float
+        required: true
+      - name: ast_fz
+        cname: 总负债
+        type: float
+        required: true
+      - name: ast_zj
+        cname: 资金余额
+        type: float
+        required: true
+      - name: ast_cp
+        cname: 产品资产
+        type: float
+        required: true
+      - name: ast_jj
+        cname: 基金资产
+        type: float
+        required: false
+      - name: ast_gp
+        cname: 股票资产
+        type: float
+        required: false
 trainSample:
-  - label: 事件选择
+  - label: 活跃行为定义
     itemList:
       - type: select
         attributeName: event_code_login
-        prefixText: 登录app事件
+        prefixText: 事件
         description: 介绍
         required: true
         optionType: 1
         optionItems:
-          - label: 登录
+          - label: 登录app
             value: login
-  - label: 沉默流失定义
+  - label: 流失定义
     itemList:
       - type: input-number
         attributeName: sample_select__active_before_days
         prefixText: 过去
         placeholder: 请输入天数
-        suffixText: 天至少有一天活跃
+        suffixText: 天有过活跃行为
         required: true
       - type: input-number
         attributeName: sample_select__active_after_days
