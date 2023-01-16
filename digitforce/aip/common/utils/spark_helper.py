@@ -45,7 +45,7 @@ class SparkClient(object):
     def get_session(self):
         return self._session
 
-    def get_starrocks_table_df_new(self, table_name):
+    def get_starrocks_table_df(self, table_name):
         return self._session.read.format('starrocks')\
             .option('starrocks.table.identifier', f'{table_name}')\
             .option('starrocks.fenodes', f'{starrocks_config["fenodes"]}')\
