@@ -3,10 +3,10 @@
 
 import logging
 
-from pyspark.sql.functions import rand
 
 import digitforce.aip.common.utils.hdfs_helper as hdfs_helper
 from digitforce.aip.common.utils.spark_helper import spark_client
+from pyspark.sql.functions import rand
 
 hdfs_client = hdfs_helper.HdfsClient()
 
@@ -31,7 +31,8 @@ def feature_and_label_to_dataset(label_table_name, model_user_feature_table_name
 
 
 def main():
-    feature_and_label_to_dataset("algorithm.tmp_aip_model_sample", "algorithm.tmp_model_user_feature_table_name",
+    feature_and_label_to_dataset("algorithm.tmp_aip_model_sample",
+                                 "algorithm.tmp_model_user_feature_table_name",
                                  "algorithm.tmp_model_item_feature_table_name",
                                  "algorithm.tmp_train_dataset_table_name",
                                  "algorithm.tmp_test_dataset_table_name")

@@ -1,9 +1,520 @@
-#!/usr/bin/env python3
+import glob
+import json
+import logging
+import os
+import os.path
+import pickle
+import uuid
+
+# coding: utf-8
+import pandas as pd
+import pyhdfs
+from pyhive import hive
+
+
+class HiveClient:
+    def __init__(self, host=None, port=None, username='root'):
+        self.conn = hive.Connection(host=host, port=port, username=username)
+
+    def __del__(self):
+        self.conn.close()
+
+    def get_table_size(self, table_name):
+        cur = self.conn.cursor()
+        sql = f'desc formatted {table_name}'
+        cur.execute(sql)
+        all_data = cur.fetchall()
+        cur.close()
+        for item in all_data:
+            if item[1] is not None and item[1].startswith('totalSize'):
+                return int(item[2].strip())
+
+    def query_to_df(self, sql):
+        df = pd.read_sql(sql, self.conn)
+        return df
+
+    def query_to_table(self, sql, table_name, db=None, delete_tb=False):
+        cursor = self.conn.cursor()
+        if delete_tb:
+            self.delete_table(table_name)
+        table_name = f"{db}.{table_name}" if db else table_name
+        _sql = f"CREATE TABLE IF NOT EXISTS {table_name} AS " \
+               f"{sql}"
+        cursor.execute(_sql)
+
+    def delete_table(self, table_name):
+        cursor = self.conn.cursor()
+        _sql = f"DROP TABLE IF EXISTS {table_name}"
+        cursor.execute(_sql)
+
+    def close(self):
+        if self.conn:
+            self.conn.close()
+        self.conn = None
+
+
+hive_client = HiveClient(host="172.22.20.57", port=7001)
+
+
+class HdfsClient:
+    def __init__(self, hosts=None, user_name="root"):
+        self.hdfs_client = pyhdfs.HdfsClient(hosts=hosts, user_name=user_name)
+
+    def get_client(self):
+        return self.hdfs_client
+
+    def list_dir(self, path):
+        return self.hdfs_client.listdir(path)
+
+    def list_status(self, path):
+        return self.hdfs_client.list_status(path)
+
+    def delete(self, path, recursive=True):
+        return self.hdfs_client.delete(path, recursive=recursive)
+
+    def copy_to_local(self, src: str, localdest: str):
+        return self.hdfs_client.copy_to_local(src, localdest)
+
+    def copy_from_local(self, localsrc: str, dest: str):
+        return self.hdfs_client.copy_from_local(localsrc, dest)
+
+    def mkdirs(self, path):
+        return self.hdfs_client.mkdirs(path)
+
+    def exists(self, path):
+        return self.hdfs_client.exists(path)
+
+    def mkdir_dirs(self, path):
+        assert path.startswith("/")
+        vals = path.split('/')
+        _path = ""
+        for _ in vals:
+            _path += _ + "/"
+            if not self.get_client().exists(_path):
+                self.mkdirs(_path)
+
+    def copy_from_local_dir(self, local_dir, dest):
+        self.mkdir_dirs(dest)
+        files = glob.glob(local_dir)
+        for _ in files:
+            _dest = os.path.join(dest, os.path.basename(_))
+            self.copy_from_local(_, _dest)
+
+    def copy_dir_to_local(self, local_dir, dest_dir):
+        dest_files = self.list_dir(dest_dir)
+        if not os.path.exists(local_dir):
+            os.makedirs(local_dir, exist_ok=True)
+        for _ in dest_files:
+            dest = os.path.join(dest_dir, _)
+            local_path = os.path.join(local_dir, _)
+            self.copy_to_local(dest, local_path)
+
+    def write_to_hdfs(self, content, dest_path):
+        self.delete(dest_path)
+        tmp_file = f"/tmp/{uuid.uuid4()}"
+        with open(tmp_file, "wb") as fo:
+            fo.write(content)
+        self.copy_from_local(tmp_file, dest_path)
+        os.remove(tmp_file)
+
+    def read_pickle_from_hdfs(self, src):
+        tmp_file = f"/tmp/{uuid.uuid4()}"
+        self.copy_to_local(src, tmp_file)
+        with open(tmp_file, "rb") as fi:
+            obj = pickle.load(fi)
+        os.remove(tmp_file)
+        return obj
+
+
+hdfs_client = HdfsClient("172.22.20.137:4008,172.22.20.110:4008")
+
+
+class FeatureEncoder(object):
+    def __init__(self, name, version, default=None, source_table_name=None):
+        self.source_table_name = source_table_name
+        self.name = name
+        self.version = version
+        self.default = default
+
+    def get_model_feature_value(self, value):
+        return self.default
+
+
+class CategoryFeatureEncoder(FeatureEncoder):
+    def __init__(self, name, version, default=None, source_table_name=None):
+        super(CategoryFeatureEncoder, self).__init__(name, version, default, source_table_name)
+        self.vocabulary = {}
+
+    def get_model_feature_value(self, value):
+        if not isinstance(value, str):
+            logging.warning(f"the category feature is wanted as string but is {type(value)} {value}")
+            value = str(value)
+        return self.vocabulary.get(value, self.default)
+
+
+class NumberFeatureEncoder(FeatureEncoder):
+    def __init__(self, name, version, default=None, source_table_name=None):
+        super(NumberFeatureEncoder, self).__init__(name, version, default, source_table_name)
+        self.mean = None
+        self.std = None
+
+    def get_model_feature_value(self, value):
+        if value in [None, "null", "", "None", "NULL"]:
+            return float(self.default)
+        try:
+            result = (value - self.mean) / self.std
+            return result
+        except Exception as e:
+            logging.error(e)
+            return self.default
+
+
+class FeatureEncoderCalculator:
+
+    @classmethod
+    def calculate(cls, encoder):
+        pass
+
+    @classmethod
+    def get_save_path(cls, encoder):
+        return "/user/ai/aip/zq/model_feature/v1" + f"/{encoder.source_table_name}/{encoder.name}/{encoder.version}"
+
+    @classmethod
+    def save_to_hdfs(cls, encoder: FeatureEncoder):
+        hdfs_path = cls.get_save_path(encoder)
+        hdfs_client.mkdir_dirs(os.path.dirname(hdfs_path))
+        result = pickle.dumps(encoder)
+        hdfs_client.write_to_hdfs(result, hdfs_path)
+
+    @classmethod
+    def read_from_hdfs(cls, encoder):
+        hdfs_path = cls.get_save_path(encoder)
+        pickle_encoder = hdfs_client.read_pickle_from_hdfs(hdfs_path)
+        return pickle_encoder
+
+    @classmethod
+    def load_encoder(cls, encoder: FeatureEncoder, use_hdfs=True):
+        if hdfs_client.exists(cls.get_save_path(encoder)) and use_hdfs:
+            encoder = cls.read_from_hdfs(encoder)
+            return encoder
+        cls.calculate(encoder)
+        cls.save_to_hdfs(encoder)
+
+
+class CategoryFeatureEncoderCalculator(FeatureEncoderCalculator):
+    @classmethod
+    def calculate(cls, encoder: CategoryFeatureEncoder):
+        query_sql = f'''
+                            SELECT 
+                                DISTINCT {encoder.name}  AS {encoder.name}
+                            FROM {encoder.source_table_name}
+                    '''
+        df = hive_client.query_to_df(query_sql)
+        encoder.vocabulary = dict([(_, i + 1) for i, _ in enumerate(df[encoder.name].astype(str))])
+
+    @classmethod
+    def read_from_hdfs(cls, encoder: CategoryFeatureEncoder):
+        _encoder = super().read_from_hdfs(encoder)
+        encoder.vocabulary = _encoder.vocabulary
+        return encoder
+
+
+class NumberFeatureEncoderCalculator(FeatureEncoderCalculator):
+    @classmethod
+    def calculate(cls, encoder: NumberFeatureEncoder):
+        query_sql = f'''
+                            SELECT 
+                                SUM({encoder.name}) / COUNT(*)  AS mean_res,
+                                STDDEV({encoder.name}) AS stddev_res 
+                            FROM {encoder.source_table_name}
+                    '''
+        df = hive_client.query_to_df(query_sql)
+        encoder.mean = df["mean_res"].tolist()[0]
+        encoder.std = df["stddev_res"].tolist()[0]
+        return encoder
+
+    @classmethod
+    def read_from_hdfs(cls, encoder: NumberFeatureEncoder):
+        _encoder = super().read_from_hdfs(encoder)
+        encoder.std = _encoder.std
+        encoder.mean = _encoder.mean
+        return encoder
+
+
+DATE_FORMAT = "%Y-%m-%d"
+PATH_DATE_FORMAT = "%Y/%m/%d"
+PATH_DATE_HOUR_FORMAT = "%Y/%m/%d/%H"
+
+import datetime
+
+
+def get_today_str(data_format=DATE_FORMAT):
+    return datetime.datetime.today().strftime(data_format)
+
+
+USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_raw_user_feature_table_name"
+
+ITEM_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_raw_item_feature_table_name"
+
+
+###################################################################################
+#   ['gender', 'EDU', 'RSK_ENDR_CPY', 'NATN', 'OCCU', 'IS_VAIID_INVST']
+class UserIdEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("user_id", version, 0, source_table_name)
+
+
+class UserGenderEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("gender", version, 0, source_table_name)
+
+
+class UserEducationEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("edu", version, 0, source_table_name)
+
+
+class UserRSKENDRCPYEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("rsk_endr_cpy", version, 0, source_table_name)
+
+
+class UserOCCUEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("occu", version, 0, source_table_name)
+
+
+class UserNATNEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("natn", version, 0, source_table_name)
+
+
+class UserISVAIIDINVSTEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("is_vaiid_invst", version, 0, source_table_name)
+
+
+# NumberFeatureEncoder
+
+class UserBUY_COUNTS_30D(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("u_buy_counts_30d", version, 0, source_table_name)
+
+
+class UserAMOUNT_SUM_30D(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("u_amount_sum_30d", version, 0, source_table_name)
+
+
+class UserAMOUNT_AVG_30D(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("u_amount_avg_30d", version, 0, source_table_name)
+
+
+class UserAMOUNT_MIN_30D(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("u_amount_min_30d", version, 0, source_table_name)
+
+
+class UserAMOUNT_MAX_30D(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("u_amount_max_30d", version, 0, source_table_name)
+
+
+class UserBUY_DAYS_30D(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("u_buy_days_30d", version, 0, source_table_name)
+
+
+class UserBUY_AVG_DAYS_30D(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("u_buy_avg_days_30d", version, 0, source_table_name)
+
+
+class UserLAST_BUY_DAYS_30D(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("u_last_buy_days_30d", version, 0, source_table_name)
+
+
+####################################################################################
+#  ['ts_code', 'fund_type', 'management', 'custodian', 'invest_type'] ##
+class ItemIdEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("item_id", version, 0, source_table_name)
+
+
+class FundTypeEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("fund_type", version, 0, source_table_name)
+
+
+class FundManagementEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("management", version, 0, source_table_name)
+
+
+class FundCustodianEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("custodian", version, 0, source_table_name)
+
+
+class FundInvestTypeEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("invest_type", version, 0, source_table_name)
+
+
+class ItemBUY_COUNTS_30D(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("i_buy_counts_30d", version, 0, source_table_name)
+
+
+class ItemAMOUNT_SUM_30D(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("i_amount_sum_30d", version, 0, source_table_name)
+
+
+class ItemAMOUNT_AVG_30D(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("i_amount_avg_30d", version, 0, source_table_name)
+
+
+class ItemAMOUNT_MIN_30D(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("i_amount_min_30d", version, 0, source_table_name)
+
+
+class ItemAMOUNT_MAX_30D(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("i_amount_max_30d", version, 0, source_table_name)
+
+
+######################################################################################################################
+
+class EncoderFactory:
+    def __init__(self, source_table_name, version=get_today_str(), encoder_cls=None):
+        if encoder_cls is None:
+            encoder_cls = []
+        self.encoder_cls = encoder_cls
+        self._factory = None
+        self.source_table_name = source_table_name
+        self.version = version
+
+    def get_encoder(self, name):
+        return self._factory.get(name, None)
+
+    def get_encoder_names(self):
+        return self._factory.keys()
+
+
+def full_factory(encoder_factory):
+    encoder_factory._factory = {}
+    for _ in encoder_factory.encoder_cls:
+        encoder = _(encoder_factory.source_table_name, encoder_factory.version)
+        if isinstance(encoder, NumberFeatureEncoder):
+            if not (encoder.std and encoder.mean):
+                NumberFeatureEncoderCalculator.load_encoder(encoder)
+        elif isinstance(encoder, CategoryFeatureEncoder):
+            if not encoder.vocabulary:
+                CategoryFeatureEncoderCalculator.load_encoder(encoder)
+        else:
+            raise TypeError(f"the encoder cls is wanted {NumberFeatureEncoder} or {CategoryFeatureEncoder}"
+                            f" but {type(encoder)} instance {encoder}")
+        encoder_factory._factory[encoder.name] = encoder
+
+
+class UserEncoderFactory(EncoderFactory):
+    def __init__(self, source_table_name, version=get_today_str()):
+        self.encoder_cls = [
+            ############ user category feature
+            UserIdEncoder,
+            UserGenderEncoder,
+            UserEducationEncoder,
+            UserRSKENDRCPYEncoder,
+            UserOCCUEncoder,
+            UserNATNEncoder,
+            UserISVAIIDINVSTEncoder,
+            ############ user number feature
+            UserBUY_COUNTS_30D,
+            UserAMOUNT_SUM_30D,
+            UserAMOUNT_AVG_30D,
+            UserAMOUNT_MIN_30D,
+            UserAMOUNT_MAX_30D,
+            UserBUY_DAYS_30D,
+            UserBUY_AVG_DAYS_30D,
+            UserLAST_BUY_DAYS_30D, ]
+        super().__init__(source_table_name, version, self.encoder_cls)
+
+
+class ItemEncoderFactory(EncoderFactory):
+    def __init__(self, source_table_name, version=get_today_str()):
+        self.encoder_cls = [
+            ################ item category feature
+            ItemIdEncoder,
+            FundTypeEncoder,
+            FundManagementEncoder,
+            FundCustodianEncoder,
+            FundInvestTypeEncoder,
+            ############### item number feature
+            ItemBUY_COUNTS_30D,
+            ItemAMOUNT_SUM_30D,
+            ItemAMOUNT_AVG_30D,
+            ItemAMOUNT_MIN_30D,
+            ItemAMOUNT_MAX_30D,
+        ]
+        super(ItemEncoderFactory, self).__init__(source_table_name, version, self.encoder_cls)
+
+
+user_feature_factory = UserEncoderFactory(USER_RAW_FEATURE_TABLE_NAME)
+full_factory(user_feature_factory)
+item_feature_factory = ItemEncoderFactory(ITEM_RAW_FEATURE_TABLE_NAME)
+full_factory(item_feature_factory)
+
+from digitforce.aip.common.utils.spark_helper import spark_client
+
+import copy
+
+
+def model_sample_map_fn(raw_sample):
+    if isinstance(raw_sample, str):
+        raw_sample = json.loads(raw_sample)
+
+    model_sample = copy.deepcopy(raw_sample)
+    for feature_name in ["user_id", ]:
+        if feature_name in model_sample:
+            encoder = user_feature_factory.get_encoder(feature_name)
+            raw_feature = raw_sample[feature_name]
+            model_sample[feature_name] = encoder.get_model_feature_value(raw_feature)
+    for feature_name in ["item_id", ]:
+        if feature_name in model_sample:
+            encoder = item_feature_factory.get_encoder(feature_name)
+            raw_feature = raw_sample[feature_name]
+            model_sample[feature_name] = encoder.get_model_feature_value(raw_feature)
+    return model_sample
+
+
+def raw_sample_to_sample(raw_sample_table_name, sample_table_name):
+    raw_sample_dataframe = spark_client.get_session().sql(f"select * from {raw_sample_table_name}")
+    model_sample_rdd = raw_sample_dataframe.toJSON().map(model_sample_map_fn)
+    model_sample_dataframe = spark_client.get_session().createDataFrame(model_sample_rdd)
+    model_sample_dataframe.write.format("hive").mode("overwrite").saveAsTable(sample_table_name)
+    return sample_table_name
+
+
+# def main():
+#     raw_sample_to_sample("algorithm.tmp_aip_sample", "algorithm.tmp_aip_model_sample")
+#
+#
+# if __name__ == '__main__':
+#     main()
+
+# !/usr/bin/env python3
 # encoding: utf-8
 
 import digitforce.aip.common.utils.component_helper as component_helper
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
-from to_sample import raw_sample_to_sample
+
+
+# from to_sample import raw_sample_to_sample
 
 
 def run():
@@ -20,10 +531,15 @@ def run():
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="name")
     df_argument_helper.add_argument("--raw_sample_table_name", type=str, required=False, help="样本数据")
-    df_argument_helper.add_argument("--model_sample_table_name", type=str, required=False, help="样本数据")
+    df_argument_helper.add_argument("--model_sample_table_name", type=str, required=False,
+                                    default="algorithm.tmp_aip_model_sample", help="样本数据")
 
     raw_sample_table_name = df_argument_helper.get_argument("raw_sample_table_name")
     model_sample_table_name = df_argument_helper.get_argument("model_sample_table_name")
+    # todo for test
+    if not model_sample_table_name:
+        model_sample_table_name = "algorithm.tmp_aip_model_sample"
+    print(f"raw_sample_table_name:{raw_sample_table_name}, model_sample_table_name:{model_sample_table_name}")
     model_sample_table_name = raw_sample_to_sample(raw_sample_table_name, model_sample_table_name)
 
     component_helper.write_output("model_sample_table_name", model_sample_table_name)

@@ -231,6 +231,16 @@ def show_all_encoder():
                 print(f"{_} std:{e.std} mean:{e.mean}")
 
 
+def init_feature_encoder_factory(raw_user_feature_table=USER_RAW_FEATURE_TABLE_NAME,
+                                 raw_item_feature_table=ITEM_RAW_FEATURE_TABLE_NAME):
+    global user_feature_factory, item_feature_factory
+    user_feature_factory = UserEncoderFactory(raw_user_feature_table)
+    full_factory(user_feature_factory)
+    item_feature_factory = ItemEncoderFactory(raw_item_feature_table)
+    full_factory(item_feature_factory)
+    return user_feature_factory, item_feature_factory
+
+
 def main():
     show_all_encoder()
 
