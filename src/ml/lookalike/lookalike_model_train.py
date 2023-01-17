@@ -105,7 +105,7 @@ def train(train_data_table_name, test_data_table_name,
         if user_vec_table_name is None:
             user_vec_table_name = "algorithm.lookalike_user_vec_table"
         user_vec_dataframe.write.format("hive").mode("overwrite").saveAsTable(user_vec_table_name)
-        model_hdfs_path = "/user/aip/aip/lookalike" + "model.pth"
+        model_hdfs_path = "/user/aip/aip/lookalike/" + "model.pth"
 
         if hdfs_client.exists(model_hdfs_path):
             hdfs_client.delete(model_hdfs_path)
