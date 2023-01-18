@@ -31,7 +31,7 @@ def train(train_data_table_name, test_data_table_name,
             f"train model on TRAIN the model_user_feature_table_name must be set... {model_user_feature_table_name}")
     print(f"begin key args "
           f"train_data_table_name:{train_data_table_name}, "
-          f"test_data_table_name:{test_data_table_name,}, "
+          f"test_data_table_name:{test_data_table_name}, "
           f"is_automl:{is_automl}, "
           f"model_user_feature_table_name:{model_user_feature_table_name}")
     print("read train dataset")

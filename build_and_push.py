@@ -78,6 +78,7 @@ def main():
     for _dir in [
         "src/",
         # "src/preprocessing",
+        "src/feature_engineering",
         # "src/ml/liushi_predict",
 
     ]:

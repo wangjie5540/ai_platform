@@ -40,10 +40,13 @@ def run():
 
     user_vec_table_name = df_argument_helper.get_argument("user_vec_table_name")
     model_user_feature_table_name = df_argument_helper.get_argument("model_user_feature_table_name")
+    print("==================================")
     print(f"train_data_table_name:{train_dataset_table_name}")
     print(f"test_data_table_name:{test_dataset_table_name}")
     print(f"model_user_feature_table_name:{model_user_feature_table_name}")
     print(f"user_vec_table_name:{user_vec_table_name}")
+    print(f"is_automl:{is_automl}")
+    print("==================================")
     train(train_data_table_name=train_dataset_table_name,
           test_data_table_name=test_dataset_table_name,
           batch_size=batch_size, lr=lr,
