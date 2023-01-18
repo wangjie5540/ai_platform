@@ -2,6 +2,7 @@
 # encoding: utf-8
 from digitforce.aip.common.utils import spark_helper
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
+from digitforce.aip.common.utils import cos_helper
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
@@ -9,7 +10,7 @@ import pandas as pd
 import os
 
 
-def crowd_expansion(user_vec_table_name, seeds_crowd_table_name, predict_crowd_table_name, result_hdfs_path):
+def crowd_expansion(user_vec_table_name, seeds_crowd_table_name, predict_crowd_table_name, output_file_name):
     spark_client = spark_helper.SparkClient()
     seed_crowd = spark_client.get_session().sql(
         f"""select t1.user_id, t2.user_vec from {seeds_crowd_table_name} t1 left join {user_vec_table_name} t2 on t1.user_id = t2.user_id""").toPandas()
@@ -27,13 +28,14 @@ def crowd_expansion(user_vec_table_name, seeds_crowd_table_name, predict_crowd_t
     seed_crowd = seed_crowd['user_vec'].str.split(',', expand=True)
     filter_crowd = filter_crowd['user_vec'].str.split(',', expand=True)
     result = get_expansion_result(seed_crowd, filter_crowd)
-    result.to_csv("result.csv",index=False)
-    result_hdfs_path = os.path.join(result_hdfs_path, "result.csv")
-    if hdfs_client.exists(result_hdfs_path):
-        hdfs_client.delete(result_hdfs_path)
-    hdfs_client.copy_from_local("result.csv", result_hdfs_path)
+    result.to_csv("result.csv",index=False,header=False)
+    output_file_path = cos_helper.upload_file("result.csv", output_file_name)
+    # output_file_path = os.path.join(output_file_path, "result.csv")
+    # if hdfs_client.exists(output_file_path):
+    #     hdfs_client.delete(output_file_path)
+    # hdfs_client.copy_from_local("result.csv", output_file_path)
     # result_dataframe = spark_client.get_session().createDataFrame(result)
-    # result_dataframe.write.format("hive").mode("overwrite").saveAsTable(result_hdfs_path)
+    # result_dataframe.write.format("hive").mode("overwrite").saveAsTable(output_file_path)
 
 
 def get_expansion_result(seed_crowd_vec, filter_crowd_vec):
