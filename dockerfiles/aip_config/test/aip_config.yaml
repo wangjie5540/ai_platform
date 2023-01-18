@@ -10,6 +10,7 @@ hive:
     port: 10000
 hdfs:
   hosts: 172.21.32.108:9870
+  base_url: hdfs://HDFS8001206
 spark:
   master_uri: k8s://https://172.22.20.16
   kubernetes_namespace: kubeflow-user-example-com
@@ -17,4 +18,13 @@ spark:
   hive_uris: thrift://172.21.32.108:9083
   java_home: /opt/jdk1.8.0_181-cloudera
   spark_home: /opt/spark-2.4.8-bin-hadoop2.7
+kubeflow:
+  url: http://172.22.20.9:30000/pipeline
+  username: admin@example.com
+  password: password
+cos:
+  bucket: algorithm-1308011215
+  secret_id: AKIDeNpeP0PaU87uSo7HFxFCwaBYpwue9VbS
+  secret_key: kEWEjyxiDaw7C4jDTfh0FKF1fBUedQ3U
+  base_url: https://algorithm-1308011215.cos.ap-beijing.myqcloud.com
 
