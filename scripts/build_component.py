@@ -37,8 +37,8 @@ COPY aip_config/{environment}/hdfs-site.xml $SPARK_HOME/conf
 '''.format(environment=environment)
     with open('Dockerfile', 'w') as f:
         f.write(algorithm_base_dockerfile)
-    base_image = f"algorithm-base:{environment}"
-    subprocess.check_call(f"docker build -t {base_image} dockerfiles", shell=True)
+    base_image = "algorithm-base:{environment}".format(environment=environment)
+    subprocess.check_call("docker build -t {base_image} dockerfiles".format(base_image=base_image), shell=True)
     return base_image
 
 
@@ -53,11 +53,12 @@ COPY . $COMPONENT_DIR
     with open('Dockerfile', 'w') as f:
         f.write(component_dockerfile)
     component_path = os.path.join('src', *component_name.split('-'))
-    component_image = f"digit-force-docker.pkg.coding.net/ai-platform/ai-components/{component_name}:{environment}"
-    build_cmd = f'''
+    component_image = "digit-force-docker.pkg.coding.net/ai-platform/ai-components/{component_name}:{environment}".format(
+        component_name=component_name, environment=environment)
+    build_cmd = '''
 docker build -t {component_image} {component_path}
 docker push {component_image}
-'''
+'''.format(component_image=component_image, component_path=component_path)
     subprocess.check_call(build_cmd, shell=True)
 
 
