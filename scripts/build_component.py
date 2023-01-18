@@ -57,9 +57,10 @@ COPY . $COMPONENT_DIR
     component_image = "digit-force-docker.pkg.coding.net/ai-platform/ai-components/{component_name}:{environment}".format(
         component_name=component_name, environment=environment)
     build_cmd = '''
-docker build -t {component_image} {component_path}
+docker build -t {component_image} -f {cur_dir}/Dockerfile {component_path}
+docker login -u ai-components-1672810563540 -p 1d228954e03793ce2e79bf655335abc4e961ec75 digit-force-docker.pkg.coding.net
 docker push {component_image}
-'''.format(component_image=component_image, component_path=component_path)
+'''.format(component_image=component_image, cur_dir=os.curdir, component_path=component_path)
     subprocess.check_call(build_cmd, shell=True)
 
 
