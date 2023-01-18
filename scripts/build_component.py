@@ -6,12 +6,10 @@ import argparse
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, required=True, help='环境')
-    parser.add_argument('--name', type=str, required=True, help='组件名称')
-    args = parser.parse_args()
-    base_image = build_algorithm_base(args.env)
-    build_component(base_image, args.name, args.env)
+    component_name = os.environ['COMPONENT_NAME']
+    environment = os.environ['ENVIRONMENT']
+    base_image = build_algorithm_base(environment)
+    build_component(base_image, component_name, environment)
     # component_name = os.environ['COMPONENT_NAME']
     # component_path = os.path.join('src', *component_name.split('-'))
     # os.chdir(component_path)
