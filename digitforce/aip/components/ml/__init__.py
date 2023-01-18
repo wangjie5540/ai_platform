@@ -34,6 +34,24 @@ class LookalikeModel(dsl.ContainerOp):
         )
 
 
+class LookalikeModelPredict(dsl.ContainerOp):
+    def __init__(self, name, global_params,
+                 seeds_crowd_table_name, predict_crowd_table_name,  # todo 从数据源组件接收
+                 tag=ENV):
+        super(LookalikeModelPredict, self).__init__(
+            name=name,
+            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
+                  f'ml-lookalike_predict:{tag}',
+            command=['python', 'main.py'],
+            arguments=['--name', name, '--global_params', global_params,
+                       '--seeds_crowd_table_name', seeds_crowd_table_name,
+                       '--predict_crowd_table_name', predict_crowd_table_name,
+                       ],
+            file_outputs={
+            }
+        )
+
+
 class LiushiModel(dsl.ContainerOp):
     def __init__(self, name, global_params, train_data, test_data, tag=ENV):
         super(LiushiModel, self).__init__(
