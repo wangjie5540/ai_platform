@@ -18,19 +18,12 @@ COPY start.sh $ROOT_DIR
 RUN pip install jupyter -i https://pypi.tuna.tsinghua.edu.cn/simple \
     && jupyter notebook --generate-config \
     && chmod +x $ROOT_DIR/clear_notebook_password.sh
-# 添加配置文件(区分环境)
-RUN mkdir -p $ROOT_DIR/.kube && mkdir -p /usr/local/etc
-COPY aip_config/$ENVIRONMENT/kube_config $ROOT_DIR/.kube/config
-COPY aip_config/$ENVIRONMENT/aip_config.yaml /usr/local/etc
 # 添加jdk
 RUN mkdir -p /opt && cd /opt && $WGET_COMMAND/jdk1.8.0_181-cloudera.zip && unzip jdk1.8.0_181-cloudera.zip
 ENV JAVA_HOME=/opt/jdk1.8.0_181-cloudera
-
 # 添加spark
 RUN mkdir -p /opt && cd /opt && $WGET_COMMAND/spark-2.4.8-bin-hadoop2.7.tgz && tar xvf spark-2.4.8-bin-hadoop2.7.tgz
 ENV SPARK_HOME=/opt/spark-2.4.8-bin-hadoop2.7
-# 添加hive环境配置
-COPY aip_config/$ENVIRONMENT/hdfs-site.xml $SPARK_HOME/conf
 # 添加依赖包
 ARG SPARK_JARS=/opt/spark-2.4.8-bin-hadoop2.7/jars
 RUN cd $SPARK_JARS \
@@ -42,11 +35,18 @@ RUN cd $SPARK_JARS \
 # coding无法代理下载200MB以上的包
 RUN pip install xgboost -i https://pypi.tuna.tsinghua.edu.cn/simple
 
+## 添加配置文件(区分环境)
+#RUN mkdir -p $ROOT_DIR/.kube && mkdir -p /usr/local/etc
+#COPY aip_config/$ENVIRONMENT/kube_config $ROOT_DIR/.kube/config
+#COPY aip_config/$ENVIRONMENT/aip_config.yaml /usr/local/etc
+## 添加hive环境配置
+#COPY aip_config/$ENVIRONMENT/hdfs-site.xml $SPARK_HOME/conf
+
 # 编译镜像
-# docker build --build-arg ENVIRONMENT=dev -t digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev -f algorithm-base.Dockerfile .
+# docker build --build-arg ENVIRONMENT=dev -t digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base -f algorithm-base.Dockerfile .
 # 上传镜像
-# docker push digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev
+# docker push digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base
 # 启动容器
-# docker run --pull always -p 2222:22 -p 9999:8888  -d --name algorithm-dev --privileged=true --rm -it digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev /usr/sbin/init
+# docker run --pull always -p 2222:22 -p 9999:8888  -d --name algorithm-base --privileged=true --rm -it digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base /usr/sbin/init
 # 开发阶段-启动ssh和jupyter-notebook
-# docker exec -i algorithm-dev sh start.sh
+# docker exec -i algorithm-base sh start.sh
