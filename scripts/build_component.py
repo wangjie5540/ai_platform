@@ -2,7 +2,6 @@
 
 import os
 import subprocess
-import argparse
 
 
 def main():
@@ -38,7 +37,9 @@ COPY aip_config/{environment}/hdfs-site.xml $SPARK_HOME/conf
     with open('Dockerfile', 'w') as f:
         f.write(algorithm_base_dockerfile)
     base_image = "algorithm-base:{environment}".format(environment=environment)
-    subprocess.check_call("docker build -t {base_image} dockerfiles".format(base_image=base_image), shell=True)
+    subprocess.check_call(
+        "docker build -t {base_image} -f {cur_dir}/Dockerfile dockerfiles".format(base_image=base_image,
+                                                                                  cur_dir=os.curdir), shell=True)
     return base_image
 
 
