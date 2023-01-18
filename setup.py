@@ -23,6 +23,7 @@ requirements = [
     'networkx',
     'kfp==1.0.4',
     'pysnowflake',
+    'cos-python-sdk-v5'
 ]
 
 setup(
