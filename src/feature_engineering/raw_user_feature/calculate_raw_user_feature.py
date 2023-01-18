@@ -37,7 +37,8 @@ def calculate_raw_user_feature(raw_user_feature_table_name):
 
 def calculate_raw_user_feature_from_order_feature(standard_order_dataframe):
     # TODO: 构建不同时间段行为统计特征
-    today = datetime.datetime.today().date()
+    today = datetime.datetime.today()
+    today_str = get_today_str()
     # TODO：数据原因，暂时取近一年构造特征
     thirty_days_ago_str = n_days_ago_str(120)
     # TODO：后续统一规范event_code
@@ -52,7 +53,7 @@ def calculate_raw_user_feature_from_order_feature(standard_order_dataframe):
 
     user_buy_df = standard_order_dataframe.filter(standard_order_dataframe[trade_type] == buy_code)
 
-    user_buy_counts_30d = user_buy_df.filter(user_buy_df[trade_date] >= thirty_days_ago_str) \
+    user_buy_counts_30d = user_buy_df.filter((user_buy_df[trade_date] >= thirty_days_ago_str)&(user_buy_df[trade_date] <= today_str)) \
         .groupby("custom_id") \
         .agg(F.count(trade_money).alias('u_buy_counts_30d'),
              F.sum(trade_money).alias('u_amount_sum_30d'),
@@ -67,7 +68,7 @@ def calculate_raw_user_feature_from_order_feature(standard_order_dataframe):
              F.min(trade_date),
              F.max(trade_date)) \
         .rdd \
-        .map(lambda x: (x[0], x[1], ((x[3] - x[2]).days / x[1]), (today - x[3]).days)) \
+        .map(lambda x: (x[0], x[1], ((datetime.datetime.strptime(x[3], "%Y-%m-%d") - datetime.datetime.strptime(x[2], "%Y-%m-%d")).days / x[1]), (today - datetime.datetime.strptime(x[3], "%Y-%m-%d")).days)) \
         .toDF(["custom_id", "u_buy_days_30d", "u_buy_avg_days_30d", "u_last_buy_days_30d"])
 
     user_order_fund_list_dataframe = user_buy_df.select(["custom_id", "fund_code", trade_date]) \

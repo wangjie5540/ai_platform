@@ -1,6 +1,7 @@
 import json
 import os
 import uuid
+
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 
 
@@ -38,3 +39,25 @@ def report_to_aip(model_and_metrics_data_hdfs_path,
     hdfs_client.mkdir_dirs(model_and_metrics_data_hdfs_path.replace("hdfs://", ""))
     hdfs_client.copy_from_local(metrics_data_local_path, metrics_data_hdfs_path)
     os.remove(metrics_data_local_path)
+
+
+def main():
+    model_and_metrics_data_hdfs_path = "/user/ai/aip/tmp"
+    model_hdfs_path = "/user/ai/aip/tmp/model.pk"
+    metrics_info = {
+        "accuracy": 0.85,
+        "auc": 0.90,
+        "precision": 0.93,
+        "recall": 0.80,
+        "f1_score": 0.88,
+        "loss": 0.001,
+    }
+    report_to_aip(model_and_metrics_data_hdfs_path,
+                  model_hdfs_path,
+                  model_name="流失预警",
+                  model_type="pk",
+                  **metrics_info)
+
+
+if __name__ == '__main__':
+    main()

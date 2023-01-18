@@ -10,7 +10,6 @@ from digitforce.aip.common.utils.argument_helper import df_argument_helper
 def run():
     # 参数解析
 
-
     # todo tmp
     # os.environ["train_dataset_table_name"] = "algorithm.train_dataset_table_name"
     # os.environ["test_dataset_table_name"] = "algorithm.test_dataset_table_name"
@@ -43,11 +42,6 @@ def run():
                       scale_pos_weight=scale_pos_weight,
                       is_automl=is_automl,
                       model_and_metrics_data_hdfs_path=model_and_metrics_data_hdfs_path)
-
-    outputs = {
-
-    }
-    # component_helper.write_output(outputs)
 
 
 if __name__ == '__main__':
