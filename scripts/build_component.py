@@ -4,12 +4,14 @@ import os
 import subprocess
 
 component_list = [
-    'source-read_table',
+    'demo-print',
 ]
 
 
 def main():
+    # 配合coding进行构建
     component_name = os.environ['COMPONENT_NAME']
+    # dev | test | uat | prod
     environment = os.environ['ENVIRONMENT']
     base_image = build_algorithm_base(environment)
     if component_name == 'all':
@@ -27,7 +29,7 @@ RUN pip install digitforce-aip -i https://aip-1657964384920:546b044f44ad6936fef6
 RUN mkdir -p $ROOT_DIR/.kube && mkdir -p /usr/local/etc
 COPY aip_config/{environment}/kube_config $ROOT_DIR/.kube/config
 COPY aip_config/{environment}/aip_config.yaml /usr/local/etc
-# 添加hive环境配置
+# 添加hive&hdfs环境配置
 COPY aip_config/{environment}/hdfs-site.xml $SPARK_HOME/conf
 '''.format(environment=environment)
     with open('Dockerfile', 'w') as f:

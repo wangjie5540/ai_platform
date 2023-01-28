@@ -11,3 +11,5 @@ DEFAULT_PVC = 'ai-platform-pvc'
 AI_PLATFORM_IMAGE_REPO = "digit-force-docker.pkg.coding.net/ai-platform/ai-components"
 # spark app name
 SPARK_APP_NAME = 'default-name'
+# environment name
+ENVIRONMENT = 'ENVIRONMENT'
