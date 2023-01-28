@@ -1,6 +1,4 @@
-import digitforce.aip.common.utils.component_helper as component_helper
 
-
-def print_environment():
+def do_print(param):
     print('lets see if it works....')
-    print(f'env: {component_helper.get_environment()}')
+    print(f'env: {param}')
