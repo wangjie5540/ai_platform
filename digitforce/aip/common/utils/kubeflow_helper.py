@@ -2,6 +2,7 @@ import re
 import requests
 from urllib.parse import urlsplit
 import digitforce.aip.common.utils.config_helper as config_helper
+import digitforce.aip.common.utils.id_helper as id_helper
 from kfp.compiler import Compiler
 import kfp
 
@@ -111,7 +112,18 @@ def upload_pipeline(pipeline_func, pipeline_name):
     client = kfp.Client(host=kubeflow_config['url'], cookies=get_istio_auth_session(
         url=kubeflow_config['url'], username=kubeflow_config['username'],
         password=kubeflow_config['password'])['session_cookie'])
-    client.upload_pipeline(pipeline_path, pipeline_name=pipeline_name)
+    return client._upload_api.upload_pipeline(uploadfile=pipeline_path, name=pipeline_name)
+
+
+def upload_pipeline_version(pipeline_func, pipeline_id, pipeline_name):
+    kubeflow_config = config_helper.get_module_config("kubeflow")
+    pipeline_path = f"/tmp/{pipeline_name}.yaml"
+    Compiler().compile(pipeline_func=pipeline_func, package_path=pipeline_path)
+    client = kfp.Client(host=kubeflow_config['url'], cookies=get_istio_auth_session(
+        url=kubeflow_config['url'], username=kubeflow_config['username'],
+        password=kubeflow_config['password'])['session_cookie'])
+    return client._upload_api.upload_pipeline_version(uploadfile=pipeline_path, pipelineid=pipeline_id,
+                                                      name=f'{pipeline_name}-{id_helper.gen_uniq_id()}')
 
 
 def create_run_directly(pipeline_func, experiment_name, arguments):
@@ -119,5 +131,6 @@ def create_run_directly(pipeline_func, experiment_name, arguments):
     client = kfp.Client(host=kubeflow_config['url'], cookies=get_istio_auth_session(
         url=kubeflow_config['url'], username=kubeflow_config['username'],
         password=kubeflow_config['password'])['session_cookie'])
+    # client._upload_api.upload_pipeline_version()
     client.create_run_from_pipeline_func(
         pipeline_func, arguments=arguments, experiment_name=experiment_name, namespace='kubeflow-user-example-com')
