@@ -18,7 +18,8 @@ def main():
         for component_name in component_list:
             build_component(base_image, component_name, environment)
     else:
-        build_component(base_image, component_name, environment)
+        for component_name in component_name.strip().split(','):
+            build_component(base_image, component_name, environment)
 
 
 def build_algorithm_base(environment):
