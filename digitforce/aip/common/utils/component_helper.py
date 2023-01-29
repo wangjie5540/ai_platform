@@ -39,3 +39,18 @@ def generate_output_path(name: str):
     生成输出文件路径
     """
     return f'/tmp/{name}'
+
+
+def set_environment(environment):
+    """
+    设置环境 dev | test | uat | prod
+    """
+    os.environ[global_constant.ENVIRONMENT] = environment
+
+
+def get_environment():
+    """
+    获取环境
+    :return: 环境标识 dev | test | uat | prod
+    """
+    return os.environ[global_constant.ENVIRONMENT]

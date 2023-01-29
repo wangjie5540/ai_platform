@@ -4,19 +4,22 @@ import os
 import subprocess
 
 component_list = [
-    'source-read_table',
+    'demo-print',
 ]
 
 
 def main():
+    # 配合coding进行构建
     component_name = os.environ['COMPONENT_NAME']
+    # dev | test | uat | prod
     environment = os.environ['ENVIRONMENT']
     base_image = build_algorithm_base(environment)
     if component_name == 'all':
         for component_name in component_list:
             build_component(base_image, component_name, environment)
     else:
-        build_component(base_image, component_name, environment)
+        for component_name in component_name.strip().split(','):
+            build_component(base_image, component_name, environment)
 
 
 def build_algorithm_base(environment):
@@ -27,15 +30,16 @@ RUN pip install digitforce-aip -i https://aip-1657964384920:546b044f44ad6936fef6
 RUN mkdir -p $ROOT_DIR/.kube && mkdir -p /usr/local/etc
 COPY aip_config/{environment}/kube_config $ROOT_DIR/.kube/config
 COPY aip_config/{environment}/aip_config.yaml /usr/local/etc
-# 添加hive环境配置
+# 添加hive&hdfs环境配置
 COPY aip_config/{environment}/hdfs-site.xml $SPARK_HOME/conf
 '''.format(environment=environment)
     with open('Dockerfile', 'w') as f:
         f.write(algorithm_base_dockerfile)
     base_image = "algorithm-base:{environment}".format(environment=environment)
-    subprocess.check_call(
-        "docker build -t {base_image} -f {cur_dir}/Dockerfile dockerfiles".format(base_image=base_image,
-                                                                                  cur_dir=os.curdir), shell=True)
+    cmd = "docker build -t {base_image} -f {cur_dir}/Dockerfile dockerfiles".format(base_image=base_image,
+                                                                                    cur_dir=os.curdir)
+    print(cmd)
+    subprocess.check_call(cmd, shell=True)
     return base_image
 
 
@@ -57,6 +61,7 @@ docker build -t {component_image} -f {cur_dir}/Dockerfile {component_path}
 docker login -u ai-components-1672810563540 -p 1d228954e03793ce2e79bf655335abc4e961ec75 digit-force-docker.pkg.coding.net
 docker push {component_image}
 '''.format(component_image=component_image, cur_dir=os.curdir, component_path=component_path)
+    print(build_cmd)
     subprocess.check_call(build_cmd, shell=True)
 
 

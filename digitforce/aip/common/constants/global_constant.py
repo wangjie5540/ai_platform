@@ -12,6 +12,8 @@ DEFAULT_PVC = 'ai-platform-pvc'
 AI_PLATFORM_IMAGE_REPO = "digit-force-docker.pkg.coding.net/ai-platform/ai-components"
 # spark app name
 SPARK_APP_NAME = 'default-name'
+# environment name
+ENVIRONMENT = 'ENVIRONMENT'
 
 ENV = "DEV"
 ENV = os.environ["RUN_ENV"] if os.environ.get("RUN_ENV") else ENV

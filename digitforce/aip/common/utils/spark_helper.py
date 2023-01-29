@@ -28,6 +28,7 @@ class SparkClient(object):
             .config("spark.driver.host", client_host) \
             .config("spark.kubernetes.container.image", spark_config['kubernetes_runtime_image']) \
             .config("spark.kubernetes.container.image.pullPolicy", "Always") \
+            .config("spark.kubernetes.namespace", "kubeflow-user-example-com") \
             .config("spark.sql.autoBroadcastJoinThreshold", -1) \
             .config("spark.executor.instances", "4") \
             .config("spark.debug.maxToStringFields", 100) \
