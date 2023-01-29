@@ -15,7 +15,7 @@ def run():
         "table_name": table_name,
         "column_list": columns
     }
-    component_helper.write_output(outputs, need_json_dump=True)
+    component_helper.write_output('table_name', outputs, need_json_dump=True)
 
 
 if __name__ == '__main__':
