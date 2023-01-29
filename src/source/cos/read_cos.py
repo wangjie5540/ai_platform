@@ -8,4 +8,5 @@ def read_to_table(url: str, columns: str):
     df = spark_helper.spark_session.createDataFrame(df)
     table_name = f'aip.cos_{id_helper.gen_uniq_id()}'
     df.write.format("hive").mode("overwrite").saveAsTable(table_name)
+    print(f'write to table {table_name} success')
     return table_name, columns
