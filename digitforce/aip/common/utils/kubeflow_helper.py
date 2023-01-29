@@ -108,7 +108,9 @@ def get_istio_auth_session(url: str, username: str, password: str) -> dict:
 def upload_pipeline(pipeline_func, pipeline_name):
     kubeflow_config = config_helper.get_module_config("kubeflow")
     pipeline_path = f"/tmp/{pipeline_name}.yaml"
-    Compiler().compile(pipeline_func=pipeline_func, package_path=pipeline_path)
+    pipeline_conf = kfp.dsl.PipelineConf()
+    pipeline_conf.set_image_pull_policy("Always")
+    Compiler().compile(pipeline_func=pipeline_func, package_path=pipeline_path, pipeline_conf=pipeline_conf)
     client = kfp.Client(host=kubeflow_config['url'], cookies=get_istio_auth_session(
         url=kubeflow_config['url'], username=kubeflow_config['username'],
         password=kubeflow_config['password'])['session_cookie'])
@@ -118,6 +120,8 @@ def upload_pipeline(pipeline_func, pipeline_name):
 def upload_pipeline_version(pipeline_func, pipeline_id, pipeline_name):
     kubeflow_config = config_helper.get_module_config("kubeflow")
     pipeline_path = f"/tmp/{pipeline_name}.yaml"
+    pipeline_conf = kfp.dsl.PipelineConf()
+    pipeline_conf.set_image_pull_policy("Always")
     Compiler().compile(pipeline_func=pipeline_func, package_path=pipeline_path)
     client = kfp.Client(host=kubeflow_config['url'], cookies=get_istio_auth_session(
         url=kubeflow_config['url'], username=kubeflow_config['username'],
@@ -131,6 +135,12 @@ def create_run_directly(pipeline_func, experiment_name, arguments):
     client = kfp.Client(host=kubeflow_config['url'], cookies=get_istio_auth_session(
         url=kubeflow_config['url'], username=kubeflow_config['username'],
         password=kubeflow_config['password'])['session_cookie'])
-    # client._upload_api.upload_pipeline_version()
+    pipeline_conf = kfp.dsl.PipelineConf()
+    pipeline_conf.set_image_pull_policy("Always")
     client.create_run_from_pipeline_func(
-        pipeline_func, arguments=arguments, experiment_name=experiment_name, namespace='kubeflow-user-example-com')
+        pipeline_func,
+        arguments=arguments,
+        pipeline_conf=pipeline_conf,
+        experiment_name=experiment_name,
+        namespace='kubeflow-user-example-com'
+    )
