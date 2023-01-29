@@ -30,15 +30,15 @@ class DigitforceAipCmdArgumentHelper:
                              f"container_name:{container_name}")
             container_envs = pipeline_config_json_obj[container_name]
             for k, v in container_envs.items():
-                os.environ[k] = v
+                os.environ[k] = str(v)
 
     def add_argument(self, *args, **kwargs):
         self.parser.add_argument(*args, **kwargs)
 
     def get_argument(self, argument_name, is_json_obj=False):
+        self.args = self.parser.parse_args()
         self.parse_envs_from_aip_config()
 
-        self.args = self.parser.parse_args()
         # env or the json string(aip_pipeline_env for global_params)
         argument_value_from_env = os.environ.get(argument_name, None)
 

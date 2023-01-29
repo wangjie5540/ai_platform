@@ -1,53 +1,63 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-import argparse
-import json
 
-from lookalike_model_train import start_model_train
+import os
+
+from digitforce.aip.common.utils import component_helper
+from digitforce.aip.common.utils.argument_helper import df_argument_helper
+from lookalike_model_train import train
 
 
 def run():
     # 参数解析
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--global_params", type=str, required=True, help="全局参数")
-    parser.add_argument("--name", type=str, required=True, help="名称")
-    parser.add_argument("--train_data", type=str, required=True, help="训练数据")
-    parser.add_argument("--test_data", type=str, required=True, help="测试数据")
-    parser.add_argument("--user_data", type=str, required=True, help="用户数据")
-    parser.add_argument("--other_data", type=str, required=True, help="其他数据")
+    df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
+    df_argument_helper.add_argument("--name", type=str, required=False, help="name")
+    df_argument_helper.add_argument("--train_dataset_table_name", type=str, required=False, help="训练集")
+    df_argument_helper.add_argument("--test_dataset_table_name", type=str, required=False, help="测试集")
 
-    parser.add_argument("--dnn_dropout", type=float, required=False, help="dnn_dropout")
-    parser.add_argument("--batch_size", type=int, required=False, help="batch_size")
-    parser.add_argument("--lr", type=float, required=False, help="lr")
-    parser.add_argument("--is_train", type=str, default="True", required=False, help="训练标识")
+    df_argument_helper.add_argument("--is_train", type=str, required=False, help="是否是训练模式")
+    df_argument_helper.add_argument("--is_automl", type=str, required=False, help="是否是调参模式")
+    df_argument_helper.add_argument("--user_vec_table_name", type=str, required=False, help="用户向量表")
+    df_argument_helper.add_argument("--model_user_feature_table_name", type=str, required=False, help="样本数据")
 
-    args = parser.parse_args()
-    train_data = json.loads(args.train_data)
-    test_data = json.loads(args.test_data)
-    user_data = json.loads(args.user_data)
-    other_data = json.loads(args.other_data)
-    is_train = args.is_train
+    df_argument_helper.add_argument("--batch_size", type=str, required=False, help="batch_size")
+    df_argument_helper.add_argument("--lr", type=str, required=False, help="lr")
+    df_argument_helper.add_argument("--dnn_dropout", type=str, required=False, help="dnn_dropout")
 
-    if is_train == 'True':
-        global_params = json.loads(args.global_params)
-        component_params = global_params[args.name]
-        dnn_dropout = component_params["dnn_dropout"]
-        batch_size = component_params["batch_size"]
-        lr = component_params["lr"]
+    train_dataset_table_name = df_argument_helper.get_argument("train_dataset_table_name")
+    test_dataset_table_name = df_argument_helper.get_argument("test_dataset_table_name")
+
+    batch_size = int(df_argument_helper.get_argument("batch_size"))
+    lr = float(df_argument_helper.get_argument("lr"))
+    dnn_dropout = float(df_argument_helper.get_argument("dnn_dropout"))
+    is_automl = df_argument_helper.get_argument("is_automl")
+    is_train = df_argument_helper.get_argument("is_train")
+    if is_train:
+        is_train = str(is_train).lower() not in ["none", "false"]
+        is_automl = not is_train
     else:
-        dnn_dropout = args.dnn_dropout
-        batch_size = args.batch_size
-        lr = args.lr
+        is_automl = str(is_automl).lower() not in ["", "none", "false"]
 
-    # TODO：讨论返回参数，user_embedding存储方式
-    start_model_train(train_data['table_name'], test_data['table_name'], user_data['table_name'],
-                      other_data['path'], train_data['column_list'], user_data['column_list'],
-                      dnn_dropout=dnn_dropout, batch_size=batch_size, lr=lr, is_train=is_train)
+    user_vec_table_name = df_argument_helper.get_argument("user_vec_table_name")
+    model_user_feature_table_name = df_argument_helper.get_argument("model_user_feature_table_name")
+    print("==================================")
+    print(f"train_data_table_name:{train_dataset_table_name}")
+    print(f"test_data_table_name:{test_dataset_table_name}")
+    print(f"model_user_feature_table_name:{model_user_feature_table_name}")
+    print(f"user_vec_table_name:{user_vec_table_name}")
+    print(f"is_automl:{is_automl}")
+    print("==================================")
+    train(train_data_table_name=train_dataset_table_name,
+          test_data_table_name=test_dataset_table_name,
+          batch_size=batch_size, lr=lr,
+          dnn_dropout=dnn_dropout,
 
-    outputs = {
+          is_automl=is_automl,
+          model_user_feature_table_name=model_user_feature_table_name,
+          user_vec_table_name=user_vec_table_name
+          )
 
-    }
-    # component_helper.write_output(outputs)
+    component_helper.write_output("user_vec_table_name", str(user_vec_table_name))
 
 
 if __name__ == '__main__':

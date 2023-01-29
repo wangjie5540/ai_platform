@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
-from sample_comb import sample_comb
+from feature_and_label_to_dataset import feature_and_label_to_dataset
 
 sample_table_name = "algorithm.tmp_aip_sample"
 sample_columns = ['user_id', 'item_id', 'label']
@@ -33,7 +33,7 @@ item_columns = ['item_id',
                 'i_amount_avg_30d',
                 'i_amount_min_30d',
                 'i_amount_max_30d']
-train_data_table_name, test_data_table_name, user_data_table_name, data_table_columns, user_data_table_columns, hdfs_dir = sample_comb(
+train_data_table_name, test_data_table_name, user_data_table_name, data_table_columns, user_data_table_columns, hdfs_dir = feature_and_label_to_dataset(
     sample_table_name,
     sample_columns,
     user_feature_table_name,

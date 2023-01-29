@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-import datetime
 from digitforce.aip.common.utils.spark_helper import spark_client
-from digitforce.aip.common.utils.time_helper import  *
 from pyspark.sql import functions as F
-from pyspark.sql.functions import *
-from pyspark.sql.types import *
+
+from digitforce.aip.common.utils.time_helper import *
 
 
-
-def calculate_raw_item_feature():
+def calculate_raw_item_feature(output_table):
     item_table_columns = ['ts_code', 'fund_type', 'management', 'custodian', 'invest_type']
     order_table_columns = ["custom_id", "trade_date", "trade_type", "fund_code", "trade_money", "fund_shares",
                            "fund_nav"]
@@ -32,7 +29,6 @@ def calculate_raw_item_feature():
     # TODO：动态hive表名
     item_feature_table = item_feature_table.withColumnRenamed("fund_code", "item_id")
     # output_table = f'raw_item_feature_{id_helper.gen_uniq_id()}'
-    output_table = 'algorithm.tmp_raw_item_feature_table_name'
     item_feature_table.write.format("hive").mode("overwrite").saveAsTable(output_table)
     return output_table
 
@@ -60,6 +56,6 @@ def calculate_raw_item_feature_from_order_table(standard_fund_trade_dataframe):
              F.min(trade_money).alias('i_amount_min_30d'), \
              F.max(trade_money).alias('i_amount_max_30d'))
     raw_feature_from_trade_dataframe = item_id_dataframe.join(item_buy_counts_30d, "fund_code",
-                                                           "left")
+                                                              "left")
 
     return raw_feature_from_trade_dataframe
