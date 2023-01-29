@@ -144,3 +144,26 @@ def create_run_directly(pipeline_func, experiment_name, arguments):
         experiment_name=experiment_name,
         namespace='kubeflow-user-example-com'
     )
+
+
+def get_pipeline_id(pipeline_name):
+    kubeflow_config = config_helper.get_module_config("kubeflow")
+    client = kfp.Client(host=kubeflow_config['url'], cookies=get_istio_auth_session(
+        url=kubeflow_config['url'], username=kubeflow_config['username'],
+        password=kubeflow_config['password'])['session_cookie'])
+    # 参考：https://github.com/kubeflow/pipelines/blob/master/backend/api/v1beta1/filter.proto
+    f = {
+        "predicates":
+            [
+                {
+                    "key": "name",
+                    "op": "EQUALS",
+                    "string_value": pipeline_name
+                }
+            ],
+    }
+    import json
+    pipeline_list = client._pipelines_api.list_pipelines(filter=json.dumps(f)).pipelines
+    if pipeline_list is None or len(pipeline_list) == 0:
+        return None
+    return pipeline_list.pipelines[0].id
