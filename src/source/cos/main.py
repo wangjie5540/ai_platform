@@ -9,7 +9,7 @@ def run():
     parser.add_argument('--url', type=str, required=True, help='目标文件地址')
     parser.add_argument('--columns', type=str, required=True, help='列名，使用逗号分隔')
     args = parser.parse_args()
-    table_name, columns = read_cos.read_to_table(args.param, args.columns)
+    table_name, columns = read_cos.read_to_table(args.url, args.columns)
     outputs = {
         "type": "hive_table",
         "table_name": table_name,

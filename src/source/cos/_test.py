@@ -1,3 +1,3 @@
-import my_print
+import read_cos
 
-my_print.do_print("hello world")
+read_cos.read_to_table("http://algorithm-1308011215.cos.ap-beijing.myqcloud.com/result.csv", "a,b")
