@@ -22,4 +22,8 @@ class BaseComponent(dsl.ContainerOp):
             command=['python', 'main.py'],
             arguments=arguments,
             file_outputs=file_outputs,
+            pvolumes={
+                '/usr/local/etc/': dsl.PipelineVolume(pvc='aip-etc-pvc'),
+                '/root/.kube': dsl.PipelineVolume(pvc='aip-kube-pvc'),
+            },
         )
