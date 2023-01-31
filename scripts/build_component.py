@@ -26,12 +26,11 @@ def build_algorithm_base(environment):
     algorithm_base_dockerfile = '''
 from digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base:latest
 RUN pip install digitforce-aip -i https://aip-1657964384920:546b044f44ad6936fef609faa512a53b3fa8b12f@digit-force-pypi.pkg.coding.net/ai-platform/aip/simple
-# 添加配置文件(区分环境)
-RUN mkdir -p $ROOT_DIR/.kube && mkdir -p /usr/local/etc
-COPY aip_config/{environment}/kube_config $ROOT_DIR/.kube/config
-COPY aip_config/{environment}/aip_config.yaml /usr/local/etc
-# 添加hive&hdfs环境配置
-COPY aip_config/{environment}/hdfs-site.xml $SPARK_HOME/conf
+# 添加配置挂载映射
+# 参考: https://spark.apache.org/docs/latest/running-on-kubernetes.html#configuration
+ENV KUBECONFIG /usr/local/etc/kube_config
+# 参考: https://spark.apache.org/docs/latest/configuration.html
+ENV SPARK_CONF_DIR /usr/local/etc
 '''.format(environment=environment)
     with open('Dockerfile', 'w') as f:
         f.write(algorithm_base_dockerfile)
