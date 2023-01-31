@@ -24,6 +24,10 @@ ENV JAVA_HOME=/opt/jdk1.8.0_181-cloudera
 # 添加spark
 RUN mkdir -p /opt && cd /opt && $WGET_COMMAND/spark-2.4.8-bin-hadoop2.7.tgz && tar xvf spark-2.4.8-bin-hadoop2.7.tgz
 ENV SPARK_HOME=/opt/spark-2.4.8-bin-hadoop2.7
+# 参考: https://spark.apache.org/docs/latest/running-on-kubernetes.html#configuration
+ENV KUBECONFIG /usr/local/etc/config
+# 参考: https://spark.apache.org/docs/latest/configuration.html
+ENV SPARK_CONF_DIR /usr/local/etc
 # 添加依赖包
 ARG SPARK_JARS=/opt/spark-2.4.8-bin-hadoop2.7/jars
 RUN cd $SPARK_JARS \
