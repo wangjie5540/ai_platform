@@ -35,13 +35,6 @@ RUN cd $SPARK_JARS \
 # coding无法代理下载200MB以上的包
 RUN pip install xgboost -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-## 添加配置文件(区分环境)
-#RUN mkdir -p $ROOT_DIR/.kube && mkdir -p /usr/local/etc
-#COPY aip_config/$ENVIRONMENT/kube_config $ROOT_DIR/.kube/config
-#COPY aip_config/$ENVIRONMENT/aip_config.yaml /usr/local/etc
-## 添加hive环境配置
-#COPY aip_config/$ENVIRONMENT/hdfs-site.xml $SPARK_HOME/conf
-
 # 编译镜像
 # docker build --build-arg ENVIRONMENT=dev -t digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base -f algorithm-base.Dockerfile .
 # 上传镜像
