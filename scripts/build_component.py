@@ -11,7 +11,7 @@ component_list = [
 def main():
     # 配合coding进行构建
     component_name = os.environ['COMPONENT_NAME']
-    tag = os.environ['ENVIRONMENT']
+    tag = os.environ['TAG']
     base_image = build_algorithm_base()
     if component_name == 'all':
         for component_name in component_list:
