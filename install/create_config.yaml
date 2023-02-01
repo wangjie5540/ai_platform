@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+   name: aip-cos
+   # Replaced by your secret namespace.
+   namespace: kube-system
+data:
+   # Replaced by your temporary secret file content. You can generate a temporary secret key with these docs:
+   # Note: The value must be encoded by base64.
+   SecretId: UVV0SlJFaE9SblJJVWxFNFlXMW5USGRKUW5GSVdXWmlTV3RGWkc1clpGVkNaSEpL
+   SecretKey: U2s1RmMwaFFTWFpKVGtOM2JsSXlWMnhyVlVSelNsUlFOMXBzYjJWSmFIRT0=
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: aip-config-pv
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 1Gi
+  csi:
+    driver: com.tencent.cloud.csi.cosfs
+    nodePublishSecretRef:
+      name: aip-cos
+      namespace: kube-system
+    volumeAttributes:
+      # Replaced by the url of your region.
+      url: http://cos.ap-beijing.myqcloud.com
+      # Replaced by the bucket name you want to use.
+      bucket: aip-1308011215
+      # You can specify sub-directory of bucket in cosfs command in here.
+      path: /dev
+       # You can specify any other options used by the cosfs command in here.
+    # additional_args: "-oallow_other"# Specify a unique volumeHandle like bucket name.(this value must different from other pv's volumeHandle)
+    volumeHandle: aip-config-pv
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+   name: aip-config-pvc
+   namespace: kubeflow-user-example-com
+spec:
+   accessModes:
+   - ReadWriteMany
+   resources:
+     requests:
+       storage: 1Gi
+   # You can specify the pv name manually or just let kubernetes to bind the pv and pvc.
+   volumeName: aip-config-pv
+   # Currently cos only supports static provisioning, the StorageClass name should be empty.
+   storageClassName: ""
