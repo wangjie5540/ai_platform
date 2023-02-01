@@ -1,5 +1,13 @@
 # coding: utf-8
-import my_sleep
+import subprocess
+
+cmd = '''
+cp /mnt/config/aip_config.yaml /usr/local/etc
+cp /mnt/config/kube_config /root/.kube/config
+cp /mnt/config/hdfs-site.xml $SPARK_HOME/conf
+'''
+subprocess.check_call(cmd, shell=True)
+
 import argparse
 import digitforce.aip.common.utils.spark_helper as spark_helper
 
