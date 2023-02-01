@@ -1,6 +1,6 @@
 import os
 
-os.environ["RUN_ENV"] = "dev"
+os.environ["RUN_ENV"] = "dev-wh"
 import kfp
 
 import digitforce.aip.common.utils.kubeflow_helper as kubeflow_helper
@@ -8,6 +8,7 @@ from digitforce.aip.common.utils import config_helper
 from digitforce.aip.components.ml import LookalikeModel,LookalikeModelPredict
 from digitforce.aip.components.preprocessing import ModelFeature2Dataset
 from digitforce.aip.components.sample import *
+from digitforce.aip.components.source.cos import Cos
 
 pipeline_name = 'lookalike'
 pipeline_path = f'/tmp/{pipeline_name}.yaml'
@@ -52,6 +53,7 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
         model_sample_op = RawSample2ModelSample(name="raw_sample2model_sample", global_params=global_params,
                                                 raw_sample_table_name="algorithm.tmp_aip_sample")  # todo
         model_sample_op.after(op_sample_selection)
+        model_sample_op.after(zq_feature_op)
         model_sample_op.container.set_image_pull_policy("Always")
         to_dataset_op = ModelFeature2Dataset(name="feature_and_label_to_dataset", global_params=global_params,
                                              label_table_name=model_sample_op.outputs[
@@ -79,6 +81,21 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
         lookalike_model_predict_op = LookalikeModelPredict("model_predict", global_params,
                                                            seeds_crowd_table_name=seeds_table_name,
                                                            predict_crowd_table_name=user_table_name)
+        # seeds_table_op = Cos("seeds_cos",
+        #                      "https://algorithm-1308011215.cos.ap-beijing.myqcloud.com/aip_test_lookalike_seeds.csv",
+        #                      "user_id")
+        # seeds_table_op.container.set_image_pull_policy("Always")
+        # predict_table_op = Cos("predict_cos",
+        #                      "https://algorithm-1308011215.cos.ap-beijing.myqcloud.com/aip_test_lookalike_predict.csv",
+        #                      "user_id")
+        # predict_table_op.container.set_image_pull_policy("Always")
+        # lookalike_model_predict_op = LookalikeModelPredict("model_predict", global_params,
+        #                                                    seeds_crowd_table_name=seeds_table_op.outputs[
+        #                                                        Cos.OUTPUT_1
+        #                                                    ],
+        #                                                    predict_crowd_table_name=predict_table_op.outputs[
+        #                                                        Cos.OUTPUT_1
+        #                                                    ])
         lookalike_model_predict_op.container.set_image_pull_policy("Always")
 
 
@@ -89,45 +106,30 @@ client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_h
 import json
 
 global_params = json.dumps({
-    "model_item_feature": {"model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"},
-    "model_user_feature": {"model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name"},
     "sample_select": {},
+    "raw_user_feature": {"raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name"},
+    "raw_item_feature": {"raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name"},
     "zq_feature_calculator": {"raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name",
                               "raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name"},
-    "raw_user_feature": {"raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name_1"},
-    "raw_item_feature": {"raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name_1"},
-    "model-item-feature": {"model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"},
     "raw_sample2model_sample": {"model_sample_table_name": "algorithm.tmp_aip_model_sample"},
+    "model_item_feature": {"model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"},
+    "model_user_feature": {"model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name"},
     "feature_and_label_to_dataset": {},
-    "model": {"lr": 0.01, "dnn_dropout": 0.5, "batch_size": 1024, "is_automl": False,
+    "model": {"lr": 0.01, "dnn_dropout": 0.5, "batch_size": 1024, "is_automl": True,
               "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name",
-              "user_vec_table_name": "algorithm.tmp_user_vec_table_name"},
+              "user_vec_table_name": "algorithm.tmp_user_vec_table_name",
+              "model_and_metrics_data_hdfs_path": "/user/ai/aip/zq/lookalike/model/112233"},
     "model_predict":{"output_file_name":"result.csv", "user_vec_table_name":"algorithm.aip_zq_lookalike_user_vec"},
-    "user_feature_trans": {
-        "create": {
-            "transform_rules": [
-                {
-                    "type": "string_indexer",
-                    "input_col": "user_id",
-                    "output_col": "user_id_index"
-                },
-                {
-                    "type": "string_indexer",
-                    "input_col": "gender",
-                    "output_col": "gender_index"
-                }
-            ]
-        }
-    }
 })
-client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "TRAIN"},
-                                     experiment_name="recommend",
-                                     namespace='kubeflow-user-example-com')
+kubeflow_helper.upload_pipeline(ml_lookalike, pipeline_name)
+# client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "TRAIN"},
+#                                      experiment_name="recommend",
+#                                      namespace='kubeflow-user-example-com')
 # client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "AUTOML"},
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')
 
-
+#
 # client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "PREDICT"},
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')

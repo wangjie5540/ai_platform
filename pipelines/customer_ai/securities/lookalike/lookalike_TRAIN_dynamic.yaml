@@ -73,39 +73,43 @@ dataSource:
         type: string
         required: false
 trainSample:
-  - label: 目标定义
+  - label:
     itemList:
       - type: select
         attributeName: event_code_buy
-        prefixText: 事件
-        placeholder: 请选择目标事件
+        prefixText: 基于
+        placeholder: 请选择业务目标
+        suffixText: 训练模型，生成用户向量
         description:
         required: true
         optionType: 1
         optionItems:
-          - label: 购买
+          - label: 交易
             value: fund_buy
 modelHyperParameter:
   - label: 模型参数
     itemList:
       - type: input-number
         attributeName: lookalike__dnn_dropout
-        prefixText: dnn_dropout
+        prefixText: 随机失活
         description: 随机隐藏一定比例的神经元，防止过拟合
         placeholder: 0.3
+        default: 0.3
         errorMessage: 请输入0-1之间的小数
         required: true
       - type: input-number
         attributeName: lookalike__batch_size
-        prefixText: 批次大小(batch_size)
+        prefixText: 批次大小
         description: 单次训练所使用的样本数量
         placeholder: 128
+        default: 128
         errorMessage: 请输入正整数
         required: true
       - type: input-number
         attributeName: lookalike__lr
-        prefixText: 学习率(lr)
+        prefixText: 学习率
         description: 模型权重迭代的步长
         placeholder: 0.1
+        default: 0.1
         errorMessage: 请输入0-1之间的小数
         required: true

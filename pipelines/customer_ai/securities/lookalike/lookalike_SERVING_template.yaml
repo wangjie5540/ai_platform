@@ -2,6 +2,6 @@
   "model-predict": {
     "type": "pk",
     "user_vec_table_name": "",
-    "output_file_name" : $result
+    "output_file_name" : "$result_file_name"
   }
 }
