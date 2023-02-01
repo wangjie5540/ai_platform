@@ -5,9 +5,9 @@ import argparse
 
 def run():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--minutes', type=str, help='sleep的分钟数')
+    parser.add_argument('--minutes', type=int, help='sleep的分钟数')
     args = parser.parse_args()
-    my_sleep.do_sleep(int(args.minutes))
+    my_sleep.do_sleep(args.minutes)
 
 
 if __name__ == '__main__':
