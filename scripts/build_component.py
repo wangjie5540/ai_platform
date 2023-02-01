@@ -27,9 +27,9 @@ from digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base:la
 RUN pip install digitforce-aip -i https://aip-1657964384920:546b044f44ad6936fef609faa512a53b3fa8b12f@digit-force-pypi.pkg.coding.net/ai-platform/aip/simple
 # 添加配置挂载映射
 # 参考: https://spark.apache.org/docs/latest/running-on-kubernetes.html#configuration
-ENV KUBECONFIG /usr/local/etc/kube_config
+# ENV KUBECONFIG /usr/local/etc/kube_config
 # 参考: https://spark.apache.org/docs/latest/configuration.html
-ENV SPARK_CONF_DIR /usr/local/etc
+# ENV SPARK_CONF_DIR /usr/local/etc
 '''
     with open('Dockerfile', 'w') as f:
         f.write(algorithm_base_dockerfile)
