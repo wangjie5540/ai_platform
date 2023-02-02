@@ -1,6 +1,7 @@
 # coding: utf-8
 import json
 import os
+import subprocess
 
 import digitforce.aip.common.constants.global_constant as global_constant
 
@@ -41,16 +42,13 @@ def generate_output_path(name: str):
     return f'/tmp/{name}'
 
 
-def set_environment(environment):
+def init_config():
     """
-    设置环境 dev | test | uat | prod
+    初始化配置文件
     """
-    os.environ[global_constant.ENVIRONMENT] = environment
-
-
-def get_environment():
-    """
-    获取环境
-    :return: 环境标识 dev | test | uat | prod
-    """
-    return os.environ[global_constant.ENVIRONMENT]
+    cmd = f'''
+    cp {global_constant.CONFIG_MOUNT_PATH}/aip_config.yaml /usr/local/etc
+    cp {global_constant.CONFIG_MOUNT_PATH}/kube_config /root/.kube/config
+    cp {global_constant.CONFIG_MOUNT_PATH}/hdfs-site.xml $SPARK_HOME/conf
+    '''
+    subprocess.check_call(cmd, shell=True)
