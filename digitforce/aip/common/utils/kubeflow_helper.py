@@ -166,4 +166,4 @@ def get_pipeline_id(pipeline_name):
     pipeline_list = client._pipelines_api.list_pipelines(filter=json.dumps(f)).pipelines
     if pipeline_list is None or len(pipeline_list) == 0:
         return None
-    return pipeline_list.pipelines[0].id
+    return pipeline_list[0].id
