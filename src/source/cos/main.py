@@ -1,12 +1,12 @@
 # coding: utf-8
-import read_cos
 import argparse
 import digitforce.aip.common.utils.component_helper as component_helper
+component_helper.init_config()
 import json
+import read_cos
 
 
 def run():
-    component_helper.init_config()
     parser = argparse.ArgumentParser()
     parser.add_argument('--name', type=str, required=True, help='名称')
     parser.add_argument('--global_params', type=str, required=True, help='pipeline全局参数')

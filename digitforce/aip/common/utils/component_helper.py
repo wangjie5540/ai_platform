@@ -48,6 +48,7 @@ def init_config():
     """
     cmd = f'''
     cp {global_constant.CONFIG_MOUNT_PATH}/aip_config.yaml /usr/local/etc
+    mkdir -p /root/.kube
     cp {global_constant.CONFIG_MOUNT_PATH}/kube_config /root/.kube/config
     cp {global_constant.CONFIG_MOUNT_PATH}/hdfs-site.xml $SPARK_HOME/conf
     '''
