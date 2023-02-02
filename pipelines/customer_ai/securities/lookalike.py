@@ -5,7 +5,7 @@ import kfp
 
 import digitforce.aip.common.utils.kubeflow_helper as kubeflow_helper
 from digitforce.aip.common.utils import config_helper
-from digitforce.aip.components.ml import LookalikeModel,LookalikeModelPredict
+from digitforce.aip.components.ml import LookalikeModel, LookalikeModelPredict
 from digitforce.aip.components.preprocessing import ModelFeature2Dataset
 from digitforce.aip.components.sample import *
 from digitforce.aip.components.source.cos import Cos
@@ -76,26 +76,22 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
 
     with dsl.Condition(flag == "PREDICT", name="is_predict"):
         # todo seed tabe and user table from other op
-        seeds_table_name = 'algorithm.aip_zq_lookalike_seeds_crowd'
-        user_table_name = 'algorithm.aip_zq_lookalike_predict_crowd'
-        lookalike_model_predict_op = LookalikeModelPredict("model_predict", global_params,
-                                                           seeds_crowd_table_name=seeds_table_name,
-                                                           predict_crowd_table_name=user_table_name)
-        # seeds_table_op = Cos("seeds_cos",
-        #                      "https://algorithm-1308011215.cos.ap-beijing.myqcloud.com/aip_test_lookalike_seeds.csv",
-        #                      "user_id")
-        # seeds_table_op.container.set_image_pull_policy("Always")
-        # predict_table_op = Cos("predict_cos",
-        #                      "https://algorithm-1308011215.cos.ap-beijing.myqcloud.com/aip_test_lookalike_predict.csv",
-        #                      "user_id")
-        # predict_table_op.container.set_image_pull_policy("Always")
+        # seeds_table_name = 'algorithm.aip_zq_lookalike_seeds_crowd'
+        # user_table_name = 'algorithm.aip_zq_lookalike_predict_crowd'
         # lookalike_model_predict_op = LookalikeModelPredict("model_predict", global_params,
-        #                                                    seeds_crowd_table_name=seeds_table_op.outputs[
-        #                                                        Cos.OUTPUT_1
-        #                                                    ],
-        #                                                    predict_crowd_table_name=predict_table_op.outputs[
-        #                                                        Cos.OUTPUT_1
-        #                                                    ])
+        #                                                    seeds_crowd_table_name=seeds_table_name,
+        #                                                    predict_crowd_table_name=user_table_name)
+        seeds_table_op = Cos("seeds_cos_url", global_params)
+        seeds_table_op.container.set_image_pull_policy("Always")
+        predict_table_op = Cos("predict_cos_url",global_params)
+        predict_table_op.container.set_image_pull_policy("Always")
+        lookalike_model_predict_op = LookalikeModelPredict("model_predict", global_params,
+                                                           seeds_crowd_table_name=seeds_table_op.outputs[
+                                                               Cos.OUTPUT_1
+                                                           ],
+                                                           predict_crowd_table_name=predict_table_op.outputs[
+                                                               Cos.OUTPUT_1
+                                                           ])
         lookalike_model_predict_op.container.set_image_pull_policy("Always")
 
 
@@ -106,22 +102,62 @@ client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_h
 import json
 
 global_params = json.dumps({
-    "sample_select": {},
-    "raw_user_feature": {"raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name"},
-    "raw_item_feature": {"raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name"},
-    "zq_feature_calculator": {"raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name",
-                              "raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name"},
-    "raw_sample2model_sample": {"model_sample_table_name": "algorithm.tmp_aip_model_sample"},
-    "model_item_feature": {"model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"},
-    "model_user_feature": {"model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name"},
-    "feature_and_label_to_dataset": {},
-    "model": {"lr": 0.01, "dnn_dropout": 0.5, "batch_size": 1024,
-              "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name",
-              "user_vec_table_name": "algorithm.tmp_user_vec_table_name",
-              "model_and_metrics_data_hdfs_path": "/user/ai/aip/zq/lookalike/model/112233"},
-    "model_predict":{"output_file_name":"result.csv", "user_vec_table_name":"algorithm.aip_zq_lookalike_user_vec"},
+    "sample_select":
+    {},
+    "raw_user_feature":
+    {
+        "raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name"
+    },
+    "raw_item_feature":
+    {
+        "raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name"
+    },
+    "zq_feature_calculator":
+    {
+        "raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name",
+        "raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name"
+    },
+    "raw_sample2model_sample":
+    {
+        "model_sample_table_name": "algorithm.tmp_aip_model_sample"
+    },
+    "model_item_feature":
+    {
+        "model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"
+    },
+    "model_user_feature":
+    {
+        "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name"
+    },
+    "feature_and_label_to_dataset":
+    {},
+    "model":
+    {
+        "lr": 0.01,
+        "dnn_dropout": 0.5,
+        "batch_size": 1024,
+        "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name",
+        "user_vec_table_name": "algorithm.tmp_user_vec_table_name",
+        "model_and_metrics_data_hdfs_path": "/user/ai/aip/zq/lookalike/model/112233"
+    },
+    "seeds_cos_url":
+    {
+        "url": "https://algorithm-1308011215.cos.ap-beijing.myqcloud.com/aip_test_lookalike_seeds.csv",
+        "columns": "user_id"
+    },
+    "predict_cos_url":
+    {
+        "url": "https://algorithm-1308011215.cos.ap-beijing.myqcloud.com/aip_test_lookalike_predict.csv",
+        "columns": "user_id"
+    },
+    "model_predict":
+    {
+        "output_file_name": "result.csv",
+        "user_vec_table_name": "algorithm.aip_zq_lookalike_user_vec"
+    }
 })
 # kubeflow_helper.upload_pipeline(ml_lookalike, pipeline_name)
+kubeflow_helper.upload_pipeline_version(ml_lookalike, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
 # client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "TRAIN"},
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')
@@ -130,6 +166,6 @@ global_params = json.dumps({
 #                                      namespace='kubeflow-user-example-com')
 
 #
-client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "PREDICT"},
-                                     experiment_name="recommend",
-                                     namespace='kubeflow-user-example-com')
+# client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "PREDICT"},
+#                                      experiment_name="recommend",
+#                                      namespace='kubeflow-user-example-com')

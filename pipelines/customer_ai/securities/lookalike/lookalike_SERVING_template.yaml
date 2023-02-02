@@ -4,4 +4,8 @@
     "user_vec_table_name": "",
     "output_file_name" : "$result_file_name"
   }
+  "seeds_cos":{
+                "url":{$url},
+                "columns": "a,b"
+  }
 }
