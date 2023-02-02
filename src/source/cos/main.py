@@ -1,8 +1,8 @@
 # coding: utf-8
-import read_cos
 import argparse
 import digitforce.aip.common.utils.component_helper as component_helper
 import json
+import read_cos
 
 
 def run():
