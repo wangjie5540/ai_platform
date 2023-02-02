@@ -10,13 +10,13 @@ from digitforce.aip.components.ml import LiushiModel
 from digitforce.aip.components.ml import LiushiPredict
 from digitforce.aip.components.sample import SampleSelectionLiushi
 
-pipeline_name = 'loss_warning_v11_dev'
+pipeline_name = 'loss_warning_v12_dev'
 pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 
 @dsl.pipeline(name=pipeline_name)
 def ml_loss_warning(global_params: str, flag='TRAIN'):
-    RUN_ENV = "dev"
+    RUN_ENV = "dev-wh"
     with Condition(flag != "PREDICT", name="is_not_predict"):
         op_sample_selection = SampleSelectionLiushi(name='sample_select', global_params=global_params, tag=RUN_ENV)
         op_sample_selection.container.set_image_pull_policy("Always")
@@ -50,14 +50,13 @@ client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_h
 import json
 
 global_params = json.dumps({
-    "sample_select": {"active_before_days": 3, "active_after_days": 5, "start_date": "20221211",
-                      "end_date": "20221220"},
-    "model": {"max_depth": 5, "scale_pos_weight": 0.5, "n_estimators": 200, "learning_rate": 0.05,
+    "sample_select": {"active_before_days": 3, "active_after_days": 5},
+    "model": {"max_depth": 5, "scale_pos_weight": 0.5, "n_estimators": 20, "learning_rate": 0.05,
               "train_table_name": "algorithm.aip_zq_liushi_custom_feature_train",
               "test_table_name": "algorithm.aip_zq_liushi_custom_feature_test",
+              "model_and_metrics_data_hdfs_path": "/user/ai/aip/model/112233"
               },
-    "feature_create": {"active_before_days": 3, "active_after_days": 5, "start_date": "20221211",
-                       "end_date": "20221220", "mid_date": "20221218"},
+    "feature_create": {"active_before_days": 3, "active_after_days": 5},
 
     "model-predict": {
         "predict_table_name": "algorithm.aip_zq_liushi_custom_feature_predict",
@@ -68,14 +67,15 @@ global_params = json.dumps({
                                "end_date": "20221220", "sample": "algorithm.aip_zq_liushi_custom_predict"},
 
 })
+
 # client.create_run_from_pipeline_func(ml_liushi, arguments={"global_params": global_params},
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')
-kubeflow_helper.upload_pipeline(ml_loss_warning, pipeline_name)
-# client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
-#                                                            "flag": "TRAIN"},
-#                                      experiment_name="recommend",
-#                                      namespace='kubeflow-user-example-com')
+# kubeflow_helper.upload_pipeline(ml_loss_warning, pipeline_name)
+client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
+                                                           "flag": "TRAIN"},
+                                     experiment_name="recommend",
+                                     namespace='kubeflow-user-example-com')
 #
 # client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
 #                                                            "flag": "PREDICT"},

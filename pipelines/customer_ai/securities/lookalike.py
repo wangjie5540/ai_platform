@@ -115,13 +115,13 @@ global_params = json.dumps({
     "model_item_feature": {"model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"},
     "model_user_feature": {"model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name"},
     "feature_and_label_to_dataset": {},
-    "model": {"lr": 0.01, "dnn_dropout": 0.5, "batch_size": 1024, "is_automl": True,
+    "model": {"lr": 0.01, "dnn_dropout": 0.5, "batch_size": 1024,
               "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name",
               "user_vec_table_name": "algorithm.tmp_user_vec_table_name",
               "model_and_metrics_data_hdfs_path": "/user/ai/aip/zq/lookalike/model/112233"},
     "model_predict":{"output_file_name":"result.csv", "user_vec_table_name":"algorithm.aip_zq_lookalike_user_vec"},
 })
-kubeflow_helper.upload_pipeline(ml_lookalike, pipeline_name)
+# kubeflow_helper.upload_pipeline(ml_lookalike, pipeline_name)
 # client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "TRAIN"},
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')
@@ -130,6 +130,6 @@ kubeflow_helper.upload_pipeline(ml_lookalike, pipeline_name)
 #                                      namespace='kubeflow-user-example-com')
 
 #
-# client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "PREDICT"},
-#                                      experiment_name="recommend",
-#                                      namespace='kubeflow-user-example-com')
+client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "PREDICT"},
+                                     experiment_name="recommend",
+                                     namespace='kubeflow-user-example-com')
