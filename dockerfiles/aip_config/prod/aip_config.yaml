@@ -1,0 +1,28 @@
+starrocks:
+  user: root
+  password: OrE0ZgsZ1bQi57G7
+  fenodes: 10.10.20.3:8030,10.10.20.5:8030,10.10.20.11:8030
+hive:
+  server2:
+    host: 10.10.10.3
+    port: 7001
+hdfs:
+  hosts: 10.10.10.3:4008,10.10.10.9:4008
+  base_url: hdfs://HDFS8001380
+spark:
+  master_uri: k8s://https://10.10.20.16
+  kubernetes_namespace: kubeflow-user-example-com
+  kubernetes_runtime_image: digit-force-docker.pkg.coding.net/ai-platform/base-images/spark-k8s-runtime-with-jars:2.4.8
+  hive_uris: thrift://10.10.10.9:7004,thrift://10.10.10.3:7004
+  java_home: /opt/jdk1.8.0_181-cloudera
+  spark_home: /opt/spark-2.4.8-bin-hadoop2.7
+kubeflow:
+  url: http://10.10.20.7:30000/pipeline
+  username: admin@example.com
+  password: password
+cos:
+  bucket: algorithm-1308011215
+  secret_id: AKIDeNpeP0PaU87uSo7HFxFCwaBYpwue9VbS
+  secret_key: kEWEjyxiDaw7C4jDTfh0FKF1fBUedQ3U
+  base_url: https://algorithm-1308011215.cos.ap-beijing.myqcloud.com
+
