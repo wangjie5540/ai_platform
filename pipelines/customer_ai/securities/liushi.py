@@ -42,7 +42,7 @@ def ml_loss_warning(global_params: str, flag='TRAIN'):
                                                         sample=predict_table_op.outputs[Cos.OUTPUT_1],
                                                         tag=RUN_ENV)
         predict_feature_op.container.set_image_pull_policy("Always")
-        liushi_predict_op = LiushiPredict(name="model-predict", global_params=global_params, tag=RUN_ENV,
+        liushi_predict_op = LiushiPredict(name="model_predict", global_params=global_params, tag=RUN_ENV,
                                           predict_table_name=predict_feature_op.outputs[
                                               predict_feature_op.OUTPUT_PREDICT_FEATURE
                                           ])
@@ -80,7 +80,7 @@ global_params = json.dumps({
         "url": "https://algorithm-1308011215.cos.ap-beijing.myqcloud.com/1675411629205-liushi.csv",
         "columns": "custom_id"
     },
-    "model-predict":
+    "model_predict":
     {
         "predict_table_name": "algorithm.aip_zq_liushi_custom_feature_predict",
         "model_hdfs_path": "/user/ai/aip/zq/liushi/model/lasted.model",
@@ -95,16 +95,16 @@ global_params = json.dumps({
 
 
 # kubeflow_helper.upload_pipeline(ml_loss_warning, pipeline_name)
-# kubeflow_helper.upload_pipeline_version(ml_loss_warning, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
+kubeflow_helper.upload_pipeline_version(ml_loss_warning, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
 # client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
 #                                                            "flag": "TRAIN"},
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')
 # #
-client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
-                                                           "flag": "PREDICT"},
-                                     experiment_name="recommend",
-                                     namespace='kubeflow-user-example-com')
+# client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
+#                                                            "flag": "PREDICT"},
+#                                      experiment_name="recommend",
+#                                      namespace='kubeflow-user-example-com')
 #
 # client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
 #                                                            "flag": "AUTOML"},

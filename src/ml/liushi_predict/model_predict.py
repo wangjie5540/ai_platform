@@ -37,7 +37,7 @@ def start_model_predict(predict_table_name, model_hdfs_path, output_file_name):
     # 预测打分
     y_pred_score = [x[1] for x in model.predict_proba(x_predict)]
     result = pd.DataFrame({'custom_id': custom_list, 'score': y_pred_score})
-    result = result.drop_duplicates()
+    result = result.drop_duplicates('custom_id')
     result.sort_values(by="score", inplace=True, ascending=False)
 
     # 结果存储
