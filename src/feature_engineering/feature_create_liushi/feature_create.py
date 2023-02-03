@@ -112,7 +112,7 @@ def feature_create(sample_table_name,
         utils.get_act_feature(int(x[1][0][0]), x[1][1]))))
 
     # 3.4 客户基本信息(年龄，性别，城市，省份，教育程度)
-    merge_feature4 = merge_feature3.join(user_feature). \
+    merge_feature4 = merge_feature3.leftOuterJoin(user_feature). \
         map(lambda x: ((x[0], x[1][0][0]), (
         x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8], x[1][1])))
 

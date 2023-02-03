@@ -91,8 +91,8 @@ def feature_create(predict_samples_table_name,
 
     # 读取样本数据：客户号 --> (日期，label)
     custom_label = spark_client.get_session(). \
-        sql("select custom_id, '{}' as date, '0' as label from {}".format(end_date, predict_samples_table_name)). \
-        rdd.map(lambda x: (x[0], (x[1], x[2])))
+        sql("select custom_id, '{0}' as date, '0' as label from {1}".format(end_date, predict_samples_table_name)). \
+        rdd.map(lambda x: (str(x[0]), (x[1], x[2])))
 
     # 3.1 客户号 --> ((日期，lable)，(最近一次交易距今天数，最近一次交易额，最近3/7/15/30天交易))
     merge_feature1 = custom_label.leftOuterJoin(jy_feature). \
@@ -111,7 +111,7 @@ def feature_create(predict_samples_table_name,
         utils.get_act_feature(int(x[1][0][0]), x[1][1]))))
 
     # 3.4 客户基本信息(年龄，性别，城市，省份，教育程度)
-    merge_feature4 = merge_feature3.join(user_feature). \
+    merge_feature4 = merge_feature3.leftOuterJoin(user_feature). \
         map(lambda x: ((x[0], x[1][0][0]), (
         x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8], x[1][1])))
 

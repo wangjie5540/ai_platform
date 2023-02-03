@@ -28,6 +28,7 @@ def run():
     active_after_days = int(df_argument_helper.get_argument("active_after_days"))
 
     sample_table_name = df_argument_helper.get_argument("sample")
+    sample_table_name = json.loads(sample_table_name).get('table_name')
     predict_feature_table_name = feature_create(sample_table_name,
                                                 active_before_days, active_after_days,
                                                 feature_days=30)

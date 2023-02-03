@@ -41,6 +41,7 @@ def ml_loss_warning(global_params: str, flag='TRAIN'):
         predict_feature_op = FeatureCreateLiushiPredict(name="feature_create_predict", global_params=global_params,
                                                         sample=predict_table_op.outputs[Cos.OUTPUT_1],
                                                         tag=RUN_ENV)
+        predict_feature_op.container.set_image_pull_policy("Always")
         liushi_predict_op = LiushiPredict(name="model-predict", global_params=global_params, tag=RUN_ENV,
                                           predict_table_name=predict_feature_op.outputs[
                                               predict_feature_op.OUTPUT_PREDICT_FEATURE
@@ -77,7 +78,7 @@ global_params = json.dumps({
     "predict_cos_url":
     {
         "url": "https://algorithm-1308011215.cos.ap-beijing.myqcloud.com/1675411629205-liushi.csv",
-        "columns": "user_id"
+        "columns": "custom_id"
     },
     "model-predict":
     {
@@ -88,8 +89,7 @@ global_params = json.dumps({
     "feature_create_predict":
     {
         "active_before_days": 1,
-        "active_after_days": 1,
-        "sample": "algorithm.aip_zq_liushi_custom_predict"
+        "active_after_days": 1
     }
 })
 

@@ -2,7 +2,7 @@
 # encoding: utf-8
 from feature_create import feature_create
 
-predict_table_name = "algorithm.aip_zq_liushi_custom_predict"
+predict_table_name = "aip.cos_4719148283926155265"
 active_before_days = 1
 active_after_days = 1
 
