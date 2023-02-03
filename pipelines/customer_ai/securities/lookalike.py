@@ -151,7 +151,7 @@ global_params = json.dumps({
     }
 })
 # kubeflow_helper.upload_pipeline(ml_lookalike, pipeline_name)
-kubeflow_helper.upload_pipeline_version(ml_lookalike, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
+# kubeflow_helper.upload_pipeline_version(ml_lookalike, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
 # client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "TRAIN"},
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')
@@ -160,6 +160,6 @@ kubeflow_helper.upload_pipeline_version(ml_lookalike, kubeflow_helper.get_pipeli
 #                                      namespace='kubeflow-user-example-com')
 
 #
-# client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "PREDICT"},
-#                                      experiment_name="recommend",
-#                                      namespace='kubeflow-user-example-com')
+client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "PREDICT"},
+                                     experiment_name="recommend",
+                                     namespace='kubeflow-user-example-com')

@@ -76,7 +76,7 @@ def main():
         os.environ["ENV"] = "dev-wh"
     tag = os.environ["ENV"]
     for _dir in [
-        "src/ml/lookalike",
+        "src/ml/liushi_predict",
         # "src/preprocessing",
         # "src/feature_engineering",
         # "src/ml/liushi_predict",

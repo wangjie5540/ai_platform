@@ -2,7 +2,7 @@
 # encoding: utf-8
 import argparse
 import os
-
+import json
 from model_predict import start_model_predict
 
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
@@ -17,6 +17,7 @@ def run():
     df_argument_helper.add_argument("--output_file_name", type=str, required=False, help="输出文件名称")
 
     predict_table_name = df_argument_helper.get_argument("predict_table_name")
+    predict_table_name = json.loads(predict_table_name).get('table_name')
     model_hdfs_path = df_argument_helper.get_argument("model_hdfs_path")
     output_file_name = df_argument_helper.get_argument("output_file_name")
     print(f"predict_table_name:{predict_table_name}")

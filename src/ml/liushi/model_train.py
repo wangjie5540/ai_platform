@@ -29,7 +29,7 @@ def start_model_train(train_table_name, test_table_name,
     df_test = spark_client.get_session().sql(
         "select * from {} where dt = {}".format(test_table_name, dt)).toPandas()
     # df_test = hive_client.query_to_df("select * from {} where dt = {} limit 1000000".format(test_table_name, today))
-    print(f"read test_dataset success test_data len:{len(df_train)}")
+    print(f"read test_dataset success test_data len:{len(df_test)}")
     for col in df_train.columns:
         if df_train[col].dtypes == "object":
             df_train[col] = df_train[col].astype(float)
