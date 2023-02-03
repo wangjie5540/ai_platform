@@ -111,7 +111,8 @@ def train(train_data_table_name, test_data_table_name,
 
         user_embedding = user_tower_model.predict(all_user_model_input, batch_size=batch_size)
         user_vec_df = model_user_feature_dataset[["user_id_raw"]]
-        user_vec_df["user_vec"] = [_.tolist() for _ in list(user_embedding)]
+        user_vec_df["user_vec"] = [str(_.tolist()) for _ in list(user_embedding)]
+        user_vec_df = user_vec_df.rename(columns={'user_id_raw': 'user_id'})
         from digitforce.aip.common.utils.spark_helper import spark_client
         print("upload user_vec to hive")
         # todo 测试一下 pandasDF -> 保存成csv-> 传到hdfs-> 转成sparkDataframe-> 存表

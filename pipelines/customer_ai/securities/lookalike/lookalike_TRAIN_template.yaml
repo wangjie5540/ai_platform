@@ -26,7 +26,7 @@
     {
         "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name"
     },
-    "feature_and_label_to_dataset":
+    "feature_create":
     {},
     "model":
     {
@@ -35,7 +35,7 @@
         "batch_size": ${lookalike__batch_size},
         "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name",
         "user_vec_table_name": "algorithm.tmp_user_vec_table_name",
-        "model_and_metrics_data_hdfs_path": "/user/ai/aip/zq/lookalike/model/${solution_run_id}"
+        "model_and_metrics_data_hdfs_path": "/user/ai/aip/model/${solution_run_id}"
     },
     "model_predict":
     {

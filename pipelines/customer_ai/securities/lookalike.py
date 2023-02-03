@@ -55,7 +55,7 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
         model_sample_op.after(op_sample_selection)
         model_sample_op.after(zq_feature_op)
         model_sample_op.container.set_image_pull_policy("Always")
-        to_dataset_op = ModelFeature2Dataset(name="feature_and_label_to_dataset", global_params=global_params,
+        to_dataset_op = ModelFeature2Dataset(name="feature_create", global_params=global_params,
                                              label_table_name=model_sample_op.outputs[
                                                  RawSample2ModelSample.OUTPUT_KEY_MODEL_SAMPLE],
                                              model_user_feature_table_name=model_user_feature_op.outputs[
@@ -75,12 +75,6 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
             lookalike_model_op.container.set_image_pull_policy("Always")
 
     with dsl.Condition(flag == "PREDICT", name="is_predict"):
-        # todo seed tabe and user table from other op
-        # seeds_table_name = 'algorithm.aip_zq_lookalike_seeds_crowd'
-        # user_table_name = 'algorithm.aip_zq_lookalike_predict_crowd'
-        # lookalike_model_predict_op = LookalikeModelPredict("model_predict", global_params,
-        #                                                    seeds_crowd_table_name=seeds_table_name,
-        #                                                    predict_crowd_table_name=user_table_name)
         seeds_table_op = Cos("seeds_cos_url", global_params)
         seeds_table_op.container.set_image_pull_policy("Always")
         predict_table_op = Cos("predict_cos_url",global_params)
@@ -129,7 +123,7 @@ global_params = json.dumps({
     {
         "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name"
     },
-    "feature_and_label_to_dataset":
+    "feature_create":
     {},
     "model":
     {

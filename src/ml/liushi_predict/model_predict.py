@@ -6,14 +6,17 @@ import pandas as pd
 import joblib
 from digitforce.aip.common.utils.spark_helper import spark_client
 import digitforce.aip.common.utils.hdfs_helper as hdfs_helper
+from digitforce.aip.common.utils import cos_helper
 
 DATE_FORMAT = "%Y%m%d"
 today = datetime.datetime.today().strftime(DATE_FORMAT)
 hdfs_client = hdfs_helper.HdfsClient()
 
 
-def start_model_predict(predict_table_name, model_hdfs_path):
-    dt = "20230103" #todo read latest partition
+def start_model_predict(predict_table_name, model_hdfs_path, output_file_name):
+    dt = spark_client.get_session().sql(
+        f"show partitions {predict_table_name}").collect()[-1][0][3:]
+    print(dt)
     df_predict = spark_client.get_session().sql(
         "select * from {} where dt = {}".format(predict_table_name, dt)).toPandas()
 
@@ -23,6 +26,8 @@ def start_model_predict(predict_table_name, model_hdfs_path):
 
     custom_list = df_predict['custom_id'].values
     x_predict = df_predict.drop(columns=['custom_id', 'label', 'dt'], axis=1)
+    if type(custom_list[0]) is not str:
+        custom_list = [str(int(custom_id)) for custom_id in custom_list]
 
     # 模型加载
     local_file_path = "./model"
@@ -37,8 +42,9 @@ def start_model_predict(predict_table_name, model_hdfs_path):
     # 结果存储
     result_local_path = "result.csv"
     result_hdfs_path = "/user/ai/aip/zq/liushi/result/{}_liushi_result.csv".format(today)
-    result.to_csv(result_local_path, index=False)
-    write_hdfs_path(result_local_path, result_hdfs_path, hdfs_client)
+    result.to_csv(result_local_path, index=False,header=False)
+    # write_hdfs_path(result_local_path, result_hdfs_path, hdfs_client)
+    output_file_path = cos_helper.upload_file("result.csv", output_file_name)
 
 # 读hdfs
 def read_hdfs_path(local_path, hdfs_path, hdfs_client):

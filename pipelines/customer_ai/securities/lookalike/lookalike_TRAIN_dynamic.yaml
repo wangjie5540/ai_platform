@@ -2,6 +2,10 @@ dataSource:
   - table_name: algorithm.zq_fund_trade
     table_cname: 基金交易表
     columns:
+      - name: custom_id_new
+        cname: 客户号
+        type: string
+        required: true
       - name: custom_id
         cname: 客户号
         type: string
@@ -73,13 +77,13 @@ dataSource:
         type: string
         required: false
 trainSample:
-  - label:
+  - label: 用户向量生成方式
     itemList:
       - type: select
         attributeName: event_code_buy
         prefixText: 基于
-        placeholder: 请选择业务目标
-        suffixText: 训练模型，生成用户向量
+        placeholder: 请选择目标
+        suffixText: 训练模型
         description:
         required: true
         optionType: 1
@@ -94,7 +98,7 @@ modelHyperParameter:
         prefixText: 随机失活
         description: 随机隐藏一定比例的神经元，防止过拟合
         placeholder: 0.3
-        default: 0.3
+        #default: 0.3
         errorMessage: 请输入0-1之间的小数
         required: true
       - type: input-number
@@ -102,7 +106,7 @@ modelHyperParameter:
         prefixText: 批次大小
         description: 单次训练所使用的样本数量
         placeholder: 128
-        default: 128
+        #default: 128
         errorMessage: 请输入正整数
         required: true
       - type: input-number
@@ -110,6 +114,6 @@ modelHyperParameter:
         prefixText: 学习率
         description: 模型权重迭代的步长
         placeholder: 0.1
-        default: 0.1
+        #default: 0.1
         errorMessage: 请输入0-1之间的小数
         required: true

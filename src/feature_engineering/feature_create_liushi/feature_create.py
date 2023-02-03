@@ -35,29 +35,29 @@ def feature_create(sample_table_name,
     print("The data source time range is from {} to {}".format(active_start_date, active_end_date))
 
     # 客户号，年龄，性别，城市，省份，教育程度
-    spark_client.get_starrocks_table_df("algorithm.sample_jcbq_zxr").createOrReplaceTempView("sample_jcbq_zxr")
+    spark_client.get_starrocks_table_df("algorithm.sample_jcbq").createOrReplaceTempView("sample_jcbq")
     table_user = spark_client.get_session().sql(
-        "select cust_code, age, gender, city_name, province, educational_degree from sample_jcbq_zxr where replace(dt,'-','') = '{}'".format(
+        "select cust_code, age, gender, city_name, province, educational_degree from sample_jcbq where replace(dt,'-','') = '{}'".format(
             end_date))
     # 客户号，日期，客户是否登录
-    spark_client.get_starrocks_table_df("algorithm.sample_llxw_zxr").createOrReplaceTempView("sample_llxw_zxr")
+    spark_client.get_starrocks_table_df("algorithm.sample_llxw").createOrReplaceTempView("sample_llxw")
     table_app = spark_client.get_session().sql(
-        "select cust_code, replace(dt,'-','') as dt, is_login from sample_llxw_zxr where replace(dt,'-','') between '{}' and '{}'".format(
+        "select cust_code, replace(dt,'-','') as dt, is_login from sample_llxw where replace(dt,'-','') between '{}' and '{}'".format(
             active_start_date, active_end_date))
     # 客户号，日期，资金转出金额，资金转入金额，资金转出笔数，资金转入笔数
-    spark_client.get_starrocks_table_df("algorithm.sample_zjls_zxr").createOrReplaceTempView("sample_zjls_zxr")
+    spark_client.get_starrocks_table_df("algorithm.sample_zjls").createOrReplaceTempView("sample_zjls")
     table_zj = spark_client.get_session().sql(
-        "select cust_code, replace(dt,'-','') as dt, zc_money, zr_money, zc_cnt, zr_cnt from sample_zjls_zxr where replace(dt,'-','') between '{}' and '{}'".format(
+        "select cust_code, replace(dt,'-','') as dt, zc_money, zr_money, zc_cnt, zr_cnt from sample_zjls where replace(dt,'-','') between '{}' and '{}'".format(
             feature_date, end_date))
     # 客户号，日期，交易笔数，交易金额，股票笔数，股票金额，基金笔数，基金金额
-    spark_client.get_starrocks_table_df("algorithm.sample_sgsh_zxr").createOrReplaceTempView("sample_sgsh_zxr")
+    spark_client.get_starrocks_table_df("algorithm.sample_sgsh").createOrReplaceTempView("sample_sgsh")
     table_jy = spark_client.get_session().sql(
-        "select cust_code, replace(dt,'-','') as dt, jy_num, jy_rmb, jygp_num, jygp_rmb, jyjj_num, jyjj_rmb from sample_sgsh_zxr where replace(dt,'-','') between '{}' and '{}'".format(
+        "select cust_code, replace(dt,'-','') as dt, jy_num, jy_rmb, jygp_num, jygp_rmb, jyjj_num, jyjj_rmb from sample_sgsh where replace(dt,'-','') between '{}' and '{}'".format(
             feature_date, end_date))
     # 客户号，日期，总资产，总负债，基金资产，股票资产，资金余额，产品资产
-    spark_client.get_starrocks_table_df("algorithm.sample_zcsj_zxr").createOrReplaceTempView("sample_zcsj_zxr")
+    spark_client.get_starrocks_table_df("algorithm.sample_zcsj").createOrReplaceTempView("sample_zcsj")
     table_zc = spark_client.get_session().sql(
-        "select cust_code, replace(dt,'-','') as dt, ast_total, ast_fz, ast_jj, ast_gp, ast_zj, ast_cp from sample_zcsj_zxr where replace(dt,'-','') between '{}' and '{}'".format(
+        "select cust_code, replace(dt,'-','') as dt, ast_total, ast_fz, ast_jj, ast_gp, ast_zj, ast_cp from sample_zcsj where replace(dt,'-','') between '{}' and '{}'".format(
             feature_date, end_date))
 
     # 2. 特征预处理
