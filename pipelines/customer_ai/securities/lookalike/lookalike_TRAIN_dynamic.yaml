@@ -2,10 +2,6 @@ dataSource:
   - table_name: algorithm.zq_fund_trade
     table_cname: 基金交易表
     columns:
-      - name: custom_id_new
-        cname: 客户号
-        type: string
-        required: true
       - name: custom_id
         cname: 客户号
         type: string
