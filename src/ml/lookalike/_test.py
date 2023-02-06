@@ -12,7 +12,7 @@ is_automl = False
 
 model_user_feature_table_name = "algorithm.tmp_model_user_feature_table_name"
 user_vec_table_name = "algorithm.tmp_user_vec_table_name"
-model_and_metrics_data_hdfs_path = "/user/ai/aip/zq/loss_warning/model/112233"
+model_and_metrics_data_hdfs_path = "/user/ai/aip/model/112233"
 train(train_data_table_name, test_data_table_name,
       dnn_dropout=dnn_dropout,
       batch_size=batch_size, lr=lr,

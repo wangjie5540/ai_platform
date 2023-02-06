@@ -1,6 +1,6 @@
 import os
 
-os.environ["RUN_ENV"] = "dev-wh"
+os.environ["RUN_ENV"] = "prod"
 import kfp
 
 import digitforce.aip.common.utils.kubeflow_helper as kubeflow_helper
@@ -9,6 +9,7 @@ from digitforce.aip.components.ml import LookalikeModel, LookalikeModelPredict
 from digitforce.aip.components.preprocessing import ModelFeature2Dataset
 from digitforce.aip.components.sample import *
 from digitforce.aip.components.source.cos import Cos
+from kfp.compiler import Compiler
 
 pipeline_name = 'lookalike'
 pipeline_path = f'/tmp/{pipeline_name}.yaml'
@@ -89,10 +90,10 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
         lookalike_model_predict_op.container.set_image_pull_policy("Always")
 
 
-kubeflow_config = config_helper.get_module_config("kubeflow")
-client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
-    url=kubeflow_config['url'], username=kubeflow_config['username'],
-    password=kubeflow_config['password'])['session_cookie'])
+# kubeflow_config = config_helper.get_module_config("kubeflow")
+# client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
+#     url=kubeflow_config['url'], username=kubeflow_config['username'],
+#     password=kubeflow_config['password'])['session_cookie'])
 import json
 
 global_params = json.dumps({
@@ -160,6 +161,12 @@ global_params = json.dumps({
 #                                      namespace='kubeflow-user-example-com')
 
 #
-client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "PREDICT"},
-                                     experiment_name="recommend",
-                                     namespace='kubeflow-user-example-com')
+# client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "PREDICT"},
+#                                      experiment_name="recommend",
+#                                      namespace='kubeflow-user-example-com')
+
+kubeflow_config = config_helper.get_module_config("kubeflow")
+pipeline_path = f"/tmp/{pipeline_name}.yaml"
+pipeline_conf = kfp.dsl.PipelineConf()
+pipeline_conf.set_image_pull_policy("Always")
+Compiler().compile(pipeline_func=ml_lookalike, package_path=pipeline_path, pipeline_conf=pipeline_conf)

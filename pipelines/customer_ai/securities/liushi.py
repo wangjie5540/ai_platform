@@ -10,14 +10,15 @@ from digitforce.aip.components.ml import LiushiModel
 from digitforce.aip.components.ml import LiushiPredict
 from digitforce.aip.components.sample import SampleSelectionLiushi
 from digitforce.aip.components.source.cos import Cos
+from kfp.compiler import Compiler
 
-pipeline_name = 'loss_warning_v12_dev'
+pipeline_name = 'loss_warning'
 pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 
 @dsl.pipeline(name=pipeline_name)
 def ml_loss_warning(global_params: str, flag='TRAIN'):
-    RUN_ENV = "dev-wh"
+    RUN_ENV = "prod"
     with Condition(flag != "PREDICT", name="is_not_predict"):
         op_sample_selection = SampleSelectionLiushi(name='sample_select', global_params=global_params, tag=RUN_ENV)
         op_sample_selection.container.set_image_pull_policy("Always")
@@ -49,9 +50,9 @@ def ml_loss_warning(global_params: str, flag='TRAIN'):
         liushi_predict_op.container.set_image_pull_policy("Always")
 
 
-client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
-    url="http://172.22.20.9:30000/pipeline", username="admin@example.com",
-    password="password")['session_cookie'])
+# client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
+#     url="http://172.22.20.9:30000/pipeline", username="admin@example.com",
+#     password="password")['session_cookie'])
 import json
 
 global_params = json.dumps({
@@ -95,7 +96,7 @@ global_params = json.dumps({
 
 
 # kubeflow_helper.upload_pipeline(ml_loss_warning, pipeline_name)
-kubeflow_helper.upload_pipeline_version(ml_loss_warning, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
+# kubeflow_helper.upload_pipeline_version(ml_loss_warning, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
 # client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
 #                                                            "flag": "TRAIN"},
 #                                      experiment_name="recommend",
@@ -110,3 +111,10 @@ kubeflow_helper.upload_pipeline_version(ml_loss_warning, kubeflow_helper.get_pip
 #                                                            "flag": "AUTOML"},
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')
+
+
+kubeflow_config = config_helper.get_module_config("kubeflow")
+pipeline_path = f"/tmp/{pipeline_name}.yaml"
+pipeline_conf = kfp.dsl.PipelineConf()
+pipeline_conf.set_image_pull_policy("Always")
+Compiler().compile(pipeline_func=ml_loss_warning, package_path=pipeline_path, pipeline_conf=pipeline_conf)
