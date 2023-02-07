@@ -8,8 +8,8 @@ metadata:
 data:
    # Replaced by your temporary secret file content. You can generate a temporary secret key with these docs:
    # Note: The value must be encoded by base64.
-   SecretId: UVV0SlJFaE9SblJJVWxFNFlXMW5USGRKUW5GSVdXWmlTV3RGWkc1clpGVkNaSEpL
-   SecretKey: U2s1RmMwaFFTWFpKVGtOM2JsSXlWMnhyVlVSelNsUlFOMXBzYjJWSmFIRT0=
+   SecretId: QUtJREhORnRIUlE4YW1nTHdJQnFIWWZiSWtFZG5rZFVCZHJK
+   SecretKey: Sk5Fc0hQSXZJTkN3blIyV2xrVURzSlRQN1psb2VJaHE=
 
 ---
 
