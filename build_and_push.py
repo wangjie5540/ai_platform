@@ -79,7 +79,9 @@ def main():
         os.environ["ENV"] = "prod"
     tag = os.environ["ENV"]
     for _dir in [
-        "src",
+        "src/feature_engineering/model_item_feature",
+        "src/feature_engineering/model_user_feature",
+        "src/sample/raw_sample_to_sample",
         # "src/preprocessing",
         # "src/feature_engineering",
         # "src/ml/liushi_predict",

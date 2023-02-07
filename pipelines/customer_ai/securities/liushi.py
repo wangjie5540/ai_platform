@@ -50,9 +50,9 @@ def ml_loss_warning(global_params: str, flag='TRAIN'):
         liushi_predict_op.container.set_image_pull_policy("Always")
 
 
-# client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
-#     url="http://172.22.20.9:30000/pipeline", username="admin@example.com",
-#     password="password")['session_cookie'])
+client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
+    url="http://172.22.20.9:30000/pipeline", username="admin@example.com",
+    password="password")['session_cookie'])
 import json
 
 global_params = json.dumps({
@@ -95,7 +95,7 @@ global_params = json.dumps({
 })
 
 
-# kubeflow_helper.upload_pipeline(ml_loss_warning, pipeline_name)
+kubeflow_helper.upload_pipeline(ml_loss_warning, pipeline_name)
 # kubeflow_helper.upload_pipeline_version(ml_loss_warning, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
 # client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
 #                                                            "flag": "TRAIN"},
