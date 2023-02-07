@@ -37,8 +37,9 @@ def start_sample_selection(active_before_days, active_after_days,
     print("The data source time range is from {} to {}".format(active_start_date, active_end_date))
 
     # 客户号，日期，客户是否登录
+    spark_client.get_starrocks_table_df("algorithm.sample_llxw").createOrReplaceTempView("sample_llxw")
     table_app = spark_client.get_session().sql(
-        """select cust_code, replace(dt,'-','') as dt, is_login from algorithm.sample_llxw where replace(dt,'-','') between '{}' and '{}'""".format(
+        """select cust_code, replace(dt,'-','') as dt, is_login from sample_llxw where replace(dt,'-','') between '{}' and '{}'""".format(
             active_start_date, active_end_date))
     # print("table_app")
     # print(table_app.count())

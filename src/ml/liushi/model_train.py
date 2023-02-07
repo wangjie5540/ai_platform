@@ -19,15 +19,17 @@ def start_model_train(train_table_name, test_table_name,
                       learning_rate=0.05, n_estimators=200, max_depth=5, scale_pos_weight=0.5,
                       is_automl=True,
                       model_and_metrics_data_hdfs_path=None):
-    dt = "20230103" # todo read latest partition
+    dt = spark_client.get_session().sql(
+        f"show partitions {train_table_name}").collect()[-1][0][3:]
+    print(dt)
     df_train = spark_client.get_session().sql(
-        "select * from {} where dt = {}  limit 1000000".format(train_table_name, dt)).toPandas()
+        "select * from {} where dt = {}".format(train_table_name, dt)).toPandas()
     # df_train = hive_client.query_to_df("select * from {} where dt = {} limit 1000000".format(train_table_name, today))
     print(f"read train_dataset success train_data len:{len(df_train)}")
     df_test = spark_client.get_session().sql(
         "select * from {} where dt = {}".format(test_table_name, dt)).toPandas()
     # df_test = hive_client.query_to_df("select * from {} where dt = {} limit 1000000".format(test_table_name, today))
-    print(f"read test_dataset success test_data len:{len(df_train)}")
+    print(f"read test_dataset success test_data len:{len(df_test)}")
     for col in df_train.columns:
         if df_train[col].dtypes == "object":
             df_train[col] = df_train[col].astype(float)

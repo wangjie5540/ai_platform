@@ -19,9 +19,9 @@ def start_sample_selection(event_code_buy, pos_sample_proportion=0.5, pos_sample
     item_id = columns[3]
     # TODO：数据取较大范围
     today = time_helper.get_today_str()
-    thirty_days_ago = time_helper.n_days_ago_str(120)
+    thirty_days_ago = time_helper.n_days_ago_str(365)
 
-    data = spark_client.get_starrocks_table_df("algorithm.zq_fund_trade")
+    data = spark_client.get_starrocks_table_df("algorithm.zq_fund_trade_lite")
     data = data.select(columns) \
         .filter((data[trade_date] >= thirty_days_ago) & (data[trade_date] <= today)) \
         .filter(data[trade_type] == buy_code)

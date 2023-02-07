@@ -15,11 +15,11 @@ def calculate_raw_user_feature(raw_user_feature_table_name):
                            "fund_nav"]
 
     # todo starrocks支持列存储  可以将select移至starrocks中 降低网络io
-    standard_user_data = spark_client.get_starrocks_table_df('algorithm.user_info')
+    standard_user_data = spark_client.get_starrocks_table_df('algorithm.user_info_lite')
     standard_user_data = standard_user_data.select(user_table_columns)
     standard_user_data = standard_user_data.withColumnRenamed("cust_id", "custom_id")
 
-    standard_order_table = spark_client.get_starrocks_table_df("algorithm.zq_fund_trade")
+    standard_order_table = spark_client.get_starrocks_table_df("algorithm.zq_fund_trade_lite")
     standard_order_data = standard_order_table.select(order_table_columns)
 
     # 3. 构造用户原始特征
@@ -40,7 +40,7 @@ def calculate_raw_user_feature_from_order_feature(standard_order_dataframe):
     today = datetime.datetime.today()
     today_str = get_today_str()
     # TODO：数据原因，暂时取近一年构造特征
-    thirty_days_ago_str = n_days_ago_str(120)
+    thirty_days_ago_str = n_days_ago_str(365)
     # TODO：后续统一规范event_code
     buy_code = "fund_buy"
     # 构建列名

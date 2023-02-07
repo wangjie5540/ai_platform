@@ -21,7 +21,7 @@ def run():
     active_after_days = component_params["active_after_days"]
     sample_table_name = "algorithm.aip_zq_liushi_custom_label"
     print("===============================================")
-    print("run on dev model....")
+    # print("run on dev model....")
     print(f"global_params:{global_params}")
     print(f"name:{name}")
     print(f"sample_table_name:{sample_table_name}")
@@ -29,7 +29,7 @@ def run():
     print(f"active_after_days:{active_after_days}")
     component_helper.write_output("sample_table_name", sample_table_name)
     print("===============================================")
-    return
+    # return
     sample_table_name = \
         start_sample_selection(active_before_days, active_after_days, label_count=300000)
     component_helper.write_output("sample_table_name", sample_table_name)
