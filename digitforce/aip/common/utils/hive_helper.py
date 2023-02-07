@@ -50,5 +50,4 @@ class HiveClient:
         self.conn = None
 
 
-# hive_client = HiveClient()
-hive_client = HiveClient(host="172.22.20.57", port=7001)
+hive_client = HiveClient()

@@ -15,5 +15,5 @@ SPARK_APP_NAME = 'default-name'
 # 配置文件挂载地址
 CONFIG_MOUNT_PATH = '/mnt/config'
 
-ENV = "DEV"
-ENV = os.environ["RUN_ENV"] if os.environ.get("RUN_ENV") else ENV
+# TODO：接入环境隔离后，进行优化
+ENV = os.environ["RUN_ENV"] if os.environ.get("RUN_ENV") else "DEV"
