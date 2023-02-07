@@ -30,12 +30,12 @@ class SparkClient(object):
             .config("spark.kubernetes.container.image.pullPolicy", "Always") \
             .config("spark.kubernetes.namespace", "kubeflow-user-example-com") \
             .config("spark.sql.autoBroadcastJoinThreshold", -1) \
-            .config("spark.executor.instances", "4") \
+            .config("spark.executor.instances", "1") \
             .config("spark.debug.maxToStringFields", 100) \
             .config("spark.executor.cores", "1") \
-            .config("spark.executor.memory", "16g") \
+            .config("spark.executor.memory", "4g") \
             .config("spark.rpc.message.maxSize", 1000) \
-            .config("spark.driver.memory", "6g") \
+            .config("spark.driver.memory", "4g") \
             .config("spark.driver.cores", "1") \
             .config("spark.driver.maxResultSize", "4g") \
             .config("spark.sql.sources.partitionOverwriteMode", "DYNAMIC") \
