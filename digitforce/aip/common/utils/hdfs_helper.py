@@ -81,5 +81,4 @@ class HdfsClient:
         return obj
 
 
-# hdfs_client = HdfsClient()
-hdfs_client = HdfsClient("172.22.20.137:4008,172.22.20.110:4008")
+hdfs_client = HdfsClient()
