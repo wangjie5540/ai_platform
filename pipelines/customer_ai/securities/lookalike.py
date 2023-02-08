@@ -1,5 +1,5 @@
 import os
-
+# TODO：后续优化为tag
 os.environ["RUN_ENV"] = "prod"
 import kfp
 
@@ -21,9 +21,9 @@ from digitforce.aip.components.feature_engineering import *
 def ml_lookalike(global_params: str, flag='TRAIN'):
     with dsl.Condition(flag != "PREDICT", name="is_not_predict"):
         raw_user_feature_op = \
-            RawUserFeatureOp(name='raw_user_feature', global_params=global_params)  # todo 第一个组件生成的表名
+            RawUserFeatureOp(name='raw_user_feature', global_params=global_params)
         raw_user_feature_op.container.set_image_pull_policy("Always")
-        raw_item_feature_op = RawItemFeatureOp(name='raw_item_feature', global_params=global_params)  # todo 第一个组件生成的表名
+        raw_item_feature_op = RawItemFeatureOp(name='raw_item_feature', global_params=global_params)
         raw_item_feature_op.container.set_image_pull_policy("Always")
 
         zq_feature_op = ZqFeatureEncoderCalculator(name="zq_feature_calculator", global_params=global_params,
@@ -48,11 +48,12 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
                                                    ])
         model_item_feature_op.after(zq_feature_op)
         model_item_feature_op.container.set_image_pull_policy("Always")
-        # todo remove table
         op_sample_selection = SampleSelectionLookalike(name='sample_select', global_params=global_params)
         op_sample_selection.container.set_image_pull_policy("Always")
         model_sample_op = RawSample2ModelSample(name="raw_sample2model_sample", global_params=global_params,
-                                                raw_sample_table_name="algorithm.tmp_aip_sample")  # todo
+                                                raw_sample_table_name=op_sample_selection.outputs[
+                                                    SampleSelectionLookalike.output_name
+                                                ])
         model_sample_op.after(op_sample_selection)
         model_sample_op.after(zq_feature_op)
         model_sample_op.container.set_image_pull_policy("Always")
@@ -148,7 +149,7 @@ global_params = json.dumps({
     "model_predict":
     {
         "output_file_name": "result.csv",
-        "user_vec_table_name": "algorithm.aip_zq_lookalike_user_vec"
+        "user_vec_table_name": "algorithm.tmp_user_vec_table_name"
     }
 })
 # kubeflow_helper.upload_pipeline(ml_lookalike, pipeline_name)
