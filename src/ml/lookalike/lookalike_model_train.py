@@ -6,8 +6,8 @@ from digitforce.aip.common.utils.hive_helper import hive_client
 import numpy as np
 import torch
 import torch.optim.adam as adam
-from sklearn.metrics import log_loss, roc_auc_score
-
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, precision_score, recall_score, log_loss
+from digitforce.aip.common.utils.aip_model_manage_helper import report_to_aip
 from digitforce.aip.common.aip_feature.zq_feature import *
 from model.dssm import DSSM
 from preprocessing.inputs import SparseFeat, DenseFeat, VarLenSparseFeat
@@ -25,7 +25,8 @@ def train(train_data_table_name, test_data_table_name,
           batch_size=256, lr=0.01,
           is_automl=False,
           model_user_feature_table_name=None,
-          user_vec_table_name=None):
+          user_vec_table_name=None,
+          model_and_metrics_data_hdfs_path=None):
     if not is_automl and model_user_feature_table_name is None:
         raise ValueError(
             f"train model on TRAIN the model_user_feature_table_name must be set... {model_user_feature_table_name}")
@@ -72,8 +73,21 @@ def train(train_data_table_name, test_data_table_name,
     model.load_state_dict(state_dict['model_state_dict'], strict=False)
 
     pred_ts = model.predict(test_model_input, batch_size=batch_size)
-    print("test-logloss={:.4f}, test-auc={:.4f}".format(log_loss(test_data["label"].values, pred_ts),
-                                                        roc_auc_score(test_data["label"].values, pred_ts)))
+    y_pred = [1 if x >= 0.5 else 0 for x in pred_ts]
+
+    def getRates(y_test, y_pred, y_pred_score):
+        s_acc = accuracy_score(y_test, y_pred)
+        s_auc = roc_auc_score(y_test, y_pred_score)
+        #     s_auc = 0
+        s_pre = precision_score(y_test, y_pred)
+        s_rec = recall_score(y_test, y_pred)
+        s_f1 = f1_score(y_test, y_pred)
+        s_loss = log_loss(y_test, y_pred_score)
+        return [s_acc, s_auc, s_pre, s_rec, s_f1, s_loss]
+
+    all_score = getRates(test_data["label"].values, y_pred, pred_ts)
+    print("test-logloss={:.4f}, test-auc={:.4f}".format(all_score[5],
+                                                        all_score[1]))
 
     if not is_automl:
         # 获取单塔 user tower
@@ -97,7 +111,8 @@ def train(train_data_table_name, test_data_table_name,
 
         user_embedding = user_tower_model.predict(all_user_model_input, batch_size=batch_size)
         user_vec_df = model_user_feature_dataset[["user_id_raw"]]
-        user_vec_df["user_vec"] = [_.tolist() for _ in list(user_embedding)]
+        user_vec_df["user_vec"] = [str(_.tolist()) for _ in list(user_embedding)]
+        user_vec_df = user_vec_df.rename(columns={'user_id_raw': 'user_id'})
         from digitforce.aip.common.utils.spark_helper import spark_client
         print("upload user_vec to hive")
         # todo 测试一下 pandasDF -> 保存成csv-> 传到hdfs-> 转成sparkDataframe-> 存表
@@ -110,6 +125,21 @@ def train(train_data_table_name, test_data_table_name,
         if hdfs_client.exists(model_hdfs_path):
             hdfs_client.delete(model_hdfs_path)
         hdfs_client.copy_from_local("./model_zoo/model.pth", model_hdfs_path)
+
+        # report model and metrics to aip
+        metrics_info = {
+            "accuracy": all_score[0],
+            "auc": all_score[1],
+            "precision": all_score[2],
+            "recall": all_score[3],
+            "f1_score": all_score[4],
+            "loss": all_score[5],
+        }
+        report_to_aip(model_and_metrics_data_hdfs_path,
+                      model_hdfs_path,
+                      model_name="人群扩散",
+                      model_type="pk",
+                      **metrics_info)
 
 
 def build_model(user_feature_columns, item_feature_columns, dnn_dropout, lr):

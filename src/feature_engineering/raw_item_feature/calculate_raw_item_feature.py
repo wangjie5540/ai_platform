@@ -16,7 +16,7 @@ def calculate_raw_item_feature(output_table):
     standard_item_dataframe = standard_item_dataframe.select(item_table_columns).distinct()
     standard_item_dataframe = standard_item_dataframe.withColumnRenamed("ts_code", "fund_code")
 
-    standard_fund_trade_dataframe = spark_client.get_starrocks_table_df("algorithm.zq_fund_trade")
+    standard_fund_trade_dataframe = spark_client.get_starrocks_table_df("algorithm.zq_fund_trade_lite")
     standard_fund_trade_dataframe = standard_fund_trade_dataframe.select(order_table_columns)
 
     # 3. 构造用户、物品特征
@@ -37,7 +37,7 @@ def calculate_raw_item_feature_from_order_table(standard_fund_trade_dataframe):
     # TODO: 构建不同时间段行为统计特征
     today = datetime.datetime.today().date()
     # TODO：数据原因，暂时取近一年构造特征
-    thirty_days_ago_str = n_days_ago_str(120)
+    thirty_days_ago_str = n_days_ago_str(365)
     # TODO：后续统一规范event_code
 
     item_id = "fund_code"

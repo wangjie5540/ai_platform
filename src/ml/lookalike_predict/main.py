@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
+import json
 
 from digitforce.aip.common.utils import component_helper
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
@@ -17,6 +18,8 @@ def run():
     seeds_crowd_table_name = df_argument_helper.get_argument("seeds_crowd_table_name")
     predict_crowd_table_name = df_argument_helper.get_argument("predict_crowd_table_name")
     output_file_name = df_argument_helper.get_argument("output_file_name")
+    seeds_crowd_table_name = json.loads(seeds_crowd_table_name).get('table_name')
+    predict_crowd_table_name = json.loads(predict_crowd_table_name).get('table_name')
     print(f"user_vec_table_name:{user_vec_table_name}")
     print(f"seeds_crowd_table_name:{seeds_crowd_table_name}")
     print(f"predict_crowd_table_name:{predict_crowd_table_name}")

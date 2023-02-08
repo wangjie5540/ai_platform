@@ -23,6 +23,8 @@ def run():
     df_argument_helper.add_argument("--batch_size", type=str, required=False, help="batch_size")
     df_argument_helper.add_argument("--lr", type=str, required=False, help="lr")
     df_argument_helper.add_argument("--dnn_dropout", type=str, required=False, help="dnn_dropout")
+    df_argument_helper.add_argument("--model_and_metrics_data_hdfs_path", type=str,
+                                    required=False, help="模型管理")
 
     train_dataset_table_name = df_argument_helper.get_argument("train_dataset_table_name")
     test_dataset_table_name = df_argument_helper.get_argument("test_dataset_table_name")
@@ -32,6 +34,7 @@ def run():
     dnn_dropout = float(df_argument_helper.get_argument("dnn_dropout"))
     is_automl = df_argument_helper.get_argument("is_automl")
     is_train = df_argument_helper.get_argument("is_train")
+    model_and_metrics_data_hdfs_path = df_argument_helper.get_argument("model_and_metrics_data_hdfs_path")
     if is_train:
         is_train = str(is_train).lower() not in ["none", "false"]
         is_automl = not is_train
@@ -54,7 +57,8 @@ def run():
 
           is_automl=is_automl,
           model_user_feature_table_name=model_user_feature_table_name,
-          user_vec_table_name=user_vec_table_name
+          user_vec_table_name=user_vec_table_name,
+          model_and_metrics_data_hdfs_path=model_and_metrics_data_hdfs_path
           )
 
     component_helper.write_output("user_vec_table_name", str(user_vec_table_name))
