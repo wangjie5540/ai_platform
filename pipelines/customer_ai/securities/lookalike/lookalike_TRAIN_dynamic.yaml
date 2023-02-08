@@ -1,5 +1,5 @@
 dataSource:
-  - table_name: algorithm.zq_fund_trade
+  - table_name: algorithm.zq_fund_trade_lite
     table_cname: 基金交易表
     columns:
       - name: custom_id
@@ -41,7 +41,7 @@ dataSource:
         cname: 投资风格
         type: string
         required: true
-  - table_name: algorithm.user_info
+  - table_name: algorithm.user_info_lite
     table_cname: 用户基础标签表
     columns:
       - name: cust_id

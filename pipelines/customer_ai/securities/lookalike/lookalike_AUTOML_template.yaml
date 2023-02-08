@@ -86,7 +86,7 @@
       "model_predict":
       {
           "output_file_name": "result.csv",
-          "user_vec_table_name": "algorithm.aip_zq_lookalike_user_vec"
+          "user_vec_table_name": "algorithm.tmp_user_vec_table_name"
       }
   },
     "flag": "AUTOML"
