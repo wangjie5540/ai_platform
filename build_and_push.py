@@ -20,7 +20,10 @@ RUN mkdir -p $PROJECT_DIR/digitforce/aip
 COPY ./digitforce/__init__.py $PROJECT_DIR/digitforce/__init__.py
 COPY ./digitforce/aip/__init__.py $PROJECT_DIR/digitforce/aip/__init__.py
 RUN mkdir -p /usr/local/etc/
-COPY aip_config.yaml /usr/local/etc/aip_config.yaml
+COPY ./dockerfiles/aip_config/prod/aip_config.yaml /usr/local/etc/aip_config.yaml
+RUN mkdir -p /root/.kube
+COPY ./dockerfiles/aip_config/prod/kube_config /root/.kube/config
+COPY ./dockerfiles/aip_config/prod/hdfs-site.xml $SPARK_HOME/conf
 COPY ./digitforce/aip/common $PROJECT_DIR/digitforce/aip/common
 COPY ./digitforce/aip/components $PROJECT_DIR/digitforce/aip/components
 
@@ -73,12 +76,14 @@ def main():
     os.system(
         "docker login -u ai-components-1672712149820 -p 30dd16ad7d172c138cdc4475133ba6d67b8fae09 digit-force-docker.pkg.coding.net")
     if not os.environ.get("ENV"):
-        os.environ["ENV"] = "dev"
+        os.environ["ENV"] = "prod"
     tag = os.environ["ENV"]
     for _dir in [
-        "src/",
+        "src/feature_engineering/model_item_feature",
+        "src/feature_engineering/model_user_feature",
+        "src/sample/raw_sample_to_sample",
         # "src/preprocessing",
-        "src/feature_engineering",
+        # "src/feature_engineering",
         # "src/ml/liushi_predict",
 
     ]:
