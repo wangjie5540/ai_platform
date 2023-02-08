@@ -17,7 +17,8 @@
       {
         "feasible_space": {
           "list": [
-            "3"
+            "3",
+            "5"
           ]
         },
         "name": "max_depth",
@@ -26,7 +27,8 @@
       {
         "feasible_space": {
           "list": [
-            "128"
+            "50",
+            "100"
           ]
         },
         "name": "n_estimators",
