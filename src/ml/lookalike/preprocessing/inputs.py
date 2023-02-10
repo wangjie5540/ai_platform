@@ -88,7 +88,7 @@ def get_varlen_pooling_list(embedding_dict, features, feature_index, varlen_spar
 
     for feat in varlen_sparse_feature_columns:
         seq_emb = embedding_dict[feat.embedding_name](
-                        features[:, feature_index[feat.name][0]:feature_index[feat.name][1]].long())
+            features[:, feature_index[feat.name][0]:feature_index[feat.name][1]].long())
 
         if feat.length_name is None:
             seq_mask = features[:, feature_index[feat.name][0]:feature_index[feat.name][1]].long() != 0
@@ -123,7 +123,7 @@ def build_input_features(feature_columns):
             features[feat_name] = (start, start + feat.maxlen)
             start += feat.maxlen
             if feat.length_name is not None and feat.length_name not in features:
-                features[feat.length_name] = (start, start+1)
+                features[feat.length_name] = (start, start + 1)
                 start += 1
         else:
             raise TypeError("Invalid feature column type,got", type(feat))
@@ -235,13 +235,7 @@ def varlen_embedding_lookup(X, embedding_dict, sequence_input_dict, varlen_spars
 
 
 def maxlen_lookup(X, sparse_input_dict, maxlen_column):
-    if maxlen_column is None or len(maxlen_column)==0:
+    if maxlen_column is None or len(maxlen_column) == 0:
         raise ValueError('please add max length column for VarLenSparseFeat of DIN/DIEN input')
     lookup_idx = np.array(sparse_input_dict[maxlen_column[0]])
     return X[:, lookup_idx[0]:lookup_idx[1]].long()
-
-# if __name__ == '__main__':
-#     user_id = SparseFeat('user_id', 1000, embedding_dim=4)
-#     score_avg = DenseFeat('score_avg', dimension=1)
-#     user_hist = VarLenSparseFeat(SparseFeat('user_hist', 1000, embedding_dim=4), 666)
-

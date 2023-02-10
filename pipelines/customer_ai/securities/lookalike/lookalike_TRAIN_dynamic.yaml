@@ -1,0 +1,115 @@
+dataSource:
+  - table_name: algorithm.zq_fund_trade_lite
+    table_cname: 基金交易表
+    columns:
+      - name: custom_id
+        cname: 客户号
+        type: string
+        required: true
+      - name: trade_date
+        cname: 交易日期
+        type: date
+        required: true
+      - name: trade_type
+        cname: 交易类型
+        type: string
+        required: true
+      - name: fund_code
+        cname: 基金代码
+        type: string
+        required: true
+  - table_name: algorithm.zq_fund_basic
+    table_cname: 基金基本信息表
+    columns:
+      - name: ts_code
+        cname: 基金代码
+        type: string
+        required: true
+      - name: fund_type
+        cname: 基金类型
+        type: string
+        required: true
+      - name: management
+        cname: 基金公司
+        type: string
+        required: true
+      - name: custodian
+        cname: 基金经理
+        type: string
+        required: true
+      - name: invest_type
+        cname: 投资风格
+        type: string
+        required: true
+  - table_name: algorithm.user_info_lite
+    table_cname: 用户基础标签表
+    columns:
+      - name: cust_id
+        cname: 客户号
+        type: string
+        required: true
+      - name: RSK_ENDR_CPY
+        cname: 风险承受能力
+        type: string
+        required: true
+      - name: gender
+        cname: 性别
+        type: string
+        required: false
+      - name: EDU
+        cname: 学历
+        type: string
+        required: false
+      - name: NATN
+        cname: 民族
+        type: string
+        required: false
+      - name: OCCU
+        cname: 职业
+        type: string
+        required: false
+      - name: IS_VAIID_INVST
+        cname: 是否合格投资者
+        type: string
+        required: false
+trainSample:
+  - label: 用户向量生成方式
+    itemList:
+      - type: select
+        attributeName: event_code_buy
+        prefixText: 基于
+        placeholder: 请选择目标
+        suffixText: 训练模型
+        description:
+        required: true
+        optionType: 1
+        optionItems:
+          - label: 交易
+            value: fund_buy
+modelHyperParameter:
+  - label: 模型参数
+    itemList:
+      - type: input-number
+        attributeName: model__dnn_dropout
+        prefixText: 随机失活
+        description: 随机隐藏一定比例的神经元，防止过拟合
+        placeholder: 0.3
+        #default: 0.3
+        errorMessage: 请输入0-1之间的小数
+        required: true
+      - type: input-number
+        attributeName: model__batch_size
+        prefixText: 批次大小
+        description: 单次训练所使用的样本数量
+        placeholder: 128
+        #default: 128
+        errorMessage: 请输入正整数
+        required: true
+      - type: input-number
+        attributeName: model__lr
+        prefixText: 学习率
+        description: 模型权重迭代的步长
+        placeholder: 0.1
+        #default: 0.1
+        errorMessage: 请输入0-1之间的小数
+        required: true

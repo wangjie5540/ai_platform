@@ -1,0 +1,73 @@
+{
+  "automl_params": {
+    "experiment_name": "server-test-loss-warning",
+    "namespace": "kubeflow-user-example-com",
+    "algorithm_spec": {
+      "algorithm_name": "random"
+    },
+    "objective_spec": {
+      "type": "maximize",
+      "goal": 0.99,
+      "objective_metric_name": "test-auc",
+      "additional_metric_names": [
+        "test-logloss"
+      ]
+    },
+    "parameters": [
+      {
+        "feasible_space": {
+          "list": [
+            "3",
+            "5"
+          ]
+        },
+        "name": "max_depth",
+        "parameter_type": "categorical"
+      },
+      {
+        "feasible_space": {
+          "list": [
+            "50",
+            "100"
+          ]
+        },
+        "name": "n_estimators",
+        "parameter_type": "categorical"
+      },
+      {
+        "feasible_space": {
+          "list": [
+            "0.1"
+          ]
+        },
+        "name": "learning_rate",
+        "parameter_type": "categorical"
+      },
+      {
+        "feasible_space": {
+          "list": [
+            "1"
+          ]
+        },
+        "name": "scale_pos_weight",
+        "parameter_type": "categorical"
+      }
+    ]
+  },
+  "pipeline_id": "${pipeline_id}",
+  "pipeline_params": {
+    "global_params": {
+      "sample_select": {
+        "active_before_days": ${sample_select__active_before_days},
+        "active_after_days": ${sample_select__active_after_days}
+      },
+      "model": {
+      },
+      "feature_create": {
+        "active_before_days": ${sample_select__active_before_days},
+        "active_after_days": ${sample_select__active_after_days}
+      }
+    },
+    "flag": "AUTOML"
+  }
+}

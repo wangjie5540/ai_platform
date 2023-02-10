@@ -1,6 +1,8 @@
 # coding: utf-8
 import kfp.dsl as dsl
+
 import digitforce.aip.common.utils.component_helper as component_helper
+from digitforce.aip.common.constants.global_constant import ENV
 
 train_data_name = 'train_data'
 test_data_name = 'test_data'
@@ -27,20 +29,27 @@ class SampleCombLookalike(dsl.ContainerOp):
             }
         )
 
-class SampleCombGaoqian(dsl.ContainerOp):
-    """
-    样本特征拼接组件
-    """
 
-    def __init__(self, name, sample, user_feature):
-        super(SampleCombGaoqian, self).__init__(
+class ModelFeature2Dataset(dsl.ContainerOp):
+    OUTPUT_KEY_TRAIN_DATASET = "train_dataset_table_name"
+    OUTPUT_KEY_TEST_DATASET = "test_dataset_table_name"
+    def __init__(self, name, global_params, label_table_name, model_user_feature_table_name,
+                 model_item_feature_table_name, tag=ENV):
+        super(ModelFeature2Dataset, self).__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/preprocessing-sample_comb_gaoqian',
+            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
+                  f'preprocessing-feature_and_label_to_dataset:{tag}',
             command=['python', 'main.py'],
-            arguments=['--sample', sample, '--user_feature', user_feature],
+            arguments=['--name', name, '--global_params', global_params,
+                       '--label_table_name', label_table_name,
+                       '--model_user_feature_table_name', model_user_feature_table_name,
+                       '--model_item_feature_table_name', model_item_feature_table_name,
+                       ],
             file_outputs={
-                train_data_name: component_helper.generate_output_path(train_data_name),
-                test_data_name: component_helper.generate_output_path(test_data_name),
-                other_data_name: component_helper.generate_output_path(other_data_name)
+                ModelFeature2Dataset.OUTPUT_KEY_TRAIN_DATASET:
+                    component_helper.generate_output_path(ModelFeature2Dataset.OUTPUT_KEY_TRAIN_DATASET),
+                ModelFeature2Dataset.OUTPUT_KEY_TEST_DATASET: component_helper.generate_output_path(
+                    ModelFeature2Dataset.OUTPUT_KEY_TEST_DATASET),
+
             }
         )

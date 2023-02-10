@@ -1,19 +1,24 @@
 # coding: utf-8
+import json
 import os
+import subprocess
 
 import digitforce.aip.common.constants.global_constant as global_constant
-import json
 
 
-def write_output(name: str, parameters: dict):
+def write_output(name: str, parameters, need_json_dump: bool = False):
     """
     向下游组件写入参数
     :param name:
     :param parameters:
+    :param need_json_dump: 内容是否需要json序列化
     :return:
     """
+    content = parameters
+    if need_json_dump and isinstance(parameters, dict):
+        content = json.dumps(parameters, ensure_ascii=False)
     with open(generate_output_path(name), 'w') as f:
-        f.write(json.dumps(parameters))
+        f.write(content)
 
 
 def set_component_app_name(app_name):
@@ -35,3 +40,16 @@ def generate_output_path(name: str):
     生成输出文件路径
     """
     return f'/tmp/{name}'
+
+
+def init_config():
+    """
+    初始化配置文件
+    """
+    cmd = f'''
+    cp {global_constant.CONFIG_MOUNT_PATH}/aip_config.yaml /usr/local/etc
+    mkdir -p /root/.kube
+    cp {global_constant.CONFIG_MOUNT_PATH}/kube_config /root/.kube/config
+    cp {global_constant.CONFIG_MOUNT_PATH}/hdfs-site.xml $SPARK_HOME/conf
+    '''
+    subprocess.check_call(cmd, shell=True)

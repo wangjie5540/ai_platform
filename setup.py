@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-__version__ = '0.1.10'
+__version__ = '0.1.15'
 requirements = [
     'pandas',
     'scipy',
@@ -23,6 +23,7 @@ requirements = [
     'networkx',
     'kfp==1.0.4',
     'pysnowflake',
+    'cos-python-sdk-v5'
 ]
 
 setup(

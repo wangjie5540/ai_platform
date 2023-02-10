@@ -1,0 +1,94 @@
+{
+  "automl_params": {
+    "experiment_name": "server-test-lookalike",
+    "namespace": "kubeflow-user-example-com",
+    "algorithm_spec": {
+      "algorithm_name": "random"
+    },
+    "objective_spec": {
+      "type": "maximize",
+      "goal": 0.99,
+      "objective_metric_name": "test-auc",
+      "additional_metric_names": [
+        "test-logloss"
+      ]
+    },
+    "parameters": [
+      {
+        "feasible_space": {
+          "list": [
+            "128",
+            "256"
+          ]
+        },
+        "name": "batch_size",
+        "parameter_type": "categorical"
+      },
+      {
+        "feasible_space": {
+          "list": [
+            "0.2",
+            "0.3"
+          ]
+        },
+        "name": "dnn_dropout",
+        "parameter_type": "categorical"
+      },
+      {
+        "feasible_space": {
+          "list": [
+            "0.1",
+            "0.01"
+          ]
+        },
+        "name": "lr",
+        "parameter_type": "categorical"
+      }
+    ]
+  },
+  "pipeline_id": "${pipeline_id}",
+  "pipeline_params": {
+    "global_params": {
+      "sample_select":
+      {},
+      "raw_user_feature":
+      {
+          "raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name"
+      },
+      "raw_item_feature":
+      {
+          "raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name"
+      },
+      "zq_feature_calculator":
+      {
+          "raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name",
+          "raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name"
+      },
+      "raw_sample2model_sample":
+      {
+          "model_sample_table_name": "algorithm.tmp_aip_model_sample"
+      },
+      "model_item_feature":
+      {
+          "model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"
+      },
+      "model_user_feature":
+      {
+          "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name"
+      },
+      "feature_create":
+      {},
+      "model":
+      {
+          "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name",
+          "user_vec_table_name": "algorithm.tmp_user_vec_table_name"
+      },
+      "model_predict":
+      {
+          "output_file_name": "result.csv",
+          "user_vec_table_name": "algorithm.tmp_user_vec_table_name"
+      }
+  },
+    "flag": "AUTOML"
+  }
+}
