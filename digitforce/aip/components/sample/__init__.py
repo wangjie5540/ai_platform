@@ -37,6 +37,20 @@ class SampleSelectionLiushi(dsl.ContainerOp):
             file_outputs={"sample_table_name": component_helper.generate_output_path("sample_table_name")}
         )
 
+class SampleSelectionGaoqian(dsl.ContainerOp):
+    """
+    高潜样本组件
+    """
+
+    def __init__(self, name, global_params, tag=ENV):
+        super(SampleSelectionGaoqian, self).__init__(
+            name=name,
+            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
+                  f'sample-sample_selection_gaoqian:{tag}',
+            command=['python', 'main.py'],
+            arguments=['--name', name, '--global_params', global_params],
+            file_outputs={"sample": component_helper.generate_output_path("sample")}
+        )
 
 class RawSample2ModelSample(dsl.ContainerOp):
     OUTPUT_KEY_MODEL_SAMPLE = 'model_sample_table_name'

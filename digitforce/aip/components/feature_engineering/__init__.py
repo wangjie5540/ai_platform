@@ -40,6 +40,23 @@ class FeatureCreateLiushi(dsl.ContainerOp):
             }
         )
 
+class FeatureCreateGaoqian(dsl.ContainerOp):
+    OUTPUT_TRAIN_FEATURE = 'train_feature_table_name'
+    OUTPUT_TEST_FEATURE = 'test_feature_table_name'
+
+    def __init__(self, name, global_params, sample, tag=ENV):
+        super(FeatureCreateGaoqian, self).__init__(
+            name=name,
+            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
+                  f'feature_engineering-feature_create_gaoqian:{tag}',
+            command=['python', 'main.py'],
+            arguments=['--name', name, '--global_params', global_params, '--sample', sample],
+            file_outputs={
+                self.OUTPUT_TRAIN_FEATURE: component_helper.generate_output_path(self.OUTPUT_TRAIN_FEATURE),
+                self.OUTPUT_TEST_FEATURE: component_helper.generate_output_path(self.OUTPUT_TEST_FEATURE)
+            }
+        )
+
 
 class FeatureCreateLiushiPredict(dsl.ContainerOp):
     OUTPUT_PREDICT_FEATURE = 'predict_feature_table_name'
