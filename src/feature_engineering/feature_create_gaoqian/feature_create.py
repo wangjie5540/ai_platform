@@ -45,13 +45,10 @@ def feature_create(event_table_name, event_columns, item_table_name, item_column
     return user_feature_table_name, user_feature_list.columns
 
 
-def get_order_feature(event_table_name, event_columns, item_table_name, item_columns, sample, event_code_list, category_a):
-    # TODO: 构建不同时间段行为统计特征
+def get_order_feature(event_table_name, event_columns, item_table_name, item_columns, sample, event_code, category_a):
     today = datetime.datetime.today().date()
-    one_year_ago = (today - datetime.timedelta(365)).strftime(DATE_FORMAT)
-    # TODO：数据原因，暂时取近一年构造特征
+    one_year_ago = (datetime.datetime.today() - datetime.timedelta(365)).strftime(DATE_FORMAT)
     thirty_days_ago_str = (datetime.datetime.today() + datetime.timedelta(days=-360)).strftime(DATE_FORMAT)
-    # TODO：后续统一规范event_code
 
     user_id = event_columns[0]
     trade_type = event_columns[1]
@@ -79,7 +76,7 @@ def get_order_feature(event_table_name, event_columns, item_table_name, item_col
 
     user_list = sample.select(user_id_sample).distinct()
 
-    user_event1_counts_30d = user_event_df.filter(user_event_df[trade_type] == event_code_list[0])\
+    user_event1_counts_30d = user_event_df.filter(user_event_df[trade_type] == event_code)\
         .filter(user_event_df[trade_date] >= thirty_days_ago_str) \
         .groupby(user_id) \
         .agg(F.count(trade_money).alias('u_event1_counts_30d'), \
@@ -95,34 +92,34 @@ def get_order_feature(event_table_name, event_columns, item_table_name, item_col
              F.min(trade_date),
              F.max(trade_date)) \
         .rdd \
-        .map(lambda x: (x[0], x[1], ((x[3] - x[2]).days / x[1]), ((today - x[3]).days))) \
+        .map(lambda x: (x[0], x[1], ((datetime.datetime.strptime(x[3], DATE_FORMAT) - datetime.datetime.strptime(x[2], DATE_FORMAT)).days / x[1]), ((datetime.datetime.today() - datetime.datetime.strptime(x[3], DATE_FORMAT)).days))) \
         .toDF([user_id, "u_event1_days_30d", "u_event1_avg_days_30d", "u_last_event1_days_30d"])
 
     # todo: event的行为序列，用于关联规则挖掘
-    if len(event_code_list) == 2:
-        user_event2_counts_30d = user_event_df.filter(user_event_df[trade_date] >= thirty_days_ago_str) \
-            .groupby(user_id) \
-            .agg(F.count(trade_money).alias('u_event2_counts_30d'), \
-                 F.sum(trade_money).alias('u_event2_amount_sum_30d'), \
-                 F.avg(trade_money).alias('u_event2_amount_avg_30d'), \
-                 F.min(trade_money).alias('u_event2_amount_min_30d'), \
-                 F.max(trade_money).alias('u_event2_amount_max_30d'))
-
-        user_event2_days_30d = user_event_df.filter(user_event_df[trade_date] >= thirty_days_ago_str) \
-            .select([user_id, trade_date]) \
-            .groupby([user_id]) \
-            .agg(countDistinct(trade_date), \
-                 F.min(trade_date),
-                 F.max(trade_date)) \
-            .rdd \
-            .map(lambda x: (x[0], x[1], ((x[3] - x[2]).days / x[1]), ((today - x[3]).days))) \
-            .toDF([user_id, "u_event2_days_30d", "u_event2_avg_days_30d", "u_last_event2_days_30d"])
+    # if len(event_code_list) == 2:
+    #     user_event2_counts_30d = user_event_df.filter(user_event_df[trade_date] >= thirty_days_ago_str) \
+    #         .groupby(user_id) \
+    #         .agg(F.count(trade_money).alias('u_event2_counts_30d'), \
+    #              F.sum(trade_money).alias('u_event2_amount_sum_30d'), \
+    #              F.avg(trade_money).alias('u_event2_amount_avg_30d'), \
+    #              F.min(trade_money).alias('u_event2_amount_min_30d'), \
+    #              F.max(trade_money).alias('u_event2_amount_max_30d'))
+    #
+    #     user_event2_days_30d = user_event_df.filter(user_event_df[trade_date] >= thirty_days_ago_str) \
+    #         .select([user_id, trade_date]) \
+    #         .groupby([user_id]) \
+    #         .agg(countDistinct(trade_date), \
+    #              F.min(trade_date),
+    #              F.max(trade_date)) \
+    #         .rdd \
+    #         .map(lambda x: (x[0], x[1], ((x[3] - x[2]).days / x[1]), ((today - x[3]).days))) \
+    #         .toDF([user_id, "u_event2_days_30d", "u_event2_avg_days_30d", "u_last_event2_days_30d"])
 
     # todo: 分别统计两个品类相关特征
 
     # 用户行为涉及最多的top3个品类
     user_event1_category_counts = user_event_df.filter(
-        (user_event_df[trade_type] == event_code_list[0]) & (user_event_df[trade_date] >= one_year_ago)) \
+        (user_event_df[trade_type] == event_code) & (user_event_df[trade_date] >= one_year_ago)) \
         .groupby([user_id, fund_type]) \
         .agg(F.count(user_id).alias('u_event1_counts'))
     w = Window.partitionBy(user_event1_category_counts[user_id]).orderBy(user_event1_category_counts['u_event1_counts'].desc())
@@ -150,9 +147,9 @@ def get_order_feature(event_table_name, event_columns, item_table_name, item_col
         user_id_sample)
     user_feature_list = user_feature_list.join(user_event1_days_30d, user_id, 'left')
     user_feature_list = user_feature_list.join(user_event1_top_cat, user_id, 'left')
-    if len(event_code_list) == 2:
-        user_feature_list = user_feature_list.join(user_event2_counts_30d, user_id)
-        user_feature_list = user_feature_list.join(user_event2_days_30d, user_id)
+    # if len(event_code_list) == 2:
+    #     user_feature_list = user_feature_list.join(user_event2_counts_30d, user_id)
+    #     user_feature_list = user_feature_list.join(user_event2_days_30d, user_id)
     return user_feature_list
 
 
