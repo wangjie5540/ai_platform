@@ -11,6 +11,7 @@ from pyspark.sql.types import *
 from pyspark.sql.functions import *
 from pyspark.sql import Window
 import datetime
+import random
 
 DATE_FORMAT = "%Y-%m-%d"
 spark_client = spark_helper.SparkClient()
@@ -27,7 +28,7 @@ def feature_create(event_table_name, event_columns, item_table_name, item_column
     user_id_user = user_columns[0]
 
     # 1. 构建sample用户id
-    user_list = sample.select(user_id_sample).distinct()
+    user_list = sample
 
     # 2. 构造用户特征
     user_order_feature_list = get_order_feature(event_table_name, event_columns, item_table_name, item_columns, sample, event_code_list, category_a)
@@ -38,11 +39,23 @@ def feature_create(event_table_name, event_columns, item_table_name, item_column
     user_feature_list = user_feature_list.join(user_label_feature, user_feature_list[user_id] == user_label_feature[user_id_user], 'left').drop(user_id_user)
     user_feature_list = user_feature_list.withColumnRenamed(user_id, user_id_sample)
     print(user_feature_list.show(5))
-    # TODO：动态hive表名
-    user_feature_table_name = "algorithm.tmp_aip_user_feature_gaoqian"
-    user_feature_list.write.format("hive").mode("overwrite").saveAsTable(user_feature_table_name)
 
-    return user_feature_table_name, user_feature_list.columns
+    data = user_feature_list.rdd.map(lambda x: (x, random.random()))
+    columns = user_feature_list.columns
+    train_test_threshold = 0.8
+    train_data = data.filter(lambda x: x[1] < train_test_threshold).map(lambda x: x[0]).toDF(columns)
+    test_data = data.filter(lambda x: x[1] >= train_test_threshold).map(lambda x: x[0]).toDF(columns)
+
+    train_data_table_name = "algorithm.tmp_aip_train_data_gaoqian"
+    train_data.write.format("hive").mode("overwrite").saveAsTable(train_data_table_name)
+
+    test_data_table_name = "algorithm.tmp_aip_test_data_gaoqian"
+    test_data.write.format("hive").mode("overwrite").saveAsTable(test_data_table_name)
+    # TODO：动态hive表名
+    # user_feature_table_name = "algorithm.tmp_aip_user_feature_gaoqian"
+    # user_feature_list.write.format("hive").mode("overwrite").saveAsTable(user_feature_table_name)
+
+    return train_data_table_name, columns, test_data_table_name
 
 
 def get_order_feature(event_table_name, event_columns, item_table_name, item_columns, sample, event_code, category_a):
@@ -79,11 +92,11 @@ def get_order_feature(event_table_name, event_columns, item_table_name, item_col
     user_event1_counts_30d = user_event_df.filter(user_event_df[trade_type] == event_code)\
         .filter(user_event_df[trade_date] >= thirty_days_ago_str) \
         .groupby(user_id) \
-        .agg(F.count(trade_money).alias('u_event1_counts_30d'), \
-             F.sum(trade_money).alias('u_event1_amount_sum_30d'), \
-             F.avg(trade_money).alias('u_event1_amount_avg_30d'), \
-             F.min(trade_money).alias('u_event1_amount_min_30d'), \
-             F.max(trade_money).alias('u_event1_amount_max_30d'))
+        .agg(F.count(trade_money).alias('u_buy_counts_30d'), \
+             F.sum(trade_money).alias('u_amount_sum_30d'), \
+             F.avg(trade_money).alias('u_amount_avg_30d'), \
+             F.min(trade_money).alias('u_amount_min_30d'), \
+             F.max(trade_money).alias('u_amount_max_30d'))
 
     user_event1_days_30d = user_event_df.filter(user_event_df[trade_date] >= thirty_days_ago_str) \
         .select([user_id, trade_date]) \
@@ -93,7 +106,7 @@ def get_order_feature(event_table_name, event_columns, item_table_name, item_col
              F.max(trade_date)) \
         .rdd \
         .map(lambda x: (x[0], x[1], ((datetime.datetime.strptime(x[3], DATE_FORMAT) - datetime.datetime.strptime(x[2], DATE_FORMAT)).days / x[1]), ((datetime.datetime.today() - datetime.datetime.strptime(x[3], DATE_FORMAT)).days))) \
-        .toDF([user_id, "u_event1_days_30d", "u_event1_avg_days_30d", "u_last_event1_days_30d"])
+        .toDF([user_id, "u_buy_days_30d", "u_buy_avg_days_30d", "u_last_buy_days_30d"])
 
     # todo: event的行为序列，用于关联规则挖掘
     # if len(event_code_list) == 2:
@@ -135,11 +148,11 @@ def get_order_feature(event_table_name, event_columns, item_table_name, item_col
     def paddle_zero_udf(index):
         return F.udf(lambda x: paddle_zero(x, index))
 
-    top_list = ['u_event1_cat_top1', 'u_event1_cat_top2', 'u_event1_cat_top3']
+    top_list = ['u_buy_cat_top1', 'u_buy_cat_top2', 'u_buy_cat_top3']
     for i in range(3):
         df1 = df1.withColumn(top_list[i], paddle_zero_udf(i)(df1[f'collect_list({fund_type})']))
 
-    user_event1_top_cat = df1.select([user_id, 'u_event1_cat_top1', 'u_event1_cat_top2', 'u_event1_cat_top3'])
+    user_event1_top_cat = df1.select([user_id, 'u_buy_cat_top1', 'u_buy_cat_top2', 'u_buy_cat_top3'])
 
     # 拼接用户特征
     user_feature_list = user_list.join(user_event1_counts_30d,

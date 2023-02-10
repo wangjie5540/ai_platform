@@ -25,19 +25,10 @@ def run():
     item_columns = ['ts_code', 'fund_type']
     user_columns = ['CUST_ID', 'gender', 'EDU', 'RSK_ENDR_CPY', 'NATN', 'OCCU', 'IS_VAIID_INVST', ]
 
-    sample_data = json.loads(args.sample)
-    if sample_data['type'] == 'hive_table':
-        sample_table_name = sample_data["table_name"]
-    else:
-        raise Exception('sample data type error!')
-
-    user_feature_table_name, user_feature_columns = feature_create(event_table_name, event_columns, item_table_name, item_columns, user_table_name, user_columns, event_code, category, sample_table_name)
-    outputs = {
-        "type": "hive_table",
-        "table_name": user_feature_table_name,
-        "column_list": user_feature_columns
-    }
-    component_helper.write_output('user_feature', outputs)
+    sample_table_name = json.loads(args.sample)
+    train_table_name, test_table_name, columns = feature_create(event_table_name, event_columns, item_table_name, item_columns, user_table_name, user_columns, event_code, category, sample_table_name)
+    component_helper.write_output("train_feature_table_name", train_table_name)
+    component_helper.write_output("test_feature_table_name", test_table_name)
 
 
 if __name__ == '__main__':
