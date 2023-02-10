@@ -6,6 +6,7 @@
 @desc:
 '''
 import digitforce.aip.common.utils.spark_helper as spark_helper
+from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
@@ -15,6 +16,7 @@ import random
 
 DATE_FORMAT = "%Y-%m-%d"
 spark_client = spark_helper.SparkClient()
+today = datetime.datetime.today().strftime("%Y%m%d")
 
 def feature_create(event_table_name, event_columns, item_table_name, item_columns, user_table_name, user_columns, event_code_list, category_a, sample_table_name):
 
@@ -131,35 +133,35 @@ def get_order_feature(event_table_name, event_columns, item_table_name, item_col
     # todo: 分别统计两个品类相关特征
 
     # 用户行为涉及最多的top3个品类
-    user_event1_category_counts = user_event_df.filter(
-        (user_event_df[trade_type] == event_code) & (user_event_df[trade_date] >= one_year_ago)) \
-        .groupby([user_id, fund_type]) \
-        .agg(F.count(user_id).alias('u_event1_counts'))
-    w = Window.partitionBy(user_event1_category_counts[user_id]).orderBy(user_event1_category_counts['u_event1_counts'].desc())
-    top = user_event1_category_counts.withColumn('rank', F.row_number().over(w)).where('rank<=3')
-    df1 = top.groupby(top[user_id]).agg(F.collect_list(top[fund_type]))
-
-    def paddle_zero(x, index):
-        if len(x) < 3:
-            for j in range(3 - len(x)):
-                x.append('0')
-        return x[index]
-
-    def paddle_zero_udf(index):
-        return F.udf(lambda x: paddle_zero(x, index))
-
-    top_list = ['u_buy_cat_top1', 'u_buy_cat_top2', 'u_buy_cat_top3']
-    for i in range(3):
-        df1 = df1.withColumn(top_list[i], paddle_zero_udf(i)(df1[f'collect_list({fund_type})']))
-
-    user_event1_top_cat = df1.select([user_id, 'u_buy_cat_top1', 'u_buy_cat_top2', 'u_buy_cat_top3'])
+    # user_event1_category_counts = user_event_df.filter(
+    #     (user_event_df[trade_type] == event_code) & (user_event_df[trade_date] >= one_year_ago)) \
+    #     .groupby([user_id, fund_type]) \
+    #     .agg(F.count(user_id).alias('u_event1_counts'))
+    # w = Window.partitionBy(user_event1_category_counts[user_id]).orderBy(user_event1_category_counts['u_event1_counts'].desc())
+    # top = user_event1_category_counts.withColumn('rank', F.row_number().over(w)).where('rank<=3')
+    # df1 = top.groupby(top[user_id]).agg(F.collect_list(top[fund_type]))
+    #
+    # def paddle_zero(x, index):
+    #     if len(x) < 3:
+    #         for j in range(3 - len(x)):
+    #             x.append('0')
+    #     return x[index]
+    #
+    # def paddle_zero_udf(index):
+    #     return F.udf(lambda x: paddle_zero(x, index))
+    #
+    # top_list = ['u_buy_cat_top1', 'u_buy_cat_top2', 'u_buy_cat_top3']
+    # for i in range(3):
+    #     df1 = df1.withColumn(top_list[i], paddle_zero_udf(i)(df1[f'collect_list({fund_type})']))
+    #
+    # user_event1_top_cat = df1.select([user_id, 'u_buy_cat_top1', 'u_buy_cat_top2', 'u_buy_cat_top3'])
 
     # 拼接用户特征
     user_feature_list = user_list.join(user_event1_counts_30d,
                                        user_list[user_id_sample] == user_event1_counts_30d[user_id], 'left').drop(
         user_id_sample)
     user_feature_list = user_feature_list.join(user_event1_days_30d, user_id, 'left')
-    user_feature_list = user_feature_list.join(user_event1_top_cat, user_id, 'left')
+    # user_feature_list = user_feature_list.join(user_event1_top_cat, user_id, 'left')
     # if len(event_code_list) == 2:
     #     user_feature_list = user_feature_list.join(user_event2_counts_30d, user_id)
     #     user_feature_list = user_feature_list.join(user_event2_days_30d, user_id)
@@ -168,5 +170,47 @@ def get_order_feature(event_table_name, event_columns, item_table_name, item_col
 
 def get_user_feature(user_table_name, user_columns):
     user_feature = spark_client.get_starrocks_table_df(user_table_name)
-    user_label_feature = user_feature.select(user_columns).distinct()
-    return user_label_feature
+    user_label_feature = user_feature.select(user_columns).distinct().rdd
+
+    dict_edu = genDict(user_label_feature.map(lambda x: x[2]))
+    write_hdfs_dict(dict_edu, "edu", hdfs_client)
+
+    dict_risk = genDict(user_label_feature.map(lambda x: x[3]))
+    write_hdfs_dict(dict_risk, "risk", hdfs_client)
+
+    dict_natn = genDict(user_label_feature.map(lambda x: x[4]))
+    write_hdfs_dict(dict_natn, "natn", hdfs_client)
+
+    dict_occu = genDict(user_label_feature.map(lambda x: x[5]))
+    write_hdfs_dict(dict_occu, "occu", hdfs_client)
+
+    user_feature_final = user_label_feature.map(lambda x: (x[0], x[1], dict_edu.get(x[2]), dict_risk.get(x[3]), dict_natn.get(x[4]), dict_occu.get(x[5]), x[6]))\
+                        .toDF(user_columns)
+    return user_feature_final
+
+def genDict(inp):
+    """
+    inp: 输入一个rdd，单列
+    return: 1. 将生成的dict存储hdfs，返回地址；2. 返回这个dict
+    """
+    sig_list = inp.distinct().collect()
+    res_dict = dict()
+    for index, term in enumerate(sig_list):
+        res_dict[term] = index
+    return res_dict
+
+# 写hdfs，覆盖写！
+def write_hdfs_path(local_path, hdfs_path, hdfs_client):
+    if hdfs_client.exists(hdfs_path):
+        hdfs_client.delete(hdfs_path)
+    hdfs_client.copy_from_local(local_path, hdfs_path)
+
+# dict先写本地，再写入hdfs
+def write_hdfs_dict(content, file_name, hdfs_client):
+    local_path = "dict.{}.{}".format(today, file_name)
+    hdfs_path = "/user/ai/aip/zq/gaoqian/enum_dict/{}/{}".format(today, file_name)
+
+    with open(local_path, "w") as f:
+        for key in content:
+            f.write("{}\t{}\n".format(key, content[key]))
+    write_hdfs_path(local_path, hdfs_path, hdfs_client)
