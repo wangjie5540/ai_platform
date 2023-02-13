@@ -57,9 +57,13 @@ ARG COMPONENT_DIR=/component
 RUN mkdir -p $COMPONENT_DIR
 WORKDIR $COMPONENT_DIR
 COPY . $COMPONENT_DIR
-    '''.format(base_image=base_image)
+'''.format(base_image=base_image)
         with open(customized_dockerfile, 'w') as f:
             f.write(component_dockerfile)
+    requirements_path = os.path.join(component_path, 'requirements.txt')
+    if os.path.exists(requirements_path):
+        with open(customized_dockerfile, 'a') as f:
+            f.write('RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple')
     print(build_component_cmd(component_image, component_path))
     subprocess.check_call(build_component_cmd(component_image, component_path), shell=True)
 
