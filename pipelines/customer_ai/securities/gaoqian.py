@@ -1,7 +1,9 @@
 import kfp
 import kfp.dsl as dsl
 from kfp.dsl import Condition
-
+import os
+os.environ['PYTHONPATH'] = '/data/pycharm_project_666/digitforce-ai-platform'
+print('[[[[[')
 import digitforce.aip.common.utils.kubeflow_helper as kubeflow_helper
 from digitforce.aip.common.utils import config_helper
 from digitforce.aip.components.feature_engineering import FeatureCreateGaoqian
@@ -12,18 +14,18 @@ from digitforce.aip.components.sample import SampleSelectionGaoqian
 from digitforce.aip.components.source.cos import Cos
 from kfp.compiler import Compiler
 
-pipeline_name = 'loss_warning'
+pipeline_name = 'gaoqian'
 pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 @dsl.pipeline(name=pipeline_name)
-def ml_loss_warning(global_params: str, flag='TRAIN'):
+def ml_gaoqian(global_params: str, flag='TRAIN'):
     RUN_ENV = "prod"
     with Condition(flag != "PREDICT", name="is_not_predict"):
         op_sample_selection = SampleSelectionGaoqian(name='sample_select', global_params=global_params, tag=RUN_ENV)
         op_sample_selection.container.set_image_pull_policy("Always")
 
         op_feature_create = FeatureCreateGaoqian(name='feature_create', global_params=global_params, tag=RUN_ENV,
-                                                sample=op_sample_selection.outputs['sample_table_name'])
+                                                sample=op_sample_selection.outputs['sample'])
         op_feature_create.container.set_image_pull_policy("Always")
 
         with Condition(flag == 'TRAIN', name="is_train"):
@@ -96,13 +98,13 @@ global_params = json.dumps({
 })
 
 
-kubeflow_helper.upload_pipeline(ml_loss_warning, pipeline_name)
+# kubeflow_helper.upload_pipeline(ml_loss_warning, pipeline_name)
 # kubeflow_helper.upload_pipeline_version(ml_loss_warning, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
-# client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
-#                                                            "flag": "TRAIN"},
-#                                      experiment_name="recommend",
-#                                      namespace='kubeflow-user-example-com')
-# #
+client.create_run_from_pipeline_func(ml_gaoqian, arguments={"global_params": global_params,
+                                                           "flag": "TRAIN"},
+                                     experiment_name="recommend",
+                                     namespace='kubeflow-user-example-com')
+#
 # client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
 #                                                            "flag": "PREDICT"},
 #                                      experiment_name="recommend",
@@ -118,4 +120,4 @@ kubeflow_config = config_helper.get_module_config("kubeflow")
 pipeline_path = f"/tmp/{pipeline_name}.yaml"
 pipeline_conf = kfp.dsl.PipelineConf()
 pipeline_conf.set_image_pull_policy("Always")
-Compiler().compile(pipeline_func=ml_loss_warning, package_path=pipeline_path, pipeline_conf=pipeline_conf)
+Compiler().compile(pipeline_func=ml_gaoqian, package_path=pipeline_path, pipeline_conf=pipeline_conf)
