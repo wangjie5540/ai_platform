@@ -17,6 +17,7 @@ RUN mkdir -p $SPARK_JARS && cd $SPARK_JARS \
     && $WGET_COMMAND/common-1.0-SNAPSHOT.jar \
     && $WGET_COMMAND/starrocks-spark-writer-2.4_2.11-1.0-SNAPSHOT.jar \
     && $WGET_COMMAND/starrocks-spark2_2.11-1.0.0.jar \
+    && $WGET_COMMAND/alluxio-2.9.1-client.jar \
     && $WGET_COMMAND/graphframes-0.8.2-spark2.4-s_2.11.jar
 
 COPY --from=miniconda /opt/miniconda3 /opt/miniconda3
