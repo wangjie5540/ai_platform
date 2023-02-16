@@ -40,7 +40,7 @@ def feature_create(event_table_name, event_columns, item_table_name, item_column
     user_feature_list = user_list.join(user_order_feature_list, user_list[user_id_sample] == user_order_feature_list[user_id], 'left').drop(user_id_sample)
     user_feature_list = user_feature_list.join(user_label_feature, user_feature_list[user_id] == user_label_feature[user_id_user], 'left').drop(user_id_user)
     user_feature_list = user_feature_list.withColumnRenamed(user_id, user_id_sample)
-    print(user_feature_list.show(5))
+    # print(user_feature_list.show(5))
 
     data = user_feature_list.rdd.map(lambda x: (x, random.random()))
     columns = user_feature_list.columns
