@@ -2,6 +2,8 @@
 # encoding: utf-8
 import argparse
 import os
+from digitforce.aip.common.utils import component_helper
+component_helper.init_config()
 from model_predict import start_model_predict
 # from digitforce.aip.common.utils import component_helper
 from digitforce.aip.common.utils.argument_helper import df_argument_helper

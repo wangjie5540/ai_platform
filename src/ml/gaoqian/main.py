@@ -2,14 +2,14 @@
 # encoding: utf-8
 import argparse
 import json
-
+from digitforce.aip.common.utils import component_helper
+component_helper.init_config()
 from model_train import start_model_train
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
-from digitforce.aip.common.utils import component_helper
+
 
 def run():
     # 参数解析
-    component_helper.init_config()
     # todo tmp
     # os.environ["train_dataset_table_name"] = "algorithm.train_dataset_table_name"
     # os.environ["test_dataset_table_name"] = "algorithm.test_dataset_table_name"
