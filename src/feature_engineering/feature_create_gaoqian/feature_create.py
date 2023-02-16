@@ -48,6 +48,7 @@ def feature_create(event_table_name, event_columns, item_table_name, item_column
     train_data = data.filter(lambda x: x[1] < train_test_threshold).map(lambda x: x[0]).toDF(columns)
     test_data = data.filter(lambda x: x[1] >= train_test_threshold).map(lambda x: x[0]).toDF(columns)
 
+    print(train_data.show(5))
     train_data_table_name = "algorithm.tmp_aip_train_data_gaoqian"
     train_data.write.format("hive").mode("overwrite").saveAsTable(train_data_table_name)
 

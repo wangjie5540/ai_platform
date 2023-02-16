@@ -3,7 +3,7 @@ import kfp.dsl as dsl
 
 import digitforce.aip.common.utils.component_helper as component_helper
 from digitforce.aip.common.constants.global_constant import ENV
-
+from digitforce.aip.components import BaseComponent
 
 class FeatureCreateLookalike(dsl.ContainerOp):
     OUTPUT_USER_FEATURE = 'user_feature'
@@ -60,7 +60,7 @@ class FeatureCreateLiushiPredict(dsl.ContainerOp):
             }
         )
 
-class FeatureCreateGaoqian(dsl.ContainerOp):
+class FeatureCreateGaoqian(BaseComponent):
     OUTPUT_TRAIN_FEATURE = 'train_feature_table_name'
     OUTPUT_TEST_FEATURE = 'test_feature_table_name'
 
@@ -68,8 +68,8 @@ class FeatureCreateGaoqian(dsl.ContainerOp):
         super(FeatureCreateGaoqian, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
-                  f'feature_engineering-feature_create_gaoqian:{tag}',
-            command=['python', 'main.py'],
+                  f'feature_engineering-feature_create_gaoqian',
+            tag=tag,
             arguments=['--name', name, '--global_params', global_params, '--sample', sample],
             file_outputs={
                 self.OUTPUT_TRAIN_FEATURE: component_helper.generate_output_path(self.OUTPUT_TRAIN_FEATURE),
