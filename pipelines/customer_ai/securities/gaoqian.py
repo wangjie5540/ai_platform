@@ -19,7 +19,7 @@ pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 @dsl.pipeline(name=pipeline_name)
 def ml_gaoqian(global_params: str, flag='TRAIN'):
-    RUN_ENV = "prod"
+    RUN_ENV = "dev"
     with Condition(flag != "PREDICT", name="is_not_predict"):
         op_sample_selection = SampleSelectionGaoqian(name='sample_select', global_params=global_params, tag=RUN_ENV)
         op_sample_selection.container.set_image_pull_policy("Always")
