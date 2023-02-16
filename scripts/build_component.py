@@ -70,9 +70,7 @@ COPY . $COMPONENT_DIR
 
 def build_component_cmd(component_image, component_path):
     return '''
-docker build -t {component_image} -f {component_path}/Dockerfile {component_path}
-docker login -u ai-components-1672810563540 -p 1d228954e03793ce2e79bf655335abc4e961ec75 digit-force-docker.pkg.coding.net
-docker push {component_image}
+docker build -t {component_image} -f {component_path}/Dockerfile {component_path} && docker login -u ai-components-1672810563540 -p 1d228954e03793ce2e79bf655335abc4e961ec75 digit-force-docker.pkg.coding.net && docker push {component_image}
     '''.format(component_image=component_image, component_path=component_path)
 
 

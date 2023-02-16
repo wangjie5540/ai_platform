@@ -9,7 +9,6 @@ RUN yum install -y gcc gcc-c++ zip unzip \
     && sh $TMP_FILE -b -p $MINICONDA_HOME \
     && rm -rf $TMP_FILE \
     && $MINICONDA_HOME/bin/conda init
-RUN conda install --yes pyhive
 
 # 编译python3.7镜像
 # docker build --no-cache --build-arg MINICONDA3_INSTALL_FILE=Miniconda3-py37_4.12.0-Linux-x86_64.sh -t digit-force-docker.pkg.coding.net/ai-platform/base-images/python:3.7 -f python.Dockerfile .
