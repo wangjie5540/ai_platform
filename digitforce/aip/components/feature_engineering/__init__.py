@@ -76,15 +76,15 @@ class FeatureCreateGaoqian(BaseComponent):
                 self.OUTPUT_TEST_FEATURE: component_helper.generate_output_path(self.OUTPUT_TEST_FEATURE)
             }
         )
-class FeatureCreateGaoqianPredict(dsl.ContainerOp):
+class FeatureCreateGaoqianPredict(BaseComponent):
     OUTPUT_PREDICT_FEATURE = 'predict_feature_table_name'
 
     def __init__(self, name, global_params, sample, tag=ENV):
         super(FeatureCreateGaoqianPredict, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
-                  f'feature_engineering-feature_create_gaoqian_predict:{tag}',
-            command=['python', 'main.py'],
+                  f'feature_engineering-feature_create_gaoqian_predict',
+            tag=tag,
             arguments=['--name', name, '--global_params', global_params,
                        '--sample', sample],
             file_outputs={
