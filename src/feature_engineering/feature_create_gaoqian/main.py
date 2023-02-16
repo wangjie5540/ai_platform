@@ -27,7 +27,7 @@ def run():
     item_columns = ['ts_code', 'fund_type']
     user_columns = ['CUST_ID', 'gender', 'EDU', 'RSK_ENDR_CPY', 'NATN', 'OCCU', 'IS_VAIID_INVST', ]
 
-    sample_table_name = json.loads(args.sample)
+    sample_table_name = args.sample
     train_table_name, test_table_name, columns = feature_create(event_table_name, event_columns, item_table_name, item_columns, user_table_name, user_columns, event_code, category, sample_table_name)
     component_helper.write_output("train_feature_table_name", train_table_name)
     component_helper.write_output("test_feature_table_name", test_table_name)
