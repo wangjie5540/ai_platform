@@ -12,10 +12,10 @@ def run():
     parser.add_argument("--name", type=str, required=False, help="名称")
     args = parser.parse_args()
 
-    event_code = args.global_params['name']['event_code']
-    train_period = args.global_params['name']['train_period']
-    predict_period = args.global_params['name']['predict_period']
-    category = args.global_params['name']['category']
+    event_code = args.global_params[args.name]['event_code']
+    train_period = args.global_params[args.name]['train_period']
+    predict_period = args.global_params[args.name]['predict_period']
+    category = args.global_params[args.name]['category']
 
     # TODO 从参数中获取
     event_table_name = 'algorithm.zq_fund_trade'
