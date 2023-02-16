@@ -1,13 +1,15 @@
 import argparse
 import json
+import digitforce.aip.common.utils.component_helper as component_helper
+component_helper.init_config()
 from sample_select import sample_create
 import digitforce.aip.common.utils.component_helper as component_helper
 import os
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
-import digitforce.aip.common.utils.component_helper as component_helper
+
 
 def run():
-    component_helper.init_config()
+
     # Default
     os.environ["train_period"] = 30
     os.environ["predict_period"] = 30
