@@ -7,6 +7,7 @@ from digitforce.aip.common.utils.argument_helper import df_argument_helper
 import digitforce.aip.common.utils.component_helper as component_helper
 
 def run():
+    component_helper.init_config()
     # Default
     os.environ["train_period"] = 30
     os.environ["predict_period"] = 30

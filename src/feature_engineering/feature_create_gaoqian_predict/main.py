@@ -7,6 +7,7 @@ from feature_create import feature_create
 from digitforce.aip.common.utils import component_helper
 
 def run():
+    component_helper.init_config()
     # 参数解析
     parser = argparse.ArgumentParser()
     parser.add_argument("--global_params", type=str, required=True, help="全局参数")
