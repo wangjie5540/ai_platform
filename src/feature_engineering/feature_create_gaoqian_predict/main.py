@@ -3,9 +3,10 @@
 
 import argparse
 import json
-from feature_create import feature_create
 from digitforce.aip.common.utils import component_helper
 component_helper.init_config()
+from feature_create import feature_create
+
 
 def run():
     # 参数解析
