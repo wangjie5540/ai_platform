@@ -3,6 +3,8 @@ import kfp.dsl as dsl
 
 import digitforce.aip.common.utils.component_helper as component_helper
 from digitforce.aip.common.constants.global_constant import ENV
+from digitforce.aip.components import BaseComponent
+
 output_name = 'sample'
 
 
@@ -37,7 +39,8 @@ class SampleSelectionLiushi(dsl.ContainerOp):
             file_outputs={"sample_table_name": component_helper.generate_output_path("sample_table_name")}
         )
 
-class SampleSelectionGaoqian(dsl.ContainerOp):
+
+class SampleSelectionGaoqian(BaseComponent):
     """
     高潜样本组件
     """
@@ -46,11 +49,12 @@ class SampleSelectionGaoqian(dsl.ContainerOp):
         super(SampleSelectionGaoqian, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
-                  f'sample-sample_selection_gaoqian:{tag}',
-            command=['python', 'main.py'],
+                  f'sample-sample_selection_gaoqian',
+            tag=tag,
             arguments=['--name', name, '--global_params', global_params],
             file_outputs={"sample": component_helper.generate_output_path("sample")}
         )
+
 
 class RawSample2ModelSample(dsl.ContainerOp):
     OUTPUT_KEY_MODEL_SAMPLE = 'model_sample_table_name'
