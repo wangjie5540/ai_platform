@@ -3,12 +3,12 @@
 import argparse
 import os
 from model_predict import start_model_predict
-from digitforce.aip.common.utils import component_helper
+# from digitforce.aip.common.utils import component_helper
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
 
 def run():
     # 参数解析
-    component_helper.init_config()
+    # component_helper.init_config()
     df_argument_helper.add_argument("--global_params", type=str, required=True, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=True, help="名称")
     df_argument_helper.add_argument("--predict_table_name", type=str, required=False, help="预测数据")
