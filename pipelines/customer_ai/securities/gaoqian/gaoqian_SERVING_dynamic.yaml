@@ -1,4 +1,4 @@
-- label: 流失预警
+- label: 高潜人群预测
   itemList:
     - type: upload
       attributeName: model_predict__predict_cos_url

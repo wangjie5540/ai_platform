@@ -60,14 +60,14 @@
       "sample_select": {
         "train_period": ${sample_select__train_period},
         "predict_period": ${sample_select__predict_period},
-        "event_code":${sample_select__event_code},
-        "category":${sample_select__category}
+        "event_code":"${sample_select__event_code}",
+        "category":"${sample_select__category}"
       },
       "model": {
       },
       "feature_create": {
-        "event_code": ${sample_select__event_code},
-        "category": ${sample_select__category}
+        "event_code": "${sample_select__event_code}",
+        "category": "${sample_select__category}"
       }
     },
     "flag": "AUTOML"

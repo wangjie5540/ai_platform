@@ -1,23 +1,25 @@
+#gaoqian动态表单-训练
+#gaoqian_TRAIN_dynamic
 dataSource:
-  - table_name: algorithm.zq_fund_trade_lite
-      table_cname: 基金交易表
-      columns:
-        - name: custom_id
-          cname: 客户号
-          type: string
-          required: true
-        - name: trade_date
-          cname: 交易日期
-          type: date
-          required: true
-        - name: trade_type
-          cname: 交易类型
-          type: string
-          required: true
-        - name: fund_code
-          cname: 基金代码
-          type: string
-          required: true
+  - table_name: algorithm.zq_fund_trade
+    table_cname: 基金交易表
+    columns:
+      - name: custom_id
+        cname: 客户号
+        type: string
+        required: true
+      - name: trade_date
+        cname: 交易日期
+        type: date
+        required: true
+      - name: trade_type
+        cname: 交易类型
+        type: string
+        required: true
+      - name: fund_code
+        cname: 基金代码
+        type: string
+        required: true
   - table_name: algorithm.zq_fund_basic
     table_cname: 基金基本信息表
     columns:
@@ -41,10 +43,10 @@ dataSource:
         cname: 投资风格
         type: string
         required: true
-  - table_name: algorithm.user_info_lite
+  - table_name: algorithm.user_info
     table_cname: 用户基础标签表
     columns:
-      - name: cust_id
+      - name: CUST_ID
         cname: 客户号
         type: string
         required: true
@@ -52,7 +54,7 @@ dataSource:
         cname: 风险承受能力
         type: string
         required: true
-      - name: gender
+      - name: GENDER
         cname: 性别
         type: string
         required: false
@@ -76,14 +78,25 @@ trainSample:
   - label: 高潜行为定义
     itemList:
       - type: select
-        attributeName: event_code_login
+        attributeName: sample_select__event_code
         prefixText: 事件
         description: 介绍
         required: true
         optionType: 1
         optionItems:
-          - label: 交易
+          - label: 买入
             value: fund_buy
+      - type: select
+        attributeName: sample_select__category
+        prefixText: 基金产品类别
+        description: 介绍
+        required: true
+        optionType: 1
+        optionItems:
+          - label: 混合型
+            value: hunhe
+          - label: 股票型
+            value: gupiao
   - label: 高潜周期定义
     itemList:
       - type: input-number
@@ -98,7 +111,6 @@ trainSample:
         placeholder: 请输入天数
         suffixText: 天会买入
         required: true
-  - label:
 modelHyperParameter:
   - label: 模型参数
     itemList:

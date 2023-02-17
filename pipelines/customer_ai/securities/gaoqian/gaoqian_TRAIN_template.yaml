@@ -1,7 +1,9 @@
 {
   "sample_select": {
-    "active_before_days": ${sample_select__active_before_days},
-    "active_after_days": ${sample_select__active_after_days}
+    "train_period": ${sample_select__train_period},
+    "predict_period": ${sample_select__predict_period},
+    "event_code":"${sample_select__event_code}",
+    "category": "${sample_select__category}"
   },
   "model": {
     "max_depth": ${model__max_depth},
@@ -11,7 +13,9 @@
     "model_and_metrics_data_hdfs_path": "/user/ai/aip/model/${solution_run_id}"
   },
   "feature_create": {
-    "active_before_days": ${sample_select__active_before_days},
-    "active_after_days": ${sample_select__active_after_days}
+    "event_code": "${sample_select__event_code}",
+    "category": "${sample_select__category}"
   }
 }
+# gaoqian参数模板-训练
+# gaoqian_TRAIN_template

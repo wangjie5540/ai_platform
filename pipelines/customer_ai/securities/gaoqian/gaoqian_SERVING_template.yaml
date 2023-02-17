@@ -11,8 +11,8 @@
     },
     "feature_create_predict":
     {
-        "event_code": ${sample_select__event_code},
-        "category": ${sample_select__category},
+        "event_code": "${sample_select__event_code}",
+        "category": "${sample_select__category}",
         "sample": "algorithm.tmp_aip_user_feature_gaoqian_predict"
     }
 }
