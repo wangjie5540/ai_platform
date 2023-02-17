@@ -20,7 +20,7 @@ today = datetime.datetime.today().strftime("%Y%m%d")
 
 def feature_create(event_table_name, event_columns, item_table_name, item_columns, user_table_name, user_columns, event_code_list, category_a, sample_table_name):
 
-    sample = spark_client.get_session().sql(f"select user_id, 0 as label from {sample_table_name}")
+    sample = spark_client.get_session().sql(f"select custom_id, 0 as label from {sample_table_name}")
     # 构建列名
     user_id = event_columns[0]
 
