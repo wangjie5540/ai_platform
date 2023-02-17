@@ -147,9 +147,7 @@ def get_order_feature(event_table_name, event_columns, item_table_name, item_col
     # user_event1_top_cat = df1.select([user_id, 'u_buy_cat_top1', 'u_buy_cat_top2', 'u_buy_cat_top3'])
 
     # 拼接用户特征
-    user_feature_list = user_list.join(user_event1_counts_30d,
-                                       user_list[user_id_sample] == user_event1_counts_30d[user_id], 'left').drop(
-        user_id_sample)
+    user_feature_list = user_list.join(user_event1_counts_30d, user_id, 'left')
     user_feature_list = user_feature_list.join(user_event1_days_30d, user_id, 'left')
     # user_feature_list = user_feature_list.join(user_event1_top_cat, user_id, 'left')
     # if len(event_code_list) == 2:
