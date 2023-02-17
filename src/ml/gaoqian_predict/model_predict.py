@@ -19,15 +19,15 @@ def start_model_predict(predict_table_name, model_hdfs_path, output_file_name):
     # print(dt)
     df_predict = spark_client.get_session().sql(
         "select * from {} ".format(predict_table_name)).toPandas()
-    df_predict.dropna(axis=0, subset=['custom_id'], inplace=True)
+    df_predict.dropna(axis=0, subset=['user_id'], inplace=True)
 
     for col in df_predict.columns:
         if df_predict[col].dtypes == "object":
             df_predict[col] = df_predict[col].astype(float)
 
 
-    custom_list = df_predict['custom_id'].values
-    x_predict = df_predict.drop(columns=['custom_id', 'label'], axis=1)
+    custom_list = df_predict['user_id'].values
+    x_predict = df_predict.drop(columns=['user_id', 'label'], axis=1)
     if type(custom_list[0]) is not str:
         custom_list = [str(int(custom_id)) for custom_id in custom_list]
 
