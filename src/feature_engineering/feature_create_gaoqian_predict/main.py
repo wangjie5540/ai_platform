@@ -28,6 +28,7 @@ def run():
     user_columns = ['CUST_ID', 'gender', 'EDU', 'RSK_ENDR_CPY', 'NATN', 'OCCU', 'IS_VAIID_INVST', ]
 
     sample_table_name = json.loads(args.sample).get('table_name')
+    print('sample_table_name', sample_table_name)
     predict_table_name = feature_create(event_table_name, event_columns, item_table_name, item_columns, user_table_name, user_columns, event_code, category, sample_table_name)
     component_helper.write_output("predict_feature_table_name", predict_table_name)
 
