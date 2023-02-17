@@ -19,6 +19,12 @@ def run():
     component_params = global_params[args.name]
     event_code = component_params["event_code"]
     category = component_params['category']
+    # todo: 类别中英文映射转换
+    category_map = {
+        "hunhe": "混合型",
+        "gupiao": "股票型"
+    }
+    category = category_map.get(category)
 
     event_table_name = 'algorithm.zq_fund_trade'
     item_table_name = 'algorithm.zq_fund_basic'

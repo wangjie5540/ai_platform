@@ -18,6 +18,12 @@ def run():
     predict_period = global_params[args.name]['predict_period']
     category = global_params[args.name]['category']
 
+    # todo: 类别中英文映射转换
+    category_map = {
+        "hunhe": "混合型",
+        "gupiao": "股票型"
+    }
+    category = category_map.get(category)
     # TODO 从参数中获取
     event_table_name = 'algorithm.zq_fund_trade'
     event_columns = ['custom_id', 'trade_type', 'fund_code', 'dt']
