@@ -3,7 +3,7 @@ import kfp.dsl as dsl
 from kfp.dsl import Condition
 import os
 os.environ['PYTHONPATH'] = '/data/pycharm_project_666/digitforce-ai-platform'
-print('[[[[[')
+
 import digitforce.aip.common.utils.kubeflow_helper as kubeflow_helper
 from digitforce.aip.common.utils import config_helper
 from digitforce.aip.components.feature_engineering import FeatureCreateGaoqian
@@ -62,7 +62,7 @@ global_params = json.dumps({
         "train_period": 30,
         "predict_period": 30,
         "event_code": "fund_buy",
-        "category":'混合型'
+        "category":'hunhe'
     },
     "model":
     {
@@ -77,11 +77,11 @@ global_params = json.dumps({
     "feature_create":
     {
         "event_code": "fund_buy",
-        "category":'混合型'
+        "category":'hunhe'
     },
     "predict_cos_url":
     {
-        "url": "https://algorithm-1308011215.cos.ap-beijing.myqcloud.com/1675411629205-liushi.csv",
+        "url": "https://algorithm-1308011215.cos.ap-beijing.myqcloud.com/aip_test_lookalike_predict.csv",
         "columns": "custom_id"
     },
     "model_predict":
@@ -93,24 +93,24 @@ global_params = json.dumps({
     "feature_create_predict":
     {
         "event_code": "fund_buy",
-        "category":'混合型'
+        "category":'hunhe'
     }
 })
 
 
-# kubeflow_helper.upload_pipeline(ml_loss_warning, pipeline_name)
-# kubeflow_helper.upload_pipeline_version(ml_loss_warning, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
-client.create_run_from_pipeline_func(ml_gaoqian, arguments={"global_params": global_params,
-                                                           "flag": "TRAIN"},
-                                     experiment_name="recommend",
-                                     namespace='kubeflow-user-example-com')
+kubeflow_helper.upload_pipeline(ml_gaoqian, pipeline_name)
+# kubeflow_helper.upload_pipeline_version(ml_gaoqian, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
+# client.create_run_from_pipeline_func(ml_gaoqian, arguments={"global_params": global_params,
+#                                                            "flag": "TRAIN"},
+#                                      experiment_name="recommend",
+#                                      namespace='kubeflow-user-example-com')
 #
-# client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
+# client.create_run_from_pipeline_func(ml_gaoqian, arguments={"global_params": global_params,
 #                                                            "flag": "PREDICT"},
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')
 #
-# client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
+# client.create_run_from_pipeline_func(ml_gaoqian, arguments={"global_params": global_params,
 #                                                            "flag": "AUTOML"},
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')
