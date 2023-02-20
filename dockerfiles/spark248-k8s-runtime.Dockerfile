@@ -17,7 +17,7 @@ RUN mkdir -p $SPARK_JARS && cd $SPARK_JARS \
     && $WGET_COMMAND/common-1.0-SNAPSHOT.jar \
     && $WGET_COMMAND/starrocks-spark-writer-2.4_2.11-1.0-SNAPSHOT.jar \
     && $WGET_COMMAND/starrocks-spark2_2.11-1.0.0.jar \
-    && $WGET_COMMAND/alluxio-2.9.1-client.jar \
+    && $WGET_COMMAND/alluxio-2.7.4-client.jar \
     && $WGET_COMMAND/graphframes-0.8.2-spark2.4-s_2.11.jar
 
 COPY --from=miniconda /opt/miniconda3 /opt/miniconda3
@@ -25,6 +25,6 @@ COPY --from=miniconda /opt/spark-2.4.8-bin-hadoop2.7/python/lib ${SPARK_HOME}/py
 ENV PYTHONPATH ${SPARK_HOME}/python/lib/pyspark.zip:${SPARK_HOME}/python/lib/py4j-*.zip
 
 # 编译镜像
-# docker build -t digit-force-docker.pkg.coding.net/ai-platform/base-images/spark-k8s-runtime-with-jars:2.4.8 -f spark248-k8s-runtime.Dockerfile .
+#
 # 上传镜像
 # docker push digit-force-docker.pkg.coding.net/ai-platform/base-images/spark-k8s-runtime-with-jars:2.4.8
