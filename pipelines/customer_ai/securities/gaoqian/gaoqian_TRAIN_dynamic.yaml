@@ -75,20 +75,11 @@ dataSource:
         type: string
         required: false
 trainSample:
-  - label: 高潜行为定义
+  - label: 产品类别限定
     itemList:
       - type: select
-        attributeName: sample_select__event_code
-        prefixText: 事件
-        description: 介绍
-        required: true
-        optionType: 1
-        optionItems:
-          - label: 买入
-            value: fund_buy
-      - type: select
         attributeName: sample_select__category
-        prefixText: 基金产品类别
+        prefixText: 产品类别
         description: 介绍
         required: true
         optionType: 1
@@ -97,20 +88,24 @@ trainSample:
             value: hunhe
           - label: 股票型
             value: gupiao
-  - label: 高潜周期定义
+  - label: 高潜用户定义
     itemList:
-      - type: input-number
-        attributeName: sample_select__train_period
-        prefixText: 过去
-        placeholder: 请输入天数
-        suffixText: 天有过活跃行为
-        required: true
       - type: input-number
         attributeName: sample_select__predict_period
         prefixText: 未来
         placeholder: 请输入天数
-        suffixText: 天会买入
+        suffixText: 天内
         required: true
+      - type: select
+        attributeName: sample_select__event_code
+        prefixText: 发生
+        suffixText: 行为
+        description: 介绍
+        required: true
+        optionType: 1
+        optionItems:
+          - label: 买入
+            value: fund_buy
 modelHyperParameter:
   - label: 模型参数
     itemList:

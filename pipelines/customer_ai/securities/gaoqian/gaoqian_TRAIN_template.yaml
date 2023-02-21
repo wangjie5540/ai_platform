@@ -1,6 +1,6 @@
 {
   "sample_select": {
-    "train_period": ${sample_select__train_period},
+    "train_period": 60,
     "predict_period": ${sample_select__predict_period},
     "event_code":"${sample_select__event_code}",
     "category": "${sample_select__category}"
