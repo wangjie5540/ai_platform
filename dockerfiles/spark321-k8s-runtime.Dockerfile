@@ -1,3 +1,4 @@
+# TODO 尚未完成
 # spark-k8s-runtime:3.1.2镜像是通过spark-3.1.2-bin-hadoop2.7打包获得，命令如下：
 # docker build -t digit-force-docker.pkg.coding.net/ai-platform/base-images/spark-k8s-runtime:3.1.2 -f  kubernetes/dockerfiles/spark/Dockerfile  .
 FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/spark-k8s-runtime:3.2.1
