@@ -1,8 +1,7 @@
 # coding: utf-8
-import read_starrocks
+import digitforce.aip.common.utils.component_helper as component_helper
 import argparse
 import json
-import digitforce.aip.common.utils.component_helper as component_helper
 
 
 def run():
@@ -19,6 +18,7 @@ def run():
     component_params = global_params[args.name]
     table_name = component_params['table_name']
     limit = component_params['limit']
+    import read_starrocks
     read_starrocks.do_read(table_name=table_name, limit=limit)
 
 
