@@ -18,7 +18,7 @@ def run():
     # 获取组件参数
     component_params = global_params[args.name]
     table_name = component_params['table_name']
-    limit = component_params['table_name']
+    limit = component_params['limit']
     read_starrocks.do_read(table_name=table_name, limit=limit)
 
 
