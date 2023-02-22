@@ -27,7 +27,7 @@ def run():
     }
     category = category_map.get(category)
 
-    event_table_name = 'algorithm.zq_fund_trade'
+    event_table_name = 'algorithm.zq_fund_trade_lite'
     item_table_name = 'algorithm.zq_fund_basic'
     user_table_name = 'algorithm.user_info'
     event_columns = ['custom_id', 'trade_type', 'fund_code', 'trade_money', 'dt']
