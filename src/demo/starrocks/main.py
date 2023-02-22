@@ -1,8 +1,7 @@
 # coding: utf-8
-import my_print
+import digitforce.aip.common.utils.component_helper as component_helper
 import argparse
 import json
-import digitforce.aip.common.utils.component_helper as component_helper
 
 
 def run():
@@ -17,8 +16,10 @@ def run():
 
     # 获取组件参数
     component_params = global_params[args.name]
-    message = component_params['message']
-    my_print.do_print(message)
+    table_name = component_params['table_name']
+    limit = component_params['limit']
+    import read_starrocks
+    read_starrocks.do_read(table_name=table_name, limit=limit)
 
 
 if __name__ == '__main__':
