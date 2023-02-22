@@ -29,7 +29,7 @@ def run():
 
     event_table_name = 'algorithm.zq_fund_trade_lite'
     item_table_name = 'algorithm.zq_fund_basic'
-    user_table_name = 'algorithm.user_info'
+    user_table_name = 'algorithm.user_info_lite'
     event_columns = ['custom_id', 'trade_type', 'fund_code', 'trade_money', 'dt']
     item_columns = ['ts_code', 'fund_type']
     user_columns = ['CUST_ID', 'gender', 'EDU', 'RSK_ENDR_CPY', 'NATN', 'OCCU', 'IS_VAIID_INVST', ]

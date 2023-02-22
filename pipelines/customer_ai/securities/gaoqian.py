@@ -19,7 +19,7 @@ pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 @dsl.pipeline(name=pipeline_name)
 def ml_gaoqian(global_params: str, flag='TRAIN'):
-    RUN_ENV = "prod"
+    RUN_ENV = "dev"
     with Condition(flag != "PREDICT", name="is_not_predict"):
         op_sample_selection = SampleSelectionGaoqian(name='sample_select', global_params=global_params, tag=RUN_ENV)
         op_sample_selection.container.set_image_pull_policy("Always")
@@ -98,13 +98,13 @@ global_params = json.dumps({
 })
 
 
-kubeflow_helper.upload_pipeline(ml_gaoqian, pipeline_name)
+# kubeflow_helper.upload_pipeline(ml_gaoqian, pipeline_name)
 # kubeflow_helper.upload_pipeline_version(ml_gaoqian, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
-# client.create_run_from_pipeline_func(ml_gaoqian, arguments={"global_params": global_params,
-#                                                            "flag": "TRAIN"},
-#                                      experiment_name="recommend",
-#                                      namespace='kubeflow-user-example-com')
-#
+client.create_run_from_pipeline_func(ml_gaoqian, arguments={"global_params": global_params,
+                                                           "flag": "TRAIN"},
+                                     experiment_name="recommend",
+                                     namespace='kubeflow-user-example-com')
+
 # client.create_run_from_pipeline_func(ml_gaoqian, arguments={"global_params": global_params,
 #                                                            "flag": "PREDICT"},
 #                                      experiment_name="recommend",
