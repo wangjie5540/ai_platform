@@ -1,4 +1,4 @@
 
-def do_print(param):
+def do_print(message):
     print('lets see if it works....')
-    print(f'env: {param}')
+    print(message)
