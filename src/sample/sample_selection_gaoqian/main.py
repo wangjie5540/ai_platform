@@ -25,7 +25,7 @@ def run():
     }
     category = category_map.get(category)
     # TODO 从参数中获取
-    event_table_name = 'algorithm.zq_fund_trade'
+    event_table_name = 'algorithm.zq_fund_trade_lite'
     event_columns = ['custom_id', 'trade_type', 'fund_code', 'dt']
     item_table_name = 'algorithm.zq_fund_basic'
     item_columns =['ts_code', 'fund_type']
