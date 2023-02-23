@@ -1,0 +1,16 @@
+{
+  "demo_print": {
+    "message": "this is the demo print message"
+  },
+  "demo_sleep": {
+    "minutes": 1
+  },
+  "demo_read_cos": {
+    "url": "https://algorithm-1308011215.cos.ap-beijing.myqcloud.com/1677049656223-gaoqian_test.csv",
+    "columns": "user_id"
+  },
+  "demo_read_starrocks": {
+    "table_name": "aip.item",
+    "limit": 10
+  }
+}
