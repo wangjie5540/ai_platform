@@ -5,3 +5,4 @@ fonttools
 python-dateutil
 pysnowflake
 chinese_calendar
+xgboost
