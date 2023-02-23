@@ -11,6 +11,7 @@ DATE_FORMAT = "%Y%m%d"
 
 
 def start_sample_selection(active_before_days, active_after_days,
+                           active_days_threshold,
                            label_count=300000):
     window_test_days = 5
     window_train_days = 30
@@ -37,9 +38,9 @@ def start_sample_selection(active_before_days, active_after_days,
     print("The data source time range is from {} to {}".format(active_start_date, active_end_date))
 
     # 客户号，日期，客户是否登录
-    spark_client.get_starrocks_table_df("algorithm.sample_llxw").createOrReplaceTempView("sample_llxw")
+    spark_client.get_starrocks_table_df("algorithm.dm_cust_traf_behv_aggregate_df").createOrReplaceTempView("dm_cust_traf_behv_aggregate_df")
     table_app = spark_client.get_session().sql(
-        """select cust_code, replace(dt,'-','') as dt, is_login from sample_llxw where replace(dt,'-','') between '{}' and '{}'""".format(
+        """select cust_code, replace(dt,'-','') as dt, is_login from dm_cust_traf_behv_aggregate_df where replace(dt,'-','') between '{}' and '{}'""".format(
             active_start_date, active_end_date))
     # print("table_app")
     # print(table_app.count())
@@ -57,10 +58,10 @@ def start_sample_selection(active_before_days, active_after_days,
     # print(user_active_days.count())
     # 1.3 全量：客户号 --> (日期，label)
 
-    # - 过去n天至少活跃1次:
+    # - 过去n天至少活跃【active_days_threshold】次:
     #  -- 未来m天连续不活跃: label=1
     #  -- 未来m天至少活跃一次: label=0
-    custom_label_all = user_active_days.filter(lambda x: x[1][1] >= 1). \
+    custom_label_all = user_active_days.filter(lambda x: x[1][1] >= active_days_threshold). \
         map(lambda x: (x[0], (x[1][0], 1)) if x[1][1] == 0 else (x[0], (x[1][0], 0)))
     # print("custom_label_all")
     # print(custom_label_all.count())
