@@ -1,4 +1,5 @@
 FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/python:3.7
+RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ARG ROOT_DIR=/root
 ARG ROOT_PASSWORD=123
 # 默认使用dev环境
@@ -36,7 +37,6 @@ RUN cd $SPARK_JARS \
 RUN pip install xgboost -i https://pypi.tuna.tsinghua.edu.cn/simple
 # 安装pyhive
 RUN conda install --yes pyhive
-RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 编译镜像
 # docker build --build-arg ENVIRONMENT=dev -t digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base -f algorithm-base.Dockerfile .
