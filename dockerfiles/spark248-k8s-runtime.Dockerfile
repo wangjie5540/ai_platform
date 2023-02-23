@@ -1,4 +1,4 @@
-FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev as miniconda
+FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base as miniconda
 # RUN pip install digitforce-aip -i https://aip-1657964384920:546b044f44ad6936fef609faa512a53b3fa8b12f@digit-force-pypi.pkg.coding.net/ai-platform/aip/simple
 # spark-k8s-runtime:2.4.8镜像是通过spark-2.4.8-bin-hadoop2.7打包获得，命令如下：
 # docker build -t digit-force-docker.pkg.coding.net/ai-platform/base-images/spark-k8s-runtime:2.4.8-base -f kubernetes/dockerfiles/spark/Dockerfile .
