@@ -1,10 +1,11 @@
 FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/python:3.7
-RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ARG ROOT_DIR=/root
 ARG ROOT_PASSWORD=123
 # 默认使用dev环境
 ARG ENVIRONMENT
 WORKDIR $ROOT_DIR
+COPY requirements.txt $ROOT_DIR
+RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ARG WGET_COMMAND="wget --http-user=others-1657101930760 --http-password=f8c1508e03a43feaaedf507bc0e7d60a0c0f0485 https://digit-force-generic.pkg.coding.net/ai-platform/others"
 RUN echo "machine digit-force-generic.pkg.coding.net" >> ~/.netrc \
     && echo "login others-1657101930760" >> ~/.netrc \
