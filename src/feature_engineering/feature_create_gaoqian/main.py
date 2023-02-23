@@ -26,12 +26,12 @@ def run():
     }
     category = category_map.get(category)
 
-    event_table_name = 'algorithm.zq_fund_trade_lite'
+    event_table_name = 'algorithm.zq_fund_trade_lite' # todo: 改表名
     item_table_name = 'algorithm.zq_fund_basic'
     user_table_name = 'algorithm.user_info_lite'
-    event_columns = ['custom_id', 'trade_type', 'fund_code', 'trade_money', 'dt']
+    event_columns = ['cust_code', 'event_code', 'product_id', 'product_amount', 'product_type_pri', 'dt']
     item_columns = ['ts_code', 'fund_type']
-    user_columns = ['CUST_ID', 'gender', 'EDU', 'RSK_ENDR_CPY', 'NATN', 'OCCU', 'IS_VAIID_INVST', ]
+    user_columns = ['cust_code', 'gender', 'educational_degree', 'rating_lvl', 'occupation', 'age' ]
 
     sample_table_name = args.sample
     train_table_name, columns, test_table_name = feature_create(event_table_name, event_columns, item_table_name, item_columns, user_table_name, user_columns, event_code, category, sample_table_name)

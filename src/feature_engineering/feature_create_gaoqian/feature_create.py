@@ -71,21 +71,22 @@ def get_order_feature(event_table_name, event_columns, item_table_name, item_col
     item_id = event_columns[2]
     trade_money = event_columns[3]
     trade_date = event_columns[-1]
-    item_id_item = item_columns[0]
-    fund_type = item_columns[1]
+    # item_id_item = item_columns[0]
+    fund_type = event_columns[4] #item_columns[1]
 
     event_data = spark_client.get_starrocks_table_df(event_table_name)
     event_data = event_data.select(event_columns) \
         .filter((event_data[trade_date] >= one_year_ago) & (event_data[trade_date] < today))
 
-    item_data = spark_client.get_starrocks_table_df(item_table_name)
-    item_data = item_data.select(item_columns).distinct()
+    # item_data = spark_client.get_starrocks_table_df(item_table_name)
+    # item_data = item_data.select(item_columns).distinct()
+    #
+    # join_data = event_data.join(item_data.select([item_id_item, fund_type]),
+    #                             event_data[item_id] == item_data[item_id_item])
 
-    join_data = event_data.join(item_data.select([item_id_item, fund_type]),
-                                event_data[item_id] == item_data[item_id_item])
-
-    columns = [user_id, trade_type, trade_date, trade_money, fund_type]
-    user_event_df = join_data.select(columns)
+    # columns = [user_id, trade_type, trade_date, trade_money, fund_type]
+    # user_event_df = join_data.select(columns)
+    user_event_df = event_data
 
     col_sample = sample.columns
     user_id_sample = col_sample[0]

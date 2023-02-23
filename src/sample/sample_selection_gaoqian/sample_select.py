@@ -1,9 +1,10 @@
 import datetime
-from digitforce.aip.common.utils.spark_helper import spark_client
+import digitforce.aip.common.utils.spark_helper as spark_helper
 import digitforce.aip.common.utils.time_helper as time_helper
 
 
 DATE_FORMAT = "%Y-%m-%d"
+spark_client = spark_helper.SparkClient()
 
 def sample_create(event_table_name, event_columns, item_table_name, item_columns, event_code, category_a, train_period, predict_period):
 
@@ -13,20 +14,20 @@ def sample_create(event_table_name, event_columns, item_table_name, item_columns
     item_id = event_columns[2]
     trade_date = event_columns[-1]
     trade_type = event_columns[1]
-    item_id_item = item_columns[0]
-    fund_type = item_columns[1]
+    # item_id_item = item_columns[0]
+    fund_type = event_columns[3] #item_columns[1]
 
     event_data = spark_client.get_starrocks_table_df(event_table_name)
     event_data = event_data.select(event_columns)\
         .filter((event_data[trade_date] >= one_year_ago) & (event_data[trade_date] < today))
 
-    item_data = spark_client.get_starrocks_table_df(item_table_name)
-    item_data = item_data.select(item_columns).distinct()
+    # item_data = spark_client.get_starrocks_table_df(item_table_name)
+    # item_data = item_data.select(item_columns).distinct()
 
-    join_data = event_data.join(item_data.select([item_id_item, fund_type]), event_data[item_id] == item_data[item_id_item])
+    # join_data = event_data.join(item_data.select([item_id_item, fund_type]), event_data[item_id] == item_data[item_id_item])
 
-    columns = [user_id, trade_type, trade_date, fund_type]
-    data = join_data.select(columns)
+    # columns = [user_id, trade_type, trade_date, fund_type]
+    data = event_data #join_data.select(columns)
 
     max_trade_date = data.filter((data[trade_type] == event_code) & (data[fund_type] == category_a))\
         .select(trade_date).rdd.max()[0]

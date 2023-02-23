@@ -26,7 +26,7 @@ def run():
     category = category_map.get(category)
     # TODO 从参数中获取
     event_table_name = 'algorithm.zq_fund_trade_lite'
-    event_columns = ['custom_id', 'trade_type', 'fund_code', 'dt']
+    event_columns = ['cust_code', 'event_code', 'product_id', 'product_type_pri', 'dt']
     item_table_name = 'algorithm.zq_fund_basic'
     item_columns =['ts_code', 'fund_type']
     table_name, columns = sample_create(event_table_name, event_columns, item_table_name, item_columns, event_code, category, train_period, predict_period)
