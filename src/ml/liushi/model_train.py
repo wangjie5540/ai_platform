@@ -4,7 +4,7 @@ import datetime
 import random
 
 import joblib
-from digitforce.aip.common.utils.spark_helper import spark_client
+from digitforce.aip.common.utils.spark_helper import SparkClient
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, precision_score, recall_score, log_loss
 from xgboost import XGBClassifier
 
@@ -19,6 +19,7 @@ def start_model_train(train_table_name, test_table_name,
                       learning_rate=0.05, n_estimators=200, max_depth=5, scale_pos_weight=0.5,
                       is_automl=True,
                       model_and_metrics_data_hdfs_path=None):
+    spark_client = SparkClient.get()
     dt = spark_client.get_session().sql(
         f"show partitions {train_table_name}").collect()[-1][0][3:]
     print(dt)

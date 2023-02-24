@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 import datetime
-from digitforce.aip.common.utils.spark_helper import spark_client
+from digitforce.aip.common.utils.spark_helper import SparkClient
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 import utils
 
@@ -11,6 +11,7 @@ today = datetime.datetime.today().strftime(DATE_FORMAT)
 def feature_create(predict_samples_table_name,
                    active_before_days, active_after_days,
                    feature_days=30):
+    spark_client = SparkClient.get()
     window_test_days = 5
     window_train_days = 30
     now = datetime.datetime.now()
@@ -34,29 +35,29 @@ def feature_create(predict_samples_table_name,
     print("The data source time range is from {} to {}".format(active_start_date, active_end_date))
 
     # 客户号，年龄，性别，城市，省份，教育程度
-    spark_client.get_starrocks_table_df("algorithm.dm_cust_label_base_attributes_df").createOrReplaceTempView("dm_cust_label_base_attributes_df")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_label_base_attributes_df").createOrReplaceTempView("dm_cust_label_base_attributes_df")
     table_user = spark_client.get_session().sql(
         "select cust_code, age, sex, city_name, province_name, educational_degree from dm_cust_label_base_attributes_df where dt = '{}'".format(
             end_date))
     # 客户号，日期，客户是否登录
-    spark_client.get_starrocks_table_df("algorithm.dm_cust_traf_behv_aggregate_df").createOrReplaceTempView("dm_cust_traf_behv_aggregate_df")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_traf_behv_aggregate_df").createOrReplaceTempView("dm_cust_traf_behv_aggregate_df")
     table_app = spark_client.get_session().sql(
         "select cust_code, dt as dt, is_login from dm_cust_traf_behv_aggregate_df where dt between '{}' and '{}'".format(
             active_start_date, active_end_date))
     # 客户号，日期，资金转出金额，资金转入金额，资金转出笔数，资金转入笔数
-    spark_client.get_starrocks_table_df("algorithm.dm_cust_capital_flow_aggregate_df").createOrReplaceTempView("dm_cust_capital_flow_aggregate_df")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_capital_flow_aggregate_df").createOrReplaceTempView("dm_cust_capital_flow_aggregate_df")
     table_zj = spark_client.get_session().sql(
         "select cust_code, dt as dt, transfer_out_amt, transfer_in_amt, transfer_out_cnt, transfer_in_cnt from dm_cust_capital_flow_aggregate_df where dt between '{}' and '{}'".format(
             feature_date, end_date))
     # 客户号，日期，交易笔数，交易金额，股票笔数，股票金额，基金笔数，基金金额
-    spark_client.get_starrocks_table_df("algorithm.dm_cust_subs_redm_event_aggregate_df").createOrReplaceTempView("dm_cust_subs_redm_event_aggregate_df")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_subs_redm_event_aggregate_df").createOrReplaceTempView("dm_cust_subs_redm_event_aggregate_df")
     table_jy = spark_client.get_session().sql(
         "select cust_code, dt as dt, total_tran_cnt, total_tran_amt, gp_tran_cnt, gp_tran_amt, jj_tran_cnt, jj_tran_amt from dm_cust_subs_redm_event_aggregate_df where dt between '{}' and '{}'".format(
             feature_date, end_date))
     # 客户号，日期，总资产，总负债，基金资产，股票资产，资金余额，产品资产
-    spark_client.get_starrocks_table_df("algorithm.sample_zcsj").createOrReplaceTempView("sample_zcsj")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_ast_redm_event_df").createOrReplaceTempView("dm_cust_ast_redm_event_df")
     table_zc = spark_client.get_session().sql(
-        "select cust_code, dt as dt, ast_total, ast_fz, ast_jj, ast_gp, ast_zj, ast_cp from sample_zcsj where dt between '{}' and '{}'".format(
+        "select cust_code, dt as dt, total_ast, total_liab, zq_ast, ashare_val, cash_bal, total_prd_ast from dm_cust_ast_redm_event_df where dt between '{}' and '{}'".format(
             feature_date, end_date))
 
     # 2. 特征预处理
@@ -164,7 +165,7 @@ def feature_create(predict_samples_table_name,
     data_predict_df = spark_client.get_session().createDataFrame(data_predict, feature_cols)
 
     predict_table_name = "algorithm.aip_zq_liushi_custom_feature_predict"
-    write_hive(data_predict_df, predict_table_name, "dt")
+    write_hive(data_predict_df, predict_table_name, "dt", spark_client)
 
     return predict_table_name
 
@@ -191,7 +192,7 @@ def write_hdfs_dict(content, file_name, hdfs_client):
 
 
 
-def write_hive(inp_df, table_name, partition_col):
+def write_hive(inp_df, table_name, partition_col, spark_client):
     check_table = spark_client.get_session()._jsparkSession.catalog().tableExists(table_name)
 
     if check_table:  # 如果存在该表

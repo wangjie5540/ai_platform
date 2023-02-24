@@ -4,7 +4,7 @@ import datetime
 
 import pandas as pd
 import joblib
-from digitforce.aip.common.utils.spark_helper import spark_client
+from digitforce.aip.common.utils.spark_helper import SparkClient
 import digitforce.aip.common.utils.hdfs_helper as hdfs_helper
 from digitforce.aip.common.utils import cos_helper
 
@@ -14,6 +14,7 @@ hdfs_client = hdfs_helper.HdfsClient()
 
 
 def start_model_predict(predict_table_name, model_hdfs_path, output_file_name):
+    spark_client = SparkClient.get()
     dt = spark_client.get_session().sql(
         f"show partitions {predict_table_name}").collect()[-1][0][3:]
     print(dt)
