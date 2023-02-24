@@ -1,4 +1,4 @@
-FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/python:3.7
+FROM aip-tcr.tencentcloudcr.com/aip/python:3.7
 ARG ROOT_DIR=/root
 ARG ROOT_PASSWORD=123
 # 默认使用dev环境
@@ -39,9 +39,9 @@ RUN cd $SPARK_JARS \
 # RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 编译镜像
-# docker build --build-arg ENVIRONMENT=dev -t digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base -f algorithm-base.Dockerfile .
+# docker build -t aip-tcr.tencentcloudcr.com/aip/algorithm-base -f algorithm-base.Dockerfile .
 # 上传镜像
-# docker push digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base
+# docker push aip-tcr.tencentcloudcr.com/aip/algorithm-base
 # 启动容器
 # docker run --pull always -p 2222:22 -p 9999:8888  -d --name algorithm-base --privileged=true --rm -it digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base /usr/sbin/init
 # 开发阶段-启动ssh和jupyter-notebook
