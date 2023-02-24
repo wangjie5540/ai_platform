@@ -158,6 +158,7 @@ def feature_create(predict_samples_table_name,
     data_predict = merge_feature7.map(lambda x: [x[0][0]] + [x[0][2]] + x[1] + [today])
     print(f"data_predict : {data_predict.count()}")
     data_predict_df = spark_client.get_session().createDataFrame(data_predict, feature_cols)
+    print(data_predict_df.show(5))
     predict_table_name = "algorithm.tmp_aip_user_feature_gaoqian_predict"
     data_predict_df.write.format("hive").mode("overwrite").saveAsTable(predict_table_name)
 
