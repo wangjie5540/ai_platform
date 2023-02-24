@@ -22,9 +22,9 @@ def sample_create(trade_table_name, trade_columns, event_table_name, event_colum
     # today = time_helper.get_today_str()
 
     # 数据起始日期：基于start_data, 过去n天， start_date - n
-    active_start_date = time_helper.get_date_n_days_ago_str(start_date, train_period, DATE_FORMAT)
+    active_start_date = (datetime.datetime.strptime(start_date, DATE_FORMAT) - datetime.timedelta(days=train_period)).strftime(DATE_FORMAT)
     # 数据戒指日期；基于end_date, 未来m天， end_date + m
-    buy_end_date = time_helper.get_date_n_days_ago_str(end_date, -predict_period, DATE_FORMAT)
+    buy_end_date = (datetime.datetime.strptime(end_date, DATE_FORMAT) + datetime.timedelta(days=predict_period)).strftime(DATE_FORMAT)
 
     event_data = spark_client.get_starrocks_table_df(event_table_name)
     event_data = event_data.select(event_columns)\
