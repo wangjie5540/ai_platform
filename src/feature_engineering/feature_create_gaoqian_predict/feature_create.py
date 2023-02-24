@@ -12,8 +12,8 @@ spark_client = SparkClient()
 def feature_create(predict_samples_table_name,
                    active_before_days, active_after_days,
                    feature_days=30):
-    window_test_days = 5
-    window_train_days = 30
+    window_test_days = 1
+    window_train_days = 3
     now = datetime.datetime.now()
     end_date = now - datetime.timedelta(days=active_after_days + 2)
     mid_date = end_date - datetime.timedelta(days=window_test_days)
@@ -35,27 +35,27 @@ def feature_create(predict_samples_table_name,
     print("The data source time range is from {} to {}".format(active_start_date, active_end_date))
 
     # 客户号，年龄，性别，城市，省份，教育程度
-    spark_client.get_starrocks_table_df("algorithm.dm_cust_label_base_attributes_df").createOrReplaceTempView("sample_jcbq")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_label_base_attributes_df").createOrReplaceTempView("sample_jcbq")
     table_user = spark_client.get_session().sql(
         "select cust_code, age, sex, city_name, province_name, educational_degree from sample_jcbq where replace(dt,'-','') = '{}'".format(
             end_date))
     # 客户号，日期，客户是否登录
-    spark_client.get_starrocks_table_df("algorithm.dm_cust_traf_behv_aggregate_df").createOrReplaceTempView("sample_llxw")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_traf_behv_aggregate_df").createOrReplaceTempView("sample_llxw")
     table_app = spark_client.get_session().sql(
         "select cust_code, replace(dt,'-','') as dt, is_login from sample_llxw where replace(dt,'-','') between '{}' and '{}'".format(
             active_start_date, active_end_date))
     # 客户号，日期，资金转出金额，资金转入金额，资金转出笔数，资金转入笔数
-    spark_client.get_starrocks_table_df("algorithm.dm_cust_capital_flow_aggregate_df").createOrReplaceTempView("sample_zjls")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_capital_flow_aggregate_df").createOrReplaceTempView("sample_zjls")
     table_zj = spark_client.get_session().sql(
         "select cust_code, replace(dt,'-','') as dt, transfer_out_amt, transfer_in_amt, transfer_out_cnt, transfer_in_cnt from sample_zjls where replace(dt,'-','') between '{}' and '{}'".format(
             feature_date, end_date))
     # 客户号，日期，交易笔数，交易金额，股票笔数，股票金额，基金笔数，基金金额
-    spark_client.get_starrocks_table_df("algorithm.dm_cust_subs_redm_event_aggregate_df").createOrReplaceTempView("sample_sgsh")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_subs_redm_event_aggregate_df").createOrReplaceTempView("sample_sgsh")
     table_jy = spark_client.get_session().sql(
         "select cust_code, replace(dt,'-','') as dt, total_tran_cnt, total_tran_amt, gp_tran_cnt, gp_tran_amt, jj_tran_cnt, jj_tran_amt from sample_sgsh where replace(dt,'-','') between '{}' and '{}'".format(
             feature_date, end_date))
     # 客户号，日期，总资产，总负债，基金资产->激励资产（tmp），股票资产，资金余额，产品资产
-    spark_client.get_starrocks_table_df("algorithm.sample_zcsj").createOrReplaceTempView("sample_zcsj")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_ast_redm_event_df").createOrReplaceTempView("sample_zcsj")
     table_zc = spark_client.get_session().sql(
         "select cust_code, replace(dt,'-','') as dt, total_ast, total_liab, incentive_ast, stock_ast, cash_bal, total_prd_ast from sample_zcsj where replace(dt,'-','') between '{}' and '{}'".format(
             feature_date, end_date))
