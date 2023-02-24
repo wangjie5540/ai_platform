@@ -1,7 +1,7 @@
 #gaoqian动态表单-训练
 #gaoqian_TRAIN_dynamic
 dataSource:
-  - table_name: algorithm.dm_cust_label_base_attributes_df
+  - table_name: zq_standard.dm_cust_label_base_attributes_df
     table_cname: 基础标签表
     columns:
       - name: cust_code
@@ -32,7 +32,7 @@ dataSource:
         cname: 教育程度
         type: string
         required: false
-  - table_name: algorithm.dm_cust_traf_behv_aggregate_df
+  - table_name: zq_standard.dm_cust_traf_behv_aggregate_df
     table_cname: 流量行为表
     columns:
       - name: cust_code
@@ -47,7 +47,7 @@ dataSource:
         cname: 是否登录
         type: string
         required: true
-  - table_name: algorithm.dm_cust_capital_flow_aggregate_df
+  - table_name: zq_standard.dm_cust_capital_flow_aggregate_df
     table_cname: 资金流水表
     columns:
       - name: cust_code
@@ -74,7 +74,7 @@ dataSource:
         cname: 资金转出笔数
         type: int
         required: true
-  - table_name: algorithm.sample_sgsh
+  - table_name: zq_standard.dm_cust_subs_redm_event_aggregate_df
     table_cname: 申购赎回表
     columns:
       - name: cust_code
@@ -109,7 +109,7 @@ dataSource:
         cname: 基金交易金额
         type: float
         required: false
-  - table_name: algorithm.dm_cust_ast_redm_event_df
+  - table_name: zq_standard.dm_cust_ast_redm_event_df
     table_cname: 资产事件表
     columns:
       - name: cust_code
@@ -150,10 +150,12 @@ trainSample:
         required: true
         optionType: 1
         optionItems:
-          - label: 混合型
-            value: hunhe
-          - label: 股票型
-            value: gupiao
+          - label: 公墓基金
+            value: gongmu
+          - label: 私募基金
+            value: simu
+          - label: 信托产品
+            value: xintuo
   - label: 高潜用户定义
     itemList:
       - type: input-number
@@ -170,8 +172,8 @@ trainSample:
         required: true
         optionType: 1
         optionItems:
-          - label: 买入
-            value: fund_buy
+          - label: 申购
+            value: shengou
 modelHyperParameter:
   - label: 模型参数
     itemList:

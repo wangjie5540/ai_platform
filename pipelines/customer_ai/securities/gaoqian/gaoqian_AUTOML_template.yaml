@@ -58,7 +58,7 @@
   "pipeline_params": {
     "global_params": {
       "sample_select": {
-        "train_period": 15,
+        "train_period": 7,
         "predict_period": ${sample_select__predict_period},
         "event_code":"${sample_select__event_code}",
         "category":"${sample_select__category}"
@@ -66,7 +66,7 @@
       "model": {
       },
       "feature_create": {
-        "train_period": 15,
+        "train_period": 7,
         "predict_period": ${ sample_select__predict_period }
       }
     },

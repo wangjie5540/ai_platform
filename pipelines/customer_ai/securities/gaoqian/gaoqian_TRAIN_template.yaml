@@ -1,6 +1,6 @@
 {
   "sample_select": {
-    "train_period": 15,
+    "train_period": 7,
     "predict_period": ${sample_select__predict_period},
     "event_code":"${sample_select__event_code}",
     "category": "${sample_select__category}"
@@ -13,7 +13,7 @@
     "model_and_metrics_data_hdfs_path": "/user/ai/aip/model/${solution_run_id}"
   },
   "feature_create": {
-    "train_period": 15,
+    "train_period": 7,
     "predict_period": ${ sample_select__predict_period }
   }
 }

@@ -2,7 +2,7 @@ import kfp
 import kfp.dsl as dsl
 from kfp.dsl import Condition
 import os
-os.environ['PYTHONPATH'] = '/data/pycharm_project_666/digitforce-ai-platform'
+os.environ['PYTHONPATH'] = '/tmp/pycharm_project_377/digitforce-ai-platform'
 
 import digitforce.aip.common.utils.kubeflow_helper as kubeflow_helper
 from digitforce.aip.common.utils import config_helper
@@ -59,10 +59,10 @@ import json
 global_params = json.dumps({
     "sample_select":
     {
-        "train_period": 30,
-        "predict_period": 30,
+        "train_period": 7,
+        "predict_period": 7,
         "event_code": "shengou",
-        "category":'gongmu'
+        "category":'simu'
     },
     "model":
     {
@@ -76,8 +76,8 @@ global_params = json.dumps({
     },
     "feature_create":
     {
-        "train_period": 30,
-        "predict_period": 30
+        "train_period": 7,
+        "predict_period": 7
     },
     "predict_cos_url":
     {
@@ -92,18 +92,18 @@ global_params = json.dumps({
     },
     "feature_create_predict":
     {
-        "train_period": 30,
-        "predict_period": 30
+        "train_period": 7,
+        "predict_period": 7
     }
 })
 
 
-# kubeflow_helper.upload_pipeline(ml_gaoqian, pipeline_name)
+kubeflow_helper.upload_pipeline(ml_gaoqian, pipeline_name)
 # kubeflow_helper.upload_pipeline_version(ml_gaoqian, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
-client.create_run_from_pipeline_func(ml_gaoqian, arguments={"global_params": global_params,
-                                                           "flag": "TRAIN"},
-                                     experiment_name="recommend",
-                                     namespace='kubeflow-user-example-com')
+# client.create_run_from_pipeline_func(ml_gaoqian, arguments={"global_params": global_params,
+#                                                            "flag": "TRAIN"},
+#                                      experiment_name="recommend",
+#                                      namespace='kubeflow-user-example-com')
 
 # client.create_run_from_pipeline_func(ml_gaoqian, arguments={"global_params": global_params,
 #                                                            "flag": "PREDICT"},

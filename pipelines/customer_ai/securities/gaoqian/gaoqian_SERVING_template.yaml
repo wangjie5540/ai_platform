@@ -11,7 +11,7 @@
     },
     "feature_create_predict":
     {
-        "train_period": 15,
+        "train_period": 7,
         "predict_period": ${ sample_select__predict_period },
         "sample": "algorithm.tmp_aip_user_feature_gaoqian_predict"
     }
