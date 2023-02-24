@@ -4,7 +4,7 @@ import datetime
 import random
 
 import joblib
-from digitforce.aip.common.utils.spark_helper import spark_client
+from digitforce.aip.common.utils.spark_helper import SparkClient
 from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, precision_score, recall_score, log_loss
 from xgboost import XGBClassifier
 
@@ -13,7 +13,7 @@ from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 from digitforce.aip.common.utils.hive_helper import hive_client
 DATE_FORMAT = "%Y%m%d"
 today = datetime.datetime.today().strftime(DATE_FORMAT)
-
+spark_client = SparkClient()
 
 def start_model_train(train_table_name, test_table_name,
                       learning_rate=0.05, n_estimators=200, max_depth=5, scale_pos_weight=0.5,

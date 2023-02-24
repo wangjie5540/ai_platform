@@ -4,14 +4,14 @@ import datetime
 
 import pandas as pd
 import joblib
-from digitforce.aip.common.utils.spark_helper import spark_client
+from digitforce.aip.common.utils.spark_helper import SparkClient
 import digitforce.aip.common.utils.hdfs_helper as hdfs_helper
 from digitforce.aip.common.utils import cos_helper
 
 DATE_FORMAT = "%Y%m%d"
 today = datetime.datetime.today().strftime(DATE_FORMAT)
 hdfs_client = hdfs_helper.HdfsClient()
-
+spark_client = SparkClient()
 
 def start_model_predict(predict_table_name, model_hdfs_path, output_file_name):
     # dt = spark_client.get_session().sql(
