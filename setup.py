@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-__version__ = '0.1.18'
+__version__ = '0.1.20'
 requirements = [
     'pandas',
     'scipy',
