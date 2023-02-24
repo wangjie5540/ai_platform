@@ -9,10 +9,17 @@ DATE_FORMAT = "%Y-%m-%d"
 spark_client = spark_helper.SparkClient()
 
 def sample_create(trade_table_name, trade_columns, event_table_name, event_columns, event_code, category, train_period, predict_period):
-    window_days = 15
+    window_test_days = 5
+    window_train_days = 30
+    now = datetime.datetime.now()
+    end_date = now - datetime.timedelta(days=predict_period + 2)
+    mid_date = end_date - datetime.timedelta(days=window_test_days)
+    start_date = mid_date - datetime.timedelta(days=window_train_days)
+    end_date = end_date.strftime(DATE_FORMAT)
+    mid_date = mid_date.strftime(DATE_FORMAT)
+    start_date = start_date.strftime(DATE_FORMAT)
+    # today = get_today_str(DATE_FORMAT)
     # today = time_helper.get_today_str()
-    end_date = time_helper.n_days_ago_str(predict_period + 2)
-    start_date = time_helper.get_date_n_days_ago_str(end_date, window_days, DATE_FORMAT)
 
     # 数据起始日期：基于start_data, 过去n天， start_date - n
     active_start_date = time_helper.get_date_n_days_ago_str(start_date, train_period, DATE_FORMAT)
