@@ -5,8 +5,8 @@
 from digitforce.aip.common.utils import component_helper
 from model_train import start_model_train
 
-train_table_name = "algorithm.tmp_aip_train_data_gaoqian"
-test_table_name = "algorithm.tmp_aip_train_data_gaoqian"
+train_table_name = "algorithm.aip_zq_gaoqian_custom_feature_train"
+test_table_name = "algorithm.aip_zq_gaoqian_custom_feature_test"
 model_and_metrics_data_hdfs_path = "/user/ai/aip/model/666"
 learning_rate = 0.05
 n_estimators = 200

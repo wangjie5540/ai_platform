@@ -36,10 +36,10 @@ def start_model_train(train_table_name, test_table_name,
         if df_test[col].dtypes == "object":
             df_test[col] = df_test[col].astype(float)
 
-    x_train = df_train.drop(columns=['label', 'user_id'], axis=1)
+    x_train = df_train.drop(columns=['label', 'dt'], axis=1)
     y_train = df_train['label']
 
-    x_test = df_test.drop(columns=['label', 'user_id'], axis=1)
+    x_test = df_test.drop(columns=['label', 'dt'], axis=1)
     y_test = df_test['label']
 
     # TODO：mock数据临时修改label
