@@ -61,8 +61,8 @@ global_params = json.dumps({
     {
         "train_period": 30,
         "predict_period": 30,
-        "event_code": "fund_buy",
-        "category":'hunhe'
+        "event_code": "shengou",
+        "category":'gongmu'
     },
     "model":
     {
@@ -70,14 +70,14 @@ global_params = json.dumps({
         "scale_pos_weight": 0.5,
         "n_estimators": 20,
         "learning_rate": 0.05,
-        "train_table_name": "algorithm.tmp_aip_train_data_gaoqian",
-        "test_table_name": "algorithm.tmp_aip_test_data_gaoqian",
+        "train_table_name": "algorithm.aip_zq_gaoqian_custom_feature_train",
+        "test_table_name": "algorithm.aip_zq_gaoqian_custom_feature_test",
         "model_and_metrics_data_hdfs_path": "/user/ai/aip/model/666"
     },
     "feature_create":
     {
-        "event_code": "fund_buy",
-        "category":'hunhe'
+        "train_period": 30,
+        "predict_period": 30
     },
     "predict_cos_url":
     {
@@ -92,8 +92,8 @@ global_params = json.dumps({
     },
     "feature_create_predict":
     {
-        "event_code": "fund_buy",
-        "category":'hunhe'
+        "train_period": 30,
+        "predict_period": 30
     }
 })
 
