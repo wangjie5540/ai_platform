@@ -17,26 +17,12 @@ def run():
     args = parser.parse_args()
     global_params = json.loads(args.global_params)
     component_params = global_params[args.name]
-    event_code = component_params["event_code"]
-    category = component_params['category']
-
-    # todo: 类别中英文映射转换
-    category_map = {
-        "hunhe": "混合型",
-        "gupiao": "股票型"
-    }
-    category = category_map.get(category)
-
-    event_table_name = 'algorithm.zq_fund_trade_lite'
-    item_table_name = 'algorithm.zq_fund_basic'
-    user_table_name = 'algorithm.user_info_lite'
-    event_columns = ['custom_id', 'trade_type', 'fund_code', 'trade_money', 'dt']
-    item_columns = ['ts_code', 'fund_type']
-    user_columns = ['CUST_ID', 'gender', 'EDU', 'RSK_ENDR_CPY', 'NATN', 'OCCU', 'IS_VAIID_INVST', ]
+    train_period = component_params["train_period"]
+    predict_period = component_params['predict_period']
 
     sample_table_name = json.loads(args.sample).get('table_name')
     print('sample_table_name', sample_table_name)
-    predict_table_name = feature_create(event_table_name, event_columns, item_table_name, item_columns, user_table_name, user_columns, event_code, category, sample_table_name)
+    predict_table_name = feature_create(sample_table_name, train_period, predict_period)
     component_helper.write_output("predict_feature_table_name", predict_table_name)
 
 if __name__ == '__main__':

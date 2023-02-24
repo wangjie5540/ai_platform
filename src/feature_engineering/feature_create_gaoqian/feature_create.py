@@ -1,205 +1,182 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-'''
-@file: feature_create.py
-@time: 2022/12/7 18:54
-@desc:
-'''
-import digitforce.aip.common.utils.spark_helper as spark_helper
-from digitforce.aip.common.utils.hdfs_helper import hdfs_client
-from pyspark.sql import functions as F
-from pyspark.sql.types import *
-from pyspark.sql.functions import *
-from pyspark.sql import Window
 import datetime
-import random
+from digitforce.aip.common.utils.spark_helper import SparkClient
+from digitforce.aip.common.utils.hdfs_helper import hdfs_client
+import utils
 
-DATE_FORMAT = "%Y-%m-%d"
-spark_client = spark_helper.SparkClient()
-today = datetime.datetime.today().strftime("%Y%m%d")
+DATE_FORMAT = "%Y%m%d"
+today = datetime.datetime.today().strftime(DATE_FORMAT)
+spark_client = SparkClient()
 
-def feature_create(event_table_name, event_columns, item_table_name, item_columns, user_table_name, user_columns, event_code_list, category_a, sample_table_name):
+def feature_create(sample_table_name,
+                   active_before_days, active_after_days,
+                   feature_days=30):
+    window_test_days = 5
+    window_train_days = 30
+    now = datetime.datetime.now()
+    end_date = now - datetime.timedelta(days=active_after_days + 2)
+    mid_date = end_date - datetime.timedelta(days=window_test_days)
+    start_date = mid_date - datetime.timedelta(days=window_train_days)
+    end_date = end_date.strftime(DATE_FORMAT)
+    mid_date = mid_date.strftime(DATE_FORMAT)
+    start_date = start_date.strftime(DATE_FORMAT)
 
-    sample = spark_client.get_session().sql(f"select * from {sample_table_name}")
-    # 构建列名
-    user_id = event_columns[0]
+    # 活跃度数据起始日期：基于start_date，过去n天，即 start_date - n
+    active_start_date = (datetime.datetime.strptime(start_date, '%Y%m%d') - datetime.timedelta(
+        days=active_before_days)).strftime("%Y%m%d")
+    # 活跃度数据结束日期：基于end_date，未来m天，即，end_date + m
+    active_end_date = (
+            datetime.datetime.strptime(end_date, '%Y%m%d') + datetime.timedelta(days=active_after_days)).strftime(
+        "%Y%m%d")
+    # 特征数据最早日期：基于start_date，使用过去k天的数据，即，start_date - k
+    feature_date = (datetime.datetime.strptime(start_date, '%Y%m%d') - datetime.timedelta(days=feature_days)).strftime(
+        "%Y%m%d")
+    print("The data source time range is from {} to {}".format(active_start_date, active_end_date))
 
-    col_sample = sample.columns
-    user_id_sample = col_sample[0]
+    # 客户号，年龄，性别，城市，省份，教育程度
+    spark_client.get_starrocks_table_df("algorithm.dm_cust_label_base_attributes_df").createOrReplaceTempView("sample_jcbq")
+    table_user = spark_client.get_session().sql(
+        "select cust_code, age, sex, city_name, province_name, educational_degree from sample_jcbq where replace(dt,'-','') = '{}'".format(
+            end_date))
+    # 客户号，日期，客户是否登录
+    spark_client.get_starrocks_table_df("algorithm.dm_cust_traf_behv_aggregate_df").createOrReplaceTempView("sample_llxw")
+    table_app = spark_client.get_session().sql(
+        "select cust_code, replace(dt,'-','') as dt, is_login from sample_llxw where replace(dt,'-','') between '{}' and '{}'".format(
+            active_start_date, active_end_date))
+    # 客户号，日期，资金转出金额，资金转入金额，资金转出笔数，资金转入笔数
+    spark_client.get_starrocks_table_df("algorithm.dm_cust_capital_flow_aggregate_df").createOrReplaceTempView("sample_zjls")
+    table_zj = spark_client.get_session().sql(
+        "select cust_code, replace(dt,'-','') as dt, transfer_out_amt, transfer_in_amt, transfer_out_cnt, transfer_in_cnt from sample_zjls where replace(dt,'-','') between '{}' and '{}'".format(
+            feature_date, end_date))
+    # 客户号，日期，交易笔数，交易金额，股票笔数，股票金额，基金笔数，基金金额
+    spark_client.get_starrocks_table_df("algorithm.dm_cust_subs_redm_event_aggregate_df").createOrReplaceTempView("sample_sgsh")
+    table_jy = spark_client.get_session().sql(
+        "select cust_code, replace(dt,'-','') as dt, total_tran_cnt, total_tran_amt, gp_tran_cnt, gp_tran_amt, jj_tran_cnt, jj_tran_amt from sample_sgsh where replace(dt,'-','') between '{}' and '{}'".format(
+            feature_date, end_date))
+    # 客户号，日期，总资产，总负债，基金资产->激励资产（tmp），股票资产，资金余额，产品资产
+    spark_client.get_starrocks_table_df("algorithm.sample_zcsj").createOrReplaceTempView("sample_zcsj")
+    table_zc = spark_client.get_session().sql(
+        "select cust_code, replace(dt,'-','') as dt, total_ast, total_liab, incentive_ast, stock_ast, cash_bal, total_prd_ast from sample_zcsj where replace(dt,'-','') between '{}' and '{}'".format(
+            feature_date, end_date))
 
-    user_id_user = user_columns[0]
+    # 2. 特征预处理
 
-    # 1. 构建sample用户id
-    user_list = sample
+    # 2.1 客户号 --> [(交易日，交易笔数，交易额，股票交易笔数，股票交易额，基金交易笔数，基金交易额),(),()...]
+    jy_feature = table_jy.rdd.filter(lambda x: x[2] and x[2] > 0). \
+        map(lambda x: (x[0], [(int(x[1]), x[2], x[3], x[4], x[5], x[6], x[7])])). \
+        reduceByKey(lambda a, b: a + b). \
+        map(lambda x: (x[0], sorted(x[1], key=lambda y: int(y[0]), reverse=True)))  # 按交易日降序排列
 
-    # 2. 构造用户特征
-    user_order_feature_list = get_order_feature(event_table_name, event_columns, item_table_name, item_columns, sample, event_code_list, category_a)
-    user_label_feature = get_user_feature(user_table_name, user_columns)
+    # 2.2 客户号 --> [(资金变动日期，资金转出金额，资金转入金额，资金转出笔数，资金转入笔数),(),()...]
+    zj_feature = table_zj.rdd.filter(lambda x: x[4] and (x[4] > 0 or x[5] > 0)). \
+        map(lambda x: (x[0], [[int(x[1]), x[2], x[3], x[4], x[5]]])). \
+        reduceByKey(lambda a, b: a + b). \
+        map(lambda x: (x[0], sorted(x[1], key=lambda y: int(y[0]), reverse=True)))  # 按日期降序排列
 
-    # 3. 拼接特征，存入hive表
-    user_feature_list = user_list.join(user_order_feature_list, user_list[user_id_sample] == user_order_feature_list[user_id], 'left').drop(user_id_sample)
-    user_feature_list = user_feature_list.join(user_label_feature, user_feature_list[user_id] == user_label_feature[user_id_user], 'left').drop(user_id_user)
-    user_feature_list = user_feature_list.withColumnRenamed(user_id, user_id_sample)
-    # print(user_feature_list.show(5))
+    # 2.3 客户号 --> [活跃日期1, 活跃日期2...]
+    act_feature = table_app.rdd.filter(lambda x: x[2] and x[2] > 0). \
+        map(lambda x: (x[0], set([int(x[1])]))). \
+        reduceByKey(lambda a, b: a | b). \
+        map(lambda x: (x[0], sorted(list(x[1]))))  # 按活跃日期升序排列
 
-    data = user_feature_list.rdd.map(lambda x: (x, random.random()))
-    columns = user_feature_list.columns
-    train_test_threshold = 0.8
-    train_data = data.filter(lambda x: x[1] < train_test_threshold).map(lambda x: x[0]).toDF(columns)
-    test_data = data.filter(lambda x: x[1] >= train_test_threshold).map(lambda x: x[0]).toDF(columns)
+    # 2.4 (客户号, 日期) --> (总资产, 总负债，基金资产，股票资产，资金余额，产品资产)
+    zc_feature = table_zc.rdd.filter(lambda x: x[2]). \
+        map(lambda x: ((x[0], x[1]), (x[2], x[3], x[4], x[5], x[6], x[7])))
 
-    print(train_data.show(5))
-    train_data_table_name = "algorithm.tmp_aip_train_data_gaoqian"
-    train_data.write.format("hive").mode("overwrite").saveAsTable(train_data_table_name)
+    # 2.5 客户号 --> (年龄，性别，城市，省份，教育程度)
+    user_feature = table_user.rdd.filter(lambda x: x[1]). \
+        map(lambda x: (x[0], (x[1], x[2], x[3], x[4], x[5])))
 
-    test_data_table_name = "algorithm.tmp_aip_test_data_gaoqian"
-    test_data.write.format("hive").mode("overwrite").saveAsTable(test_data_table_name)
-    # TODO：动态hive表名
-    # user_feature_table_name = "algorithm.tmp_aip_user_feature_gaoqian"
-    # user_feature_list.write.format("hive").mode("overwrite").saveAsTable(user_feature_table_name)
+    # 3. 特征拼接
 
-    return train_data_table_name, columns, test_data_table_name
+    # 读取样本数据：客户号 --> (日期，lable)
+    custom_label = spark_client.get_session(). \
+        sql("select custom_id, date, label from {}".format(sample_table_name)). \
+        rdd.map(lambda x: (x[0], (x[1], x[2])))
 
+    # 3.1 客户号 --> ((日期，lable)，(最近一次交易距今天数，最近一次交易额，最近3/7/15/30天交易))
+    merge_feature1 = custom_label.leftOuterJoin(jy_feature). \
+        map(lambda x: (x[0], (x[1][0], utils.get_jy_feature(int(x[1][0][0]), x[1][1]))))
 
-def get_order_feature(event_table_name, event_columns, item_table_name, item_columns, sample, event_code, category_a):
-    today = datetime.datetime.today().date()
-    one_year_ago = (datetime.datetime.today() - datetime.timedelta(365)).strftime(DATE_FORMAT)
-    thirty_days_ago_str = (datetime.datetime.today() + datetime.timedelta(days=-360)).strftime(DATE_FORMAT)
+    # 3.2  最近一次资金变动距今天数，最近一次资金变动金额，最近3/7/15/30天的资金变动
+    merge_feature2 = merge_feature1.leftOuterJoin(zj_feature). \
+        map(lambda x: (x[0], (x[1][0][0][0], x[1][0][0][1], x[1][0][1][0], x[1][0][1][1], x[1][0][1][2],
+                              utils.get_zj_feature(int(x[1][0][0][0]), x[1][1])))). \
+        map(lambda x: (x[0], (x[1][0], x[1][1], x[1][2], x[1][3], x[1][4], x[1][5][0], x[1][5][1], x[1][5][2])))
 
-    user_id = event_columns[0]
-    trade_type = event_columns[1]
-    item_id = event_columns[2]
-    trade_money = event_columns[3]
-    trade_date = event_columns[-1]
-    # item_id_item = item_columns[0]
-    fund_type = event_columns[4] #item_columns[1]
+    # 3.3 最近3/7/15/30天的登录天数
+    merge_feature3 = merge_feature2.leftOuterJoin(act_feature). \
+        map(lambda x: (x[0], (
+        x[1][0][0], x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7],
+        utils.get_act_feature(int(x[1][0][0]), x[1][1]))))
 
-    event_data = spark_client.get_starrocks_table_df(event_table_name)
-    event_data = event_data.select(event_columns) \
-        .filter((event_data[trade_date] >= one_year_ago) & (event_data[trade_date] < today))
+    # 3.4 客户基本信息(年龄，性别，城市，省份，教育程度)
+    merge_feature4 = merge_feature3.leftOuterJoin(user_feature). \
+        map(lambda x: ((x[0], x[1][0][0]), (
+        x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8], x[1][1])))
 
-    # item_data = spark_client.get_starrocks_table_df(item_table_name)
-    # item_data = item_data.select(item_columns).distinct()
-    #
-    # join_data = event_data.join(item_data.select([item_id_item, fund_type]),
-    #                             event_data[item_id] == item_data[item_id_item])
+    # 3.5 当天总资产, 总负债，基金资产，股票资产，资金余额，产品资产
+    merge_feature5 = merge_feature4.leftOuterJoin(zc_feature). \
+        map(lambda x: x if x[1][1] else (x[0], (x[1][0], (0.0, 0.0, 0.0, 0.0, 0.0, 0.0))))
 
-    # columns = [user_id, trade_type, trade_date, trade_money, fund_type]
-    # user_event_df = join_data.select(columns)
-    user_event_df = event_data
+    # 3.6 格式整理 共59个特征
+    merge_feature6 = merge_feature5.map(lambda x: ((x[0][0], x[0][1], x[1][0][0]), \
+                                                   [x[1][0][1], x[1][0][2]] + utils.format_list(x[1][0][3]) + \
+                                                   [x[1][0][4], x[1][0][5]] + utils.format_list(x[1][0][6]) + \
+                                                   x[1][0][7] + list(x[1][0][8]) + list(x[1][1])))
 
-    col_sample = sample.columns
-    user_id_sample = col_sample[0]
+    # 性别
+    dict_sex = utils.genDict(merge_feature6.map(lambda x: x[1][49]))
+    # dict_sex = genDict(spark.sparkContext.parallelize(["男","女"]))
+    write_hdfs_dict(dict_sex, "sex", hdfs_client)
 
-    user_list = sample.select(user_id_sample).distinct()
+    # 城市
+    dict_city = utils.genDict(merge_feature6.map(lambda x: x[1][50]))
+    write_hdfs_dict(dict_city, "city", hdfs_client)
 
-    user_event1_counts_30d = user_event_df.filter(user_event_df[trade_type] == event_code)\
-        .filter(user_event_df[trade_date] >= thirty_days_ago_str) \
-        .groupby(user_id) \
-        .agg(F.count(trade_money).alias('u_buy_counts_30d'), \
-             F.sum(trade_money).alias('u_amount_sum_30d'), \
-             F.avg(trade_money).alias('u_amount_avg_30d'), \
-             F.min(trade_money).alias('u_amount_min_30d'), \
-             F.max(trade_money).alias('u_amount_max_30d'))
+    # 省份
+    dict_province = utils.genDict(merge_feature6.map(lambda x: x[1][51]))
+    write_hdfs_dict(dict_province, "province", hdfs_client)
 
-    user_event1_days_30d = user_event_df.filter(user_event_df[trade_date] >= thirty_days_ago_str) \
-        .select([user_id, trade_date]) \
-        .groupby([user_id]) \
-        .agg(countDistinct(trade_date), \
-             F.min(trade_date),
-             F.max(trade_date)) \
-        .rdd \
-        .map(lambda x: (x[0], x[1], ((datetime.datetime.strptime(x[3], DATE_FORMAT) - datetime.datetime.strptime(x[2], DATE_FORMAT)).days / x[1]), ((datetime.datetime.today() - datetime.datetime.strptime(x[3], DATE_FORMAT)).days))) \
-        .toDF([user_id, "u_buy_days_30d", "u_buy_avg_days_30d", "u_last_buy_days_30d"])
-
-    # todo: event的行为序列，用于关联规则挖掘
-    # if len(event_code_list) == 2:
-    #     user_event2_counts_30d = user_event_df.filter(user_event_df[trade_date] >= thirty_days_ago_str) \
-    #         .groupby(user_id) \
-    #         .agg(F.count(trade_money).alias('u_event2_counts_30d'), \
-    #              F.sum(trade_money).alias('u_event2_amount_sum_30d'), \
-    #              F.avg(trade_money).alias('u_event2_amount_avg_30d'), \
-    #              F.min(trade_money).alias('u_event2_amount_min_30d'), \
-    #              F.max(trade_money).alias('u_event2_amount_max_30d'))
-    #
-    #     user_event2_days_30d = user_event_df.filter(user_event_df[trade_date] >= thirty_days_ago_str) \
-    #         .select([user_id, trade_date]) \
-    #         .groupby([user_id]) \
-    #         .agg(countDistinct(trade_date), \
-    #              F.min(trade_date),
-    #              F.max(trade_date)) \
-    #         .rdd \
-    #         .map(lambda x: (x[0], x[1], ((x[3] - x[2]).days / x[1]), ((today - x[3]).days))) \
-    #         .toDF([user_id, "u_event2_days_30d", "u_event2_avg_days_30d", "u_last_event2_days_30d"])
-
-    # todo: 分别统计两个品类相关特征
-
-    # 用户行为涉及最多的top3个品类
-    # user_event1_category_counts = user_event_df.filter(
-    #     (user_event_df[trade_type] == event_code) & (user_event_df[trade_date] >= one_year_ago)) \
-    #     .groupby([user_id, fund_type]) \
-    #     .agg(F.count(user_id).alias('u_event1_counts'))
-    # w = Window.partitionBy(user_event1_category_counts[user_id]).orderBy(user_event1_category_counts['u_event1_counts'].desc())
-    # top = user_event1_category_counts.withColumn('rank', F.row_number().over(w)).where('rank<=3')
-    # df1 = top.groupby(top[user_id]).agg(F.collect_list(top[fund_type]))
-    #
-    # def paddle_zero(x, index):
-    #     if len(x) < 3:
-    #         for j in range(3 - len(x)):
-    #             x.append('0')
-    #     return x[index]
-    #
-    # def paddle_zero_udf(index):
-    #     return F.udf(lambda x: paddle_zero(x, index))
-    #
-    # top_list = ['u_buy_cat_top1', 'u_buy_cat_top2', 'u_buy_cat_top3']
-    # for i in range(3):
-    #     df1 = df1.withColumn(top_list[i], paddle_zero_udf(i)(df1[f'collect_list({fund_type})']))
-    #
-    # user_event1_top_cat = df1.select([user_id, 'u_buy_cat_top1', 'u_buy_cat_top2', 'u_buy_cat_top3'])
-
-    # 拼接用户特征
-    user_feature_list = user_list.join(user_event1_counts_30d,
-                                       user_list[user_id_sample] == user_event1_counts_30d[user_id], 'left').drop(
-        user_id_sample)
-    user_feature_list = user_feature_list.join(user_event1_days_30d, user_id, 'left')
-    # user_feature_list = user_feature_list.join(user_event1_top_cat, user_id, 'left')
-    # if len(event_code_list) == 2:
-    #     user_feature_list = user_feature_list.join(user_event2_counts_30d, user_id)
-    #     user_feature_list = user_feature_list.join(user_event2_days_30d, user_id)
-    return user_feature_list
-
-
-def get_user_feature(user_table_name, user_columns):
-    user_feature = spark_client.get_starrocks_table_df(user_table_name)
-    user_label_feature = user_feature.select(user_columns).distinct().rdd
-
-    dict_edu = genDict(user_label_feature.map(lambda x: x[2]))
+    # 教育程度
+    dict_edu = utils.genDict(merge_feature6.map(lambda x: x[1][52]))
     write_hdfs_dict(dict_edu, "edu", hdfs_client)
 
-    dict_risk = genDict(user_label_feature.map(lambda x: x[3]))
-    write_hdfs_dict(dict_risk, "risk", hdfs_client)
+    # 3.7 将枚举型转为数值型
+    merge_feature7 = merge_feature6.map(lambda x: (x[0], x[1][:49] + [dict_sex.get(x[1][49]), dict_city.get(x[1][50]),
+                                                                      dict_province.get(x[1][51]),
+                                                                      dict_edu.get(x[1][52])] + x[1][53:]))
 
-    dict_natn = genDict(user_label_feature.map(lambda x: x[4]))
-    write_hdfs_dict(dict_natn, "natn", hdfs_client)
+    feature_cols = ["label", "last_jy_days", "last_jy_money", "3_jy_cnt", "3_jy_money", "3_jy_gp_cnt",
+                    "3_jy_gp_money", "3_jy_jj_cnt", "3_jy_jj_money", "7_jy_cnt", "7_jy_money", "7_jy_gp_cnt",
+                    "7_jy_gp_money", "7_jy_jj_cnt", "7_jy_jj_money", "15_jy_cnt", "15_jy_money", "15_jy_gp_cnt",
+                    "15_jy_gp_money", "15_jy_jj_cnt", "15_jy_jj_money", "30_jy_cnt", "30_jy_money", "30_jy_gp_cnt",
+                    "30_jy_gp_money", "30_jy_jj_cnt", "30_jy_jj_money", "last_zj_days", "last_zj_money",
+                    "3_zj_zc_money", "3_zj_zr_money", "3_zj_zc_cnt", "3_zj_zr_cnt", "7_zj_zc_money", "7_zj_zr_money",
+                    "7_zj_zc_cnt", "7_zj_zr_cnt", "15_zj_zc_money", "15_zj_zr_money", "15_zj_zc_cnt", "15_zj_zr_cnt",
+                    "30_zj_zc_money", "30_zj_zr_money", "30_zj_zc_cnt", "30_zj_zr_cnt", "3_login_cnt", "7_login_cnt",
+                    "15_login_cnt", "30_login_cnt", "age", "sex", "city", "province", "edu", "now_zc", "now_fuzhai",
+                    "now_zc_jj", "now_zc_gp", "now_zj", "now_zc_cp", "dt"]
 
-    dict_occu = genDict(user_label_feature.map(lambda x: x[5]))
-    write_hdfs_dict(dict_occu, "occu", hdfs_client)
+    # dt(今天,分区), lable, 最近一次...
+    data_test = merge_feature7.filter(lambda x: int(x[0][1]) >= int(mid_date)). \
+        map(lambda x: [x[0][2]] + x[1] + [today])
+    print(f"data_test : {data_test.count()}")
+    data_test_df = spark_client.get_session().createDataFrame(data_test, feature_cols)
 
-    user_feature_final = user_label_feature.map(lambda x: (x[0], x[1], dict_edu.get(x[2]), dict_risk.get(x[3]), dict_natn.get(x[4]), dict_occu.get(x[5]), x[6]))\
-                        .toDF(user_columns)
-    return user_feature_final
+    data_train = merge_feature7.filter(lambda x: int(x[0][1]) < int(mid_date)). \
+        map(lambda x: [x[0][2]] + x[1] + [today])
+    print(f"data_train : {data_train.count()}")
+    data_train_df = spark_client.get_session().createDataFrame(data_train, feature_cols)
 
-def genDict(inp):
-    """
-    inp: 输入一个rdd，单列
-    return: 1. 将生成的dict存储hdfs，返回地址；2. 返回这个dict
-    """
-    sig_list = inp.distinct().collect()
-    res_dict = dict()
-    for index, term in enumerate(sig_list):
-        res_dict[term] = index
-    return res_dict
+    train_table_name = "algorithm.aip_zq_gaoqian_custom_feature_train"
+    test_table_name = "algorithm.aip_zq_gaoqian_custom_feature_test"
+    data_train_df.write.format("hive").mode("overwrite").saveAsTable(train_table_name)
+    data_test_df.write.format("hive").mode("overwrite").saveAsTable(test_table_name)
+
+    return train_table_name, test_table_name
+
 
 # 写hdfs，覆盖写！
 def write_hdfs_path(local_path, hdfs_path, hdfs_client):
@@ -207,12 +184,27 @@ def write_hdfs_path(local_path, hdfs_path, hdfs_client):
         hdfs_client.delete(hdfs_path)
     hdfs_client.copy_from_local(local_path, hdfs_path)
 
+
 # dict先写本地，再写入hdfs
 def write_hdfs_dict(content, file_name, hdfs_client):
     local_path = "dict.{}.{}".format(today, file_name)
-    hdfs_path = "/user/ai/aip/zq/gaoqian/enum_dict/{}/{}".format(today, file_name)
+    hdfs_path1 = "/user/ai/aip/zq/gaoqian/enum_dict/{}/{}".format(today, file_name)
+    hdfs_path2 = "/user/ai/aip/zq/gaoqian/enum_dict/latest/{}".format(file_name)
 
     with open(local_path, "w") as f:
         for key in content:
             f.write("{}\t{}\n".format(key, content[key]))
-    write_hdfs_path(local_path, hdfs_path, hdfs_client)
+    write_hdfs_path(local_path, hdfs_path1, hdfs_client)
+    write_hdfs_path(local_path, hdfs_path2, hdfs_client)
+
+
+# def write_hive(inp_df, table_name, partition_col):
+#     check_table = spark_client.get_session()._jsparkSession.catalog().tableExists(table_name)
+#
+#     if check_table:  # 如果存在该表
+#         print("table:{} exist......".format(table_name))
+#         inp_df.write.format("orc").mode("overwrite").insertInto(table_name)
+#
+#     else:  # 如果不存在
+#         print("table:{} not exist......".format(table_name))
+#         inp_df.write.format("orc").mode("overwrite").partitionBy(partition_col).saveAsTable(table_name)
