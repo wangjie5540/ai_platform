@@ -59,7 +59,7 @@ def sample_create(trade_table_name, trade_columns, event_table_name, event_colum
     label_cnt = 100000
     sample_rate = label_cnt * 1.0 / all_cnt
     # 最终结果：客户号， 日期， label
-    sample_columns = ['user_id', 'date', 'label']
+    sample_columns = ['custom_id', 'date', 'label']
     sample = sample_all.map(lambda x: (x[0], (x[1], random.random())))\
         .filter(lambda x: x[1][1] < sample_rate)\
         .map(lambda x: (x[0], x[1][0][[0]], x[1][0][1]))\
