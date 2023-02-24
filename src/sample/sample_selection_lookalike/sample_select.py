@@ -6,12 +6,13 @@ import math
 import numpy as np
 import builtins
 import random
-from digitforce.aip.common.utils.spark_helper import spark_client
+from digitforce.aip.common.utils.spark_helper import SparkClient
 import digitforce.aip.common.utils.time_helper as time_helper
 
 
 def start_sample_selection(event_code_buy, pos_sample_proportion=0.5, pos_sample_num=200000):
-    columns = ["custom_id", "trade_date", "trade_type", "fund_code"]
+    spark_client = SparkClient.get()
+    columns = ["cust_code", "event_time", "event_code", "product_id"]
     buy_code = event_code_buy
     user_id = columns[0]
     trade_date = columns[1]
@@ -21,7 +22,7 @@ def start_sample_selection(event_code_buy, pos_sample_proportion=0.5, pos_sample
     today = time_helper.get_today_str()
     thirty_days_ago = time_helper.n_days_ago_str(365)
 
-    data = spark_client.get_starrocks_table_df("algorithm.zq_fund_trade_lite")
+    data = spark_client.get_starrocks_table_df("zq_standard.dm_cust_subs_redm_event_df")
     data = data.select(columns) \
         .filter((data[trade_date] >= thirty_days_ago) & (data[trade_date] <= today)) \
         .filter(data[trade_type] == buy_code)

@@ -2,7 +2,7 @@
 # encoding: utf-8
 import datetime
 
-from digitforce.aip.common.utils.spark_helper import spark_client
+from digitforce.aip.common.utils.spark_helper import SparkClient
 from pyspark.sql import functions as F
 from pyspark.sql.functions import *
 
@@ -10,16 +10,15 @@ from digitforce.aip.common.utils.time_helper import *
 
 
 def calculate_raw_user_feature(raw_user_feature_table_name):
-    user_table_columns = ['cust_id', 'gender', 'EDU', 'RSK_ENDR_CPY', 'NATN', 'OCCU', 'IS_VAIID_INVST']
-    order_table_columns = ["custom_id", "trade_date", "trade_type", "fund_code", "trade_money", "fund_shares",
-                           "fund_nav"]
+    spark_client = SparkClient.get()
+    user_table_columns = ['cust_code', 'age', 'sex', 'city_name', 'province_name', 'investor_type', 'risk_level']
+    order_table_columns = ["cust_code", "event_time", "event_code", "product_id", "product_amt"]
 
     # todo starrocks支持列存储  可以将select移至starrocks中 降低网络io
-    standard_user_data = spark_client.get_starrocks_table_df('algorithm.user_info_lite')
+    standard_user_data = spark_client.get_starrocks_table_df('zq_standard.dm_cust_label_base_attributes_df')
     standard_user_data = standard_user_data.select(user_table_columns)
-    standard_user_data = standard_user_data.withColumnRenamed("cust_id", "custom_id")
 
-    standard_order_table = spark_client.get_starrocks_table_df("algorithm.zq_fund_trade_lite")
+    standard_order_table = spark_client.get_starrocks_table_df("zq_standard.dm_cust_subs_redm_event_df")
     standard_order_data = standard_order_table.select(order_table_columns)
 
     # 3. 构造用户原始特征
@@ -27,8 +26,8 @@ def calculate_raw_user_feature(raw_user_feature_table_name):
         calculate_raw_user_feature_from_order_feature(standard_order_data)
 
     # 4. 拼接特征，存入hive表
-    raw_user_feature_dataframe = standard_user_data.join(user_order_feature_dataframe, "custom_id", "left")
-    raw_user_feature_dataframe = raw_user_feature_dataframe.withColumnRenamed("custom_id", "user_id")
+    raw_user_feature_dataframe = standard_user_data.join(user_order_feature_dataframe, "cust_code", "left")
+    raw_user_feature_dataframe = raw_user_feature_dataframe.withColumnRenamed("cust_code", "user_id")
 
     raw_user_feature_dataframe.write.format("hive").mode("overwrite").saveAsTable(raw_user_feature_table_name)
 
@@ -49,12 +48,12 @@ def calculate_raw_user_feature_from_order_feature(standard_order_dataframe):
     trade_date = "trade_date"
     trade_money = "trade_money"
 
-    user_id_dataframe = standard_order_dataframe.select("custom_id").distinct()
+    user_id_dataframe = standard_order_dataframe.select("cust_code").distinct()
 
     user_buy_df = standard_order_dataframe.filter(standard_order_dataframe[trade_type] == buy_code)
 
     user_buy_counts_30d = user_buy_df.filter((user_buy_df[trade_date] >= thirty_days_ago_str)&(user_buy_df[trade_date] <= today_str)) \
-        .groupby("custom_id") \
+        .groupby("cust_code") \
         .agg(F.count(trade_money).alias('u_buy_counts_30d'),
              F.sum(trade_money).alias('u_amount_sum_30d'),
              F.avg(trade_money).alias('u_amount_avg_30d'),
@@ -62,27 +61,27 @@ def calculate_raw_user_feature_from_order_feature(standard_order_dataframe):
              F.max(trade_money).alias('u_amount_max_30d'))
 
     user_buy_days_30d = user_buy_df.filter(user_buy_df[trade_date] >= thirty_days_ago_str) \
-        .select(["custom_id", trade_date]) \
-        .groupby(["custom_id"]) \
+        .select(["cust_code", trade_date]) \
+        .groupby(["cust_code"]) \
         .agg(countDistinct(trade_date),
              F.min(trade_date),
              F.max(trade_date)) \
         .rdd \
         .map(lambda x: (x[0], x[1], ((datetime.datetime.strptime(x[3], "%Y-%m-%d") - datetime.datetime.strptime(x[2], "%Y-%m-%d")).days / x[1]), (today - datetime.datetime.strptime(x[3], "%Y-%m-%d")).days)) \
-        .toDF(["custom_id", "u_buy_days_30d", "u_buy_avg_days_30d", "u_last_buy_days_30d"])
+        .toDF(["cust_code", "u_buy_days_30d", "u_buy_avg_days_30d", "u_last_buy_days_30d"])
 
-    user_order_fund_list_dataframe = user_buy_df.select(["custom_id", "fund_code", trade_date]) \
+    user_order_fund_list_dataframe = user_buy_df.select(["cust_code", "product_id", trade_date]) \
         .rdd \
         .sortBy(keyfunc=(lambda x: x[2]), ascending=False) \
         .map(lambda x: (x[0], x[1])) \
         .groupByKey() \
         .mapValues(list) \
         .map(lambda x: (x[0], "|".join(x[1][:5]))) \
-        .toDF(["custom_id", "u_buy_list"])
+        .toDF(["cust_code", "u_buy_list"])
 
     # 5. 拼接用户特征
-    raw_user_feature_dataframe = user_id_dataframe.join(user_buy_counts_30d, "custom_id")
-    raw_user_feature_dataframe = raw_user_feature_dataframe.join(user_buy_days_30d, "custom_id")
-    raw_user_feature_dataframe = raw_user_feature_dataframe.join(user_order_fund_list_dataframe, "custom_id")
+    raw_user_feature_dataframe = user_id_dataframe.join(user_buy_counts_30d, "cust_code")
+    raw_user_feature_dataframe = raw_user_feature_dataframe.join(user_buy_days_30d, "cust_code")
+    raw_user_feature_dataframe = raw_user_feature_dataframe.join(user_order_fund_list_dataframe, "cust_code")
 
     return raw_user_feature_dataframe

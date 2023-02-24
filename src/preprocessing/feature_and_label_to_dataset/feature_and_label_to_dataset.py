@@ -5,7 +5,7 @@ import logging
 
 
 import digitforce.aip.common.utils.hdfs_helper as hdfs_helper
-from digitforce.aip.common.utils.spark_helper import spark_client
+from digitforce.aip.common.utils.spark_helper import SparkClient
 from pyspark.sql.functions import rand
 
 hdfs_client = hdfs_helper.HdfsClient()
@@ -14,6 +14,7 @@ hdfs_client = hdfs_helper.HdfsClient()
 def feature_and_label_to_dataset(label_table_name, model_user_feature_table_name, model_item_feature_table_name,
                                  train_dataset_table_name, test_dataset_table_name, train_p=0.8):
     logging.info("begin join feature and label [FEATURE, LABEL] --> [DATASET]")
+    spark_client = SparkClient.get()
     label_dataframe = spark_client.get_session().sql(f"select * from {label_table_name}")
     model_user_feature_dataframe = spark_client.get_session().sql(f"select * from {model_user_feature_table_name}")
     model_item_feature_dataframe = spark_client.get_session().sql(f"select * from {model_item_feature_table_name}")

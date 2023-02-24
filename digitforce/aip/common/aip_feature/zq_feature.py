@@ -6,6 +6,7 @@ import uuid
 
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 from digitforce.aip.common.utils.hive_helper import hive_client
+from digitforce.aip.common.utils.time_helper import *
 
 
 class FeatureEncoder(object):
@@ -125,7 +126,7 @@ class NumberFeatureEncoderCalculator(FeatureEncoderCalculator):
         encoder.std = _encoder.std
         encoder.mean = _encoder.mean
         return encoder
-from digitforce.aip.common.utils.time_helper import *
+
 
 USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_raw_user_feature_table_name"
 
@@ -133,15 +134,14 @@ ITEM_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_raw_item_feature_table_name"
 
 
 ###################################################################################
-#   ['gender', 'EDU', 'RSK_ENDR_CPY', 'NATN', 'OCCU', 'IS_VAIID_INVST']
 class UserIdEncoder(CategoryFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("user_id", version, 0, source_table_name)
 
 
-class UserGenderEncoder(CategoryFeatureEncoder):
+class UserSexEncoder(CategoryFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
-        super().__init__("gender", version, 0, source_table_name)
+        super().__init__("sex", version, 0, source_table_name)
 
 
 class UserEducationEncoder(CategoryFeatureEncoder):
@@ -149,9 +149,9 @@ class UserEducationEncoder(CategoryFeatureEncoder):
         super().__init__("edu", version, 0, source_table_name)
 
 
-class UserRSKENDRCPYEncoder(CategoryFeatureEncoder):
+class UserRiskLevelEncoder(CategoryFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
-        super().__init__("rsk_endr_cpy", version, 0, source_table_name)
+        super().__init__("risk_level", version, 0, source_table_name)
 
 
 class UserOCCUEncoder(CategoryFeatureEncoder):
@@ -169,7 +169,26 @@ class UserISVAIIDINVSTEncoder(CategoryFeatureEncoder):
         super().__init__("is_vaiid_invst", version, 0, source_table_name)
 
 
+class UserCityEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("city_name", version, 0, source_table_name)
+
+
+class UserProvinceEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("province_name", version, 0, source_table_name)
+
+
+class UserInvestTypeEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("investor_type", version, 0, source_table_name)
+
+
 # NumberFeatureEncoder
+class UserAgeEncoder(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("age", version, 0, source_table_name)
+
 
 class UserBUY_COUNTS_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
@@ -212,7 +231,6 @@ class UserLAST_BUY_DAYS_30D(NumberFeatureEncoder):
 
 
 ####################################################################################
-#  ['ts_code', 'fund_type', 'management', 'custodian', 'invest_type'] ##
 class ItemIdEncoder(CategoryFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("item_id", version, 0, source_table_name)
@@ -221,6 +239,11 @@ class ItemIdEncoder(CategoryFeatureEncoder):
 class FundTypeEncoder(CategoryFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("fund_type", version, 0, source_table_name)
+
+
+class ProductTypeEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("product_type_pri", version, 0, source_table_name)
 
 
 class FundManagementEncoder(CategoryFeatureEncoder):
@@ -302,13 +325,12 @@ class UserEncoderFactory(EncoderFactory):
         self.encoder_cls = [
             ############ user category feature
             UserIdEncoder,
-            UserGenderEncoder,
-            UserEducationEncoder,
-            UserRSKENDRCPYEncoder,
-            UserOCCUEncoder,
-            UserNATNEncoder,
-            UserISVAIIDINVSTEncoder,
+            UserSexEncoder,
+            UserCityEncoder,
+            UserProvinceEncoder,
+            UserInvestTypeEncoder,
             ############ user number feature
+            UserAgeEncoder,
             UserBUY_COUNTS_30D,
             UserAMOUNT_SUM_30D,
             UserAMOUNT_AVG_30D,
@@ -327,10 +349,7 @@ class ItemEncoderFactory(EncoderFactory):
         self.encoder_cls = [
             ################ item category feature
             ItemIdEncoder,
-            FundTypeEncoder,
-            FundManagementEncoder,
-            FundCustodianEncoder,
-            FundInvestTypeEncoder,
+            ProductTypeEncoder,
             ############### item number feature
             ItemBUY_COUNTS_30D,
             ItemAMOUNT_SUM_30D,
@@ -342,9 +361,7 @@ class ItemEncoderFactory(EncoderFactory):
 
 
 user_feature_factory = UserEncoderFactory(USER_RAW_FEATURE_TABLE_NAME)
-full_factory(user_feature_factory)
 item_feature_factory = ItemEncoderFactory(ITEM_RAW_FEATURE_TABLE_NAME)
-full_factory(item_feature_factory)
 
 
 def show_all_encoder():

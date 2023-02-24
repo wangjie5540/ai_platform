@@ -2,6 +2,7 @@
 # encoding: utf-8
 import time
 from digitforce.aip.common.utils.hive_helper import hive_client
+from digitforce.aip.common.utils.spark_helper import SparkClient
 
 import numpy as np
 import torch
@@ -36,13 +37,16 @@ def train(train_data_table_name, test_data_table_name,
           f"is_automl:{is_automl}, "
           f"model_user_feature_table_name:{model_user_feature_table_name}")
     print("read train dataset")
-    train_data = hive_client.query_to_df(
-        f"""select * from {train_data_table_name}""")
-    train_data.columns = [_.split(".")[-1] for _ in train_data.columns]
+    spark_client = SparkClient.get()
+    # train_data = hive_client.query_to_df(
+    #     f"""select * from {train_data_table_name}""")
+    # train_data.columns = [_.split(".")[-1] for _ in train_data.columns]
+    train_data =spark_client.get_session().sql(f"""select * from {train_data_table_name}""").toPandas()
     print("read test dataset")
-    test_data = hive_client.query_to_df(
-        f"""select * from {test_data_table_name}""")
-    test_data.columns = [_.split(".")[-1] for _ in test_data.columns]
+    # test_data = hive_client.query_to_df(
+    #     f"""select * from {test_data_table_name}""")
+    # test_data.columns = [_.split(".")[-1] for _ in test_data.columns]
+    test_data = spark_client.get_session().sql(f"""select * from {test_data_table_name}""").toPandas()
 
     print("show user_feature_encoder and item_feature_encoder")
     show_all_encoder()
@@ -98,9 +102,10 @@ def train(train_data_table_name, test_data_table_name,
         # todo 读model_user_feature 表
         print(f"begin predict all user in {model_user_feature_table_name}")
         print(f"begin read model_user_feature_table ")
-        model_user_feature_dataset = hive_client.query_to_df(
-            f"""select * from {model_user_feature_table_name}""")
-        model_user_feature_dataset.columns = [_.split(".")[-1] for _ in model_user_feature_dataset.columns]
+        # model_user_feature_dataset = hive_client.query_to_df(
+        #     f"""select * from {model_user_feature_table_name}""")
+        # model_user_feature_dataset.columns = [_.split(".")[-1] for _ in model_user_feature_dataset.columns]
+        model_user_feature_dataset = spark_client.get_session().sql(f"""select * from {model_user_feature_table_name}""")
         all_user_model_input = dataset_to_dssm_model_input(model_user_feature_dataset,
                                                            [_.name for _ in user_feature_columns],
                                                            user_sequence_feature_and_max_len_map)
@@ -113,7 +118,7 @@ def train(train_data_table_name, test_data_table_name,
         user_vec_df = model_user_feature_dataset[["user_id_raw"]]
         user_vec_df["user_vec"] = [str(_.tolist()) for _ in list(user_embedding)]
         user_vec_df = user_vec_df.rename(columns={'user_id_raw': 'user_id'})
-        from digitforce.aip.common.utils.spark_helper import spark_client
+        # from digitforce.aip.common.utils.spark_helper import spark_client
         print("upload user_vec to hive")
         # todo 测试一下 pandasDF -> 保存成csv-> 传到hdfs-> 转成sparkDataframe-> 存表
         user_vec_dataframe = spark_client.get_session().createDataFrame(user_vec_df)
