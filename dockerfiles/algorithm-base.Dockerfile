@@ -33,10 +33,10 @@ RUN cd $SPARK_JARS \
     && $WGET_COMMAND/starrocks-spark2_2.11-1.0.0.jar \
     && $WGET_COMMAND/graphframes-0.8.2-spark2.4-s_2.11.jar
 # 安装pyhive
-RUN conda install --yes pyhive
+# RUN conda install --yes pyhive
 # 安装依赖包
-COPY requirements.txt $ROOT_DIR
-RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+# COPY requirements.txt $ROOT_DIR
+# RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 编译镜像
 # docker build --build-arg ENVIRONMENT=dev -t digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base -f algorithm-base.Dockerfile .
