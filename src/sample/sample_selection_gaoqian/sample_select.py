@@ -36,7 +36,7 @@ def sample_create(trade_table_name, trade_columns, event_table_name, event_colum
 
     #1. 样本生成
     ##1.1 客户号 -> 活跃日期：set(str)
-    user_active_days = event_data.rdd.filter(lambda x: x[1] and x[1] > 0).map(lambda x: (x[0], {x[1]}))\
+    user_active_days = event_data.rdd.filter(lambda x: x[1] and x[1] > 0).map(lambda x: (x[0], {x[2]}))\
         .reduceByKey(lambda a, b: a | b)
     ## 1.2 客户号 -> 申购日期：set(str)
     user_buy_days = trade_data.rdd.filter(lambda x: x[1] == event_code and x[2] == category).map(lambda x: (x[0], {x[3]}))\
