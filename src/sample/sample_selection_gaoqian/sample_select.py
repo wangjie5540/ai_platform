@@ -10,9 +10,9 @@ spark_client = spark_helper.SparkClient()
 
 def sample_create(trade_table_name, trade_columns, event_table_name, event_columns, event_code, category, train_period, predict_period):
     window_test_days = 1
-    window_train_days = 15
+    window_train_days = 3
     now = datetime.datetime.now()
-    end_date = now - datetime.timedelta(days=predict_period + 2)
+    end_date = now - datetime.timedelta(days=predict_period+2)
     mid_date = end_date - datetime.timedelta(days=window_test_days)
     start_date = mid_date - datetime.timedelta(days=window_train_days)
     end_date = end_date.strftime(DATE_FORMAT)
@@ -28,11 +28,11 @@ def sample_create(trade_table_name, trade_columns, event_table_name, event_colum
 
     event_data = spark_client.get_starrocks_table_df(event_table_name)
     event_data = event_data.select(event_columns)\
-        .filter((event_data['dt'] >= active_start_date) & (event_data['dt'] < buy_end_date))
+        .filter((event_data['dt'] >= active_start_date) & (event_data['dt'] <= buy_end_date))
 
     trade_data = spark_client.get_starrocks_table_df(trade_table_name)
     trade_data = trade_data.select(trade_columns)\
-        .filter((trade_data['dt'] >= active_start_date) & (trade_data['dt'] < buy_end_date))
+        .filter((trade_data['dt'] >= active_start_date) & (trade_data['dt'] <= buy_end_date))
 
     #1. 样本生成
     ##1.1 客户号 -> 活跃日期：set(str)
@@ -62,7 +62,7 @@ def sample_create(trade_table_name, trade_columns, event_table_name, event_colum
     sample_columns = ['custom_id', 'date', 'label']
     sample = sample_all.map(lambda x: (x[0], (x[1], random.random())))\
         .filter(lambda x: x[1][1] < sample_rate)\
-        .map(lambda x: (x[0], x[1][0][[0]], x[1][0][1]))\
+        .map(lambda x: (x[0], x[1][0][0], x[1][0][1]))\
         .toDF(sample_columns)
 
     # todo: dynamic change table name
