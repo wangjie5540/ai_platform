@@ -1,6 +1,6 @@
 {
   "sample_select": {
-    "train_period": 60,
+    "train_period": 15,
     "predict_period": ${sample_select__predict_period},
     "event_code":"${sample_select__event_code}",
     "category": "${sample_select__category}"
@@ -13,8 +13,8 @@
     "model_and_metrics_data_hdfs_path": "/user/ai/aip/model/${solution_run_id}"
   },
   "feature_create": {
-    "event_code": "${sample_select__event_code}",
-    "category": "${sample_select__category}"
+    "train_period": 15,
+    "predict_period": ${ sample_select__predict_period }
   }
 }
 # gaoqian参数模板-训练

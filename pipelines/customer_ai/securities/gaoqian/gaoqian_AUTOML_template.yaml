@@ -58,7 +58,7 @@
   "pipeline_params": {
     "global_params": {
       "sample_select": {
-        "train_period": 60,
+        "train_period": 15,
         "predict_period": ${sample_select__predict_period},
         "event_code":"${sample_select__event_code}",
         "category":"${sample_select__category}"
@@ -66,8 +66,8 @@
       "model": {
       },
       "feature_create": {
-        "event_code": "${sample_select__event_code}",
-        "category": "${sample_select__category}"
+        "train_period": 15,
+        "predict_period": ${ sample_select__predict_period }
       }
     },
     "flag": "AUTOML"
