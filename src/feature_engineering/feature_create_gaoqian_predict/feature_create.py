@@ -93,7 +93,7 @@ def feature_create(predict_samples_table_name,
     # 读取样本数据：客户号 --> (日期，lable)
     custom_label = spark_client.get_session(). \
         sql("select custom_id, '{0}' as date, 0 as label from {1}".format(end_date, predict_samples_table_name)). \
-        rdd.map(lambda x: (x[0], (x[1], x[2])))
+        rdd.map(lambda x: (str(x[0]), (x[1], x[2])))
 
     # 3.1 客户号 --> ((日期，lable)，(最近一次交易距今天数，最近一次交易额，最近3/7/15/30天交易))
     merge_feature1 = custom_label.leftOuterJoin(jy_feature). \
@@ -143,7 +143,7 @@ def feature_create(predict_samples_table_name,
                                                                       dict_province.get(x[1][51]),
                                                                       dict_edu.get(x[1][52])] + x[1][53:]))
 
-    feature_cols = ["label", "last_jy_days", "last_jy_money", "3_jy_cnt", "3_jy_money", "3_jy_gp_cnt",
+    feature_cols = ["custom_id", "label", "last_jy_days", "last_jy_money", "3_jy_cnt", "3_jy_money", "3_jy_gp_cnt",
                     "3_jy_gp_money", "3_jy_jj_cnt", "3_jy_jj_money", "7_jy_cnt", "7_jy_money", "7_jy_gp_cnt",
                     "7_jy_gp_money", "7_jy_jj_cnt", "7_jy_jj_money", "15_jy_cnt", "15_jy_money", "15_jy_gp_cnt",
                     "15_jy_gp_money", "15_jy_jj_cnt", "15_jy_jj_money", "30_jy_cnt", "30_jy_money", "30_jy_gp_cnt",
