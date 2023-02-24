@@ -128,9 +128,9 @@ class NumberFeatureEncoderCalculator(FeatureEncoderCalculator):
         return encoder
 
 
-USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_raw_user_feature_table_name"
+USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_user_feature"
 
-ITEM_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_raw_item_feature_table_name"
+ITEM_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_item_feature"
 
 
 ###################################################################################
@@ -361,7 +361,9 @@ class ItemEncoderFactory(EncoderFactory):
 
 
 user_feature_factory = UserEncoderFactory(USER_RAW_FEATURE_TABLE_NAME)
+full_factory(user_feature_factory)
 item_feature_factory = ItemEncoderFactory(ITEM_RAW_FEATURE_TABLE_NAME)
+full_factory(item_feature_factory)
 
 
 def show_all_encoder():

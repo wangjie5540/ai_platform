@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 from digitforce.aip.common.utils.spark_helper import SparkClient
+import findspark
+findspark.init()
 from pyspark.sql import functions as F
 from digitforce.aip.common.utils.time_helper import *
 
@@ -42,7 +44,7 @@ def calculate_raw_item_feature_from_order_table(standard_fund_trade_dataframe):
     trade_type = "event_code"
     trade_date = "event_time"
     trade_money = "product_amt"
-    buy_code = "fund_buy"
+    buy_code = "申购"
 
     item_id_dataframe = standard_fund_trade_dataframe.select(item_id).distinct()
 

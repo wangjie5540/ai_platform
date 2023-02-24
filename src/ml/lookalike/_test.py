@@ -21,6 +21,7 @@ train(train_data_table_name, test_data_table_name,
       user_vec_table_name=user_vec_table_name,
       model_and_metrics_data_hdfs_path=model_and_metrics_data_hdfs_path
 )
+print(123)
 # from digitforce.aip.common.utils.spark_helper import SparkClient
 # spark_client = SparkClient.get()
 # df = spark_client.get_session().sql(f"""select * from {train_data_table_name}""")

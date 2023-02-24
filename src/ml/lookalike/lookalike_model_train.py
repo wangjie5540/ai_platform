@@ -62,6 +62,7 @@ def train(train_data_table_name, test_data_table_name,
     test_model_input = dataset_to_dssm_model_input(test_data, feature_names, user_sequence_feature_and_max_len_map)
 
     print("build DSSM model with feature and super params")
+    # TODO：看0.3.0代码，model有没有DENSE FEATURE
     model = build_model(user_feature_columns, item_feature_columns, dnn_dropout, lr)
 
     print("begin fit model...")

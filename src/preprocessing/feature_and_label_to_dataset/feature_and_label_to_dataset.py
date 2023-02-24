@@ -6,6 +6,8 @@ import logging
 
 import digitforce.aip.common.utils.hdfs_helper as hdfs_helper
 from digitforce.aip.common.utils.spark_helper import SparkClient
+import findspark
+findspark.init()
 from pyspark.sql.functions import rand
 
 hdfs_client = hdfs_helper.HdfsClient()

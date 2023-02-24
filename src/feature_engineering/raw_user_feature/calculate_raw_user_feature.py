@@ -3,11 +3,12 @@
 import datetime
 
 from digitforce.aip.common.utils.spark_helper import SparkClient
+import findspark
+findspark.init()
 from pyspark.sql import functions as F
 from pyspark.sql.functions import *
 
 from digitforce.aip.common.utils.time_helper import *
-
 
 def calculate_raw_user_feature(raw_user_feature_table_name):
     spark_client = SparkClient.get()
@@ -41,12 +42,12 @@ def calculate_raw_user_feature_from_order_feature(standard_order_dataframe):
     # TODO：数据原因，暂时取近一年构造特征
     thirty_days_ago_str = n_days_ago_str(365)
     # TODO：后续统一规范event_code
-    buy_code = "fund_buy"
+    buy_code = "申购"
     # 构建列名
 
-    trade_type = "trade_type"
-    trade_date = "trade_date"
-    trade_money = "trade_money"
+    trade_type = "event_code"
+    trade_date = "event_time"
+    trade_money = "product_amt"
 
     user_id_dataframe = standard_order_dataframe.select("cust_code").distinct()
 

@@ -129,9 +129,9 @@ class NumberFeatureEncoderCalculator(FeatureEncoderCalculator):
         return encoder
 
 
-USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_raw_user_feature_table_name"
+USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_user_feature"
 
-ITEM_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_raw_item_feature_table_name"
+ITEM_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_item_feature"
 
 
 ###################################################################################
