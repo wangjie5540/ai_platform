@@ -5,9 +5,7 @@ ARG MINICONDA3_INSTALL_FILE
 ENV PATH $MINICONDA_HOME/bin:$MINICONDA_HOME/condabin:$PATH
 RUN yum install -y gcc gcc-c++ zip unzip \
     && yum install -y wget \
-    && wget -q -O $TMP_FILE --no-check-certificate https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/${MINICONDA3_INSTALL_FILE} \
-    && sh $TMP_FILE -b -p $MINICONDA_HOME \
-    && rm -rf $TMP_FILE \
+    && wget -q -O - --no-check-certificate https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/${MINICONDA3_INSTALL_FILE} | sh -b -p $MINICONDA_HOME \
     && $MINICONDA_HOME/bin/conda init
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
