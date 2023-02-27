@@ -21,6 +21,7 @@ def start_sample_selection(event_code_buy, pos_sample_proportion=0.5, pos_sample
     # TODO：数据取较大范围
     today = time_helper.get_today_str()
     thirty_days_ago = time_helper.n_days_ago_str(365)
+    print("The data source time range is from {} to {}".format(thirty_days_ago, today))
 
     data = spark_client.get_starrocks_table_df("zq_standard.dm_cust_subs_redm_event_df")
     data = data.select(columns) \

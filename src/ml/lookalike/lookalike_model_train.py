@@ -42,11 +42,13 @@ def train(train_data_table_name, test_data_table_name,
     #     f"""select * from {train_data_table_name}""")
     # train_data.columns = [_.split(".")[-1] for _ in train_data.columns]
     train_data =spark_client.get_session().sql(f"""select * from {train_data_table_name}""").toPandas()
+    train_data = train_data.sample(frac=1)
     print("read test dataset")
     # test_data = hive_client.query_to_df(
     #     f"""select * from {test_data_table_name}""")
     # test_data.columns = [_.split(".")[-1] for _ in test_data.columns]
     test_data = spark_client.get_session().sql(f"""select * from {test_data_table_name}""").toPandas()
+    test_data = test_data.sample(frac=1)
 
     print("show user_feature_encoder and item_feature_encoder")
     show_all_encoder()
@@ -68,7 +70,7 @@ def train(train_data_table_name, test_data_table_name,
     print("begin fit model...")
     start = time.time()
     model.fit(train_model_input, train_data["label"].values, batch_size=batch_size,
-              epochs=3, verbose=2, validation_split=0.2)
+              epochs=3, verbose=0, validation_split=0.2)
     end = time.time()
     print("model training takes {} seconds".format(end - start))
 

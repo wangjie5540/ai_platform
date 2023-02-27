@@ -1,6 +1,4 @@
 import os
-# TODO：后续优化为tag
-os.environ["RUN_ENV"] = "dev"
 import kfp
 
 import digitforce.aip.common.utils.kubeflow_helper as kubeflow_helper
@@ -11,7 +9,7 @@ from digitforce.aip.components.sample import *
 from digitforce.aip.components.source.cos import Cos
 from kfp.compiler import Compiler
 
-pipeline_name = 'lookalike'
+pipeline_name = 'lookalike_standard'
 pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 from digitforce.aip.components.feature_engineering import *
@@ -92,15 +90,18 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
         lookalike_model_predict_op.container.set_image_pull_policy("Always")
 
 
-# kubeflow_config = config_helper.get_module_config("kubeflow")
-# client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
-#     url=kubeflow_config['url'], username=kubeflow_config['username'],
-#     password=kubeflow_config['password'])['session_cookie'])
+kubeflow_config = config_helper.get_module_config("kubeflow")
+client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
+    url=kubeflow_config['url'], username=kubeflow_config['username'],
+    password=kubeflow_config['password'])['session_cookie'])
 import json
 
 global_params = json.dumps({
     "sample_select":
-    {},
+    {
+        "event_code_buy": "申购",
+        "pos_sample_proportion": 0.5,
+    },
     "raw_user_feature":
     {
         "raw_user_feature_table_name": "algorithm.tmp_test_raw_user_feature"
@@ -132,7 +133,7 @@ global_params = json.dumps({
     {
         "lr": 0.01,
         "dnn_dropout": 0.5,
-        "batch_size": 1024,
+        "batch_size": 256,
         "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name",
         "user_vec_table_name": "algorithm.tmp_user_vec_table_name",
         "model_and_metrics_data_hdfs_path": "/user/ai/aip/zq/lookalike/model/112233"
@@ -155,9 +156,9 @@ global_params = json.dumps({
 })
 # kubeflow_helper.upload_pipeline(ml_lookalike, pipeline_name)
 # kubeflow_helper.upload_pipeline_version(ml_lookalike, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
-# client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "TRAIN"},
-#                                      experiment_name="recommend",
-#                                      namespace='kubeflow-user-example-com')
+client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "TRAIN"},
+                                     experiment_name="recommend",
+                                     namespace='kubeflow-user-example-com')
 # client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "AUTOML"},
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')
