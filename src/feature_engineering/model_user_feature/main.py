@@ -448,12 +448,12 @@ from digitforce.aip.common.utils.argument_helper import df_argument_helper
 
 def run():
     # for test
-    import os
-    import json
-    os.environ["global_params"] = json.dumps(
-        {"op_name": {"raw_user_feature_table_name": "algorithm.tmp_test_raw_user_feature",
-        "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name"}})
-    os.environ["name"] = "op_name"
+    # import os
+    # import json
+    # os.environ["global_params"] = json.dumps(
+    #     {"op_name": {"raw_user_feature_table_name": "algorithm.tmp_test_raw_user_feature",
+    #     "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name"}})
+    # os.environ["name"] = "op_name"
     # 参数解析
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="name")

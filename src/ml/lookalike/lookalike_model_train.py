@@ -106,7 +106,7 @@ def train(train_data_table_name, test_data_table_name,
         # model_user_feature_dataset = hive_client.query_to_df(
         #     f"""select * from {model_user_feature_table_name}""")
         # model_user_feature_dataset.columns = [_.split(".")[-1] for _ in model_user_feature_dataset.columns]
-        model_user_feature_dataset = spark_client.get_session().sql(f"""select * from {model_user_feature_table_name}""")
+        model_user_feature_dataset = spark_client.get_session().sql(f"""select * from {model_user_feature_table_name}""").toPandas()
         all_user_model_input = dataset_to_dssm_model_input(model_user_feature_dataset,
                                                            [_.name for _ in user_feature_columns],
                                                            user_sequence_feature_and_max_len_map)
@@ -119,7 +119,6 @@ def train(train_data_table_name, test_data_table_name,
         user_vec_df = model_user_feature_dataset[["user_id_raw"]]
         user_vec_df["user_vec"] = [str(_.tolist()) for _ in list(user_embedding)]
         user_vec_df = user_vec_df.rename(columns={'user_id_raw': 'user_id'})
-        # from digitforce.aip.common.utils.spark_helper import spark_client
         print("upload user_vec to hive")
         # todo 测试一下 pandasDF -> 保存成csv-> 传到hdfs-> 转成sparkDataframe-> 存表
         user_vec_dataframe = spark_client.get_session().createDataFrame(user_vec_df)
@@ -208,7 +207,7 @@ def get_dssm_feature_columns(user_sequence_feature_and_max_len_map):
 
     for user_v, maxlen in user_sequence_feature_and_max_len_map.items():  # [u_buy_list]
         user_varlen_feature = \
-            VarLenSparseFeat(SparseFeat(user_v, len(user_feature_factory.get_encoder("user_id").vocabulary)),
+            VarLenSparseFeat(SparseFeat(user_v, len(user_feature_factory.get_encoder("user_id").vocabulary)+1),
                              maxlen=maxlen, combiner='mean', length_name=None)
         user_feature_columns.append(user_varlen_feature)
 

@@ -12,12 +12,25 @@ from digitforce.aip.common.utils.time_helper import *
 
 def calculate_raw_user_feature(raw_user_feature_table_name):
     spark_client = SparkClient.get()
-    user_table_columns = ['cust_code', 'age', 'sex', 'city_name', 'province_name', 'investor_type', 'risk_level']
+    user_table_columns = ['cust_code', 'age', 'sex', 'city_name', 'province_name', 'investor_type']
     order_table_columns = ["cust_code", "event_time", "event_code", "product_id", "product_amt"]
 
-    # todo starrocks支持列存储  可以将select移至starrocks中 降低网络io
+    # TODO：临时数据，重复、不更新，增加临时处理逻辑，后续删除
+    spark_client.get_starrocks_table_df('zq_standard.dm_cust_label_base_attributes_df').select(["dt"]).createOrReplaceTempView("dm_cust_label_base_attributes_df")
+    approximate_dt_sql = f'''
+                        select
+                              dt,
+                              abs(DATEDIFF(dt,'{get_today_str()}')) as datediffs
+                        from dm_cust_label_base_attributes_df
+                        group by dt
+                        order by datediffs asc
+                        limit 1
+                    '''
+    approximate_dt_df = spark_client.get_session().sql(approximate_dt_sql).toPandas()
+    approximate_dt = approximate_dt_df['dt'][0]
+
     standard_user_data = spark_client.get_starrocks_table_df('zq_standard.dm_cust_label_base_attributes_df')
-    standard_user_data = standard_user_data.select(user_table_columns)
+    standard_user_data = standard_user_data.filter(standard_user_data["dt"] == approximate_dt).select(user_table_columns).dropDuplicates()
 
     standard_order_table = spark_client.get_starrocks_table_df("zq_standard.dm_cust_subs_redm_event_df")
     standard_order_data = standard_order_table.select(order_table_columns)

@@ -435,12 +435,12 @@ def raw_feature2model_feature(raw_feature_table_name, model_feature_table):
 
 
 def run():
-    import os
-    import json
-    os.environ["global_params"] = json.dumps(
-        {"op_name": {"raw_item_feature_table_name": "algorithm.tmp_test_raw_item_feature",
-                     "model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"}})
-    os.environ["name"] = "op_name"
+    # import os
+    # import json
+    # os.environ["global_params"] = json.dumps(
+    #     {"op_name": {"raw_item_feature_table_name": "algorithm.tmp_test_raw_item_feature",
+    #                  "model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"}})
+    # os.environ["name"] = "op_name"
     # 参数解析
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="name")

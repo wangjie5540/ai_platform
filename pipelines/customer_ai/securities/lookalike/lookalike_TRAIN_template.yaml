@@ -3,16 +3,16 @@
     {},
     "raw_user_feature":
     {
-        "raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name"
+        "raw_user_feature_table_name": "algorithm.tmp_test_raw_user_feature"
     },
     "raw_item_feature":
     {
-        "raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name"
+        "raw_item_feature_table_name": "algorithm.tmp_test_raw_item_feature"
     },
     "zq_feature_calculator":
     {
-        "raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name",
-        "raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name"
+        "raw_user_feature_table_name": "algorithm.tmp_test_raw_user_feature",
+        "raw_item_feature_table_name": "algorithm.tmp_test_raw_item_feature"
     },
     "raw_sample2model_sample":
     {
