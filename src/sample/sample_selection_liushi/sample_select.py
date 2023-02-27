@@ -8,11 +8,11 @@ from digitforce.aip.common.utils.time_helper import get_today_str
 import utils
 
 DATE_FORMAT = "%Y%m%d"
-spark_client = SparkClient.get()
 
 def start_sample_selection(active_before_days, active_after_days,
                            active_days_threshold,
                            label_count=300000):
+    spark_client = SparkClient.get()
     window_test_days = 5
     window_train_days = 30
     now = datetime.datetime.now()
@@ -84,6 +84,7 @@ def start_sample_selection(active_before_days, active_after_days,
 
 
 def write_hive(inp_df, table_name, partition_col):
+    spark_client = SparkClient.get()
     check_table = spark_client.get_session()._jsparkSession.catalog().tableExists(table_name)
 
     if check_table:  # 如果存在该表

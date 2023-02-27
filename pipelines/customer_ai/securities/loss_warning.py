@@ -114,8 +114,8 @@ client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params"
 #                                      namespace='kubeflow-user-example-com')
 
 
-kubeflow_config = config_helper.get_module_config("kubeflow")
-pipeline_path = f"/tmp/{pipeline_name}.yaml"
-pipeline_conf = kfp.dsl.PipelineConf()
-pipeline_conf.set_image_pull_policy("Always")
-Compiler().compile(pipeline_func=ml_loss_warning, package_path=pipeline_path, pipeline_conf=pipeline_conf)
+# kubeflow_config = config_helper.get_module_config("kubeflow")
+# pipeline_path = f"/tmp/{pipeline_name}.yaml"
+# pipeline_conf = kfp.dsl.PipelineConf()
+# pipeline_conf.set_image_pull_policy("Always")
+# Compiler().compile(pipeline_func=ml_loss_warning, package_path=pipeline_path, pipeline_conf=pipeline_conf)

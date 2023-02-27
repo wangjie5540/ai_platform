@@ -2,14 +2,14 @@
 # encoding: utf-8
 import argparse
 import os
+import digitforce.aip.common.utils.component_helper as component_helper
+# 初始化组件
+component_helper.init_config()
+from digitforce.aip.common.utils.argument_helper import df_argument_helper
 from model_predict import start_model_predict
 
-import digitforce.aip.common.utils.component_helper as component_helper
-from digitforce.aip.common.utils.argument_helper import df_argument_helper
 
 def run():
-    # 初始化组件
-    component_helper.init_config()
     # 参数解析
     df_argument_helper.add_argument("--global_params", type=str, required=True, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=True, help="名称")

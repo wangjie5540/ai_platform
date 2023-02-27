@@ -10,10 +10,10 @@ from digitforce.aip.common.utils import cos_helper
 
 DATE_FORMAT = "%Y%m%d"
 today = datetime.datetime.today().strftime(DATE_FORMAT)
-hdfs_client = hdfs_helper.HdfsClient()
 
 
 def start_model_predict(predict_table_name, model_hdfs_path, output_file_name):
+    hdfs_client = hdfs_helper.HdfsClient()
     spark_client = SparkClient.get()
     dt = spark_client.get_session().sql(
         f"show partitions {predict_table_name}").collect()[-1][0][3:]
