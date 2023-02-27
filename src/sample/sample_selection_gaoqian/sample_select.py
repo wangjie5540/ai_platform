@@ -43,8 +43,8 @@ def sample_create(trade_table_name, trade_columns, event_table_name, event_colum
         .reduceByKey(lambda a, b: a | b)
 
     ## 1.3 客户号->(日期，过去n天活跃天数，未来m天申购天数）
-    user_days = user_active_days.join(user_buy_days)\
-        .map(lambda x: (x[0], getActiveDays(x[1][0], x[1][1], start_date, end_date, train_period, predict_period)))\
+    user_days = user_active_days.leftOuterJoin(user_buy_days)\
+        .map(lambda x: (x[0], getActiveDays(x[1][0], x[1][1], start_date, end_date, train_period, predict_period)) if x[1][1] else (x[0], getActiveDays(x[1][0], set({}), start_date, end_date, train_period, predict_period)))\
         .flatMapValues(lambda x: x)
 
     ## 1.4 客户号 -> (日期， label)
