@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# 脚本运行要求：设置COMPONENT_NAME环境变量
+
 # 设置镜像仓库默认值
 IMAGE_REPO=aip-tcr.tencentcloudcr.com/aip
 SCRIPT_DIR=$(cd `dirname $0`; pwd)
@@ -41,7 +43,7 @@ function build_component() {
     if [ -f $component_path/requirements.txt ]; then
         echo "RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple" >> /tmp/Dockerfile
     fi
-    docker build -t $component_image -f /tmp/Dockerfile $component_path
+    docker build -t $component_image -f $component_path/Dockerfile $component_path
     docker push $component_image
 }
 
