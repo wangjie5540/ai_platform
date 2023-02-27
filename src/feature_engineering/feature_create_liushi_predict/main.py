@@ -10,6 +10,8 @@ from digitforce.aip.common.utils.argument_helper import df_argument_helper
 
 
 def run():
+    # 初始化组件
+    component_helper.init_config()
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="名称")
     df_argument_helper.add_argument("--sample", type=str, required=False, help="样本数据")

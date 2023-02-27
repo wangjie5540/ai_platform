@@ -5,14 +5,13 @@ import json
 
 from model_train import start_model_train
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
+import digitforce.aip.common.utils.component_helper as component_helper
 
 
 def run():
+    # 初始化组件
+    component_helper.init_config()
     # 参数解析
-
-    # todo tmp
-    # os.environ["train_dataset_table_name"] = "algorithm.train_dataset_table_name"
-    # os.environ["test_dataset_table_name"] = "algorithm.test_dataset_table_name"
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="名称")
     df_argument_helper.add_argument("--train_data", type=str, required=False, help="训练数据")

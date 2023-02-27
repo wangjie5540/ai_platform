@@ -8,6 +8,8 @@ import digitforce.aip.common.utils.component_helper as component_helper
 
 
 def run():
+    # 初始化组件
+    component_helper.init_config()
     # 参数解析
     parser = argparse.ArgumentParser()
     parser.add_argument("--global_params", type=str, required=True, help="全局参数")
