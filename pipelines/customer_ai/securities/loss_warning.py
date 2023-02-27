@@ -12,13 +12,13 @@ from digitforce.aip.components.sample import SampleSelectionLiushi
 from digitforce.aip.components.source.cos import Cos
 from kfp.compiler import Compiler
 
-pipeline_name = 'loss_warning'
+pipeline_name = 'loss_warning_v13_dev'
 pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 
 @dsl.pipeline(name=pipeline_name)
 def ml_loss_warning(global_params: str, flag='TRAIN'):
-    RUN_ENV = "prod"
+    RUN_ENV = "dev"
     with Condition(flag != "PREDICT", name="is_not_predict"):
         op_sample_selection = SampleSelectionLiushi(name='sample_select', global_params=global_params, tag=RUN_ENV)
         op_sample_selection.container.set_image_pull_policy("Always")
@@ -59,7 +59,8 @@ global_params = json.dumps({
     "sample_select":
     {
         "active_before_days": 3,
-        "active_after_days": 5
+        "active_after_days": 5,
+        "active_days_threshold": 1
     },
     "model":
     {

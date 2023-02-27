@@ -59,7 +59,8 @@
     "global_params": {
       "sample_select": {
         "active_before_days": ${sample_select__active_before_days},
-        "active_after_days": ${sample_select__active_after_days}
+        "active_after_days": ${sample_select__active_after_days},
+        "active_days_threshold": 1
       },
       "model": {
       },

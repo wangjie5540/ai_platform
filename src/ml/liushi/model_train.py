@@ -10,7 +10,6 @@ from xgboost import XGBClassifier
 
 from digitforce.aip.common.utils.aip_model_manage_helper import report_to_aip
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
-from digitforce.aip.common.utils.hive_helper import hive_client
 DATE_FORMAT = "%Y%m%d"
 today = datetime.datetime.today().strftime(DATE_FORMAT)
 
