@@ -9,7 +9,7 @@ REGISTRY_DB = 'hello-world'
 # 默认的pvc，需要在部署完毕之后同步创建
 DEFAULT_PVC = 'ai-platform-pvc'
 
-AI_PLATFORM_IMAGE_REPO = "digit-force-docker.pkg.coding.net/ai-platform/ai-components"
+AI_PLATFORM_IMAGE_REPO = "aip-tcr.tencentcloudcr.com/aip"
 # spark app name
 SPARK_APP_NAME = 'default-name'
 # 配置文件挂载地址
