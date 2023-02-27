@@ -6,6 +6,10 @@ dataSource:
         cname: 客户代码
         type: string
         required: true
+      - name: dt
+        cname: 日期
+        type: date
+        required: true
       - name: event_time
         cname: 事件时间
         type: string
@@ -28,6 +32,10 @@ dataSource:
       - name: cust_code
         cname: 客户号
         type: string
+        required: true
+      - name: dt
+        cname: 日期
+        type: date
         required: true
       - name: age
         cname: 年龄

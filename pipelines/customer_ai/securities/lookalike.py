@@ -9,7 +9,7 @@ from digitforce.aip.components.sample import *
 from digitforce.aip.components.source.cos import Cos
 from kfp.compiler import Compiler
 
-pipeline_name = 'lookalike_standard'
+pipeline_name = 'lookalike'
 pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 from digitforce.aip.components.feature_engineering import *
@@ -155,10 +155,10 @@ global_params = json.dumps({
     }
 })
 # kubeflow_helper.upload_pipeline(ml_lookalike, pipeline_name)
-# kubeflow_helper.upload_pipeline_version(ml_lookalike, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
-client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "TRAIN"},
-                                     experiment_name="recommend",
-                                     namespace='kubeflow-user-example-com')
+kubeflow_helper.upload_pipeline_version(ml_lookalike, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
+# client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "TRAIN"},
+#                                      experiment_name="recommend",
+#                                      namespace='kubeflow-user-example-com')
 # client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "AUTOML"},
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')

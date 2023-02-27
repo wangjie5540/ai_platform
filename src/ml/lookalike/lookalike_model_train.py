@@ -64,7 +64,6 @@ def train(train_data_table_name, test_data_table_name,
     test_model_input = dataset_to_dssm_model_input(test_data, feature_names, user_sequence_feature_and_max_len_map)
 
     print("build DSSM model with feature and super params")
-    # TODO：看0.3.0代码，model有没有DENSE FEATURE
     model = build_model(user_feature_columns, item_feature_columns, dnn_dropout, lr)
 
     print("begin fit model...")
@@ -102,7 +101,6 @@ def train(train_data_table_name, test_data_table_name,
         user_tower_model = DSSM(user_feature_columns, [], dnn_hidden_units=dnn_hidden_units,
                                 dnn_dropout=dnn_dropout, task='binary', device=DEVICE)
         dict_user = user_tower_model.state_dict()
-        # todo 读model_user_feature 表
         print(f"begin predict all user in {model_user_feature_table_name}")
         print(f"begin read model_user_feature_table ")
         # model_user_feature_dataset = hive_client.query_to_df(

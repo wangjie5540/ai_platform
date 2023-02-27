@@ -1,6 +1,6 @@
 {
     "sample_select":
-    {},
+      {},
     "raw_user_feature":
     {
         "raw_user_feature_table_name": "algorithm.tmp_test_raw_user_feature"
