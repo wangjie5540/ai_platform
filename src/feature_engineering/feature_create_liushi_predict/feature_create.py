@@ -177,7 +177,7 @@ def read_hdfs_path(local_path, hdfs_path, hdfs_client):
 
 def get_dict(feature_name):
     local_path = "dict.{}".format(feature_name)
-    hdfs_path = "/user/ai/aip/zq/gaoqian/enum_dict/latest/{}".format(feature_name)
+    hdfs_path = "/user/ai/aip/zq/liushi/enum_dict/latest/{}".format(feature_name)
     read_hdfs_path(local_path, hdfs_path, hdfs_client)
     res_dict = {}
     with open(local_path, "r") as file:
