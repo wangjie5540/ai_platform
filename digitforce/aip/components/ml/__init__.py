@@ -2,6 +2,8 @@
 import kfp.dsl as dsl
 
 from digitforce.aip.common.constants.global_constant import ENV
+from digitforce.aip.components import BaseComponent
+import digitforce.aip.common.constants.global_constant as global_constant
 
 
 class Lookalike(dsl.ContainerOp):
@@ -52,29 +54,27 @@ class LookalikeModelPredict(dsl.ContainerOp):
         )
 
 
-class LiushiModel(dsl.ContainerOp):
-    def __init__(self, name, global_params, train_data, test_data, tag=ENV):
-        super(LiushiModel, self).__init__(
+class LiushiModel(BaseComponent):
+    def __init__(self, name, global_params, train_data, test_data, tag='latest'):
+        super().__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
-                  f'ml-liushi:{tag}',
-            command=['python', 'main.py'],
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/ml-liushi',
             arguments=['--name', name, '--global_params', global_params, '--train_data', train_data,
                        '--test_data', test_data],
+            tag=tag,
             file_outputs={
             }
         )
 
 
-class LiushiPredict(dsl.ContainerOp):
-    def __init__(self, name, global_params, predict_table_name, tag=ENV):
-        super(LiushiPredict, self).__init__(
+class LiushiPredict(BaseComponent):
+    def __init__(self, name, global_params, predict_table_name, tag='latest'):
+        super().__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
-                  f'ml-liushi_predict:{tag}',
-            command=['python', 'main.py'],
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/ml-liushi_predict',
             arguments=['--name', name, '--global_params', global_params, '--predict_table_name', predict_table_name,
                        ],
+            tag=tag,
             file_outputs={
             }
         )
