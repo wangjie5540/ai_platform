@@ -1,6 +1,4 @@
 import os
-# TODO：后续优化为tag
-os.environ["RUN_ENV"] = "prod"
 import kfp
 
 import digitforce.aip.common.utils.kubeflow_helper as kubeflow_helper
@@ -11,7 +9,7 @@ from digitforce.aip.components.sample import *
 from digitforce.aip.components.source.cos import Cos
 from kfp.compiler import Compiler
 
-pipeline_name = 'lookalike'
+pipeline_name = 'lookalike_prod'
 pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 from digitforce.aip.components.feature_engineering import *
@@ -19,11 +17,12 @@ from digitforce.aip.components.feature_engineering import *
 
 @dsl.pipeline(name=pipeline_name)
 def ml_lookalike(global_params: str, flag='TRAIN'):
+    RUN_ENV = "2.0.0"
     with dsl.Condition(flag != "PREDICT", name="is_not_predict"):
         raw_user_feature_op = \
-            RawUserFeatureOp(name='raw_user_feature', global_params=global_params)
+            RawUserFeatureOp(name='raw_user_feature', global_params=global_params, tag=RUN_ENV)
         raw_user_feature_op.container.set_image_pull_policy("Always")
-        raw_item_feature_op = RawItemFeatureOp(name='raw_item_feature', global_params=global_params)
+        raw_item_feature_op = RawItemFeatureOp(name='raw_item_feature', global_params=global_params, tag=RUN_ENV)
         raw_item_feature_op.container.set_image_pull_policy("Always")
 
         zq_feature_op = ZqFeatureEncoderCalculator(name="zq_feature_calculator", global_params=global_params,
@@ -31,7 +30,7 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
                                                        RawUserFeatureOp.OUTPUT_KEY_RAW_USER_FEATURE],
                                                    raw_item_feature_table=raw_item_feature_op.outputs[
                                                        RawItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE
-                                                   ])
+                                                   ], tag=RUN_ENV)
 
         zq_feature_op.container.set_image_pull_policy("Always")
         model_user_feature_op = ModelUserFeatureOp(name='model_user_feature', global_params=global_params,
@@ -39,21 +38,21 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
                                                        RawUserFeatureOp.OUTPUT_KEY_RAW_USER_FEATURE],
                                                    raw_item_feature_table=raw_item_feature_op.outputs[
                                                        RawItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE
-                                                   ])
+                                                   ], tag=RUN_ENV)
         model_user_feature_op.after(zq_feature_op)
         model_user_feature_op.container.set_image_pull_policy("Always")
         model_item_feature_op = ModelItemFeatureOp(name="model_item_feature", global_params=global_params,
                                                    raw_item_feature_table=raw_item_feature_op.outputs[
                                                        RawItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE
-                                                   ])
+                                                   ], tag=RUN_ENV)
         model_item_feature_op.after(zq_feature_op)
         model_item_feature_op.container.set_image_pull_policy("Always")
-        op_sample_selection = SampleSelectionLookalike(name='sample_select', global_params=global_params)
+        op_sample_selection = SampleSelectionLookalike(name='sample_select', global_params=global_params, tag=RUN_ENV)
         op_sample_selection.container.set_image_pull_policy("Always")
         model_sample_op = RawSample2ModelSample(name="raw_sample2model_sample", global_params=global_params,
                                                 raw_sample_table_name=op_sample_selection.outputs[
                                                     SampleSelectionLookalike.output_name
-                                                ])
+                                                ], tag=RUN_ENV)
         model_sample_op.after(op_sample_selection)
         model_sample_op.after(zq_feature_op)
         model_sample_op.container.set_image_pull_policy("Always")
@@ -64,7 +63,7 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
                                                  ModelUserFeatureOp.OUTPUT_KEY_MODEL_USER_FEATURE],
                                              model_item_feature_table_name=model_item_feature_op.outputs[
                                                  ModelItemFeatureOp.OUTPUT_KEY_RAW_ITEM_FEATURE
-                                             ]
+                                             ], tag=RUN_ENV
                                              )
         to_dataset_op.container.set_image_pull_policy("Always")
         with dsl.Condition(flag == 'TRAIN', name="is_train"):
@@ -73,7 +72,7 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
                                                     ModelFeature2Dataset.OUTPUT_KEY_TRAIN_DATASET],
                                                 test_dataset_table_name=to_dataset_op.outputs[
                                                     ModelFeature2Dataset.OUTPUT_KEY_TEST_DATASET
-                                                ])
+                                                ], tag=RUN_ENV)
             lookalike_model_op.container.set_image_pull_policy("Always")
 
     with dsl.Condition(flag == "PREDICT", name="is_predict"):
@@ -87,31 +86,32 @@ def ml_lookalike(global_params: str, flag='TRAIN'):
                                                            ],
                                                            predict_crowd_table_name=predict_table_op.outputs[
                                                                Cos.OUTPUT_1
-                                                           ])
+                                                           ], tag=RUN_ENV)
         lookalike_model_predict_op.container.set_image_pull_policy("Always")
 
 
-# kubeflow_config = config_helper.get_module_config("kubeflow")
-# client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
-#     url=kubeflow_config['url'], username=kubeflow_config['username'],
-#     password=kubeflow_config['password'])['session_cookie'])
+kubeflow_config = config_helper.get_module_config("kubeflow")
+client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
+    url=kubeflow_config['url'], username=kubeflow_config['username'],
+    password=kubeflow_config['password'])['session_cookie'])
 import json
 
 global_params = json.dumps({
     "sample_select":
-    {},
+    {
+    },
     "raw_user_feature":
     {
-        "raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name"
+        "raw_user_feature_table_name": "algorithm.tmp_test_raw_user_feature"
     },
     "raw_item_feature":
     {
-        "raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name"
+        "raw_item_feature_table_name": "algorithm.tmp_test_raw_item_feature"
     },
     "zq_feature_calculator":
     {
-        "raw_user_feature_table_name": "algorithm.tmp_raw_user_feature_table_name",
-        "raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name"
+        "raw_user_feature_table_name": "algorithm.tmp_test_raw_user_feature",
+        "raw_item_feature_table_name": "algorithm.tmp_test_raw_item_feature"
     },
     "raw_sample2model_sample":
     {
@@ -131,7 +131,7 @@ global_params = json.dumps({
     {
         "lr": 0.01,
         "dnn_dropout": 0.5,
-        "batch_size": 1024,
+        "batch_size": 256,
         "model_user_feature_table_name": "algorithm.tmp_model_user_feature_table_name",
         "user_vec_table_name": "algorithm.tmp_user_vec_table_name",
         "model_and_metrics_data_hdfs_path": "/user/ai/aip/zq/lookalike/model/112233"
@@ -152,8 +152,9 @@ global_params = json.dumps({
         "user_vec_table_name": "algorithm.tmp_user_vec_table_name"
     }
 })
+
 # kubeflow_helper.upload_pipeline(ml_lookalike, pipeline_name)
-# kubeflow_helper.upload_pipeline_version(ml_lookalike, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
+kubeflow_helper.upload_pipeline_version(ml_lookalike, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
 # client.create_run_from_pipeline_func(ml_lookalike, arguments={"global_params": global_params, "flag": "TRAIN"},
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')
@@ -166,8 +167,8 @@ global_params = json.dumps({
 #                                      experiment_name="recommend",
 #                                      namespace='kubeflow-user-example-com')
 
-kubeflow_config = config_helper.get_module_config("kubeflow")
-pipeline_path = f"/tmp/{pipeline_name}.yaml"
-pipeline_conf = kfp.dsl.PipelineConf()
-pipeline_conf.set_image_pull_policy("Always")
-Compiler().compile(pipeline_func=ml_lookalike, package_path=pipeline_path, pipeline_conf=pipeline_conf)
+# kubeflow_config = config_helper.get_module_config("kubeflow")
+# pipeline_path = f"/tmp/{pipeline_name}.yaml"
+# pipeline_conf = kfp.dsl.PipelineConf()
+# pipeline_conf.set_image_pull_policy("Always")
+# Compiler().compile(pipeline_func=ml_lookalike, package_path=pipeline_path, pipeline_conf=pipeline_conf)
