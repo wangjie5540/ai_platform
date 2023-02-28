@@ -6,7 +6,6 @@ from digitforce.aip.common.constants.global_constant import ENV
 from digitforce.aip.components import BaseComponent
 import digitforce.aip.common.constants.global_constant as global_constant
 
-
 class FeatureCreateLookalike(dsl.ContainerOp):
     OUTPUT_USER_FEATURE = 'user_feature'
     OUTPUT_ITEM_FEATURE = 'item_feature'
@@ -58,6 +57,38 @@ class FeatureCreateLiushiPredict(BaseComponent):
             }
         )
 
+class FeatureCreateGaoqian(BaseComponent):
+    OUTPUT_TRAIN_FEATURE = 'train_feature_table_name'
+    OUTPUT_TEST_FEATURE = 'test_feature_table_name'
+
+    def __init__(self, name, global_params, sample, tag='latest'):
+        super(FeatureCreateGaoqian, self).__init__(
+            name=name,
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/'
+                  f'feature_engineering-feature_create_gaoqian',
+            tag=tag,
+            arguments=['--name', name, '--global_params', global_params, '--sample', sample],
+            file_outputs={
+                self.OUTPUT_TRAIN_FEATURE: component_helper.generate_output_path(self.OUTPUT_TRAIN_FEATURE),
+                self.OUTPUT_TEST_FEATURE: component_helper.generate_output_path(self.OUTPUT_TEST_FEATURE)
+            }
+        )
+class FeatureCreateGaoqianPredict(BaseComponent):
+    OUTPUT_PREDICT_FEATURE = 'predict_feature_table_name'
+
+    def __init__(self, name, global_params, sample, tag='latest'):
+        super(FeatureCreateGaoqianPredict, self).__init__(
+            name=name,
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/'
+                  f'feature_engineering-feature_create_gaoqian_predict',
+            tag=tag,
+            arguments=['--name', name, '--global_params', global_params,
+                       '--sample', sample],
+            file_outputs={
+                self.OUTPUT_PREDICT_FEATURE: component_helper.generate_output_path(self.OUTPUT_PREDICT_FEATURE),
+
+            }
+        )
 
 class RawUserFeatureOp(dsl.ContainerOp):
     OUTPUT_KEY_RAW_USER_FEATURE = 'raw_user_feature'
