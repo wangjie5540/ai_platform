@@ -6,10 +6,6 @@ from digitforce.aip.common.constants.global_constant import ENV
 from digitforce.aip.components import BaseComponent
 import digitforce.aip.common.constants.global_constant as global_constant
 
-output_name = 'sample'
-
-
-
 
 class SampleSelectionLookalike(dsl.ContainerOp):
     """
