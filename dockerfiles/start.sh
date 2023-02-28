@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo 'export SPARK_HOME=/opt/spark-2.4.8-bin-hadoop2.7' >> /root/.bashrc
 source activate
 conda activate python36
 /root/clear_notebook_password.sh

@@ -1,18 +1,15 @@
 from setuptools import setup, find_packages
 
-__version__ = '0.1.16'
+__version__ = '0.1.20'
 requirements = [
     'pandas',
     'scipy',
     'PyHDFS',
-    'redis',
     'kafka-python',
     'requests',
     'Cython',
     'fonttools',
-    'pyaml',
     'python-dateutil',
-    'xlrd',
     'findspark',
     'h5py',
     'hdfs',
@@ -41,7 +38,11 @@ setup(
     install_requires=requirements
 )
 
-# 参考：https://help.coding.net/docs/artifacts/quick-start/pypi.html
-# 安装依赖包：pip install twine setuptools wheel -i https://pypi.tuna.tsinghua.edu.cn/simple
-# 编译与安装：python3 setup.py sdist bdist_wheel
-# 上传制品库：twine upload -r coding-pypi dist/*
+'''
+参考：
+https://help.coding.net/docs/artifacts/quick-start/pypi.html
+安装依赖包：
+pip install twine setuptools wheel -i https://pypi.tuna.tsinghua.edu.cn/simple
+编译&上传制品库：
+python3 setup.py sdist bdist_wheel && twine upload -r coding-pypi dist/* && rm -rf build dist digitforce_aip.egg-info
+'''

@@ -4,6 +4,7 @@ import kfp.dsl as dsl
 import digitforce.aip.common.utils.component_helper as component_helper
 from digitforce.aip.common.constants.global_constant import ENV
 from digitforce.aip.components import BaseComponent
+import digitforce.aip.common.constants.global_constant as global_constant
 
 output_name = 'sample'
 
@@ -24,18 +25,17 @@ class SampleSelectionLookalike(dsl.ContainerOp):
         )
 
 
-class SampleSelectionLiushi(dsl.ContainerOp):
+class SampleSelectionLiushi(BaseComponent):
     """
     数据源-读取表组件
     """
 
-    def __init__(self, name, global_params, tag=ENV):
-        super(SampleSelectionLiushi, self).__init__(
+    def __init__(self, name, global_params, tag='latest'):
+        super().__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
-                  f'sample-sample_selection_liushi:{tag}',
-            command=['python', 'main.py'],
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/sample-sample_selection_liushi',
             arguments=['--name', name, '--global_params', global_params],
+            tag=tag,
             file_outputs={"sample_table_name": component_helper.generate_output_path("sample_table_name")}
         )
 
