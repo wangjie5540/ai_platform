@@ -14,10 +14,10 @@ RUN mkdir -p $PROJECT_DIR/digitforce/aip
 COPY ./digitforce/__init__.py $PROJECT_DIR/digitforce/__init__.py
 COPY ./digitforce/aip/__init__.py $PROJECT_DIR/digitforce/aip/__init__.py
 RUN mkdir -p /usr/local/etc/
-COPY ./dockerfiles/aip_config/dev/aip_config.yaml /usr/local/etc/aip_config.yaml
+COPY ./dockerfiles/aip_config/prod/aip_config.yaml /usr/local/etc/aip_config.yaml
 RUN mkdir -p /root/.kube
-COPY ./dockerfiles/aip_config/dev/kube_config /root/.kube/config
-COPY ./dockerfiles/aip_config/dev/hdfs-site.xml $SPARK_HOME/conf
+COPY ./dockerfiles/aip_config/prod/kube_config /root/.kube/config
+COPY ./dockerfiles/aip_config/prod/hdfs-site.xml $SPARK_HOME/conf
 COPY ./digitforce/aip/common $PROJECT_DIR/digitforce/aip/common
 COPY ./digitforce/aip/components $PROJECT_DIR/digitforce/aip/components
 COPY src/ml/lookalike_predict/ $PROJECT_DIR
