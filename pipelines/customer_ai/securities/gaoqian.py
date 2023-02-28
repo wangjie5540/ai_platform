@@ -1,8 +1,6 @@
 import kfp
 import kfp.dsl as dsl
 from kfp.dsl import Condition
-import os
-os.environ['PYTHONPATH'] = '/tmp/pycharm_project_377/digitforce-ai-platform'
 
 import digitforce.aip.common.utils.kubeflow_helper as kubeflow_helper
 from digitforce.aip.common.utils import config_helper
@@ -22,11 +20,9 @@ def ml_gaoqian(global_params: str, flag='TRAIN'):
     RUN_ENV = "prod"
     with Condition(flag != "PREDICT", name="is_not_predict"):
         op_sample_selection = SampleSelectionGaoqian(name='sample_select', global_params=global_params, tag=RUN_ENV)
-        op_sample_selection.container.set_image_pull_policy("Always")
 
         op_feature_create = FeatureCreateGaoqian(name='feature_create', global_params=global_params, tag=RUN_ENV,
                                                 sample=op_sample_selection.outputs['sample'])
-        op_feature_create.container.set_image_pull_policy("Always")
 
         with Condition(flag == 'TRAIN', name="is_train"):
             op_sample_comb = GaoqianModel(name="model", global_params=global_params, tag=RUN_ENV,
@@ -36,24 +32,18 @@ def ml_gaoqian(global_params: str, flag='TRAIN'):
                                          test_data=op_feature_create.outputs[
                                              op_feature_create.OUTPUT_TEST_FEATURE
                                          ])
-            op_sample_comb.container.set_image_pull_policy("Always")
     with Condition(flag == "PREDICT", name="is_predict"):
         predict_table_op = Cos("predict_cos_url",global_params)
-        predict_table_op.container.set_image_pull_policy("Always")
         predict_feature_op = FeatureCreateGaoqianPredict(name="feature_create_predict", global_params=global_params,
                                                         sample=predict_table_op.outputs[Cos.OUTPUT_1],
                                                         tag=RUN_ENV)
-        predict_feature_op.container.set_image_pull_policy("Always")
         liushi_predict_op = GaoqianPredict(name="model_predict", global_params=global_params, tag=RUN_ENV,
                                           predict_table_name=predict_feature_op.outputs[
                                               predict_feature_op.OUTPUT_PREDICT_FEATURE
                                           ])
-        liushi_predict_op.container.set_image_pull_policy("Always")
 
 
-client = kfp.Client(host="http://172.22.20.9:30000/pipeline", cookies=kubeflow_helper.get_istio_auth_session(
-    url="http://172.22.20.9:30000/pipeline", username="admin@example.com",
-    password="password")['session_cookie'])
+
 import json
 
 global_params = json.dumps({
@@ -100,20 +90,6 @@ global_params = json.dumps({
 
 kubeflow_helper.upload_pipeline(ml_gaoqian, pipeline_name)
 # kubeflow_helper.upload_pipeline_version(ml_gaoqian, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
-# client.create_run_from_pipeline_func(ml_gaoqian, arguments={"global_params": global_params,
-#                                                            "flag": "TRAIN"},
-#                                      experiment_name="recommend",
-#                                      namespace='kubeflow-user-example-com')
-
-# client.create_run_from_pipeline_func(ml_gaoqian, arguments={"global_params": global_params,
-#                                                            "flag": "PREDICT"},
-#                                      experiment_name="recommend",
-#                                      namespace='kubeflow-user-example-com')
-#
-# client.create_run_from_pipeline_func(ml_gaoqian, arguments={"global_params": global_params,
-#                                                            "flag": "AUTOML"},
-#                                      experiment_name="recommend",
-#                                      namespace='kubeflow-user-example-com')
 
 
 kubeflow_config = config_helper.get_module_config("kubeflow")
