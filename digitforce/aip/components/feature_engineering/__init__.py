@@ -7,17 +7,16 @@ from digitforce.aip.components import BaseComponent
 import digitforce.aip.common.constants.global_constant as global_constant
 
 
-class FeatureCreateLookalike(dsl.ContainerOp):
+class FeatureCreateLookalike(BaseComponent):
     OUTPUT_USER_FEATURE = 'user_feature'
     OUTPUT_ITEM_FEATURE = 'item_feature'
 
-    def __init__(self, name, global_params, sample, tag=ENV):
-        image_name = f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/' \
-                     f'feature_engineering-feature_create_lookalike:{tag}'
-        super(FeatureCreateLookalike, self).__init__(
-            image=image_name,
+    def __init__(self, name, global_params, sample, tag='latest'):
+        super().__init__(
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-feature_create_lookalike',
             name=name,
             arguments=['--name', name, '--global_params', global_params, '--sample', sample],
+            tag=tag,
             file_outputs={
                 self.OUTPUT_USER_FEATURE: component_helper.generate_output_path(self.OUTPUT_USER_FEATURE),
                 self.OUTPUT_ITEM_FEATURE: component_helper.generate_output_path(self.OUTPUT_ITEM_FEATURE)
@@ -59,19 +58,18 @@ class FeatureCreateLiushiPredict(BaseComponent):
         )
 
 
-class RawUserFeatureOp(dsl.ContainerOp):
+class RawUserFeatureOp(BaseComponent):
     OUTPUT_KEY_RAW_USER_FEATURE = 'raw_user_feature'
 
-    def __init__(self, name, global_params, tag=ENV):
-        super(RawUserFeatureOp, self).__init__(
+    def __init__(self, name, global_params, tag='latest'):
+        super().__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/feature_engineering-raw_user_feature:{tag}',
-            command=['python', 'main.py'],
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-raw_user_feature',
             arguments=[
                 '--name', name,
                 '--global_params', global_params,
             ],
+            tag=tag,
             file_outputs={
                 self.OUTPUT_KEY_RAW_USER_FEATURE: component_helper.generate_output_path(
                     self.OUTPUT_KEY_RAW_USER_FEATURE)
@@ -79,18 +77,15 @@ class RawUserFeatureOp(dsl.ContainerOp):
         )
 
 
-class RawItemFeatureOp(dsl.ContainerOp):
+class RawItemFeatureOp(BaseComponent):
     OUTPUT_KEY_RAW_ITEM_FEATURE = 'raw_item_feature'
 
-    def __init__(self, name, global_params, tag=ENV):
-        super(RawItemFeatureOp, self).__init__(
+    def __init__(self, name, global_params, tag='latest'):
+        super().__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/feature_engineering-raw_item_feature:{tag}',
-            command=['python', 'main.py'],
-            arguments=['--name', name, '--global_params', global_params,
-
-                       ],
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-raw_item_feature',
+            arguments=['--name', name, '--global_params', global_params],
+            tag=tag,
             file_outputs={
                 self.OUTPUT_KEY_RAW_ITEM_FEATURE: component_helper.generate_output_path(
                     self.OUTPUT_KEY_RAW_ITEM_FEATURE)
@@ -98,19 +93,18 @@ class RawItemFeatureOp(dsl.ContainerOp):
         )
 
 
-class ModelUserFeatureOp(dsl.ContainerOp):
+class ModelUserFeatureOp(BaseComponent):
     OUTPUT_KEY_MODEL_USER_FEATURE = 'model_user_feature_table_name'
 
-    def __init__(self, name, global_params, raw_user_feature_table, raw_item_feature_table, tag=ENV):
-        super(ModelUserFeatureOp, self).__init__(
+    def __init__(self, name, global_params, raw_user_feature_table, raw_item_feature_table, tag='latest'):
+        super().__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/feature_engineering-model_user_feature:{tag}',
-            command=['python', 'main.py'],
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-model_user_feature',
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_user_feature_table_name', raw_user_feature_table,
                        '--raw_item_feature_table_name', raw_item_feature_table,
                        ],
+            tag=tag,
             file_outputs={
                 self.OUTPUT_KEY_MODEL_USER_FEATURE: component_helper.generate_output_path(
                     self.OUTPUT_KEY_MODEL_USER_FEATURE)
@@ -118,33 +112,30 @@ class ModelUserFeatureOp(dsl.ContainerOp):
         )
 
 
-class ZqFeatureEncoderCalculator(dsl.ContainerOp):
-    def __init__(self, name, global_params, raw_user_feature_table, raw_item_feature_table, tag=ENV):
-        super(ZqFeatureEncoderCalculator, self).__init__(
+class ZqFeatureEncoderCalculator(BaseComponent):
+    def __init__(self, name, global_params, raw_user_feature_table, raw_item_feature_table, tag='latest'):
+        super().__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/feature_engineering-zq_feature_calculator:{tag}',
-            command=['python', 'main.py'],
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-zq_feature_calculator',
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_user_feature_table_name', raw_user_feature_table,
                        '--raw_item_feature_table_name', raw_item_feature_table,
                        ],
-
+            tag=tag,
         )
 
 
-class ModelItemFeatureOp(dsl.ContainerOp):
+class ModelItemFeatureOp(BaseComponent):
     OUTPUT_KEY_RAW_ITEM_FEATURE = 'model_item_feature_table_name'
 
-    def __init__(self, name, global_params, raw_item_feature_table, tag=ENV):
-        super(ModelItemFeatureOp, self).__init__(
+    def __init__(self, name, global_params, raw_item_feature_table, tag='latest'):
+        super().__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components'
-                  f'/feature_engineering-model_item_feature:{tag}',
-            command=['python', 'main.py'],
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-model_item_feature',
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_item_feature_table_name', raw_item_feature_table,
                        ],
+            tag=tag,
             file_outputs={
                 self.OUTPUT_KEY_RAW_ITEM_FEATURE: component_helper.generate_output_path(
                     self.OUTPUT_KEY_RAW_ITEM_FEATURE)

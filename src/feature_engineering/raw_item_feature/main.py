@@ -5,6 +5,9 @@ import json
 import os
 
 import digitforce.aip.common.utils.component_helper as component_helper
+
+# 初始化组件
+component_helper.init_config()
 from calculate_raw_item_feature import calculate_raw_item_feature
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
 from digitforce.aip.components.feature_engineering import RawItemFeatureOp

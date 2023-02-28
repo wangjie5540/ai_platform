@@ -1,18 +1,24 @@
+#!/usr/bin/env python3
+# encoding: utf-8
+
 import glob
 import json
 import logging
 import os
 import os.path
 import pickle
-import uuid
 
-# coding: utf-8
-import pandas as pd
-import pyhdfs
-from pyhive import hive
+import digitforce.aip.common.utils.component_helper as component_helper
+from digitforce.aip.common.utils.argument_helper import df_argument_helper
+
+# 初始化组件
+component_helper.init_config()
 from digitforce.aip.common.utils.hive_helper import hive_client
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 from digitforce.aip.common.utils.time_helper import *
+from digitforce.aip.common.utils.spark_helper import SparkClient
+
+import copy
 
 
 class FeatureEncoder(object):
@@ -363,10 +369,6 @@ full_factory(user_feature_factory)
 item_feature_factory = ItemEncoderFactory(ITEM_RAW_FEATURE_TABLE_NAME)
 full_factory(item_feature_factory)
 
-from digitforce.aip.common.utils.spark_helper import SparkClient
-
-import copy
-
 
 def model_sample_map_fn(raw_sample):
     if isinstance(raw_sample, str):
@@ -399,19 +401,16 @@ def raw_sample_to_sample(raw_sample_table_name, sample_table_name):
 #     raw_sample_to_sample("algorithm.tmp_aip_sample", "algorithm.tmp_aip_model_sample")
 #
 
-import digitforce.aip.common.utils.component_helper as component_helper
-from digitforce.aip.common.utils.argument_helper import df_argument_helper
-
 def run():
     # for test
-    import os
-    import json
-    os.environ["global_params"] = json.dumps(
-        {"op_name": {
-            "raw_sample_table_name": "algorithm.tmp_aip_sample",
-            "model_sample_table_name": "algorithm.tmp_aip_model_sample",
-        }})
-    os.environ["name"] = "op_name"
+    # import os
+    # import json
+    # os.environ["global_params"] = json.dumps(
+    #     {"op_name": {
+    #         "raw_sample_table_name": "algorithm.tmp_aip_sample",
+    #         "model_sample_table_name": "algorithm.tmp_aip_model_sample",
+    #     }})
+    # os.environ["name"] = "op_name"
     # 参数解析
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="name")

@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# encoding: utf-8
+
+import digitforce.aip.common.utils.component_helper as component_helper
+# 初始化组件
+component_helper.init_config()
 from digitforce.aip.common.aip_feature.zq_feature import *
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
 
