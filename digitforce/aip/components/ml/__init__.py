@@ -63,3 +63,29 @@ class LiushiPredict(BaseComponent):
             file_outputs={
             }
         )
+
+class GaoqianModel(BaseComponent):
+    def __init__(self, name, global_params, train_data, test_data, tag='latest'):
+        super(GaoqianModel, self).__init__(
+            name=name,
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/'
+                  f'ml-gaoqian',
+            tag=tag,
+            arguments=['--name', name, '--global_params', global_params, '--train_data', train_data,
+                       '--test_data', test_data],
+            file_outputs={
+            }
+        )
+
+class GaoqianPredict(BaseComponent):
+    def __init__(self, name, global_params, predict_table_name, tag='latest'):
+        super(GaoqianPredict, self).__init__(
+            name=name,
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/'
+                  f'ml-gaoqian_predict',
+            tag=tag,
+            arguments=['--name', name, '--global_params', global_params, '--predict_table_name', predict_table_name,
+                       ],
+            file_outputs={
+            }
+        )

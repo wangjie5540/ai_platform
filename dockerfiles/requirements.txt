@@ -6,3 +6,7 @@ python-dateutil
 pysnowflake
 chinese_calendar
 xgboost
+requests
+Cython
+kafka-python
+Pillow

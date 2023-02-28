@@ -38,6 +38,22 @@ class SampleSelectionLiushi(BaseComponent):
         )
 
 
+class SampleSelectionGaoqian(BaseComponent):
+    """
+    高潜样本组件
+    """
+
+    def __init__(self, name, global_params, tag='latest'):
+        super(SampleSelectionGaoqian, self).__init__(
+            name=name,
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/'
+                  f'sample-sample_selection_gaoqian',
+            tag=tag,
+            arguments=['--name', name, '--global_params', global_params],
+            file_outputs={"sample": component_helper.generate_output_path("sample")}
+        )
+
+
 class RawSample2ModelSample(BaseComponent):
     """
     lookalike样本ID特征编码组件

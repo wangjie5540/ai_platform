@@ -1,0 +1,225 @@
+#gaoqian动态表单-训练
+#gaoqian_TRAIN_dynamic
+dataSource:
+  - table_name: zq_standard.dm_cust_label_base_attributes_df
+    table_cname: 基础标签表
+    columns:
+      - name: cust_code
+        cname: 客户号
+        type: string
+        required: true
+      - name: dt
+        cname: 日期
+        type: date
+        required: true
+      - name: age
+        cname: 年龄
+        type: int
+        required: false
+      - name: sex
+        cname: 性别
+        type: string
+        required: false
+      - name: city_name
+        cname: 城市
+        type: string
+        required: false
+      - name: province_name
+        cname: 省份
+        type: string
+        required: false
+      - name: educational_degree
+        cname: 教育程度
+        type: string
+        required: false
+  - table_name: zq_standard.dm_cust_subs_redm_event_df
+    table_cname: 申购赎回表
+    columns:
+      - name: cust_code
+        cname: 客户号
+        type: string
+        required: true
+      - name: dt
+        cname: 日期
+        type: date
+        required: true
+      - name: product_type_pri
+        cname: 一级产品类型
+        type: string
+        required: true
+      - name: event_code
+        cname: 事件类型
+        type: string
+        required: true
+  - table_name: zq_standard.dm_cust_traf_behv_aggregate_df
+    table_cname: 聚合流量行为表
+    columns:
+      - name: cust_code
+        cname: 客户号
+        type: string
+        required: true
+      - name: dt
+        cname: 日期
+        type: date
+        required: true
+      - name: is_login
+        cname: 是否登录
+        type: string
+        required: true
+  - table_name: zq_standard.dm_cust_capital_flow_aggregate_df
+    table_cname: 聚合资金流水表
+    columns:
+      - name: cust_code
+        cname: 客户号
+        type: string
+        required: true
+      - name: dt
+        cname: 日期
+        type: date
+        required: true
+      - name: transfer_in_amt
+        cname: 资金转入金额
+        type: float
+        required: true
+      - name: transfer_out_amt
+        cname: 资金转出金额
+        type: float
+        required: true
+      - name: transfer_in_cnt
+        cname: 资金转入笔数
+        type: int
+        required: true
+      - name: transfer_out_cnt
+        cname: 资金转出笔数
+        type: int
+        required: true
+  - table_name: zq_standard.dm_cust_subs_redm_event_aggregate_df
+    table_cname: 聚合申购赎回表
+    columns:
+      - name: cust_code
+        cname: 客户号
+        type: string
+        required: true
+      - name: dt
+        cname: 日期
+        type: date
+        required: true
+      - name: total_tran_amt
+        cname: 总交易金额
+        type: float
+        required: true
+      - name: total_tran_cnt
+        cname: 总交易笔数
+        type: int
+        required: true
+      - name: gp_tran_cnt
+        cname: 股票交易总笔数
+        type: int
+        required: false
+      - name: gp_tran_amt
+        cname: 股票交易总金额
+        type: float
+        required: false
+      - name: jj_tran_cnt
+        cname: 基金交易总笔数
+        type: int
+        required: false
+      - name: jj_tran_amt
+        cname: 基金交易总金额
+        type: float
+        required: false
+  - table_name: zq_standard.dm_cust_ast_redm_event_df
+    table_cname: 资产事件表
+    columns:
+      - name: cust_code
+        cname: 客户号
+        type: string
+        required: true
+      - name: dt
+        cname: 日期
+        type: date
+        required: true
+      - name: total_ast
+        cname: 总资产
+        type: float
+        required: true
+      - name: total_liab
+        cname: 总负债
+        type: float
+        required: true
+      - name: cash_bal
+        cname: 资金余额
+        type: float
+        required: true
+      - name: total_prd_ast
+        cname: 产品资产
+        type: float
+        required: false
+      - name: stock_ast
+        cname: 股票资产
+        type: float
+        required: false
+trainSample:
+  - label: 产品类别限定
+    itemList:
+      - type: select
+        attributeName: sample_select__category
+        prefixText: 产品类别
+        description: 介绍
+        required: true
+        optionType: 1
+        optionItems:
+          - label: 私募基金
+            value: simu
+          - label: 公墓基金
+            value: gongmu
+          - label: 信托产品
+            value: xintuo
+  - label: 高潜用户定义
+    itemList:
+      - type: input-number
+        attributeName: sample_select__predict_period
+        prefixText: 未来
+        placeholder: 请输入天数
+        suffixText: 天内
+        required: true
+      - type: select
+        attributeName: sample_select__event_code
+        prefixText: 发生
+        suffixText: 行为
+        description: 介绍
+        required: true
+        optionType: 1
+        optionItems:
+          - label: 申购
+            value: shengou
+modelHyperParameter:
+  - label: 模型参数
+    itemList:
+      - type: input-number
+        attributeName: model__max_depth
+        prefixText: 最大深度
+        description: 树模型的最大深度
+        placeholder: 5
+        required: true
+      - type: input-number
+        attributeName: model__scale_pos_weight
+        prefixText: 正负类别比例
+        description: 负类别数与正类别数之比，辅助处理类别不平衡的情况，帮助模型更快收敛
+        placeholder: 0.5
+        errorMessage: 请输入正确的批次大小
+        required: true
+      - type: input-number
+        attributeName: model__n_estimators
+        prefixText: 子模型个数
+        description: 弱学习器个数
+        placeholder: 200
+        errorMessage: 请输入正确的学习率
+        required: true
+      - type: input-number
+        attributeName: model__learning_rate
+        prefixText: 学习率
+        description: 每个迭代产生的模型的权重
+        placeholder: 0.05
+        errorMessage: 请输入正确的学习率
+        required: true
