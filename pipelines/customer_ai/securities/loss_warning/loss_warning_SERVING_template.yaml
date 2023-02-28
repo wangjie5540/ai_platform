@@ -1,3 +1,5 @@
+loss_warning参数模板-服务
+loss_warning_SERVING_template
 {
     "predict_cos_url":
     {
