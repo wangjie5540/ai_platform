@@ -116,7 +116,7 @@ class BaseTower(nn.Module):
         else:
             print(self.device)
 
-        train_loader = DataLoader(dataset=train_tensor_data, shuffle=shuffle, batch_size=batch_size)
+        train_loader = DataLoader(dataset=train_tensor_data, shuffle=shuffle, batch_size=batch_size, drop_last=True)
 
         sample_num = len(train_tensor_data)
         steps_per_epoch = (sample_num - 1) // batch_size + 1

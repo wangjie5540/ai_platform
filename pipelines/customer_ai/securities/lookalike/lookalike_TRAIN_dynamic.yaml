@@ -1,75 +1,64 @@
 dataSource:
-  - table_name: algorithm.zq_fund_trade_lite
-    table_cname: 基金交易表
+  - table_name: zq_standard.dm_cust_subs_redm_event_df
+    table_cname: 申购赎回表
     columns:
-      - name: custom_id
-        cname: 客户号
+      - name: cust_code
+        cname: 客户代码
         type: string
         required: true
-      - name: trade_date
-        cname: 交易日期
+      - name: dt
+        cname: 日期
         type: date
         required: true
-      - name: trade_type
-        cname: 交易类型
+      - name: event_time
+        cname: 事件时间
         type: string
         required: true
-      - name: fund_code
-        cname: 基金代码
+      - name: event_code
+        cname: 事件code
         type: string
         required: true
-  - table_name: algorithm.zq_fund_basic
-    table_cname: 基金基本信息表
-    columns:
-      - name: ts_code
-        cname: 基金代码
+      - name: product_id
+        cname: 产品id
         type: string
         required: true
-      - name: fund_type
-        cname: 基金类型
+      - name: product_type_pri
+        cname: 一级产品类型
         type: string
         required: true
-      - name: management
-        cname: 基金公司
-        type: string
-        required: true
-      - name: custodian
-        cname: 基金经理
-        type: string
-        required: true
-      - name: invest_type
-        cname: 投资风格
-        type: string
-        required: true
-  - table_name: algorithm.user_info_lite
+  - table_name: zq_standard.dm_cust_label_base_attributes_df
     table_cname: 用户基础标签表
     columns:
-      - name: cust_id
+      - name: cust_code
         cname: 客户号
         type: string
         required: true
-      - name: RSK_ENDR_CPY
-        cname: 风险承受能力
-        type: string
+      - name: dt
+        cname: 日期
+        type: date
         required: true
-      - name: gender
+      - name: age
+        cname: 年龄
+        type: int
+        required: false
+      - name: sex
         cname: 性别
         type: string
         required: false
-      - name: EDU
-        cname: 学历
+      - name: city_name
+        cname: 城市
         type: string
         required: false
-      - name: NATN
-        cname: 民族
+      - name: province_name
+        cname: 省份
         type: string
         required: false
-      - name: OCCU
-        cname: 职业
+      - name: investor_type
+        cname: 投资者类型
         type: string
         required: false
-      - name: IS_VAIID_INVST
-        cname: 是否合格投资者
+      - name: educational_degree
+        cname: 教育程度
         type: string
         required: false
 trainSample:

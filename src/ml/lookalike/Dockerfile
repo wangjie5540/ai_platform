@@ -1,4 +1,4 @@
-FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev:latest
+FROM digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base:latest
 
 # 安装aip-sdk
 RUN pip install digitforce-aip scikit-learn -i https://aip-1657964384920:546b044f44ad6936fef609faa512a53b3fa8b12f@digit-force-pypi.pkg.coding.net/ai-platform/aip/simple
