@@ -9,8 +9,8 @@ DATE_FORMAT = "%Y-%m-%d"
 spark_client = spark_helper.SparkClient()
 
 def sample_create(trade_table_name, trade_columns, event_table_name, event_columns, event_code, category, train_period, predict_period):
-    window_test_days = 1
-    window_train_days = 3
+    window_test_days = 7
+    window_train_days = 15
     now = datetime.datetime.now()
     end_date = now - datetime.timedelta(days=predict_period+2)
     mid_date = end_date - datetime.timedelta(days=window_test_days)

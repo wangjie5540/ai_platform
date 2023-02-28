@@ -12,8 +12,8 @@ spark_client = SparkClient()
 def feature_create(sample_table_name,
                    active_before_days, active_after_days,
                    feature_days=30):
-    window_test_days = 1
-    window_train_days = 3
+    window_test_days = 7
+    window_train_days = 15
     now = datetime.datetime.now()
     end_date = now - datetime.timedelta(days=active_after_days + 2)
     mid_date = end_date - datetime.timedelta(days=window_test_days)
