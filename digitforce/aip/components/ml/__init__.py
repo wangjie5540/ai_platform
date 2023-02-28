@@ -81,10 +81,10 @@ class LiushiPredict(BaseComponent):
         )
 
 class GaoqianModel(BaseComponent):
-    def __init__(self, name, global_params, train_data, test_data, tag=ENV):
+    def __init__(self, name, global_params, train_data, test_data, tag='latest'):
         super(GaoqianModel, self).__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/'
                   f'ml-gaoqian',
             tag=tag,
             arguments=['--name', name, '--global_params', global_params, '--train_data', train_data,
@@ -94,10 +94,10 @@ class GaoqianModel(BaseComponent):
         )
 
 class GaoqianPredict(BaseComponent):
-    def __init__(self, name, global_params, predict_table_name, tag=ENV):
+    def __init__(self, name, global_params, predict_table_name, tag='latest'):
         super(GaoqianPredict, self).__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/'
                   f'ml-gaoqian_predict',
             tag=tag,
             arguments=['--name', name, '--global_params', global_params, '--predict_table_name', predict_table_name,

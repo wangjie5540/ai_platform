@@ -61,10 +61,10 @@ class FeatureCreateGaoqian(BaseComponent):
     OUTPUT_TRAIN_FEATURE = 'train_feature_table_name'
     OUTPUT_TEST_FEATURE = 'test_feature_table_name'
 
-    def __init__(self, name, global_params, sample, tag=ENV):
+    def __init__(self, name, global_params, sample, tag='latest'):
         super(FeatureCreateGaoqian, self).__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/'
                   f'feature_engineering-feature_create_gaoqian',
             tag=tag,
             arguments=['--name', name, '--global_params', global_params, '--sample', sample],
@@ -76,10 +76,10 @@ class FeatureCreateGaoqian(BaseComponent):
 class FeatureCreateGaoqianPredict(BaseComponent):
     OUTPUT_PREDICT_FEATURE = 'predict_feature_table_name'
 
-    def __init__(self, name, global_params, sample, tag=ENV):
+    def __init__(self, name, global_params, sample, tag='latest'):
         super(FeatureCreateGaoqianPredict, self).__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/'
                   f'feature_engineering-feature_create_gaoqian_predict',
             tag=tag,
             arguments=['--name', name, '--global_params', global_params,
