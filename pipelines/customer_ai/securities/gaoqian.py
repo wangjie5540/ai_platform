@@ -14,12 +14,12 @@ from digitforce.aip.components.sample import SampleSelectionGaoqian
 from digitforce.aip.components.source.cos import Cos
 from kfp.compiler import Compiler
 
-pipeline_name = 'gaoqian'
+pipeline_name = 'gaoqian_prod'
 pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 @dsl.pipeline(name=pipeline_name)
 def ml_gaoqian(global_params: str, flag='TRAIN'):
-    RUN_ENV = "dev"
+    RUN_ENV = "prod"
     with Condition(flag != "PREDICT", name="is_not_predict"):
         op_sample_selection = SampleSelectionGaoqian(name='sample_select', global_params=global_params, tag=RUN_ENV)
         op_sample_selection.container.set_image_pull_policy("Always")
