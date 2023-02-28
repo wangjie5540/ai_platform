@@ -30,7 +30,6 @@ function build_component() {
     # 把使用横杆分隔的组件名转换成使用斜杠分隔
     local component_path=src/`echo $component_name | tr '-' '/'`
     local component_image=$IMAGE_REPO/$component_name:$TAG
-    echo $component_path/Dockerfile =================
     pwd
     if [ ! -f $component_path/Dockerfile ]; then
         echo "使用默认的Dockerfile"

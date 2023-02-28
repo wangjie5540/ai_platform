@@ -1,8 +1,6 @@
 FROM aip-tcr.tencentcloudcr.com/aip/python:3.7
 ARG ROOT_DIR=/root
 ARG ROOT_PASSWORD=123
-# 默认使用dev环境
-ARG ENVIRONMENT
 WORKDIR $ROOT_DIR
 ARG WGET_COMMAND="wget --http-user=others-1657101930760 --http-password=f8c1508e03a43feaaedf507bc0e7d60a0c0f0485 https://digit-force-generic.pkg.coding.net/ai-platform/others"
 RUN echo "machine digit-force-generic.pkg.coding.net" >> ~/.netrc \
@@ -32,11 +30,6 @@ RUN cd $SPARK_JARS \
     && $WGET_COMMAND/starrocks-spark-writer-2.4_2.11-1.0-SNAPSHOT.jar \
     && $WGET_COMMAND/starrocks-spark2_2.11-1.0.0.jar \
     && $WGET_COMMAND/graphframes-0.8.2-spark2.4-s_2.11.jar
-# 安装pyhive
-# RUN conda install --yes pyhive
-# 安装依赖包
-# COPY requirements.txt $ROOT_DIR
-# RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 编译镜像
 # docker build -t aip-tcr.tencentcloudcr.com/aip/algorithm-base -f algorithm-base.Dockerfile .
