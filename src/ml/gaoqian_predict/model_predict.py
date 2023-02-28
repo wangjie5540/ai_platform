@@ -19,7 +19,6 @@ def start_model_predict(predict_table_name, model_hdfs_path, output_file_name):
     # print(dt)
     df_predict = spark_client.get_session().sql(
         "select * from {} ".format(predict_table_name)).toPandas()
-    # df_predict.dropna(axis=0, subset=['user_id'], inplace=True)
 
     for col in df_predict.columns:
         if df_predict[col].dtypes == "object":
@@ -45,9 +44,7 @@ def start_model_predict(predict_table_name, model_hdfs_path, output_file_name):
 
     # 结果存储
     result_local_path = "result.csv"
-    # result_hdfs_path = "/user/ai/aip/zq/gaoqian/result/{}_gaoqian_result.csv".format(today)
     result.to_csv(result_local_path, index=False,header=False)
-    # write_hdfs_path(result_local_path, result_hdfs_path, hdfs_client)
     output_file_path = cos_helper.upload_file("result.csv", output_file_name)
 
 # 读hdfs

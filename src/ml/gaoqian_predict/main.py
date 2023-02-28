@@ -27,9 +27,9 @@ def run():
     start_model_predict(predict_table_name, model_hdfs_path, output_file_name)
 
 
-outputs = {
+    outputs = {
 
-    }
+        }
     # component_helper.write_output(outputs)
 
 

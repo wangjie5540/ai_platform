@@ -18,8 +18,6 @@ def sample_create(trade_table_name, trade_columns, event_table_name, event_colum
     end_date = end_date.strftime(DATE_FORMAT)
     mid_date = mid_date.strftime(DATE_FORMAT)
     start_date = start_date.strftime(DATE_FORMAT)
-    # today = get_today_str(DATE_FORMAT)
-    # today = time_helper.get_today_str()
 
     # 数据起始日期：基于start_data, 过去n天， start_date - n
     active_start_date = (datetime.datetime.strptime(start_date, DATE_FORMAT) - datetime.timedelta(days=train_period)).strftime(DATE_FORMAT)

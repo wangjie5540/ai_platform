@@ -198,13 +198,3 @@ def write_hdfs_dict(content, file_name, hdfs_client):
     write_hdfs_path(local_path, hdfs_path2, hdfs_client)
 
 
-# def write_hive(inp_df, table_name, partition_col):
-#     check_table = spark_client.get_session()._jsparkSession.catalog().tableExists(table_name)
-#
-#     if check_table:  # 如果存在该表
-#         print("table:{} exist......".format(table_name))
-#         inp_df.write.format("orc").mode("overwrite").insertInto(table_name)
-#
-#     else:  # 如果不存在
-#         print("table:{} not exist......".format(table_name))
-#         inp_df.write.format("orc").mode("overwrite").partitionBy(partition_col).saveAsTable(table_name)

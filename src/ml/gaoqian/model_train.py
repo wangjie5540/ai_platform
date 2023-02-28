@@ -24,11 +24,11 @@ def start_model_train(train_table_name, test_table_name,
     # print(dt)
     df_train = spark_client.get_session().sql(
         "select * from {} ".format(train_table_name)).toPandas()
-    # df_train = hive_client.query_to_df("select * from {} where dt = {} limit 1000000".format(train_table_name, today))
+
     print(f"read train_dataset success train_data len:{len(df_train)}")
     df_test = spark_client.get_session().sql(
         "select * from {} ".format(test_table_name)).toPandas()
-    # df_test = hive_client.query_to_df("select * from {} where dt = {} limit 1000000".format(test_table_name, today))
+
     print(f"read test_dataset success test_data len:{len(df_test)}")
     for col in df_train.columns:
         if df_train[col].dtypes == "object":
