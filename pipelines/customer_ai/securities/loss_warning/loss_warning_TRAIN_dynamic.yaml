@@ -1,6 +1,8 @@
+loss_warning动态表单-训练
+loss_warning_TRAIN_dynamic
 dataSource:
   - table_name: zq_standard.dm_cust_label_base_attributes_df
-    table_cname: 基础标签表
+  table_cname: 基础标签表
     columns:
       - name: cust_code
         cname: 客户号

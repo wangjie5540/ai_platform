@@ -190,11 +190,13 @@ def write_hdfs_path(local_path, hdfs_path, hdfs_client):
 def write_hdfs_dict(content, file_name, hdfs_client):
     local_path = "dict.{}.{}".format(today, file_name)
     hdfs_path = "/user/ai/aip/zq/liushi/enum_dict/{}/{}".format(today, file_name)
+    hdfs_path_latest = "/user/ai/aip/zq/liushi/enum_dict/latest/{}".format(file_name)
 
     with open(local_path, "w") as f:
         for key in content:
             f.write("{}\t{}\n".format(key, content[key]))
     write_hdfs_path(local_path, hdfs_path, hdfs_client)
+    write_hdfs_path(local_path, hdfs_path_latest, hdfs_client)
 
 
 def write_hive(inp_df, table_name, partition_col, spark_client):

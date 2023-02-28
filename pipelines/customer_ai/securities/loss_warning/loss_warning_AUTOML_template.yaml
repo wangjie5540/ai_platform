@@ -1,3 +1,5 @@
+loss_warning参数模板-自动调参
+loss_warning_AUTOML_template
 {
   "automl_params": {
     "experiment_name": "server-test-loss-warning",

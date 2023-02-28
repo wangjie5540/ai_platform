@@ -96,12 +96,12 @@ global_params = json.dumps({
 })
 
 
-# kubeflow_helper.upload_pipeline(ml_loss_warning, pipeline_name)
+kubeflow_helper.upload_pipeline(ml_loss_warning, pipeline_name)
 # kubeflow_helper.upload_pipeline_version(ml_loss_warning, kubeflow_helper.get_pipeline_id(pipeline_name),pipeline_name)
-client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
-                                                           "flag": "TRAIN"},
-                                     experiment_name="recommend",
-                                     namespace='kubeflow-user-example-com')
+# client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
+#                                                            "flag": "TRAIN"},
+#                                      experiment_name="recommend",
+#                                      namespace='kubeflow-user-example-com')
 # #
 # client.create_run_from_pipeline_func(ml_loss_warning, arguments={"global_params": global_params,
 #                                                            "flag": "PREDICT"},
