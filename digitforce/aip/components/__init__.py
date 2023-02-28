@@ -1,7 +1,7 @@
 # coding: utf-8
 import kfp.dsl as dsl
 import digitforce.aip.common.constants.global_constant as global_constant
-# import kubernetes.client.models as models TODO
+import kubernetes.client.models as models
 
 
 class BaseComponent(dsl.ContainerOp):
@@ -23,9 +23,8 @@ class BaseComponent(dsl.ContainerOp):
             arguments=arguments,
             file_outputs=file_outputs,
             pvolumes={
-                global_constant.CONFIG_MOUNT_PATH: dsl.PipelineVolume(pvc='aip-config-pvc'),
-                # TODO '/tmp/test': dsl.PipelineVolume(config_map=models.V1ConfigMapVolumeSource(name='wtg-config')),
-                # '/root/.kube/config': dsl.PipelineVolume(config_map=models.V1ConfigMapVolumeSource(name='kube_config')),
-                # '/opt/spark-2.4.8-bin-hadoop2.7/conf': dsl.PipelineVolume(config_map=models.V1ConfigMapVolumeSource(name='hive-site.xml')),
+                '/root/.kube/config': dsl.PipelineVolume(config_map=models.V1ConfigMapVolumeSource(name='kube-config')),
+                '/opt/spark-2.4.8-bin-hadoop2.7/conf': dsl.PipelineVolume(config_map=models.V1ConfigMapVolumeSource(name='hive-site')),
+                '/usr/local/etc': dsl.PipelineVolume(config_map=models.V1ConfigMapVolumeSource(name='aip-config')),
             },
         )
