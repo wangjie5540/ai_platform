@@ -1,26 +1,12 @@
 from setuptools import setup, find_packages
 
-__version__ = '0.1.20'
+__version__ = '0.1.21'
 requirements = [
-    'pandas',
-    'scipy',
-    'PyHDFS',
-    'kafka-python',
-    'requests',
-    'Cython',
     'fonttools',
-    'python-dateutil',
     'findspark',
-    'h5py',
-    'hdfs',
-    'lxml',
-    'Pillow',
-    'ortools',
-    'openpyxl',
     'networkx',
     'kfp==1.0.4',
-    'pysnowflake',
-    'cos-python-sdk-v5'
+    'cos-python-sdk-v5',
 ]
 
 setup(

@@ -8,3 +8,9 @@ def get_module_config(module_name):
     with open(global_constant.AIP_CONFIG_PATH, 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
         return config.get(module_name, {})
+
+
+def get_component_config(module_name):
+    with open(global_constant.COMPONENT_CONFIG_PATH, 'r') as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+        return config.get(module_name, {})

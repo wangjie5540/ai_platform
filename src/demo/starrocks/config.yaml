@@ -1,0 +1,2 @@
+spark:
+  spark.executor.memory: 2g
