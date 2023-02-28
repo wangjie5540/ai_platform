@@ -9,7 +9,7 @@ from digitforce.aip.components.sample import *
 from digitforce.aip.components.source.cos import Cos
 from kfp.compiler import Compiler
 
-pipeline_name = 'lookalike_prod'
+pipeline_name = 'lookalike_dev'
 pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 from digitforce.aip.components.feature_engineering import *
@@ -17,7 +17,7 @@ from digitforce.aip.components.feature_engineering import *
 
 @dsl.pipeline(name=pipeline_name)
 def ml_lookalike(global_params: str, flag='TRAIN'):
-    RUN_ENV = "2.0.0"
+    RUN_ENV = "dev-wh"
     with dsl.Condition(flag != "PREDICT", name="is_not_predict"):
         raw_user_feature_op = \
             RawUserFeatureOp(name='raw_user_feature', global_params=global_params, tag=RUN_ENV)
