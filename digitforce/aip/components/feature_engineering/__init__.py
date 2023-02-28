@@ -3,6 +3,8 @@ import kfp.dsl as dsl
 
 import digitforce.aip.common.utils.component_helper as component_helper
 from digitforce.aip.common.constants.global_constant import ENV
+from digitforce.aip.components import BaseComponent
+import digitforce.aip.common.constants.global_constant as global_constant
 
 
 class FeatureCreateLookalike(dsl.ContainerOp):
@@ -23,17 +25,16 @@ class FeatureCreateLookalike(dsl.ContainerOp):
         )
 
 
-class FeatureCreateLiushi(dsl.ContainerOp):
+class FeatureCreateLiushi(BaseComponent):
     OUTPUT_TRAIN_FEATURE = 'train_feature_table_name'
     OUTPUT_TEST_FEATURE = 'test_feature_table_name'
 
-    def __init__(self, name, global_params, sample, tag=ENV):
-        super(FeatureCreateLiushi, self).__init__(
+    def __init__(self, name, global_params, sample, tag='latest'):
+        super().__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
-                  f'feature_engineering-feature_create_liushi:{tag}',
-            command=['python', 'main.py'],
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-feature_create_liushi',
             arguments=['--name', name, '--global_params', global_params, '--sample', sample],
+            tag=tag,
             file_outputs={
                 self.OUTPUT_TRAIN_FEATURE: component_helper.generate_output_path(self.OUTPUT_TRAIN_FEATURE),
                 self.OUTPUT_TEST_FEATURE: component_helper.generate_output_path(self.OUTPUT_TEST_FEATURE)
@@ -41,17 +42,16 @@ class FeatureCreateLiushi(dsl.ContainerOp):
         )
 
 
-class FeatureCreateLiushiPredict(dsl.ContainerOp):
+class FeatureCreateLiushiPredict(BaseComponent):
     OUTPUT_PREDICT_FEATURE = 'predict_feature_table_name'
 
-    def __init__(self, name, global_params, sample, tag=ENV):
-        super(FeatureCreateLiushiPredict, self).__init__(
+    def __init__(self, name, global_params, sample, tag='latest'):
+        super().__init__(
             name=name,
-            image=f'digit-force-docker.pkg.coding.net/ai-platform/ai-components/'
-                  f'feature_engineering-feature_create_liushi_predict:{tag}',
-            command=['python', 'main.py'],
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-feature_create_liushi_predict',
             arguments=['--name', name, '--global_params', global_params,
                        '--sample', sample],
+            tag=tag,
             file_outputs={
                 self.OUTPUT_PREDICT_FEATURE: component_helper.generate_output_path(self.OUTPUT_PREDICT_FEATURE),
 
