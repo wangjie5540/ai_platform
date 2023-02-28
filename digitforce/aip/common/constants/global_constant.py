@@ -2,6 +2,7 @@
 import os
 
 AIP_CONFIG_PATH = '/usr/local/etc/aip_config.yaml'
+COMPONENT_CONFIG_PATH = 'config.yaml'
 JSON_OUTPUT_PATH = '/tmp/out'
 MOUNT_NFS_DIR = '/mnt/nfs'
 IMAGE_REGISTRY = 'digit-force-docker.pkg.coding.net/marketing_algorithm'
