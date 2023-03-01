@@ -118,7 +118,7 @@ def upload_pipeline(pipeline_func, pipeline_name):
     try:
         return client._upload_api.upload_pipeline(uploadfile=pipeline_path, name=pipeline_name)
     except Exception as e:
-        print('there mayby a pipeline with the same name, try to update it')
+        print('there maybe a pipeline with the same name, try to update it')
         return upload_pipeline_version(pipeline_func, get_pipeline_id(pipeline_name), pipeline_name)
 
 
