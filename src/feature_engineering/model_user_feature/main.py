@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# encoding: utf-8
+
 import logging
 import os
 import os.path
@@ -5,10 +8,19 @@ import pickle
 import uuid
 import copy
 import json
+import digitforce.aip.common.utils.component_helper as component_helper
+
+# 初始化组件
+component_helper.init_config()
+from digitforce.aip.common.utils.argument_helper import df_argument_helper
 from digitforce.aip.common.utils.spark_helper import SparkClient
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 from digitforce.aip.common.utils.hive_helper import hive_client
 from digitforce.aip.common.utils.time_helper import *
+
+USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_user_feature"
+
+ITEM_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_item_feature"
 
 
 class FeatureEncoder(object):
@@ -128,11 +140,6 @@ class NumberFeatureEncoderCalculator(FeatureEncoderCalculator):
         encoder.std = _encoder.std
         encoder.mean = _encoder.mean
         return encoder
-
-
-USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_user_feature"
-
-ITEM_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_item_feature"
 
 
 ###################################################################################
@@ -439,11 +446,6 @@ def raw_feature2model_feature(raw_feature_table_name, model_feature_table):
     model_user_feature_rdd = raw_user_feature_dataframe.toJSON().map(raw_user_feature_to_model_user_feature)
     model_user_feature_dataframe = spark_client.get_session().createDataFrame(model_user_feature_rdd)
     model_user_feature_dataframe.write.format("hive").mode("overwrite").saveAsTable(model_feature_table)
-
-
-import digitforce.aip.common.utils.component_helper as component_helper
-from digitforce.aip.common.utils.argument_helper import df_argument_helper
-# from raw_user_feature_to_model_user_feature import *
 
 
 def run():

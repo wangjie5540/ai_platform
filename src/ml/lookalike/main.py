@@ -4,6 +4,8 @@
 import os
 
 from digitforce.aip.common.utils import component_helper
+# 初始化组件
+component_helper.init_config()
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
 from lookalike_model_train import train
 

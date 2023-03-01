@@ -6,8 +6,11 @@ import json
 import os
 
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
-from sample_select import start_sample_selection
 import digitforce.aip.common.utils.component_helper as component_helper
+
+# 初始化组件
+component_helper.init_config()
+from sample_select import start_sample_selection
 
 
 def run():

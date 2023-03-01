@@ -8,6 +8,10 @@ from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 from digitforce.aip.common.utils.hive_helper import hive_client
 from digitforce.aip.common.utils.time_helper import *
 
+USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_user_feature"
+
+ITEM_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_item_feature"
+
 
 class FeatureEncoder(object):
     def __init__(self, name, version, default=None, source_table_name=None):
@@ -126,11 +130,6 @@ class NumberFeatureEncoderCalculator(FeatureEncoderCalculator):
         encoder.std = _encoder.std
         encoder.mean = _encoder.mean
         return encoder
-
-
-USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_user_feature"
-
-ITEM_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_item_feature"
 
 
 ###################################################################################

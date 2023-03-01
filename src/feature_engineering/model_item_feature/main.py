@@ -1,11 +1,14 @@
 import copy
 import json
 
+import digitforce.aip.common.utils.component_helper as component_helper
+
+# 初始化组件
+component_helper.init_config()
 from digitforce.aip.common.utils.spark_helper import SparkClient
 from digitforce.aip.common.utils.hive_helper import hive_client
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
-import digitforce.aip.common.utils.component_helper as component_helper
 
 import logging
 import os.path
@@ -14,27 +17,20 @@ import pickle
 import glob
 import os
 import pickle
-import uuid
-
-import pyhdfs
-# coding: utf-8
-import pandas as pd
-from pyhive import hive
 import datetime
-
 
 DATE_FORMAT = "%Y-%m-%d"
 PATH_DATE_FORMAT = "%Y/%m/%d"
 PATH_DATE_HOUR_FORMAT = "%Y/%m/%d/%H"
 
+USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_user_feature"
+
+ITEM_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_item_feature"
+
 
 def get_today_str(data_format=DATE_FORMAT):
     return datetime.datetime.today().strftime(data_format)
 
-
-USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_user_feature"
-
-ITEM_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_item_feature"
 
 
 class FeatureEncoder(object):
@@ -147,8 +143,6 @@ class NumberFeatureEncoderCalculator(FeatureEncoderCalculator):
         encoder.std = _encoder.std
         encoder.mean = _encoder.mean
         return encoder
-
-
 
 
 ###################################################################################
@@ -304,7 +298,6 @@ class ItemAMOUNT_MAX_30D(NumberFeatureEncoder):
         super().__init__("i_amount_max_30d", version, 0, source_table_name)
 
 
-
 ######################################################################################################################
 
 class EncoderFactory:
@@ -378,8 +371,6 @@ class ItemEncoderFactory(EncoderFactory):
         super(ItemEncoderFactory, self).__init__(source_table_name, version, self.encoder_cls)
 
 
-
-
 item_feature_factory = ItemEncoderFactory(ITEM_RAW_FEATURE_TABLE_NAME)
 
 
@@ -431,7 +422,6 @@ def raw_feature2model_feature(raw_feature_table_name, model_feature_table):
     model_feature_dataframe = spark_client.get_session().createDataFrame(model_feature_rdd)
     model_feature_dataframe.write.format("hive").mode("overwrite").saveAsTable(model_feature_table)
 
-# from raw_item_feature_to_model_item_feature import raw_feature2model_feature
 
 
 def run():
@@ -452,7 +442,7 @@ def run():
     # todo model_user_feature_table_name 的key 从组件中获取
     raw_item_feature_table_name = df_argument_helper.get_argument("raw_item_feature_table_name")
     model_item_feature_table_name = df_argument_helper.get_argument("model_item_feature_table_name")
-    # init_feature_encoder_factory(raw_item_feature_table=raw_item_feature_table_name)
+
     raw_feature2model_feature(raw_item_feature_table_name, model_item_feature_table_name)
     component_helper.write_output("model_item_feature_table_name", model_item_feature_table_name)
 
