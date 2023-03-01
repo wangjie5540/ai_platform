@@ -5,6 +5,7 @@ import digitforce.aip.common.utils.config_helper as config_helper
 import digitforce.aip.common.utils.id_helper as id_helper
 from kfp.compiler import Compiler
 import kfp
+import datetime
 
 
 def get_istio_auth_session(url: str, username: str, password: str) -> dict:
@@ -114,7 +115,11 @@ def upload_pipeline(pipeline_func, pipeline_name):
     client = kfp.Client(host=kubeflow_config['url'], cookies=get_istio_auth_session(
         url=kubeflow_config['url'], username=kubeflow_config['username'],
         password=kubeflow_config['password'])['session_cookie'])
-    return client._upload_api.upload_pipeline(uploadfile=pipeline_path, name=pipeline_name)
+    try:
+        return client._upload_api.upload_pipeline(uploadfile=pipeline_path, name=pipeline_name)
+    except Exception as e:
+        print('there mayby a pipeline with the same name, try to update it')
+        return upload_pipeline_version(pipeline_func, get_pipeline_id(pipeline_name), pipeline_name)
 
 
 def upload_pipeline_version(pipeline_func, pipeline_id, pipeline_name):
@@ -130,7 +135,7 @@ def upload_pipeline_version(pipeline_func, pipeline_id, pipeline_name):
                                                       name=f'{pipeline_name}-{id_helper.gen_uniq_id()}')
 
 
-def create_run_directly(pipeline_func, experiment_name, arguments):
+def create_run_directly(pipeline_name, pipeline_func, experiment_name, arguments, ):
     kubeflow_config = config_helper.get_module_config("kubeflow")
     client = kfp.Client(host=kubeflow_config['url'], cookies=get_istio_auth_session(
         url=kubeflow_config['url'], username=kubeflow_config['username'],
@@ -139,6 +144,7 @@ def create_run_directly(pipeline_func, experiment_name, arguments):
     pipeline_conf.set_image_pull_policy("Always")
     client.create_run_from_pipeline_func(
         pipeline_func,
+        run_name=pipeline_name + ' ' + datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S'),
         arguments=arguments,
         pipeline_conf=pipeline_conf,
         experiment_name=experiment_name,
