@@ -37,6 +37,7 @@ RUN conda install --yes pyhive
 # 安装依赖包
 COPY requirements.txt $ROOT_DIR
 RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip install torch==1.10.1+cpu torchvision==0.11.2+cpu torchaudio==0.10.1 -f https://download.pytorch.org/whl/torch_stable.html
 
 # 编译镜像
 # docker build --build-arg ENVIRONMENT=dev -t digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base -f algorithm-base.Dockerfile .
