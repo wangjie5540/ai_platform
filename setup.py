@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
+from digitforce import __version__
 
-__version__ = '0.1.23'
 requirements = [
     'fonttools',
     'findspark',
