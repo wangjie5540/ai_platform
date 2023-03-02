@@ -5,13 +5,8 @@
 # 设置镜像仓库默认值
 IMAGE_REPO=aip-tcr.tencentcloudcr.com/aip
 SCRIPT_DIR=$(cd `dirname $0`; pwd)
-if [ $COMPONENT_NAME == "all" ]; then
-    echo "编译所有组件"
-    components=`cat $SCRIPT_DIR/component_register`
-else
-    # 把逗号分隔的字符串转换成使用空格分隔
-    components=`echo $COMPONENT_NAME | tr ',' ' '`
-fi
+# 把逗号分隔的字符串转换成使用空格分隔
+components=`echo $COMPONENT_NAME | tr ',' ' '`
 
 if [ -z "$TAG" ]; then
     TAG=latest
