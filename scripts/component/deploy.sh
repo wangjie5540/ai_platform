@@ -25,8 +25,11 @@ function build_component() {
     else
         component_dockerfile=scripts/component/Dockerfile
     fi
+    ls -l $component_path/requirements.txt
     if [ -f $component_path/requirements.txt ]; then
-        echo "RUN pip install -r requirements.txt -i https://aip-1657964384920:546b044f44ad6936fef609faa512a53b3fa8b12f@digit-force-pypi.pkg.coding.net/ai-platform/aip/simple" >> $component_path/Dockerfile
+        # 文件中添加一个空行
+        echo "" >> $component_dockerfile
+        echo "RUN pip install -r requirements.txt -i https://aip-1657964384920:546b044f44ad6936fef609faa512a53b3fa8b12f@digit-force-pypi.pkg.coding.net/ai-platform/aip/simple" >> $component_dockerfile
     fi
     echo component_dockerfile: $component_dockerfile
     cat $component_dockerfile
