@@ -25,7 +25,6 @@ function build_component() {
     else
         component_dockerfile=scripts/component/Dockerfile
     fi
-    ls -l $component_path/requirements.txt
     if [ -f $component_path/requirements.txt ]; then
         # 文件中添加一个空行
         echo "" >> $component_dockerfile
