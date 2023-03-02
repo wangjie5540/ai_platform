@@ -18,16 +18,19 @@ function build_component() {
     # 把使用横杆分隔的组件名转换成使用斜杠分隔
     local component_path=src/`echo $component_name | tr '-' '/'`
     local component_image=$IMAGE_REPO/$component_name:$TAG
+    echo component_image: $component_image
     component_dockerfile=scripts/build_component/Dockerfile
     if [ ! -f $component_path/Dockerfile ]; then
         component_dockerfile=$component_path/Dockerfile
     else
-        component_dockerfile=scripts/component/deploy/Dockerfile
+        component_dockerfile=scripts/component/Dockerfile
     fi
     if [ -f $component_path/requirements.txt ]; then
         echo "RUN pip install -r requirements.txt -i https://aip-1657964384920:546b044f44ad6936fef609faa512a53b3fa8b12f@digit-force-pypi.pkg.coding.net/ai-platform/aip/simple" >> $component_path/Dockerfile
     fi
-    docker build -t $component_image -f $component_path/Dockerfile $component_path
+    echo component_dockerfile: $component_dockerfile
+    cat $component_dockerfile
+    docker build -t $component_image -f $component_dockerfile $component_path
     docker push $component_image
 }
 
