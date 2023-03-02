@@ -23,7 +23,6 @@ COPY --from=miniconda /opt/miniconda3 /opt/miniconda3
 COPY --from=miniconda /opt/spark-2.4.8-bin-hadoop2.7/python/lib ${SPARK_HOME}/python/lib
 ENV PYTHONPATH ${SPARK_HOME}/python/lib/pyspark.zip:${SPARK_HOME}/python/lib/py4j-*.zip
 
-# 编译镜像
-#
-# 上传镜像
-# docker push digit-force-docker.pkg.coding.net/ai-platform/base-images/spark-k8s-runtime-with-jars:2.4.8
+# 构建镜像
+# docker build -t aip-tcr.tencentcloudcr.com/aip/spark-k8s-runtime-with-jars_248:$TAG -f spark248-k8s-runtime.Dockerfile .
+# docker push aip-tcr.tencentcloudcr.com/aip/spark-k8s-runtime-with-jars_248:$TAG
