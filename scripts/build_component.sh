@@ -18,40 +18,32 @@ if [ -z "$TAG" ]; then
 fi
 echo TAG为: $TAG
 
-function build_algorithm_base() {
-    echo "FROM $IMAGE_REPO/algorithm-base:latest" > /tmp/Dockerfile
-    echo "RUN pip install digitforce-aip -i https://aip-1657964384920:546b044f44ad6936fef609faa512a53b3fa8b12f@digit-force-pypi.pkg.coding.net/ai-platform/aip/simple -U" >> /tmp/Dockerfile
-    docker build -t algorithm-base -f /tmp/Dockerfile .
-}
-
 function build_component() {
-    local base_image=$1
-    local component_name=$2
+    local component_name=$1
     # 把使用横杆分隔的组件名转换成使用斜杠分隔
     local component_path=src/`echo $component_name | tr '-' '/'`
     local component_image=$IMAGE_REPO/$component_name:$TAG
     pwd
     if [ ! -f $component_path/Dockerfile ]; then
         echo "使用默认的Dockerfile"
-        echo "FROM $base_image" > $component_path/Dockerfile
+        echo "FROM aip-tcr.tencentcloudcr.com/aip/algorithm-base:1.0.1" > $component_path/Dockerfile
         echo "ARG COMPONENT_DIR=/component" >> $component_path/Dockerfile
         echo "RUN mkdir -p \$COMPONENT_DIR" >> $component_path/Dockerfile
         echo "WORKDIR \$COMPONENT_DIR" >> $component_path/Dockerfile
         echo "COPY . \$COMPONENT_DIR" >> $component_path/Dockerfile
     fi
     if [ -f $component_path/requirements.txt ]; then
-        echo "RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple" >> /tmp/Dockerfile
+        echo "RUN pip install -r requirements.txt -i https://aip-1657964384920:546b044f44ad6936fef609faa512a53b3fa8b12f@digit-force-pypi.pkg.coding.net/ai-platform/aip/simple" >> /tmp/Dockerfile
     fi
     docker build -t $component_image -f $component_path/Dockerfile $component_path
     docker push $component_image
 }
 
-build_algorithm_base
 echo $components
 
 for component in $components; do
     echo "开始编译组件：$component"
-    build_component algorithm-base $component
+    build_component $component
     echo "编译组件：$component 完成"
     echo "----------------------------------------"
 done
