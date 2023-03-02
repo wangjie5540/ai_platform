@@ -1,5 +1,4 @@
 # coding: utf-8
-import digitforce.aip.common.utils.component_helper as component_helper
 import argparse
 import json
 
