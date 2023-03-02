@@ -32,6 +32,7 @@ function build_component() {
         echo "WORKDIR \$COMPONENT_DIR" >> $component_path/Dockerfile
         echo "COPY . \$COMPONENT_DIR" >> $component_path/Dockerfile
     fi
+    echo wtg----- $component_path/requirements.txt
     if [ -f $component_path/requirements.txt ]; then
         echo "RUN pip install -r requirements.txt -i https://aip-1657964384920:546b044f44ad6936fef609faa512a53b3fa8b12f@digit-force-pypi.pkg.coding.net/ai-platform/aip/simple" >> /tmp/Dockerfile
     fi
