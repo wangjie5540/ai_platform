@@ -22,7 +22,7 @@ function build_component() {
     if [ ! -f $component_path/Dockerfile ]; then
         component_dockerfile=$component_path/Dockerfile
     else
-        component_dockerfile=scripts/build_component/Dockerfile
+        component_dockerfile=scripts/component/deploy/Dockerfile
     fi
     if [ -f $component_path/requirements.txt ]; then
         echo "RUN pip install -r requirements.txt -i https://aip-1657964384920:546b044f44ad6936fef609faa512a53b3fa8b12f@digit-force-pypi.pkg.coding.net/ai-platform/aip/simple" >> $component_path/Dockerfile
