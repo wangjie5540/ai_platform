@@ -1,9 +1,14 @@
 import copy
 import json
 
-from digitforce.aip.common.utils.spark_helper import spark_client
+import digitforce.aip.common.utils.component_helper as component_helper
+
+# 初始化组件
+component_helper.init_config()
+from digitforce.aip.common.utils.spark_helper import SparkClient
 from digitforce.aip.common.utils.hive_helper import hive_client
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
+from digitforce.aip.common.utils.argument_helper import df_argument_helper
 
 import logging
 import os.path
@@ -12,129 +17,20 @@ import pickle
 import glob
 import os
 import pickle
-import uuid
+import datetime
 
-import pyhdfs
-# coding: utf-8
-import pandas as pd
-from pyhive import hive
+DATE_FORMAT = "%Y-%m-%d"
+PATH_DATE_FORMAT = "%Y/%m/%d"
+PATH_DATE_HOUR_FORMAT = "%Y/%m/%d/%H"
 
-#
-# class HiveClient:
-#     def __init__(self, host=None, port=None, username='root'):
-#         self.conn = hive.Connection(host=host, port=port, username=username)
-#
-#     def __del__(self):
-#         self.conn.close()
-#
-#     def get_table_size(self, table_name):
-#         cur = self.conn.cursor()
-#         sql = f'desc formatted {table_name}'
-#         cur.execute(sql)
-#         all_data = cur.fetchall()
-#         cur.close()
-#         for item in all_data:
-#             if item[1] is not None and item[1].startswith('totalSize'):
-#                 return int(item[2].strip())
-#
-#     def query_to_df(self, sql):
-#         df = pd.read_sql(sql, self.conn)
-#         return df
-#
-#     def query_to_table(self, sql, table_name, db=None, delete_tb=False):
-#         cursor = self.conn.cursor()
-#         if delete_tb:
-#             self.delete_table(table_name)
-#         table_name = f"{db}.{table_name}" if db else table_name
-#         _sql = f"CREATE TABLE IF NOT EXISTS {table_name} AS " \
-#                f"{sql}"
-#         cursor.execute(_sql)
-#
-#     def delete_table(self, table_name):
-#         cursor = self.conn.cursor()
-#         _sql = f"DROP TABLE IF EXISTS {table_name}"
-#         cursor.execute(_sql)
-#
-#     def close(self):
-#         if self.conn:
-#             self.conn.close()
-#         self.conn = None
-#
-#
-# hive_client = HiveClient(host="172.22.20.57", port=7001)
-#
-#
-# class HdfsClient:
-#     def __init__(self, hosts=None, user_name="root"):
-#         self.hdfs_client = pyhdfs.HdfsClient(hosts=hosts, user_name=user_name)
-#
-#     def get_client(self):
-#         return self.hdfs_client
-#
-#     def list_dir(self, path):
-#         return self.hdfs_client.listdir(path)
-#
-#     def list_status(self, path):
-#         return self.hdfs_client.list_status(path)
-#
-#     def delete(self, path, recursive=True):
-#         return self.hdfs_client.delete(path, recursive=recursive)
-#
-#     def copy_to_local(self, src: str, localdest: str):
-#         return self.hdfs_client.copy_to_local(src, localdest)
-#
-#     def copy_from_local(self, localsrc: str, dest: str):
-#         return self.hdfs_client.copy_from_local(localsrc, dest)
-#
-#     def mkdirs(self, path):
-#         return self.hdfs_client.mkdirs(path)
-#
-#     def exists(self, path):
-#         return self.hdfs_client.exists(path)
-#
-#     def mkdir_dirs(self, path):
-#         assert path.startswith("/")
-#         vals = path.split('/')
-#         _path = ""
-#         for _ in vals:
-#             _path += _ + "/"
-#             if not self.get_client().exists(_path):
-#                 self.mkdirs(_path)
-#
-#     def copy_from_local_dir(self, local_dir, dest):
-#         self.mkdir_dirs(dest)
-#         files = glob.glob(local_dir)
-#         for _ in files:
-#             _dest = os.path.join(dest, os.path.basename(_))
-#             self.copy_from_local(_, _dest)
-#
-#     def copy_dir_to_local(self, local_dir, dest_dir):
-#         dest_files = self.list_dir(dest_dir)
-#         if not os.path.exists(local_dir):
-#             os.makedirs(local_dir, exist_ok=True)
-#         for _ in dest_files:
-#             dest = os.path.join(dest_dir, _)
-#             local_path = os.path.join(local_dir, _)
-#             self.copy_to_local(dest, local_path)
-#
-#     def write_to_hdfs(self, content, dest_path):
-#         self.delete(dest_path)
-#         tmp_file = f"/tmp/{uuid.uuid4()}"
-#         with open(tmp_file, "wb") as fo:
-#             fo.write(content)
-#         self.copy_from_local(tmp_file, dest_path)
-#         os.remove(tmp_file)
-#
-#     def read_pickle_from_hdfs(self, src):
-#         tmp_file = f"/tmp/{uuid.uuid4()}"
-#         self.copy_to_local(src, tmp_file)
-#         with open(tmp_file, "rb") as fi:
-#             obj = pickle.load(fi)
-#         os.remove(tmp_file)
-#         return obj
-#
-#
-# hdfs_client = HdfsClient("172.22.20.137:4008,172.22.20.110:4008")
+USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_user_feature"
+
+ITEM_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_test_raw_item_feature"
+
+
+def get_today_str(data_format=DATE_FORMAT):
+    return datetime.datetime.today().strftime(data_format)
+
 
 
 class FeatureEncoder(object):
@@ -213,7 +109,7 @@ class CategoryFeatureEncoderCalculator(FeatureEncoderCalculator):
     @classmethod
     def calculate(cls, encoder: CategoryFeatureEncoder):
         query_sql = f'''
-                            SELECT 
+                            SELECT
                                 DISTINCT {encoder.name}  AS {encoder.name}
                             FROM {encoder.source_table_name}
                     '''
@@ -231,9 +127,9 @@ class NumberFeatureEncoderCalculator(FeatureEncoderCalculator):
     @classmethod
     def calculate(cls, encoder: NumberFeatureEncoder):
         query_sql = f'''
-                            SELECT 
+                            SELECT
                                 SUM({encoder.name}) / COUNT(*)  AS mean_res,
-                                STDDEV({encoder.name}) AS stddev_res 
+                                STDDEV({encoder.name}) AS stddev_res
                             FROM {encoder.source_table_name}
                     '''
         df = hive_client.query_to_df(query_sql)
@@ -249,32 +145,15 @@ class NumberFeatureEncoderCalculator(FeatureEncoderCalculator):
         return encoder
 
 
-DATE_FORMAT = "%Y-%m-%d"
-PATH_DATE_FORMAT = "%Y/%m/%d"
-PATH_DATE_HOUR_FORMAT = "%Y/%m/%d/%H"
-
-import datetime
-
-
-def get_today_str(data_format=DATE_FORMAT):
-    return datetime.datetime.today().strftime(data_format)
-
-
-USER_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_raw_user_feature_table_name"
-
-ITEM_RAW_FEATURE_TABLE_NAME = "algorithm.tmp_raw_item_feature_table_name"
-
-
 ###################################################################################
-#   ['gender', 'EDU', 'RSK_ENDR_CPY', 'NATN', 'OCCU', 'IS_VAIID_INVST']
 class UserIdEncoder(CategoryFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("user_id", version, 0, source_table_name)
 
 
-class UserGenderEncoder(CategoryFeatureEncoder):
+class UserSexEncoder(CategoryFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
-        super().__init__("gender", version, 0, source_table_name)
+        super().__init__("sex", version, 0, source_table_name)
 
 
 class UserEducationEncoder(CategoryFeatureEncoder):
@@ -282,9 +161,9 @@ class UserEducationEncoder(CategoryFeatureEncoder):
         super().__init__("edu", version, 0, source_table_name)
 
 
-class UserRSKENDRCPYEncoder(CategoryFeatureEncoder):
+class UserRiskLevelEncoder(CategoryFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
-        super().__init__("rsk_endr_cpy", version, 0, source_table_name)
+        super().__init__("risk_level", version, 0, source_table_name)
 
 
 class UserOCCUEncoder(CategoryFeatureEncoder):
@@ -302,7 +181,26 @@ class UserISVAIIDINVSTEncoder(CategoryFeatureEncoder):
         super().__init__("is_vaiid_invst", version, 0, source_table_name)
 
 
+class UserCityEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("city_name", version, 0, source_table_name)
+
+
+class UserProvinceEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("province_name", version, 0, source_table_name)
+
+
+class UserInvestTypeEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("investor_type", version, 0, source_table_name)
+
+
 # NumberFeatureEncoder
+class UserAgeEncoder(NumberFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("age", version, 0, source_table_name)
+
 
 class UserBUY_COUNTS_30D(NumberFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
@@ -345,7 +243,6 @@ class UserLAST_BUY_DAYS_30D(NumberFeatureEncoder):
 
 
 ####################################################################################
-#  ['ts_code', 'fund_type', 'management', 'custodian', 'invest_type'] ##
 class ItemIdEncoder(CategoryFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("item_id", version, 0, source_table_name)
@@ -354,6 +251,11 @@ class ItemIdEncoder(CategoryFeatureEncoder):
 class FundTypeEncoder(CategoryFeatureEncoder):
     def __init__(self, source_table_name, version=get_today_str()):
         super().__init__("fund_type", version, 0, source_table_name)
+
+
+class ProductTypeEncoder(CategoryFeatureEncoder):
+    def __init__(self, source_table_name, version=get_today_str()):
+        super().__init__("product_type_pri", version, 0, source_table_name)
 
 
 class FundManagementEncoder(CategoryFeatureEncoder):
@@ -435,13 +337,12 @@ class UserEncoderFactory(EncoderFactory):
         self.encoder_cls = [
             ############ user category feature
             UserIdEncoder,
-            UserGenderEncoder,
-            UserEducationEncoder,
-            UserRSKENDRCPYEncoder,
-            UserOCCUEncoder,
-            UserNATNEncoder,
-            UserISVAIIDINVSTEncoder,
+            UserSexEncoder,
+            UserCityEncoder,
+            UserProvinceEncoder,
+            UserInvestTypeEncoder,
             ############ user number feature
+            UserAgeEncoder,
             UserBUY_COUNTS_30D,
             UserAMOUNT_SUM_30D,
             UserAMOUNT_AVG_30D,
@@ -455,13 +356,11 @@ class UserEncoderFactory(EncoderFactory):
 
 class ItemEncoderFactory(EncoderFactory):
     def __init__(self, source_table_name, version=get_today_str()):
+        self.factory = {}
         self.encoder_cls = [
             ################ item category feature
             ItemIdEncoder,
-            FundTypeEncoder,
-            FundManagementEncoder,
-            FundCustodianEncoder,
-            FundInvestTypeEncoder,
+            ProductTypeEncoder,
             ############### item number feature
             ItemBUY_COUNTS_30D,
             ItemAMOUNT_SUM_30D,
@@ -472,10 +371,7 @@ class ItemEncoderFactory(EncoderFactory):
         super(ItemEncoderFactory, self).__init__(source_table_name, version, self.encoder_cls)
 
 
-user_feature_factory = UserEncoderFactory(USER_RAW_FEATURE_TABLE_NAME)
-full_factory(user_feature_factory)
 item_feature_factory = ItemEncoderFactory(ITEM_RAW_FEATURE_TABLE_NAME)
-full_factory(item_feature_factory)
 
 
 def init_feature_encoder_factory(raw_user_feature_table=USER_RAW_FEATURE_TABLE_NAME,
@@ -517,33 +413,23 @@ def raw_item_feature_to_model_item_feature(raw_feature: dict) -> dict:
 
 
 def raw_feature2model_feature(raw_feature_table_name, model_feature_table):
-    raw_user_feature_dataframe = spark_client.get_session().sql(f"select * from {raw_feature_table_name}")
-    model_user_feature_rdd = raw_user_feature_dataframe.toJSON().map(raw_item_feature_to_model_item_feature)
-    model_user_feature_dataframe = spark_client.get_session().createDataFrame(model_user_feature_rdd)
-    model_user_feature_dataframe.write.format("hive").mode("overwrite").saveAsTable(model_feature_table)
+    spark_client = SparkClient.get()
+    global item_feature_factory
+    item_feature_factory = ItemEncoderFactory(raw_feature_table_name)
+    full_factory(item_feature_factory)
+    raw_feature_dataframe = spark_client.get_session().sql(f"select * from {raw_feature_table_name}")
+    model_feature_rdd = raw_feature_dataframe.toJSON().map(raw_item_feature_to_model_item_feature)
+    model_feature_dataframe = spark_client.get_session().createDataFrame(model_feature_rdd)
+    model_feature_dataframe.write.format("hive").mode("overwrite").saveAsTable(model_feature_table)
 
-
-# if __name__ == '__main__':
-#     raw_feature2model_feature("algorithm.tmp_raw_item_feature_table_name",
-#                               "algorithm.tmp_model_item_feature_table_name")
-
-# !/usr/bin/env python3
-# encoding: utf-8
-
-import digitforce.aip.common.utils.component_helper as component_helper
-from digitforce.aip.common.utils.argument_helper import df_argument_helper
-
-
-# from raw_item_feature_to_model_item_feature import *
 
 
 def run():
-    # for test
     # import os
     # import json
     # os.environ["global_params"] = json.dumps(
-    #     {"op_name": {"raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name",
-    #     "model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"}})
+    #     {"op_name": {"raw_item_feature_table_name": "algorithm.tmp_test_raw_item_feature",
+    #                  "model_item_feature_table_name": "algorithm.tmp_model_item_feature_table_name"}})
     # os.environ["name"] = "op_name"
     # 参数解析
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
@@ -555,10 +441,10 @@ def run():
 
     # todo model_user_feature_table_name 的key 从组件中获取
     raw_item_feature_table_name = df_argument_helper.get_argument("raw_item_feature_table_name")
-    model_user_feature_table_name = df_argument_helper.get_argument("model_item_feature_table_name")
-    init_feature_encoder_factory(raw_item_feature_table=raw_item_feature_table_name)
-    raw_feature2model_feature(raw_item_feature_table_name, model_user_feature_table_name)
-    component_helper.write_output("model_item_feature_table_name", model_user_feature_table_name)
+    model_item_feature_table_name = df_argument_helper.get_argument("model_item_feature_table_name")
+
+    raw_feature2model_feature(raw_item_feature_table_name, model_item_feature_table_name)
+    component_helper.write_output("model_item_feature_table_name", model_item_feature_table_name)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,8 @@
+loss_warning动态表单-训练
+loss_warning_TRAIN_dynamic
 dataSource:
-  - table_name: algorithm.sample_jcbq
-    table_cname: 基础标签表
+  - table_name: zq_standard.dm_cust_label_base_attributes_df
+  table_cname: 基础标签表
     columns:
       - name: cust_code
         cname: 客户号
@@ -14,7 +16,7 @@ dataSource:
         cname: 年龄
         type: int
         required: false
-      - name: gender
+      - name: sex
         cname: 性别
         type: string
         required: false
@@ -22,7 +24,7 @@ dataSource:
         cname: 城市
         type: string
         required: false
-      - name: province
+      - name: province_name
         cname: 省份
         type: string
         required: false
@@ -30,7 +32,7 @@ dataSource:
         cname: 教育程度
         type: string
         required: false
-  - table_name: algorithm.sample_llxw
+  - table_name: zq_standard.dm_cust_traf_behv_aggregate_df
     table_cname: 流量行为表
     columns:
       - name: cust_code
@@ -45,7 +47,7 @@ dataSource:
         cname: 是否登录
         type: string
         required: true
-  - table_name: algorithm.sample_zjls
+  - table_name: zq_standard.dm_cust_capital_flow_aggregate_df
     table_cname: 资金流水表
     columns:
       - name: cust_code
@@ -56,23 +58,23 @@ dataSource:
         cname: 日期
         type: date
         required: true
-      - name: zr_money
+      - name: transfer_in_amt
         cname: 资金转入金额
         type: float
         required: true
-      - name: zc_money
+      - name: transfer_out_amt
         cname: 资金转出金额
         type: float
         required: true
-      - name: zr_cnt
+      - name: transfer_in_cnt
         cname: 资金转入笔数
         type: int
         required: true
-      - name: zc_cnt
+      - name: transfer_out_cnt
         cname: 资金转出笔数
         type: int
         required: true
-  - table_name: algorithm.sample_sgsh
+  - table_name: zq_standard.dm_cust_subs_redm_event_aggregate_df
     table_cname: 申购赎回表
     columns:
       - name: cust_code
@@ -83,31 +85,31 @@ dataSource:
         cname: 日期
         type: date
         required: true
-      - name: jy_rmb
+      - name: total_tran_amt
         cname: 交易金额
         type: float
         required: true
-      - name: jy_num
+      - name: total_tran_cnt
         cname: 交易笔数
         type: int
         required: true
-      - name: jygp_num
+      - name: gp_tran_cnt
         cname: 股票交易笔数
         type: int
         required: false
-      - name: jygp_rmb
+      - name: gp_tran_amt
         cname: 股票交易金额
         type: float
         required: false
-      - name: jyjj_num
+      - name: jj_tran_cnt
         cname: 基金交易笔数
         type: int
         required: false
-      - name: jyjj_rmb
+      - name: jj_tran_amt
         cname: 基金交易金额
         type: float
         required: false
-  - table_name: algorithm.sample_zcsj
+  - table_name: zq_standard.dm_cust_ast_redm_event_df
     table_cname: 资产事件表
     columns:
       - name: cust_code
@@ -118,27 +120,23 @@ dataSource:
         cname: 日期
         type: date
         required: true
-      - name: ast_total
+      - name: total_ast
         cname: 总资产
         type: float
         required: true
-      - name: ast_fz
+      - name: total_liab
         cname: 总负债
         type: float
         required: true
-      - name: ast_zj
+      - name: cash_bal
         cname: 资金余额
         type: float
         required: true
-      - name: ast_cp
+      - name: total_prd_ast
         cname: 产品资产
         type: float
         required: true
-      - name: ast_jj
-        cname: 基金资产
-        type: float
-        required: false
-      - name: ast_gp
+      - name: stock_ast
         cname: 股票资产
         type: float
         required: false

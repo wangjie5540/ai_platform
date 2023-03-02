@@ -1,26 +1,12 @@
 from setuptools import setup, find_packages
+from digitforce import __version__
 
-__version__ = '0.1.20'
 requirements = [
-    'pandas',
-    'scipy',
-    'PyHDFS',
-    'kafka-python',
-    'requests',
-    'Cython',
     'fonttools',
-    'python-dateutil',
     'findspark',
-    'h5py',
-    'hdfs',
-    'lxml',
-    'Pillow',
-    'ortools',
-    'openpyxl',
     'networkx',
     'kfp==1.0.4',
-    'pysnowflake',
-    'cos-python-sdk-v5'
+    'cos-python-sdk-v5',
 ]
 
 setup(
@@ -34,7 +20,7 @@ setup(
             'digitforce',
             'digitforce.*',
         ]),
-    python_requires='>=3.6.0',
+    python_requires='>=3.7.0',
     install_requires=requirements
 )
 

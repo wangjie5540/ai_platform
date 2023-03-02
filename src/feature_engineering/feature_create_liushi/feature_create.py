@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 import datetime
-from digitforce.aip.common.utils.spark_helper import spark_client
+from digitforce.aip.common.utils.spark_helper import SparkClient
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 import utils
 
@@ -12,6 +12,7 @@ today = datetime.datetime.today().strftime(DATE_FORMAT)
 def feature_create(sample_table_name,
                    active_before_days, active_after_days,
                    feature_days=30):
+    spark_client = SparkClient.get()
     window_test_days = 5
     window_train_days = 30
     now = datetime.datetime.now()
@@ -35,29 +36,29 @@ def feature_create(sample_table_name,
     print("The data source time range is from {} to {}".format(active_start_date, active_end_date))
 
     # 客户号，年龄，性别，城市，省份，教育程度
-    spark_client.get_starrocks_table_df("algorithm.sample_jcbq").createOrReplaceTempView("sample_jcbq")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_label_base_attributes_df").createOrReplaceTempView("dm_cust_label_base_attributes_df")
     table_user = spark_client.get_session().sql(
-        "select cust_code, age, gender, city_name, province, educational_degree from sample_jcbq where replace(dt,'-','') = '{}'".format(
+        "select cust_code, age, sex, city_name, province_name, educational_degree from dm_cust_label_base_attributes_df where replace(dt,'-','') = '{}'".format(
             end_date))
     # 客户号，日期，客户是否登录
-    spark_client.get_starrocks_table_df("algorithm.sample_llxw").createOrReplaceTempView("sample_llxw")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_traf_behv_aggregate_df").createOrReplaceTempView("dm_cust_traf_behv_aggregate_df")
     table_app = spark_client.get_session().sql(
-        "select cust_code, replace(dt,'-','') as dt, is_login from sample_llxw where replace(dt,'-','') between '{}' and '{}'".format(
+        "select cust_code, replace(dt,'-','') as dt, is_login from dm_cust_traf_behv_aggregate_df where replace(dt,'-','') between '{}' and '{}'".format(
             active_start_date, active_end_date))
     # 客户号，日期，资金转出金额，资金转入金额，资金转出笔数，资金转入笔数
-    spark_client.get_starrocks_table_df("algorithm.sample_zjls").createOrReplaceTempView("sample_zjls")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_capital_flow_aggregate_df").createOrReplaceTempView("dm_cust_capital_flow_aggregate_df")
     table_zj = spark_client.get_session().sql(
-        "select cust_code, replace(dt,'-','') as dt, zc_money, zr_money, zc_cnt, zr_cnt from sample_zjls where replace(dt,'-','') between '{}' and '{}'".format(
+        "select cust_code, replace(dt,'-','') as dt, transfer_out_amt, transfer_in_amt, transfer_out_cnt, transfer_in_cnt from dm_cust_capital_flow_aggregate_df where replace(dt,'-','') between '{}' and '{}'".format(
             feature_date, end_date))
     # 客户号，日期，交易笔数，交易金额，股票笔数，股票金额，基金笔数，基金金额
-    spark_client.get_starrocks_table_df("algorithm.sample_sgsh").createOrReplaceTempView("sample_sgsh")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_subs_redm_event_aggregate_df").createOrReplaceTempView("dm_cust_subs_redm_event_aggregate_df")
     table_jy = spark_client.get_session().sql(
-        "select cust_code, replace(dt,'-','') as dt, jy_num, jy_rmb, jygp_num, jygp_rmb, jyjj_num, jyjj_rmb from sample_sgsh where replace(dt,'-','') between '{}' and '{}'".format(
+        "select cust_code, replace(dt,'-','') as dt, total_tran_cnt, total_tran_amt, gp_tran_cnt, gp_tran_amt, jj_tran_cnt, jj_tran_amt from dm_cust_subs_redm_event_aggregate_df where replace(dt,'-','') between '{}' and '{}'".format(
             feature_date, end_date))
     # 客户号，日期，总资产，总负债，基金资产，股票资产，资金余额，产品资产
-    spark_client.get_starrocks_table_df("algorithm.sample_zcsj").createOrReplaceTempView("sample_zcsj")
+    spark_client.get_starrocks_table_df("zq_standard.dm_cust_ast_redm_event_df").createOrReplaceTempView("dm_cust_ast_redm_event_df")
     table_zc = spark_client.get_session().sql(
-        "select cust_code, replace(dt,'-','') as dt, ast_total, ast_fz, ast_jj, ast_gp, ast_zj, ast_cp from sample_zcsj where replace(dt,'-','') between '{}' and '{}'".format(
+        "select cust_code, replace(dt,'-','') as dt, total_ast, total_liab, zq_ast, ashare_val, cash_bal, total_prd_ast from dm_cust_ast_redm_event_df where replace(dt,'-','') between '{}' and '{}'".format(
             feature_date, end_date))
 
     # 2. 特征预处理
@@ -172,8 +173,8 @@ def feature_create(sample_table_name,
 
     train_table_name = "algorithm.aip_zq_liushi_custom_feature_train"
     test_table_name = "algorithm.aip_zq_liushi_custom_feature_test"
-    write_hive(data_train_df, train_table_name, "dt")
-    write_hive(data_test_df, test_table_name, "dt")
+    write_hive(data_train_df, train_table_name, "dt", spark_client)
+    write_hive(data_test_df, test_table_name, "dt", spark_client)
 
     return train_table_name, test_table_name
 
@@ -189,14 +190,16 @@ def write_hdfs_path(local_path, hdfs_path, hdfs_client):
 def write_hdfs_dict(content, file_name, hdfs_client):
     local_path = "dict.{}.{}".format(today, file_name)
     hdfs_path = "/user/ai/aip/zq/liushi/enum_dict/{}/{}".format(today, file_name)
+    hdfs_path_latest = "/user/ai/aip/zq/liushi/enum_dict/latest/{}".format(file_name)
 
     with open(local_path, "w") as f:
         for key in content:
             f.write("{}\t{}\n".format(key, content[key]))
     write_hdfs_path(local_path, hdfs_path, hdfs_client)
+    write_hdfs_path(local_path, hdfs_path_latest, hdfs_client)
 
 
-def write_hive(inp_df, table_name, partition_col):
+def write_hive(inp_df, table_name, partition_col, spark_client):
     check_table = spark_client.get_session()._jsparkSession.catalog().tableExists(table_name)
 
     if check_table:  # 如果存在该表

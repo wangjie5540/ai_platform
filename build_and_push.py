@@ -5,7 +5,7 @@ import os
 
 def get_dockerfile_content(image_dir, bottom_image_name=None):
     if bottom_image_name is None:
-        bottom_image_name = "digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev:latest"
+        bottom_image_name = "digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-base:latest"
     return """FROM {0}
 RUN pip install digitforce-aip -i https://aip-1657964384920:546b044f44ad6936fef609faa512a53b3fa8b12f@digit-force-pypi.pkg.coding.net/ai-platform/aip/simple
 RUN conda install pyhive --yes
@@ -75,17 +75,18 @@ def find_main_file(one_dir, result):
 def main():
     os.system(
         "docker login -u ai-components-1672712149820 -p 30dd16ad7d172c138cdc4475133ba6d67b8fae09 digit-force-docker.pkg.coding.net")
-    if not os.environ.get("ENV"):
-        os.environ["ENV"] = "prod"
-    tag = os.environ["ENV"]
+    tag = "2.0.0"
     for _dir in [
+        "src/sample/sample_selection_lookalike",
+        "src/sample/raw_sample_to_sample",
+        "src/feature_engineering/raw_item_feature",
+        "src/feature_engineering/raw_user_feature",
         "src/feature_engineering/model_item_feature",
         "src/feature_engineering/model_user_feature",
-        "src/sample/raw_sample_to_sample",
-        # "src/preprocessing",
-        # "src/feature_engineering",
-        # "src/ml/liushi_predict",
-
+        "src/feature_engineering/zq_feature_calculator",
+        "src/preprocessing/feature_and_label_to_dataset",
+        "src/ml/lookalike",
+        "src/ml/lookalike_predict",
     ]:
         result = []
         find_main_file(_dir, result)

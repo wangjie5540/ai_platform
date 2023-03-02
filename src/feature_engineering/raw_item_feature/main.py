@@ -5,6 +5,9 @@ import json
 import os
 
 import digitforce.aip.common.utils.component_helper as component_helper
+
+# 初始化组件
+component_helper.init_config()
 from calculate_raw_item_feature import calculate_raw_item_feature
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
 from digitforce.aip.components.feature_engineering import RawItemFeatureOp
@@ -12,14 +15,10 @@ from digitforce.aip.components.feature_engineering import RawItemFeatureOp
 
 def run():
     # 参数解析
-    os.environ["raw_item_feature_table_name"] = "algorithm.tmp_raw_item_feature_table_name"
-    os.environ["global_params"] = json.dumps(
-        {"container_name": {"raw_item_feature_table_name": "algorithm.tmp_raw_item_feature_table_name"}})
-    os.environ["name"] = "container_name"
     df_argument_helper.add_argument("--global_params", type=str, required=False, help="全局参数")
     df_argument_helper.add_argument("--name", type=str, required=False, help="name")
     df_argument_helper.add_argument("--raw_item_feature_table_name",
-                                    default="algorithm.tmp_raw_item_feature_table_name",
+                                    default="algorithm.tmp_test_raw_item_feature",
                                     type=str, required=False,
                                     help="raw_item_feature_table_name")
 
