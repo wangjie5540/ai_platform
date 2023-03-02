@@ -25,6 +25,7 @@ RUN cd $SPARK_JARS \
     && $WGET_COMMAND/common-1.0-SNAPSHOT.jar \
     && $WGET_COMMAND/starrocks-spark-writer-2.4_2.11-1.0-SNAPSHOT.jar \
     && $WGET_COMMAND/starrocks-spark2_2.11-1.0.0.jar \
+    && $WGET_COMMAND/alluxio-2.7.4-client.jar \
     && $WGET_COMMAND/graphframes-0.8.2-spark2.4-s_2.11.jar
 # 添加jupyter
 RUN pip install jupyter -i https://pypi.tuna.tsinghua.edu.cn/simple \
