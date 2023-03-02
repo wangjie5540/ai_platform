@@ -19,7 +19,6 @@ function build_component() {
     local component_path=src/`echo $component_name | tr '-' '/'`
     local component_image=$IMAGE_REPO/$component_name:$TAG
     echo component_image: $component_image
-    component_dockerfile=scripts/build_component/Dockerfile
     if [ ! -f $component_path/Dockerfile ]; then
         component_dockerfile=$component_path/Dockerfile
     else
