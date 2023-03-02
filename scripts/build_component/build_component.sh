@@ -18,14 +18,11 @@ function build_component() {
     # 把使用横杆分隔的组件名转换成使用斜杠分隔
     local component_path=src/`echo $component_name | tr '-' '/'`
     local component_image=$IMAGE_REPO/$component_name:$TAG
-    pwd
+    component_dockerfile=scripts/build_component/Dockerfile
     if [ ! -f $component_path/Dockerfile ]; then
-        echo "使用默认的Dockerfile"
-        echo "FROM aip-tcr.tencentcloudcr.com/aip/algorithm-base:1.0.1" > $component_path/Dockerfile
-        echo "ARG COMPONENT_DIR=/component" >> $component_path/Dockerfile
-        echo "RUN mkdir -p \$COMPONENT_DIR" >> $component_path/Dockerfile
-        echo "WORKDIR \$COMPONENT_DIR" >> $component_path/Dockerfile
-        echo "COPY . \$COMPONENT_DIR" >> $component_path/Dockerfile
+        component_dockerfile=$component_path/Dockerfile
+    else
+        component_dockerfile=scripts/build_component/Dockerfile
     fi
     if [ -f $component_path/requirements.txt ]; then
         echo "RUN pip install -r requirements.txt -i https://aip-1657964384920:546b044f44ad6936fef609faa512a53b3fa8b12f@digit-force-pypi.pkg.coding.net/ai-platform/aip/simple" >> $component_path/Dockerfile
