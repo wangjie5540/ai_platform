@@ -16,7 +16,7 @@ class SampleSelectionLookalike(BaseComponent):
     def __init__(self, name, global_params, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/sample-sample_selection_lookalike',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/sample-sample_selection_lookalike',
             arguments=['--name', name, '--global_params', global_params],
             tag=tag,
             file_outputs={self.output_name: component_helper.generate_output_path(self.output_name)}
@@ -63,7 +63,7 @@ class RawSample2ModelSample(BaseComponent):
     def __init__(self, name, global_params, raw_sample_table_name, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/sample-raw_sample_to_sample',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/sample-raw_sample_to_sample',
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_sample_table_name', raw_sample_table_name,
                        ],
