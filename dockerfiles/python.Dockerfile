@@ -16,13 +16,13 @@ RUN pip install xgboost Cython pandas scipy sklearn requests -i https://pypi.tun
 
 
 # 编译python3.7镜像
-# docker build --no-cache --build-arg MINICONDA3_INSTALL_FILE=Miniconda3-py37_4.12.0-Linux-x86_64.sh -t aip-tcr.tencentcloudcr.com/aip/python:3.7 -f python.Dockerfile .
+# docker build --no-cache --build-arg MINICONDA3_INSTALL_FILE=Miniconda3-py37_4.12.0-Linux-x86_64.sh -t aip-tcr.tencentcloudcr.com/aip/python37:1.0.1 -f python.Dockerfile .
 # 上传python3.7镜像
-# docker push aip-tcr.tencentcloudcr.com/aip/python:3.7
+# docker push aip-tcr.tencentcloudcr.com/aip/python37:1.0.1
 
 # 编译python3.9镜像
-# docker build --no-cache --build-arg MINICONDA3_INSTALL_FILE=Miniconda3-py39_4.12.0-Linux-x86_64.sh -t digit-force-docker.pkg.coding.net/ai-platform/base-images/python:3.9 -f python.Dockerfile .
+# docker build --no-cache --build-arg MINICONDA3_INSTALL_FILE=Miniconda3-py39_4.12.0-Linux-x86_64.sh -t aip-tcr.tencentcloudcr.com/aip/python39:1.0.0 -f python.Dockerfile .
 # 上传python3.9镜像
-# docker push digit-force-docker.pkg.coding.net/ai-platform/base-images/python:3.9
+# docker push aip-tcr.tencentcloudcr.com/aip/python39:1.0.0
 
 # 具体见CI中的脚本
