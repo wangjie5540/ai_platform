@@ -1,4 +1,4 @@
-FROM aip-tcr.tencentcloudcr.com/aip/python:3.7
+FROM aip-tcr.tencentcloudcr.com/aip/python37:1.0.1
 ARG ROOT_DIR=/root
 ARG ROOT_PASSWORD=123
 WORKDIR $ROOT_DIR
