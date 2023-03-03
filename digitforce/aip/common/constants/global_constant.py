@@ -11,6 +11,7 @@ REGISTRY_DB = 'hello-world'
 DEFAULT_PVC = 'ai-platform-pvc'
 
 AI_PLATFORM_IMAGE_REPO = "digit-force-docker.pkg.coding.net/ai-platform/ai-components"
+AI_PLATFORM_IMAGE_REPO_V2 = "aip-tcr.tencentcloudcr.com/aip"
 # spark app name
 SPARK_APP_NAME = 'default-name'
 # 配置文件挂载地址
