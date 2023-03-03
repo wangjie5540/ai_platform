@@ -1,3 +1,5 @@
+lookalike动态表单-训练
+lookalike_TRAIN_dynamic
 dataSource:
   - table_name: zq_standard.dm_cust_subs_redm_event_df
     table_cname: 申购赎回表

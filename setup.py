@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-__version__ = "0.1.26"
+__version__ = "0.1.30"
 
 requirements = [
     'fonttools',

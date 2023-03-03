@@ -1,3 +1,5 @@
+lookalike动态表单-服务
+lookalike_SERVING_dynamic
 - label: 人群扩散预测
   itemList:
     - type: upload
