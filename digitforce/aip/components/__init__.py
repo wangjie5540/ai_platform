@@ -23,8 +23,10 @@ class BaseComponent(dsl.ContainerOp):
             arguments=arguments,
             file_outputs=file_outputs,
             pvolumes={
-                '/root/.kube/config': dsl.PipelineVolume(config_map=models.V1ConfigMapVolumeSource(name='kube-config')),
-                '/opt/spark-2.4.8-bin-hadoop2.7/conf': dsl.PipelineVolume(config_map=models.V1ConfigMapVolumeSource(name='hive-site')),
-                '/usr/local/etc': dsl.PipelineVolume(config_map=models.V1ConfigMapVolumeSource(name='aip-config')),
+                # TODO
+                global_constant.CONFIG_MOUNT_PATH: dsl.PipelineVolume(pvc='aip-config-pvc'),
+                # '/root/.kube/config': dsl.PipelineVolume(config_map=models.V1ConfigMapVolumeSource(name='kube-config')),
+                # '/opt/spark-2.4.8-bin-hadoop2.7/conf': dsl.PipelineVolume(config_map=models.V1ConfigMapVolumeSource(name='hive-site')),
+                # '/usr/local/etc': dsl.PipelineVolume(config_map=models.V1ConfigMapVolumeSource(name='aip-config')),
             },
         )
