@@ -1,0 +1,170 @@
+apiVersion: v1
+data:
+  aip_config.yaml: |+
+    starrocks:
+      user: root
+      password: OrE0ZgsZ1bQi57G7
+      fenodes: 10.10.20.3:8030,10.10.20.5:8030,10.10.20.11:8030
+    hive:
+      server2:
+        host: 10.10.10.3
+        port: 7001
+    hdfs:
+      hosts: 10.10.10.3:4008,10.10.10.9:4008
+      base_url: hdfs://HDFS8001380
+    spark:
+      master_uri: k8s://https://10.10.20.16
+      kubernetes_namespace: kubeflow-user-example-com
+      kubernetes_runtime_image: digit-force-docker.pkg.coding.net/ai-platform/base-images/spark-k8s-runtime-with-jars:2.4.8
+      hive_uris: thrift://10.10.10.9:7004,thrift://10.10.10.3:7004
+      java_home: /opt/jdk1.8.0_181-cloudera
+      spark_home: /opt/spark-2.4.8-bin-hadoop2.7
+    kubeflow:
+      url: http://10.10.20.7:30000/pipeline
+      username: admin@example.com
+      password: password
+    cos:
+      bucket: algorithm-1308011215
+      secret_id: AKIDeNpeP0PaU87uSo7HFxFCwaBYpwue9VbS
+      secret_key: kEWEjyxiDaw7C4jDTfh0FKF1fBUedQ3U
+      base_url: https://algorithm-1308011215.cos.ap-beijing.myqcloud.com
+
+kind: ConfigMap
+metadata:
+  name: aip-config
+  namespace: kubeflow-user-example-com
+
+---
+# TODO demo环境尚未部署alluxio
+apiVersion: v1
+data:
+  hive-site.xml: >+
+    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?><!--
+       Licensed to the Apache Software Foundation (ASF) under one or more
+       contributor license agreements.  See the NOTICE file distributed with
+       this work for additional information regarding copyright ownership.
+       The ASF licenses this file to You under the Apache License, Version 2.0
+       (the "License"); you may not use this file except in compliance with
+       the License.  You may obtain a copy of the License at
+
+           http://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+    -->
+
+    <!-- These are default values meant to allow easy smoke testing of the
+    metastore.  You will
+
+    likely need to add a number of new values. -->
+
+    <configuration>
+        <property>
+            <name>hive.metastore.uris</name>
+            <value>thrift://hive-metastore-svc.default:9083</value>
+        </property>
+        <property>
+            <name>metastore.thrift.uris</name>
+            <value>thrift://hive-metastore-svc.default:9083</value>
+            <description>Thrift URI for the remote metastore. Used by metastore client to connect to remote metastore.
+            </description>
+        </property>
+        <property>
+            <name>metastore.task.threads.always</name>
+            <value>org.apache.hadoop.hive.metastore.events.EventCleanerTask</value>
+        </property>
+        <property>
+            <name>metastore.expression.proxy</name>
+            <value>org.apache.hadoop.hive.metastore.DefaultPartitionExpressionProxy</value>
+        </property>
+
+        <!-- 所连接的 MySQL 数据库的地址，hive_local是数据库，程序会自动创建，自定义就行 -->
+        <property>
+            <name>javax.jdo.option.ConnectionURL</name>
+            <value>jdbc:mysql://172.22.20.118:3306/hive_metastore?useSSL=false&amp;createDatabaseIfNotExist=true&amp;useSSL=false&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true</value>
+
+        </property>
+
+
+        <!-- MySQL 驱动 -->
+        <property>
+            <name>javax.jdo.option.ConnectionDriverName</name>
+            <value>com.mysql.cj.jdbc.Driver</value>-->
+            <!--<value>com.mysql.jdbc.Driver</value>-->
+        </property>
+
+        <!-- mysql连接用户 -->
+        <property>
+            <name>javax.jdo.option.ConnectionUserName</name>
+            <value>root</value>
+        </property>
+
+        <!-- mysql连接密码 -->
+        <property>
+            <name>javax.jdo.option.ConnectionPassword</name>
+            <value>hive.metastore</value>
+        </property>
+
+        <!--元数据是否校验-->
+        <property>
+            <name>hive.metastore.schema.verification</name>
+            <value>false</value>
+        </property>
+        <property>
+            <name>fs.defaultFS</name>
+            <value>alluxio://alluxio-master-0.alluxio:19998</value>
+        </property>
+
+
+        <property>
+            <name>fs.alluxio.impl</name>
+            <value>alluxio.hadoop.FileSystem</value>
+        </property>
+
+        <property>
+            <name>hive.metastore.warehouse.dir</name>
+            <value>alluxio://alluxio-master-0.alluxio:19998/user/hive/warehouse</value>
+        </property>
+    </configuration>
+
+
+kind: ConfigMap
+metadata:
+  name: hive-site
+  namespace: kubeflow-user-example-com
+
+---
+
+apiVersion: v1
+data:
+  config: |
+    apiVersion: v1
+    clusters:
+    - cluster:
+        certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUN5RENDQWJDZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJeU1EZ3hNVEEwTVRRME1Gb1hEVE15TURnd09EQTBNVFEwTUZvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBS29wCnloYmtQdlFnMkM0Z0tPVzRqZW9INkc2WTVTTG4xdGVydnNwaTIydnNpT0t4ZXlzc2twQ3lDcWJOamN0WHZkajQKSkRLdWcwN2ZpNzgwMS9BV0EzY1RSRzlkeEpYK0lqbkVjT3NmL0VxODJBKzlmaTdhYjk4VjNHVnNUQVdKeTh2bgo5ZzJJMnBxNHd0M3lkV25uK3ArRFR0WEt6L2ZQaTRRR1ZpT0VUdUNkTDV0U05oNGlsVVcwekdGaFdPZjkzTTdiCk5SN2pPSllLQjQ3Q2NucCtmRkc3M0RuM1ZxMzdKSzBaQXJhQ3B1M1RQMHZxZHpLcHRZS1NvbjVrSWZZWDJ4cFYKUE81bnJUQ1R5dkFLOStjcDF4dnR4RG01V042UllNUXk1eHIxVDNtdUxjSnBKWWFaeFFITGF6NkFVTjJwU2pLZAo2bkZCS2dvRTM0SHc5dkFzd2Q4Q0F3RUFBYU1qTUNFd0RnWURWUjBQQVFIL0JBUURBZ0tVTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0RRWUpLb1pJaHZjTkFRRUxCUUFEZ2dFQkFGbVhzWURLQ2NsTW1PSXVOZVRpRTQzbU5nNWwKMGpTclBzVmcyL2FsbG1aTWN5NGgrTE5sb2JkaGdZeFdrblRHNFlEUlBQbGVLUklOOGZMYXJ6L0EvQ2JoZXdScwoycHpaT2srUjJzbHQ1WklSK0xEdW9qa1VnMXBZQUQ4TDNodEJuWE5LVE0vb3k1UGdiZVJWeVFNbDJWb3diUzZCCkN3MEd5dXRRamplelZIOFFwakUvRzdPL0dVTHF6cElDK1JucG1JdmhQcEY0Vk1NQkk0R0dadVNMdFF4R0cwQksKd2IwUXBIbFllQ2Jwc0tvUm5uVUVvMDl2ano2TUFtbUU0NE1rQlFtRVkrNGUvSnVGcmNjTncvVk1pMUw1Zy9neAo4bDR6NzhTK1BGcDlscGl5cExEU0xwT3Y0V1pmSSt6dEREaDlSNEg1MkMrVVN1ZmRzUEcxVWwvME1CWT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+        server: https://10.10.20.16
+      name: cls-pcvrhvw9
+    contexts:
+    - context:
+        cluster: cls-pcvrhvw9
+        namespace: kubeflow-user-example-com
+        user: "100021963549"
+      name: cls-pcvrhvw9-100021963549-context-default
+    current-context: cls-pcvrhvw9-100021963549-context-default
+    kind: Config
+    preferences: {}
+    users:
+    - name: "100021963549"
+      user:
+        client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURERENDQWZTZ0F3SUJBZ0lJTDlxLzdUVFBsWU13RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TWpBNE1URXdOREUzTWpOYUZ3MDBNakE0TVRFd05ERTNNak5hTURZeApFakFRQmdOVkJBb1RDWFJyWlRwMWMyVnljekVnTUI0R0ExVUVBeE1YTVRBd01ESXhPVFl6TlRRNUxURTJOakF4Ck9URTBORE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRRFNFTTZHd3c5UXBOSk0KVkJkN3lzSTRFVmc0VVZUbmZlQ25OcU9MNm1UNU40ajY1aDE1bGdpbVNBYjQ1U0JhaEg4MkZyaE9GdlE3bVhYcApXdW1XQUM3QWNJTGtwODEwS3pYcFVjZGY0WWxFRm16TWFKdnIxcnFjSWp3S0RjdmRRMkRNczNJTEU2WWpaT0lYClNaOTJ1N3ZFM09jZm9BNFhlMktFWXBtSmlZUFc3MHlsWjZjaWFSQko0UzN4TTJ6OEFSZUsrcU44RnlZZ1JNNXcKT2VJdnlzSVR4RWVNRFQySC9XeVNLYi8ra3k4QVIrWUEzcXdyR1JBRlFkaXFOdlBXRWZKdFh5WDNsLzdwSDVuVwpDK0o1b1R4djh1U1hrNk1hUmZEZ0dLMXhiNzV5alRJRWdERmFsQzcvQWc3U1ZMd20zVXRkelNJRWtjSFdoMUZkClc0bDI5MWR2QWdNQkFBR2pQekE5TUE0R0ExVWREd0VCL3dRRUF3SUNoREFkQmdOVkhTVUVGakFVQmdnckJnRUYKQlFjREFnWUlLd1lCQlFVSEF3RXdEQVlEVlIwVEFRSC9CQUl3QURBTkJna3Foa2lHOXcwQkFRc0ZBQU9DQVFFQQpVWWJBbFBPbWgvU3pQcmhhMjV6QUI1bzhSZVNZdDc4Y1dXdlJzaVllWVNZZXdRTGY0NWVBRlNmTm1sc1dnLzRYCmVNN3VkcjNhQmJwcTJNcVlod0pyNEx3OSt5NmV3bTN5SFQ3c2o4NDIrT1pIaFZLdjVRbldtNWh5K3N1eVdDa0oKTEl1T2IvaWJHUyt1NEJzMjV2UStPQnRSNHZGRjFXNzA3VEM0TVR0Ykp1ZFRlejhGM0dkRGQyT0ZZWVVUc2habQphU1UvVTMycll6SGwwMFNCaEd6S0VnLzYyRXRNcjJ2KzZnc1JraFBuRFpDenpIdTVOVjNWSWVQWVE5SHpmdjR2Ci9WbjFuSnBIUGQxMXpYRTlLMVZxdkdmRWo0Qi92MWRUOUFNNDkyRy9LUnpST05RZ3c3QWJBcjJ2dHdoYVR5clkKR1FhdEZKM1BKQ3RMc09PdUJUQWVXZz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+        client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBMGhET2hzTVBVS1RTVEZRWGU4ckNPQkZZT0ZGVTUzM2dwemFqaStwaytUZUkrdVlkCmVaWUlwa2dHK09VZ1dvUi9OaGE0VGhiME81bDE2VnJwbGdBdXdIQ0M1S2ZOZENzMTZWSEhYK0dKUkJac3pHaWIKNjlhNm5DSThDZzNMM1VOZ3pMTnlDeE9tSTJUaUYwbWZkcnU3eE56bkg2QU9GM3RpaEdLWmlZbUQxdTlNcFdlbgpJbWtRU2VFdDhUTnMvQUVYaXZxamZCY21JRVRPY0RuaUw4ckNFOFJIakEwOWgvMXNraW0vL3BNdkFFZm1BTjZzCkt4a1FCVUhZcWpiejFoSHliVjhsOTVmKzZSK1oxZ3ZpZWFFOGIvTGtsNU9qR2tYdzRCaXRjVysrY28weUJJQXgKV3BRdS93SU8wbFM4SnQxTFhjMGlCSkhCMW9kUlhWdUpkdmRYYndJREFRQUJBb0lCQUdBUUU0SUpIYTNSVWVKWgo2a3RRRTdVMEtWWEh5NzM1RUkwbkxXOUVoMXg0aXduQnhlVGVPYUpnK2Q5RVdLRk1TaWhnQjNTZWhwM2l0Y3M3CktlclF0cENHWXpWUmoyRDZpYkxqRlB2QjFkWHZNMTNlMEw3dStYT0JMRmVrcTMvSjJqQ0NOenJkaDNKVUpoaGsKTUtwSmU3cXhFbmloNXcvUit1RnpmYWNwM2NLaDQvZ2I4ZFdTL0JmSjE5Y0NlNHQ0V0JGMDcvOFlMbUI1VFhmUQp0VFlnOWFOanp5bk91K29WVHdYZldDbndYTXY2K055VkxSWVdxMnFGVXpuWmdMWHlRNGhzUGI5MlJtRUdOWnQrCitQb0pjbzFTTjZvRHRGUHR6SXltRXM1cEx4L2Z1dmIxWVllNVJ6VzlnY3liaE5WN3QvbHV5WHNJMlBxUDFMYmgKYzU5VXVNRUNnWUVBOFA0blhpSGpIQXcxcURwc1BqOURVVFlZN0xBT1RFVjN3bTJpK0xJVTBKOVpyR1M4LzN0ZApQeFlQakZDaW1IU090NnNRdldidHROWGVjenAxZEwxNm9MNzlheDN5WmJWSWZHaG9RNG5LcTlzcGRJc09qRWRCCjBMb1FWYW5HVlRRK0VNdDlBd1JJMmVmZUdUSHJLcG9iQU5wUnE4ZXNPS3ZMeEJoZWZ5NVdhTDhDZ1lFQTN5V2UKejE2dWtLTFN6UkRGd29kNW9iQkp5djFlOVNZZ1BzcGg2Tld3eVM5MFBKQnAzdEZJaTdFS3NJUTczckFDMzRPNQpxRGQ0UEwrd09WbTJLa2VxWTVRKzNFa2VQc2pCR3c1Z0RQS1Z3dFhFVWp4Y0dqRml1emJFODhBY1h5TksyZ2RoCmxPWURVUCtwU1BYTmcyVmI3Z3ZvRnZJODRvbDlRT3FIVDg3UmpWRUNnWUF4bmRJVElsejA2RnFmd1MrSi9WSnAKeFA2S3RKQ3RDVnhuemxUUWFURzU1aVQ3Umw1WEoxb0NaQk5kYXppZXROaXhYZW43Wk5hcDlhSndET2dqMmVNRwpkMndMZ3NYbVJOV2dyNHBQNVcyeHhsU1pwd3VldkFrRDVWcjVtQk82ZFNBV0t4OFk0T2Z5M1RjdjdzUWhLRXRJCitLbjUrUWt2UGNlZEh2dE5xZ2VtVndLQmdRQzJYNDdOdUhvL0ozUFZ1VkdIVFNXeGFkekZsQkpabFZGaFFCS0oKTXF5TG9NY0ZBSm9tU3pGWlNkYU1zV1lrK0FGQkgrMUtlQnRDdXYrUnY2cE1IOG80SEY3THRzNkxUWlBWUXdocApUSkh0Ykx4STRaLzhvRVFxOGZaQnFNOEhTbGJRbnB1NEQ4ekNGRkVNbWlmZXJhWldoVkNvQUU2V2J2djVaRFEyCm03ZFVJUUtCZ1FDY3A0VUpXaTVFSWNTbEhLTGxuYncvRkdZZXZmSGwrdFlKdlFKdzZnT04zN2p0Zm9UNS95dG4KbDBlWmNCU2pCVzg5dUV3eGRFcWlSZzNhR2NVbWZ3UXlyUjdNQXJxM2NEdE1oNDFFbWlzUHdWenJEbDVHc21WagpDdm94SHZFd29vZW50RmVodkNsWld6ZnlVeEdjTFJ0SGl3eVNpUU1Hb0Nvc1lNaElhc1ZPREE9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+kind: ConfigMap
+metadata:
+  name: kubeconfig
+  namespace: kubeflow-user-example-com
+

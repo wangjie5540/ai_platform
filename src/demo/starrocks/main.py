@@ -1,12 +1,9 @@
 # coding: utf-8
-import digitforce.aip.common.utils.component_helper as component_helper
 import argparse
 import json
 
 
 def run():
-    # 初始化组件
-    component_helper.init_config()
     # 解析全局参数
     parser = argparse.ArgumentParser()
     parser.add_argument('--name', type=str, help='your component name')
