@@ -10,3 +10,4 @@ requests
 Cython
 kafka-python
 Pillow
+boto3

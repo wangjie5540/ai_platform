@@ -3,6 +3,7 @@ import digitforce.aip.common.utils.config_helper as config_helper
 
 import os
 import zipfile
+import json
 
 SUBMIT_ZIP_PATH = 'submit.zip'
 
@@ -14,8 +15,8 @@ class SparkClient(object):
     def __init__(self, client_host=None,):
         spark_config = config_helper.get_module_config("spark")
         spark_config.update(config_helper.get_component_config("spark"))
-        print('spark config --------------')
-        print(spark_config)
+        print("spark_config: ")
+        print(json.dumps(spark_config, indent=4, sort_keys=True))
         os.environ['SPARK_HOME'] = spark_config['spark_home']
         os.environ['JAVA_HOME'] = spark_config['java_home']
         import findspark
