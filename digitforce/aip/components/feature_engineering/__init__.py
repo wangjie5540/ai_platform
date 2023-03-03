@@ -13,7 +13,7 @@ class FeatureCreateLookalike(BaseComponent):
 
     def __init__(self, name, global_params, sample, tag='latest'):
         super().__init__(
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-feature_create_lookalike',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/feature_engineering-feature_create_lookalike',
             name=name,
             arguments=['--name', name, '--global_params', global_params, '--sample', sample],
             tag=tag,
@@ -96,7 +96,7 @@ class RawUserFeatureOp(BaseComponent):
     def __init__(self, name, global_params, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-raw_user_feature',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/feature_engineering-raw_user_feature',
             arguments=[
                 '--name', name,
                 '--global_params', global_params,
@@ -115,7 +115,7 @@ class RawItemFeatureOp(BaseComponent):
     def __init__(self, name, global_params, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-raw_item_feature',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/feature_engineering-raw_item_feature',
             arguments=['--name', name, '--global_params', global_params],
             tag=tag,
             file_outputs={
@@ -131,7 +131,7 @@ class ModelUserFeatureOp(BaseComponent):
     def __init__(self, name, global_params, raw_user_feature_table, raw_item_feature_table, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-model_user_feature',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/feature_engineering-model_user_feature',
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_user_feature_table_name', raw_user_feature_table,
                        '--raw_item_feature_table_name', raw_item_feature_table,
@@ -148,7 +148,7 @@ class ZqFeatureEncoderCalculator(BaseComponent):
     def __init__(self, name, global_params, raw_user_feature_table, raw_item_feature_table, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-zq_feature_calculator',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/feature_engineering-zq_feature_calculator',
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_user_feature_table_name', raw_user_feature_table,
                        '--raw_item_feature_table_name', raw_item_feature_table,
@@ -163,7 +163,7 @@ class ModelItemFeatureOp(BaseComponent):
     def __init__(self, name, global_params, raw_item_feature_table, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-model_item_feature',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/feature_engineering-model_item_feature',
             arguments=['--name', name, '--global_params', global_params,
                        '--raw_item_feature_table_name', raw_item_feature_table,
                        ],

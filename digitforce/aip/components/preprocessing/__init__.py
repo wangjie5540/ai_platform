@@ -40,7 +40,7 @@ class ModelFeature2Dataset(BaseComponent):
                  model_item_feature_table_name, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/preprocessing-feature_and_label_to_dataset',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/preprocessing-feature_and_label_to_dataset',
             arguments=['--name', name, '--global_params', global_params,
                        '--label_table_name', label_table_name,
                        '--model_user_feature_table_name', model_user_feature_table_name,

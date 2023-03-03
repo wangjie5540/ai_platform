@@ -11,7 +11,7 @@ class LookalikeModel(BaseComponent):
     def __init__(self, name, global_params, train_dataset_table_name, test_dataset_table_name, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/ml-lookalike',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/ml-lookalike',
             arguments=['--name', name, '--global_params', global_params,
                        '--train_dataset_table_name', train_dataset_table_name,
                        '--test_dataset_table_name', test_dataset_table_name,
@@ -28,7 +28,7 @@ class LookalikeModelPredict(BaseComponent):
                  tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/ml-lookalike_predict',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/ml-lookalike_predict',
             arguments=['--name', name, '--global_params', global_params,
                        '--seeds_crowd_table_name', seeds_crowd_table_name,
                        '--predict_crowd_table_name', predict_crowd_table_name,
