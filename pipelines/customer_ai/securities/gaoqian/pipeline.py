@@ -4,14 +4,13 @@ from digitforce.aip.components.sample import SampleSelectionGaoqian
 from digitforce.aip.components.source.cos import Cos
 import kfp.dsl as dsl
 
-pipeline_name = 'gaoqian_dev'
+pipeline_name = 'gaoqian_prod'
 
 @dsl.pipeline(name=pipeline_name)
-def ml_gaoqian(global_params: str, flag='TRAIN'):
-    RUN_ENV = "dev"
+def pipeline_func(global_params: str, flag='TRAIN'):
+    RUN_ENV = "1.0.0"
     with dsl.Condition(flag != "PREDICT", name="is_not_predict"):
         op_sample_selection = SampleSelectionGaoqian(name='sample_select', global_params=global_params, tag=RUN_ENV)
-
         op_feature_create = FeatureCreateGaoqian(name='feature_create', global_params=global_params, tag=RUN_ENV,
                                                 sample=op_sample_selection.outputs['sample'])
 
