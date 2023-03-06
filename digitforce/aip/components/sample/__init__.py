@@ -46,7 +46,7 @@ class SampleSelectionGaoqian(BaseComponent):
     def __init__(self, name, global_params, tag='latest'):
         super(SampleSelectionGaoqian, self).__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/'
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/'
                   f'sample-sample_selection_gaoqian',
             tag=tag,
             arguments=['--name', name, '--global_params', global_params],

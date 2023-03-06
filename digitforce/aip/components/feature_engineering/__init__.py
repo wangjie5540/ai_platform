@@ -64,7 +64,7 @@ class FeatureCreateGaoqian(BaseComponent):
     def __init__(self, name, global_params, sample, tag='latest'):
         super(FeatureCreateGaoqian, self).__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/'
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/'
                   f'feature_engineering-feature_create_gaoqian',
             tag=tag,
             arguments=['--name', name, '--global_params', global_params, '--sample', sample],
@@ -79,7 +79,7 @@ class FeatureCreateGaoqianPredict(BaseComponent):
     def __init__(self, name, global_params, sample, tag='latest'):
         super(FeatureCreateGaoqianPredict, self).__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/'
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/'
                   f'feature_engineering-feature_create_gaoqian_predict',
             tag=tag,
             arguments=['--name', name, '--global_params', global_params,
