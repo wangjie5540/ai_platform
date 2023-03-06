@@ -3,10 +3,11 @@
 import argparse
 import json
 
-from model_train import start_model_train
-from digitforce.aip.common.utils.argument_helper import df_argument_helper
+
 import digitforce.aip.common.utils.component_helper as component_helper
 component_helper.init_config()
+from digitforce.aip.common.utils.argument_helper import df_argument_helper # NOQA: E402
+from model_train import start_model_train # NOQA: E402
 
 
 def run():

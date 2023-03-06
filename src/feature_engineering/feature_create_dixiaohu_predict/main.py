@@ -3,10 +3,11 @@
 
 import argparse
 import json
-from feature_create import feature_create
-import digitforce.aip.common.utils.component_helper as component_helper
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
 component_helper.init_config()
+
+import digitforce.aip.common.utils.component_helper as component_helper # NOQA: E402
+from feature_create import feature_create # NOQA: E402
 
 
 def run():

@@ -3,10 +3,11 @@
 
 import argparse
 import json
-from digitforce.aip.common.utils.argument_helper import df_argument_helper
-from sample_select import start_sample_selection
 import digitforce.aip.common.utils.component_helper as component_helper
 component_helper.init_config()
+from digitforce.aip.common.utils.argument_helper import df_argument_helper # NOQA: E402
+from sample_select import start_sample_selection # NOQA: E402
+
 
 
 def run():
