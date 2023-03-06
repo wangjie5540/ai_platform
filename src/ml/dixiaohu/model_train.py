@@ -145,6 +145,8 @@ def start_model_train(
         all_score = getRates(y_test, y_pred, y_pred_score)
         print(
             "test-logloss={:.4f}, test-auc={:.4f}".format(all_score[5], all_score[1]))
+    else:
+        all_score = [0.5,0.5,0.5,0.5,0.5,0.5]
 
     if not is_automl:  # automl 默认值这里给False
         local_file_path = "{}_aip_zq_dixiaohu.model".format(today)
