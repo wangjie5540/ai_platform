@@ -11,36 +11,47 @@ from sample_select import start_sample_selection # NOQA: E402
 
 
 def run():
-    # 参数解析
-    df_argument_helper.add_argument(
-        "--global_params", type=str, required=False, help="全局参数"
-    )
-    df_argument_helper.add_argument(
-        "--name", type=str, required=False, help="名称")
-    df_argument_helper.add_argument(
-        "--dixiao_before_days", type=int, required=False, help="低效户前置时间"
-    )
-    df_argument_helper.add_argument(
-        "--dixiao_after_days", type=int, required=False, help="低效户后置时间"
-    )
-    df_argument_helper.add_argument(
-        "--right_zc_threshold", type=int, required=False, help="时点资产阈值"
-    )
-    df_argument_helper.add_argument(
-        "--avg_zc_threshold", type=int, required=False, help="日均资产阈值"
-    )
-    df_argument_helper.add_argument(
-        "--event_tag", type=int, required=False, help="事件标签"
-    )
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--global_params", type=str, required=False, help="全局参数")
+    parser.add_argument("--name", type=str, required=False, help="名称")
+    args = parser.parse_args()
 
-    dixiao_before_days = int(
-        df_argument_helper.get_argument("dixiao_before_days"))
-    dixiao_after_days = int(
-        df_argument_helper.get_argument("dixiao_after_days"))
-    right_zc_threshold = int(
-        df_argument_helper.get_argument("right_zc_threshold"))
-    avg_zc_threshold = int(df_argument_helper.get_argument("avg_zc_threshold"))
-    event_tag = int(df_argument_helper.get_argument("event_tag"))
+    global_params = json.loads(args.global_params)
+    dixiao_before_days = global_params[args.name]['dixiao_before_days']
+    dixiao_after_days = global_params[args.name]['dixiao_after_days']
+    right_zc_threshold = global_params[args.name]['right_zc_threshold']
+    avg_zc_threshold = global_params[args.name]['avg_zc_threshold']
+    event_tag = global_params[args.name]['event_tag']
+    # df_argument_helper 类
+    # df_argument_helper.add_argument(
+    #     "--global_params", type=str, required=False, help="全局参数"
+    # )
+    # df_argument_helper.add_argument(
+    #     "--name", type=str, required=False, help="名称")
+    # df_argument_helper.add_argument(
+    #     "--dixiao_before_days", type=int, required=False, help="低效户前置时间"
+    # )
+    # df_argument_helper.add_argument(
+    #     "--dixiao_after_days", type=int, required=False, help="低效户后置时间"
+    # )
+    # df_argument_helper.add_argument(
+    #     "--right_zc_threshold", type=int, required=False, help="时点资产阈值"
+    # )
+    # df_argument_helper.add_argument(
+    #     "--avg_zc_threshold", type=int, required=False, help="日均资产阈值"
+    # )
+    # df_argument_helper.add_argument(
+    #     "--event_tag", type=int, required=False, help="事件标签"
+    # )
+
+    # dixiao_before_days = int(
+    #     df_argument_helper.get_argument("dixiao_before_days"))
+    # dixiao_after_days = int(
+    #     df_argument_helper.get_argument("dixiao_after_days"))
+    # right_zc_threshold = int(
+    #     df_argument_helper.get_argument("right_zc_threshold"))
+    # avg_zc_threshold = int(df_argument_helper.get_argument("avg_zc_threshold"))
+    # event_tag = int(df_argument_helper.get_argument("event_tag"))
     sample_table_name = start_sample_selection(
         dixiao_before_days=dixiao_before_days,
         dixiao_after_days=dixiao_after_days,
