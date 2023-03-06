@@ -18,10 +18,6 @@ def run():
     global_params = args.global_params
     global_params = json.loads(global_params)
 
-    print("===============================================")
-    print(f"global_params:{global_params}")
-    print(f"name:{args.name}")
-
     dixiao_before_days = global_params[args.name]['dixiao_before_days']
     dixiao_after_days = global_params[args.name]['dixiao_after_days']
     right_zc_threshold = global_params[args.name]['right_zc_threshold']
