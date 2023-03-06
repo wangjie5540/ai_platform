@@ -73,3 +73,17 @@ class RawSample2ModelSample(BaseComponent):
                     self.OUTPUT_KEY_MODEL_SAMPLE)
             }
         )
+        
+class SampleSelectionDixiaohu(BaseComponent):
+    """
+    数据源-读取表组件
+    """
+
+    def __init__(self, name, global_params, tag='latest'):
+        super().__init__(
+            name=name,
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/sample-sample_selection_dixiaohu',
+            arguments=['--name', name, '--global_params', global_params],
+            tag=tag,
+            file_outputs={"sample_table_name": component_helper.generate_output_path("sample_table_name")}
+        )
