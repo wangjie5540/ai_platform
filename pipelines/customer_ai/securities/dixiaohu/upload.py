@@ -9,12 +9,12 @@ kubeflow_helper.upload_pipeline_version(
 )  # 更新版本不改变id
 
 # prod环境不同,需采用以下配置生成yaml环境导入
-# kubeflow_config = config_helper.get_module_config("kubeflow")
-# pipeline_path = f"/tmp/{pipeline_name}.yaml"
-# pipeline_conf = dsl.PipelineConf()
-# pipeline_conf.set_image_pull_policy("Always")
-# Compiler().compile(
-#     pipeline_func=ml_dixiaohu,
-#     package_path=pipeline_path,
-#     pipeline_conf=pipeline_conf,
-# )
+kubeflow_config = config_helper.get_module_config("kubeflow")
+pipeline_path = f"/tmp/{pipeline_name}.yaml"
+pipeline_conf = dsl.PipelineConf()
+pipeline_conf.set_image_pull_policy("Always")
+Compiler().compile(
+    pipeline_func=ml_dixiaohu,
+    package_path=pipeline_path,
+    pipeline_conf=pipeline_conf,
+)z
