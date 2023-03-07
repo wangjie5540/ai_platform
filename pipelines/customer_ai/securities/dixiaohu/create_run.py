@@ -1,7 +1,7 @@
 import digitforce.aip.common.utils.kubeflow_helper as kubeflow_helper
 import pipeline
 
-with open('global_params.json', 'r') as f:
+with open('pipelines/customer_ai/securities/dixiaohu/global_params.json', 'r') as f:
     kubeflow_helper.create_run_directly(
         pipeline_name=pipeline.pipeline_name,
         pipeline_func=pipeline.pipeline_func,
@@ -11,3 +11,4 @@ with open('global_params.json', 'r') as f:
             'flag': 'TRAIN',
         }
     )
+
