@@ -214,7 +214,7 @@ class FeatureCreateDixiaohu(BaseComponent):
     def __init__(self, name, global_params, sample, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-feature_create_dixiaohu',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/feature_engineering-feature_create_dixiaohu',
             arguments=['--name', name, '--global_params',
                        global_params, '--sample', sample],
             tag=tag,
@@ -232,7 +232,7 @@ class FeatureCreateDixiaohuPredict(BaseComponent):
     def __init__(self, name, global_params, sample, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-feature_create_dixiaohu_predict',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/feature_engineering-feature_create_dixiaohu_predict',
             arguments=['--name', name, '--global_params', global_params,
                        '--sample', sample],
             tag=tag,

@@ -96,7 +96,7 @@ class DixiaohuModel(BaseComponent):
     def __init__(self, name, global_params, train_table_name, test_table_name, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/ml-dixiaohu',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/ml-dixiaohu',
             arguments=['--name', name, '--global_params', global_params,
                        '--train_table_name', train_table_name, '--test_table_name', test_table_name],
             tag=tag,
@@ -109,7 +109,7 @@ class DixiaohuPredict(BaseComponent):
     def __init__(self, name, global_params, predict_table_name, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/ml-dixiaohu_predict',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/ml-dixiaohu_predict',
             arguments=['--name', name, '--global_params', global_params, '--predict_table_name', predict_table_name,
                        ],
             tag=tag,

@@ -1,0 +1,21 @@
+{
+    "sample_select": {
+        "dixiao_before_days": 11,
+        "dixiao_after_days": 1,
+        "right_zc_threshold": 111,
+        "avg_zc_threshold": 111,
+        "event_tag": 0
+    },
+    "model": {
+        "max_depth": 5,
+        "scale_pos_weight": 0.5,
+        "n_estimators": 100,
+        "learning_rate": 0.1,
+        "model_and_metrics_data_hdfs_path": "/user/ai/aip/model/1632699470585520130"
+    },
+    "feature_create": {
+        "dixiao_before_days": 11,
+        "dixiao_after_days": 1,
+        "feature_days": 30
+    }
+}
