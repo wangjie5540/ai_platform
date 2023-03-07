@@ -24,11 +24,6 @@ def run():
     avg_zc_threshold = global_params[args.name]['avg_zc_threshold']
     event_tag = global_params[args.name]['event_tag']
 
-    print(f"global_params:{global_params}")
-    print(f"name:{args.name}")
-    print(f"sample_table_name:{sample_table_name}")
-    print(f"event_tag:{event_tag}")
-
     event_map = {
         0: "login",
         1: "exchange",
