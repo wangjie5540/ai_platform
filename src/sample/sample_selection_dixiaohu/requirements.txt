@@ -1,2 +1,3 @@
+digitforce-aip==0.1.30
 chinese-calendar
 python-dateutil
