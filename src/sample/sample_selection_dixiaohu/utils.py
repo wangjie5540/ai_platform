@@ -12,8 +12,8 @@ def get_zc_jf(feature_list: list, start_date: str, end_date: str,
 
     Args:
         feature_list (list): 输入某个客户的每日资产，顺序排列 [("20230101",123456),("20230102",1234567),("20230103",12345)]
-        start_date (str): 需要计算样本起始时间
-        end_date (str): 需要计算样本结束时间
+        start_date (str): 需要计算样本起始时间,样式形如"20230203"
+        end_date (str): 需要计算样本结束时间,样式形如"20230203"
         dixiao_before_days (int): 过去n个交易日,要求大于0
         dixiao_after_days (int): 在未来m个交易日,要求大于0
         noexchangedate_list (list[str]): 非交易日列表，['2023-02-04','2023-02-05']
@@ -99,8 +99,8 @@ def get_login_days(feature_list: list, start_date: str, end_date: str,
 
     Args:
         feature_list (list): 输入某个客户的每日是否登录，顺序排列 [("20230101",1),("20230102",1),("20230103",1)]
-        start_date (str): 需要计算样本起始时间
-        end_date (str): 需要计算样本结束时间
+        start_date (str): 需要计算样本起始时间,样式形如"20230203"
+        end_date (str): 需要计算样本结束时间,样式形如"20230203"
         dixiao_before_days (int): 过去n个交易日,要求大于0
         noexchangedate_list (list): 非交易日列表，['2023-02-04','2023-02-05']
 

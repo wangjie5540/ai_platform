@@ -18,13 +18,10 @@ import lightgbm as lgb
 from digitforce.aip.common.utils.aip_model_manage_helper import report_to_aip
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 from digitforce.aip.common.utils.spark_helper import SparkClient
-import os
-# os.environ['SPARK_HOME'] = '/opt/spark-2.4.8-bin-hadoop2.7'
+from digitforce.aip.common.utils.time_helper import DATE_FORMAT
 import findspark
 findspark.init()
 
-
-DATE_FORMAT = "%Y%m%d"
 today = datetime.datetime.today().strftime(DATE_FORMAT)
 
 

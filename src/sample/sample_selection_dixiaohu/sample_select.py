@@ -1,10 +1,5 @@
-# encoding: utf-8
-
 import datetime
-from dateutil.relativedelta import relativedelta
 from digitforce.aip.common.utils.spark_helper import SparkClient
-import os
-# os.environ['SPARK_HOME'] = '/opt/spark-2.4.8-bin-hadoop2.7'
 import findspark
 findspark.init()
 # 需要固定位置的import 后添加 # NOQA: E402， 表示忽略模块级别导入不在文件顶部的错误
@@ -12,7 +7,7 @@ from pyspark.sql import window as W  # NOQA: E402
 from pyspark.sql import functions as F  # NOQA: E402
 from pyspark.sql import types as T  # NOQA: E402
 from utils import *  # NOQA: E402
-
+from digitforce.aip.common.utils.time_helper import DATE_FORMAT
 
 def start_sample_selection(
     dixiao_before_days: int,
@@ -33,15 +28,12 @@ def start_sample_selection(
     """
     spark_client = SparkClient.get()
     spark = spark_client.get_session()
-    DATE_FORMAT = "%Y%m%d"
     zc_table = "zq_standard.dm_cust_ast_redm_event_df"
     app_table = "zq_standard.dm_cust_traf_behv_aggregate_df"
     jy_table = "zq_standard.dm_cust_subs_redm_event_aggregate_df"
     zc_view = zc_table[zc_table.find(".")+1:]
     app_view = app_table[app_table.find(".")+1:]
     jy_view = jy_table[jy_table.find(".")+1:]
-
-    # TODO: 日期排除节假日因素
 
     # 1.获取关键时间点
     window_test_days = 3
@@ -73,12 +65,13 @@ def start_sample_selection(
 
     # 非交易日列表
     noexchangedate_list = noexchange_days(
-        start_date=datetime.datetime.strptime(
-            dixiao_start_date, '%Y%m%d').strftime('%Y-%m-%d'),
-        end_date=datetime.datetime.strptime(
-            dixiao_end_date, '%Y%m%d').strftime('%Y-%m-%d'),
+        start_date=dixiao_start_date,
+        end_date=dixiao_end_date,
     )
-    print("11111111111111")
+    start_date = datetime.datetime.strptime(
+            start_date, '%Y-%m-%d').strftime('%Y%m%d') # 修改日期表达字符串
+    end_date = datetime.datetime.strptime(
+            end_date, '%Y-%m-%d').strftime('%Y%m%d') # 修改日期表达字符串
     # 资产数据
     zzc_sample = get_zc_sample(
         spark,
@@ -106,14 +99,14 @@ def start_sample_selection(
     else:
         zc_sample_df = zzc_sample.toDF(
             ["cust_code", "right_zzc", "past_avg_zzc", "future_max_zzc", "dt"])
-    print("2222222")
+
     # 登录数据
     login_sample = (
         spark.sql(
             f"""
                 select cust_code,is_login,replace(dt,'-','') as dt
                 from {app_view} 
-                where replace(dt,'-','') between '{dixiao_start_date}' and '{dixiao_end_date}'
+                where dt between '{dixiao_start_date}' and '{dixiao_end_date}'
                 """
         )
         .rdd
@@ -145,7 +138,7 @@ def start_sample_selection(
             f"""
                 select cust_code,total_tran_cnt,replace(dt,'-','') as dt
                 from {jy_view} 
-                where replace(dt,'-','') between '{dixiao_start_date}' and '{dixiao_end_date}'
+                where dt between '{dixiao_start_date}' and '{dixiao_end_date}'
                 """
         )
         .rdd
@@ -195,12 +188,16 @@ def start_sample_selection(
             F.expr(f"IF(future_max_zzc>{right_zc_threshold},'1','0')")
         )
         .select("cust_code", "label", "dt")
+        .withColumn('dt',
+                    F.from_unixtime(
+        F.unix_timestamp(timestamp=F.col("dt"), format="yyyymmdd"),
+                    "yyyy-mm-dd",
+                )
+        )
     )
-    print()
     # 3.write to hive
-    # TODO:动态存表
-    sample_table_name = "algorithm.aip_zq_dixiaohu_custom_label_standarddata"
-    write_hive(spark, sample_df, sample_table_name, "dt")
+    sample_table_name = "algorithm.aip_zq_dixiaohu_custom_label"
+    sample_df.write.format("hive").mode("overwrite").saveAsTable(sample_table_name)
     return sample_table_name
 
 
@@ -232,13 +229,12 @@ def get_zc_sample(
     dixiao_after_days: int,
     noexchangedate_list: list
 ):
-
     sample_rdd = (
         spark.sql(
             f"""
                 select cust_code,{zc},replace(dt,'-','') as dt
                 from {zc_view} 
-                where replace(dt,'-','') between '{dixiao_start_date}' and '{dixiao_end_date}'
+                where dt between '{dixiao_start_date}' and '{dixiao_end_date}'
                 """
         )
         .rdd

@@ -6,12 +6,10 @@ import datetime
 import pandas as pd
 import joblib
 from digitforce.aip.common.utils.spark_helper import SparkClient
-import os
-# os.environ['SPARK_HOME'] = '/opt/spark-2.4.8-bin-hadoop2.7'
+from digitforce.aip.common.utils.time_helper import DATE_FORMAT
 import findspark
 findspark.init()
 
-DATE_FORMAT = "%Y%m%d"
 now = datetime.datetime.today()
 today = now.strftime(DATE_FORMAT)
 predict_day = (now - datetime.timedelta(days=5)

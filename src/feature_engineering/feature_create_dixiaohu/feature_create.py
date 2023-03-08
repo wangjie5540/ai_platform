@@ -2,16 +2,14 @@
 import datetime
 from dateutil.relativedelta import relativedelta
 from digitforce.aip.common.utils.spark_helper import SparkClient
-import os
-# os.environ['SPARK_HOME'] = '/opt/spark-2.4.8-bin-hadoop2.7'
 import findspark
 findspark.init()
 from pyspark.sql import window as W  # NOQA: E402
 from pyspark.sql import functions as F  # NOQA: E402
 from pyspark.sql import types as T  # NOQA: E402
 from utils import *  # NOQA: E402
+from digitforce.aip.common.utils.time_helper import DATE_FORMAT
 
-DATE_FORMAT = "%Y-%m-%d"
 today = datetime.datetime.today().strftime(DATE_FORMAT)
 
 
@@ -35,7 +33,6 @@ def feature_create(
     """
     spark_client = SparkClient.get()
     spark = spark_client.get_session()
-    DATE_FORMAT = "%Y%m%d"
     user_table = "zq_standard.dm_cust_label_base_attributes_df"
     app_table = "zq_standard.dm_cust_traf_behv_aggregate_df"
     zj_table = "zq_standard.dm_cust_capital_flow_aggregate_df"
@@ -85,37 +82,38 @@ def feature_create(
     table_user = spark.sql(
         f"""
         select cust_code, age, sex, city_name, province_name, educational_degree 
-        from {user_view} where replace(dt,'-','') = '{end_date}'
+        from {user_view} where dt = '{end_date}'
         """
     )
     # 客户号，日期，客户是否登录
     table_app = spark.sql(
         f"""
-        select cust_code, replace(dt,'-','') as dt, is_login from {app_view} where replace(dt,'-','') between '{feature_date}' and '{end_date}'
+        select cust_code, dt, is_login from {app_view} 
+        where dt between '{feature_date}' and '{end_date}'
         """
     )
     # 客户号，日期，资金转出金额，资金转入金额，资金转出笔数，资金转入笔数
     table_zj = spark.sql(
         f"""
-        select cust_code, replace(dt,'-','') as dt, transfer_out_amt, transfer_in_amt, transfer_out_cnt, transfer_in_cnt 
+        select cust_code, dt, transfer_out_amt, transfer_in_amt, transfer_out_cnt, transfer_in_cnt 
         from {zj_view} 
-        where replace(dt,'-','') between '{feature_date}' and '{end_date}'
+        where dt between '{feature_date}' and '{end_date}'
         """
     )
     # 客户号，日期，交易笔数，交易金额，股票笔数，股票金额，基金笔数，基金金额, 债券笔数， 债券金额
     table_jy = spark.sql(
         f"""
-        select cust_code, replace(dt,'-','') as dt, total_tran_cnt, total_tran_amt, gp_tran_cnt, gp_tran_amt, jj_tran_cnt, jj_tran_amt, zq_tran_cnt, zq_tran_amt 
+        select cust_code, dt, total_tran_cnt, total_tran_amt, gp_tran_cnt, gp_tran_amt, jj_tran_cnt, jj_tran_amt, zq_tran_cnt, zq_tran_amt 
         from {jy_view} 
-        where replace(dt,'-','') between '{feature_date}' and '{end_date}'
+        where dt between '{feature_date}' and '{end_date}'
         """
     )
     # 客户号，日期，总资产，净资产，总负债，非货币型基金资产，股票资产，资金余额，产品资产
     table_zc = spark.sql(
         f"""
-        select cust_code, replace(dt,'-','') as dt, total_ast, net_ast, total_liab, unmoney_fnd_val, stock_ast, cash_bal, total_prd_ast 
+        select cust_code, dt, total_ast, net_ast, total_liab, unmoney_fnd_val, stock_ast, cash_bal, total_prd_ast 
         from {zc_view} 
-        where replace(dt,'-','') between '{feature_date}' and '{end_date}'
+        where dt between '{feature_date}' and '{end_date}'
         """
     )
 
