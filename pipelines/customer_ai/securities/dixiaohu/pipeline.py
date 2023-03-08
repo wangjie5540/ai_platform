@@ -14,16 +14,15 @@ pipeline_name = "dixiaohu_test"
 
 @dsl.pipeline(name=pipeline_name)
 def pipeline_func(global_params: str, flag="TRAIN"):
-    RUN_ENV = "DEV_v4_sd2"
     with Condition(flag != "PREDICT", name="is_not_predict"):
         op_sample_selection = SampleSelectionDixiaohu(
-            name="sample_select", global_params=global_params, tag=RUN_ENV
+            name="sample_select", global_params=global_params, tag="latest"
         )
 
         op_feature_create = FeatureCreateDixiaohu(
             name="feature_create",
             global_params=global_params,
-            tag=RUN_ENV,
+            tag="latest",
             sample=op_sample_selection.outputs["sample_table_name"],
         )
 
@@ -31,7 +30,7 @@ def pipeline_func(global_params: str, flag="TRAIN"):
             op_sample_comb = DixiaohuModel(
                 name="model",
                 global_params=global_params,
-                tag=RUN_ENV,
+                tag="latest",
                 train_table_name=op_feature_create.outputs[
                     op_feature_create.OUTPUT_TRAIN_FEATURE
                 ],
@@ -39,7 +38,6 @@ def pipeline_func(global_params: str, flag="TRAIN"):
                     op_feature_create.OUTPUT_TEST_FEATURE
                 ],
             )
-            op_sample_comb.container.set_image_pull_policy("Always")
     with Condition(flag == "PREDICT", name="is_predict"):
         predict_table_op = Cos("predict_cos_url", global_params)
 
@@ -47,12 +45,12 @@ def pipeline_func(global_params: str, flag="TRAIN"):
             name="feature_create_predict",
             global_params=global_params,
             sample=predict_table_op.outputs[Cos.OUTPUT_1],
-            tag=RUN_ENV,
+            tag="latest",
         )
         dixiaohu_predict_op = DixiaohuPredict(
             name="model_predict",
             global_params=global_params,
-            tag=RUN_ENV,
+            tag="latest",
             predict_table_name=predict_feature_op.outputs[
                 predict_feature_op.OUTPUT_PREDICT_FEATURE
             ],
