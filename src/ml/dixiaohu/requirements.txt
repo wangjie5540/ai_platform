@@ -1,0 +1,4 @@
+digitforce-aip==0.1.30
+scikit-learn
+lightgbm
+joblib
