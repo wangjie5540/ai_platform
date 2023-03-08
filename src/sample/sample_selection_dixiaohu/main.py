@@ -5,7 +5,7 @@ import argparse
 import json
 import digitforce.aip.common.utils.component_helper as component_helper
 component_helper.init_config()
-from sample_select import start_sample_selection # NOQA: E402
+from sample_select import start_sample_selection 
 
 
 

@@ -7,8 +7,8 @@ import os
 import digitforce.aip.common.utils.component_helper as component_helper
 component_helper.init_config()
 
-from digitforce.aip.common.utils.argument_helper import df_argument_helper # NOQA: E402
-from model_predict import start_model_predict # NOQA: E402
+from digitforce.aip.common.utils.argument_helper import df_argument_helper 
+from model_predict import start_model_predict 
 
 def run():
     # 参数解析

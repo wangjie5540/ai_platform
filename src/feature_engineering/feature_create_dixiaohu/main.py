@@ -4,7 +4,7 @@ import argparse
 import json
 import digitforce.aip.common.utils.component_helper as component_helper
 component_helper.init_config()
-from feature_create import feature_create # NOQA: E402
+from feature_create import feature_create 
 
 
 def run():
