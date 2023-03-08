@@ -163,7 +163,7 @@ def start_sample_selection(
     else:
         exchange_sample_df = exchange_sample.toDF(
             ["cust_code", "before_exchange_days", "dt"])
-    print("333333333333333")
+    print("data generated, start joining")
     # 合并，按照条件过滤
     sample_df = (
         zc_sample_df
