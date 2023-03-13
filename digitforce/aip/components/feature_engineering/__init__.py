@@ -15,11 +15,13 @@ class FeatureCreateLookalike(BaseComponent):
         super().__init__(
             image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/feature_engineering-feature_create_lookalike',
             name=name,
-            arguments=['--name', name, '--global_params', global_params, '--sample', sample],
+            arguments=['--name', name, '--global_params',
+                       global_params, '--sample', sample],
             tag=tag,
             file_outputs={
                 self.OUTPUT_USER_FEATURE: component_helper.generate_output_path(self.OUTPUT_USER_FEATURE),
-                self.OUTPUT_ITEM_FEATURE: component_helper.generate_output_path(self.OUTPUT_ITEM_FEATURE)
+                self.OUTPUT_ITEM_FEATURE: component_helper.generate_output_path(
+                    self.OUTPUT_ITEM_FEATURE)
             }
         )
 
@@ -32,11 +34,13 @@ class FeatureCreateLiushi(BaseComponent):
         super().__init__(
             name=name,
             image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-feature_create_liushi',
-            arguments=['--name', name, '--global_params', global_params, '--sample', sample],
+            arguments=['--name', name, '--global_params',
+                       global_params, '--sample', sample],
             tag=tag,
             file_outputs={
                 self.OUTPUT_TRAIN_FEATURE: component_helper.generate_output_path(self.OUTPUT_TRAIN_FEATURE),
-                self.OUTPUT_TEST_FEATURE: component_helper.generate_output_path(self.OUTPUT_TEST_FEATURE)
+                self.OUTPUT_TEST_FEATURE: component_helper.generate_output_path(
+                    self.OUTPUT_TEST_FEATURE)
             }
         )
 
@@ -57,6 +61,7 @@ class FeatureCreateLiushiPredict(BaseComponent):
             }
         )
 
+
 class FeatureCreateGaoqian(BaseComponent):
     OUTPUT_TRAIN_FEATURE = 'train_feature_table_name'
     OUTPUT_TEST_FEATURE = 'test_feature_table_name'
@@ -64,22 +69,26 @@ class FeatureCreateGaoqian(BaseComponent):
     def __init__(self, name, global_params, sample, tag='latest'):
         super(FeatureCreateGaoqian, self).__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/'
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/'
                   f'feature_engineering-feature_create_gaoqian',
             tag=tag,
-            arguments=['--name', name, '--global_params', global_params, '--sample', sample],
+            arguments=['--name', name, '--global_params',
+                       global_params, '--sample', sample],
             file_outputs={
                 self.OUTPUT_TRAIN_FEATURE: component_helper.generate_output_path(self.OUTPUT_TRAIN_FEATURE),
-                self.OUTPUT_TEST_FEATURE: component_helper.generate_output_path(self.OUTPUT_TEST_FEATURE)
+                self.OUTPUT_TEST_FEATURE: component_helper.generate_output_path(
+                    self.OUTPUT_TEST_FEATURE)
             }
         )
+
+
 class FeatureCreateGaoqianPredict(BaseComponent):
     OUTPUT_PREDICT_FEATURE = 'predict_feature_table_name'
 
     def __init__(self, name, global_params, sample, tag='latest'):
         super(FeatureCreateGaoqianPredict, self).__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/'
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/'
                   f'feature_engineering-feature_create_gaoqian_predict',
             tag=tag,
             arguments=['--name', name, '--global_params', global_params,
@@ -89,6 +98,7 @@ class FeatureCreateGaoqianPredict(BaseComponent):
 
             }
         )
+
 
 class RawUserFeatureOp(BaseComponent):
     OUTPUT_KEY_RAW_USER_FEATURE = 'raw_user_feature'
@@ -187,10 +197,47 @@ class FeatureTransformerOp(dsl.ContainerOp):
             image=f'digit-force-docker.pkg.coding.net/'
                   f'ai-platform/ai-components/feature_engineering-feature_transformer:{tag}',
             command=['python', 'main.py'],
-            arguments=['--name', name, '--global_params', global_params, '--table_name', raw_user_feature_table],
+            arguments=['--name', name, '--global_params',
+                       global_params, '--table_name', raw_user_feature_table],
             file_outputs={
                 self.OUTPUT_PIPELINE_MODEL: component_helper.generate_output_path(self.OUTPUT_PIPELINE_MODEL),
                 self.OUTPUT_TRANSFORMERS: component_helper.generate_output_path(self.OUTPUT_TRANSFORMERS),
                 # self.OUTPUT_FEATURE_TABLE: component_helper.generate_output_path(self.OUTPUT_FEATURE_TABLE)
+            }
+        )
+
+
+class FeatureCreateDixiaohu(BaseComponent):
+    OUTPUT_TRAIN_FEATURE = 'train_feature_table_name'
+    OUTPUT_TEST_FEATURE = 'test_feature_table_name'
+
+    def __init__(self, name, global_params, sample, tag='latest'):
+        super().__init__(
+            name=name,
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/feature_engineering-feature_create_dixiaohu',
+            arguments=['--name', name, '--global_params',
+                       global_params, '--sample', sample],
+            tag=tag,
+            file_outputs={
+                self.OUTPUT_TRAIN_FEATURE: component_helper.generate_output_path(self.OUTPUT_TRAIN_FEATURE),
+                self.OUTPUT_TEST_FEATURE: component_helper.generate_output_path(
+                    self.OUTPUT_TEST_FEATURE)
+            }
+        )
+
+
+class FeatureCreateDixiaohuPredict(BaseComponent):
+    OUTPUT_PREDICT_FEATURE = 'predict_feature_table_name'
+
+    def __init__(self, name, global_params, sample, tag='latest'):
+        super().__init__(
+            name=name,
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/feature_engineering-feature_create_dixiaohu_predict',
+            arguments=['--name', name, '--global_params', global_params,
+                       '--sample', sample],
+            tag=tag,
+            file_outputs={
+                self.OUTPUT_PREDICT_FEATURE: component_helper.generate_output_path(self.OUTPUT_PREDICT_FEATURE),
+
             }
         )
