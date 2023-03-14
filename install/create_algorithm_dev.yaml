@@ -8,11 +8,33 @@ metadata:
 spec:
   containers:
     - name: algorithm-dev
-      image: digit-force-docker.pkg.coding.net/ai-platform/base-images/algorithm-dev
+      image: aip-tcr.tencentcloudcr.com/aip/algorithm-base
       command: ["/usr/sbin/init"]
       imagePullPolicy: Always
       securityContext:
         privileged: true
+      resources:
+        limits:
+          cpu: 4000m
+          memory: 40Gi
+        requests:
+          cpu: 1000m
+          memory: 6Gi
+      volumeMounts:
+        - name: aip-config
+          mountPath: /usr/local/etc
+        - name: kube-config
+          mountPath: /root/.kube
+  volumes:
+    - name: aip-config
+      configMap:
+        name: aip-config
+    - name: hive-site
+      configMap:
+        name: hive-site
+    - name: kube-config
+      configMap:
+        name: kube-config
 ---
 apiVersion: v1
 kind: Service
