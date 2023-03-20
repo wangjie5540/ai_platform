@@ -1,4 +1,5 @@
 {
+  "train_id": "demo",
   "demo_print": {
     "message": "this is the demo print message"
   },
