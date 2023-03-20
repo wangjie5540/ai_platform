@@ -28,17 +28,6 @@ data:
       secret_id: AKIDeNpeP0PaU87uSo7HFxFCwaBYpwue9VbS
       secret_key: kEWEjyxiDaw7C4jDTfh0FKF1fBUedQ3U
       base_url: https://algorithm-1308011215.cos.ap-beijing.myqcloud.com
-
-
-kind: ConfigMap
-metadata:
-  name: aip-config
-  namespace: kubeflow-user-example-com
-
----
-
-apiVersion: v1
-data:
   hive-site.xml: >+
     <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 
@@ -133,10 +122,9 @@ data:
         </property>
     </configuration>
 
-
 kind: ConfigMap
 metadata:
-  name: hive-site
+  name: aip-config
   namespace: kubeflow-user-example-com
 
 ---
