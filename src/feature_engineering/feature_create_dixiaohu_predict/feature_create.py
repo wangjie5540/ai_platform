@@ -1,25 +1,22 @@
 # encoding: utf-8
 import datetime
-from dateutil.relativedelta import relativedelta
 from digitforce.aip.common.utils.spark_helper import SparkClient
-import os
-# os.environ['SPARK_HOME'] = '/opt/spark-2.4.8-bin-hadoop2.7'
 import findspark
+
 findspark.init()
-from pyspark.sql import window as W  # NOQA: E402
-from pyspark.sql import functions as F  # NOQA: E402
-from pyspark.sql import types as T  # NOQA: E402
-from utils import *  # NOQA: E402
+from pyspark.sql import window as W
+from pyspark.sql import functions as F
+from pyspark.sql import types as T
 from digitforce.aip.common.utils.time_helper import DATE_FORMAT
 
 today = datetime.datetime.today().strftime(DATE_FORMAT)
 
 
 def feature_create(
-    sample_table_name: str,
-    dixiao_before_days: int,
-    dixiao_after_days: int,
-    feature_days=180,
+        sample_table_name: str,
+        dixiao_before_days: int,
+        dixiao_after_days: int,
+        feature_days=180,
 ):
     """产生训练数据集和验证数据集（回测数据集）
 
@@ -39,12 +36,11 @@ def feature_create(
     zj_table = "zq_standard.dm_cust_capital_flow_aggregate_df"
     jy_table = "zq_standard.dm_cust_subs_redm_event_aggregate_df"
     zc_table = "zq_standard.dm_cust_ast_redm_event_df"
-    user_view = user_table[user_table.find(".")+1:]
-    app_view = app_table[app_table.find(".")+1:]
-    zj_view = zj_table[zj_table.find(".")+1:]
-    jy_view = jy_table[jy_table.find(".")+1:]
-    zc_view = zc_table[zc_table.find(".")+1:]
-
+    user_view = user_table[user_table.find(".") + 1:]
+    app_view = app_table[app_table.find(".") + 1:]
+    zj_view = zj_table[zj_table.find(".") + 1:]
+    jy_view = jy_table[jy_table.find(".") + 1:]
+    zc_view = zc_table[zc_table.find(".") + 1:]
 
     # 1.获取关键时间点
     window_test_days = 3
@@ -52,14 +48,14 @@ def feature_create(
     now = datetime.datetime.now()
     dixiao_end_date = now - datetime.timedelta(days=2)  # 低效户结束日期
     end_date = dixiao_end_date - \
-        datetime.timedelta(days=dixiao_after_days)  # 低效户结束日期
+               datetime.timedelta(days=dixiao_after_days)  # 低效户结束日期
     mid_date = end_date - datetime.timedelta(days=window_test_days)
     start_date = mid_date - datetime.timedelta(days=window_train_days)
     dixiao_start_date = start_date - datetime.timedelta(
         days=dixiao_before_days
     )  # 低效户开始日期
     feature_date = dixiao_start_date - \
-        datetime.timedelta(days=feature_days)  # 特征数据最早日期
+                   datetime.timedelta(days=feature_days)  # 特征数据最早日期
 
     now = now.strftime(DATE_FORMAT)
     dixiao_end_date = dixiao_end_date.strftime(DATE_FORMAT)
@@ -126,7 +122,7 @@ def feature_create(
             f"""
             SELECT cust_code,label,dt
             FROM {sample_table_name}
-            WHERE dt >= {dixiao_start_date} and dt <= {end_date}
+            WHERE dt >= '{dixiao_start_date}' and dt <= '{end_date}'
             """
         )
         .join(table_user, on=["cust_code"], how="left")
@@ -136,6 +132,9 @@ def feature_create(
         .join(table_zc, on=["cust_code", "dt"], how="left")
     )
     # TODO: 特征加工
+    print("dixiao_start_date-----", dixiao_start_date)
+    print("end_date-----", end_date)
+    print("特征数据规模-----", len(data.toPandas()))
 
     predict_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_predict_standarddata"
     write_hive(spark, data, predict_table_name, "dt")
