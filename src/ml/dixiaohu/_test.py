@@ -17,5 +17,3 @@ start_model_train(
     is_automl=False,
     model_and_metrics_data_hdfs_path=model_and_metrics_data_hdfs_path,
 )
-
-
