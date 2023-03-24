@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
 # encoding: utf-8
 import datetime
-from pyspark.sql import window as W
-from pyspark.sql import functions as F
 
 
 def get_jy_feature(now: int, featurelist: list):
@@ -110,7 +107,6 @@ def format_list(inp: list):
     for term in inp:
         res += term
     return res
-
 
 
 def day_diff(date1: int, date2: int):
