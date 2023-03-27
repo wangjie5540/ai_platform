@@ -23,6 +23,7 @@ def cat_ale(x_test: pd.DataFrame, model, cat_var: str):
         分类返回每个枚举值对应的每个类别的ale值：[['cat_var',class_cols]]
     """
     if hasattr(model, "predict_proba"):
+        # TODO：目前只按照方法不同分为分类和回归，后续待优化
         model_type = "classifier"
     else:
         model_type = "regressor"
