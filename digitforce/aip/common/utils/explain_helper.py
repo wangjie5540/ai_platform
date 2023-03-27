@@ -14,9 +14,9 @@ def cat_ale(x_test: pd.DataFrame, model, cat_var: str):
     """离散型变量的ale值计算
 
     Args:
-        x_test (pd.DataFrame): _description_
-        model (_type_): _description_
-        cat_var (str): _description_
+        x_test (pd.DataFrame): 需要与模型需要输入的数据形状相同
+        model : 现支持sklearn接口的model
+        cat_var (str): 离散型特征名称
 
     Returns:
         回归返回每个枚举值对应的ale值，[['cat_var','ale_val']]，
@@ -43,8 +43,8 @@ def cat_ale(x_test: pd.DataFrame, model, cat_var: str):
 
         for i in range(len(cat_var_sorted)):  # 对于每个离散变量
             pred_dfi = pred_dataframe.loc[
-                pred_dataframe[cat_var] == cat_var_sorted[i], :
-            ]
+                       pred_dataframe[cat_var] == cat_var_sorted[i], :
+                       ]
             if not len(pred_dfi):  # 预测样本集中该特征未出现该枚举值
                 cat_mean_probs[i] = 0
             else:
@@ -95,13 +95,15 @@ def num_ale(X: pd.DataFrame, feature: str, model, n_bins=20):
     """连续型变量的ale值
 
     Args:
-        X (pd.DataFrame): _description_
-        feature (str): _description_
-        model (_type_): _description_
-        n_bins (int, optional): _description_. Defaults to 20.
+        X (pd.DataFrame): 需要与模型需要输入的数据形状相同
+        feature (str): 连续型特征名称
+        model : 现支持sklearn接口的机器学习模型
+        n_bins (int, optional): 分块数量，也是折线图数据点数量，数字越大，折线走势越受到数据分布的影响
+        ，数字越小越不容易被数据分布影响. Defaults to 20.
 
     Returns:
-        回归返回每个bins的中位数对应的ale值，[['cat_var','ale_val']]，分类返回每个枚举值对应的每个类别的ale值：[['cat_var',class_cols]]
+        回归返回每个bins的中位数对应的ale值，[['cat_var','ale_val']]
+        ，分类返回每个枚举值对应的每个类别的ale值：[['cat_var',class_cols]]
     """
     # 计算端点值，TODO:分箱方式优化
     feat_range = np.linspace(np.min(X[feature]), np.max(X[feature]), n_bins + 1)
@@ -122,11 +124,11 @@ def num_ale(X: pd.DataFrame, feature: str, model, n_bins=20):
         for i in range(n_bins):
             if i < n_bins - 1:
                 condition_bin = (X[feature] >= feat_range[i]) & (
-                    X[feature] < feat_range[i + 1]
+                        X[feature] < feat_range[i + 1]
                 )  # bin 下的数据所在位置，左闭右开
             else:
                 condition_bin = (X[feature] >= feat_range[i]) & (
-                    X[feature] <= feat_range[i + 1]
+                        X[feature] <= feat_range[i + 1]
                 )  # 最后一个区间全闭
             X_bin = X[condition_bin]
             if len(X_bin):
@@ -136,7 +138,8 @@ def num_ale(X: pd.DataFrame, feature: str, model, n_bins=20):
                 X_bin_repl = X_bin.copy()
                 X_bin_repl[feature] = feat_range[i]
 
-                # Get the average prediction of the samples in the i-th bin after replacing the feature values
+                # Get the average prediction of the samples in the i-th bin
+                # after replacing the feature values
                 bin_mean_repl = model.predict(X_bin_repl).mean()
 
                 # Compute the ALE value for the i-th bin
@@ -169,11 +172,11 @@ def num_ale(X: pd.DataFrame, feature: str, model, n_bins=20):
         for i in range(n_bins):
             if i < n_bins - 1:
                 condition_bin = (X[feature] >= feat_range[i]) & (
-                    X[feature] < feat_range[i + 1]
+                        X[feature] < feat_range[i + 1]
                 )  # bin 下的数据所在位置，左闭右开
             else:
                 condition_bin = (X[feature] >= feat_range[i]) & (
-                    X[feature] <= feat_range[i + 1]
+                        X[feature] <= feat_range[i + 1]
                 )  # 最后一个区间全闭
             X_bin = X[condition_bin]
 
@@ -208,11 +211,11 @@ def hist_max_height(data, bins=20):
     """直方图最高的柱子的高度
 
     Args:
-        data (array_like): _description_
-        bins (int, optional): _description_. Defaults to 20.
+        data (array_like): 输入数据
+        bins (int, optional): 直方图柱子数量. Defaults to 20.
 
     Returns:
-        _type_: _description_
+        最高柱子高度
     """
     hist, bin_edges = np.histogram(a=data, bins=bins)
     return np.max(hist)
@@ -222,13 +225,13 @@ def ale(X: pd.DataFrame, feature: str, model, feature_type: str):
     """ale值计算，合并连续变量和离散变量
 
     Args:
-        X (pd.DataFrame): 要求不要有cust_code列
-        feature (str): _description_
-        model (_type_): _description_
-        feature_type (str): _description_
+        X (pd.DataFrame): 要求和model要求的输入的形状相同
+        feature (str): 特征名称
+        model : 现支持sklearn接口的机器学习模型
+        feature_type (str): 特征类型，["categorical", "cat"]为离散型，["numeric", "num"]表示连续型
 
     Returns:
-        _type_: _description_
+       ale值计算结果
     """
     if feature_type in ["categorical", "cat"]:
         return cat_ale(X, model, feature)
@@ -240,9 +243,9 @@ def ale_main(X: pd.DataFrame, model, cat_cols: List[str]):
     """ale值计算，合并分类和回归
 
     Args:
-        X (pd.DataFrame): _description_
-        model (_type_): _description_
-        cat_cols (List[str]): _description_
+        X (pd.DataFrame): 要求和model要求的输入的形状相同
+        model : 现支持sklearn接口的机器学习模型
+        cat_cols (List[str]): 离散型变量的列表
 
     Returns:
         返回y_value, feature, feature_value, ale四列
@@ -305,11 +308,11 @@ def shap_value(X: pd.DataFrame, model):
     """shap值的计算
 
     Args:
-        X (pd.DataFrame): _description_
-        model (_type_): _description_
+        X (pd.DataFrame): 要求必须有cust_code列和模型要求的输入列
+        model : 现支持sklearn接口的机器学习模型
 
     Returns:
-        _type_: _description_
+        返回dataframe，列包括['cust_code','y_value', 'feature', 'shap_value']
     """
     # feature_list
     feature_list = []
@@ -349,13 +352,15 @@ def explain_main(X: pd.DataFrame, model, cat_cols: List[str]):
     # 1123, 2, {"age": 0.2, "tall": 0.3}
 
     Args:
-        X (pd.DataFrame): 要求必须有cust_code列
-        model (_type_): xgb.lgb，主要sklearn接口
+        X (pd.DataFrame): 要求必须有cust_code列和模型要求的输入列
+        model : 列现支持sklearn接口的机器学习模型
         cat_cols (List[str]): 离散型变量的list
 
     Returns:
-        返回两个dataframe，ale_df[['y_value', 'feature', 'feature_trends']],
-         shap_df[['cust_code', 'y_value', 'feature_contribution']]
+        返回两个dataframe，ale_df[['target', 'feature', 'feature_trends']],形如
+        2, “age”, {0.1: 0.2, 0.2: 0.3}
+         shap_df[['cust_code', 'target', 'feature_contribution']]，形如
+        1123, 2, {"age": 0.2, "tall": 0.3}
     """
     ale_df = ale_main(X.drop(columns=["cust_code"]), model, cat_cols)
     ale_df["feature_trends"] = ale_df.apply(lambda row: {row[2]: row[3]}, axis=1)
