@@ -1,11 +1,11 @@
+import findspark
+findspark.init()
 import datetime
 from digitforce.aip.common.utils.spark_helper import SparkClient
-import findspark
 
-findspark.init()
-from pyspark.sql import functions as F  # NOQA: E402
-from pyspark.sql import types as T  # NOQA: E402
-from utils import *  # NOQA: E402
+from pyspark.sql import functions as F
+from pyspark.sql import types as T
+from utils import noexchange_days, get_login_days, get_exchange_days, get_zc_jf
 from digitforce.aip.common.utils.time_helper import DATE_FORMAT
 
 

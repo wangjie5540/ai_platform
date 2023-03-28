@@ -99,7 +99,8 @@ def start_model_predict(
     output_file_path = cos_helper.upload_file("result.csv", output_file_name)
     print("output_file_path-----*****", output_file_path)
 
-    from digitforce.aip.common.utils.explain_helper import explain_main  # shap和spark存在兼容性冲突，须放在spark_client后使用
+    from digitforce.aip.common.utils.explain_helper import explain_main
+    # shap和spark存在兼容性冲突，须放在spark_client后使用
     # 计算ale值和shap值并存储
     ale_df, shap_df = explain_main(
         df_predict.drop(columns=["label", "dt"]), model, categorical_features

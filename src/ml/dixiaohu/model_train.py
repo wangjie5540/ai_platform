@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
 # encoding: utf-8
+import findspark
+findspark.init()
 import datetime
 import random
 import pandas as pd
@@ -19,9 +20,7 @@ from digitforce.aip.common.utils.aip_model_manage_helper import report_to_aip
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 from digitforce.aip.common.utils.spark_helper import SparkClient
 from digitforce.aip.common.utils.time_helper import DATE_FORMAT
-import findspark
 
-findspark.init()
 
 today = datetime.datetime.today().strftime(DATE_FORMAT)
 

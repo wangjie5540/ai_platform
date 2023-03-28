@@ -1,10 +1,11 @@
 # encoding: utf-8
+import findspark
+findspark.init()
 
 from digitforce.aip.common.utils.spark_helper import SparkClient
 from digitforce.aip.common.utils.time_helper import DATE_FORMAT
 import datetime
-import findspark
-findspark.init()
+
 import pyspark.sql.functions as F
 
 today = datetime.datetime.today().strftime(DATE_FORMAT)
