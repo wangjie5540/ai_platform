@@ -27,6 +27,7 @@ def get_zc_jf(feature_list: list, start_date: str, end_date: str,
     # 过去5天：  (left_date1, right_date1), (20200311 - 20200315)
     # 未来10天： (left_date2, right_date2), (20200316 - 20200325)
     right1, left1, right2, left2 = None, None, None, None
+    start_index, end_index = None, None
 
     # 确定起始日期
     for index, value in enumerate(feature_list):
@@ -40,7 +41,7 @@ def get_zc_jf(feature_list: list, start_date: str, end_date: str,
             break
 
     res = []
-    for ix in range(start_index, end_index+1):
+    for ix in range(start_index, end_index + 1):
 
         right1 = ix  # right1
         #
@@ -61,7 +62,7 @@ def get_zc_jf(feature_list: list, start_date: str, end_date: str,
                 left1 -= 1  # 往左的快指针,最小指到0
             else:
                 break
-        left_avg_asset = left_avg_asset/i  # 除以实际天数
+        left_avg_asset = left_avg_asset / i  # 除以实际天数
 
         #
         left2 = right1 + 1
@@ -110,7 +111,8 @@ def get_login_days(feature_list: list, start_date: str, end_date: str,
     # date类型
     # 比如当前是20200315，该值的取值范围是(start_date, end_date)
     # 过去5天：  (left_date, right_date), (20200311 - 20200315)
-    right, left,  = None, None,
+    right, left, = None, None,
+    start_index, end_index = None, None
 
     # 确定起始日期
     for index, value in enumerate(feature_list):
@@ -124,7 +126,7 @@ def get_login_days(feature_list: list, start_date: str, end_date: str,
             break
 
     res = []
-    for ix in range(start_index, end_index+1):
+    for ix in range(start_index, end_index + 1):
 
         right = ix  # right1
         #
@@ -168,7 +170,8 @@ def get_exchange_days(feature_list: list, start_date: str, end_date: str,
     # date类型
     # 比如当前是20200315，该值的取值范围是(start_date, end_date)
     # 过去5天：  (left_date, right_date), (20200311 - 20200315)
-    right, left,  = None, None,
+    right, left, = None, None,
+    start_index, end_index = None, None
 
     # 确定起始日期
     for index, value in enumerate(feature_list):
@@ -182,7 +185,7 @@ def get_exchange_days(feature_list: list, start_date: str, end_date: str,
             break
 
     res = []
-    for ix in range(start_index, end_index+1):
+    for ix in range(start_index, end_index + 1):
 
         right = ix  # right1
         #
@@ -213,17 +216,13 @@ def get_exchange_days(feature_list: list, start_date: str, end_date: str,
 def get_latest_dt(spark, table_name, method='max'):
     """
     获取一个表的最新分区日期
+    Args:
+        spark:
+        table_name:
+        method:
 
-    Parameters
-    ----------
-    spark : SparkSession
-    table_name : str
-        表名
+    Returns:
 
-    Returns
-    -------
-    str
-        最新分区日期
     """
     all_dt = (
         spark.sql('show partitions ' + table_name)
@@ -258,7 +257,7 @@ def future_exchange_date(day: str, delta: int):
 
     # 计算未来/过去delta个交易日
     while count < abs(delta):
-
+        days = None
         if delta == 0:
             break
         elif delta < 0:
@@ -297,7 +296,7 @@ def noexchange_days(start_date: str, end_date: str):
     end_day = datetime.datetime.strptime(end_date, '%Y-%m-%d')
 
     res = []
-    for i in range((end_day-future_day).days+1):
+    for i in range((end_day - future_day).days + 1):
         future_day += datetime.timedelta(days=1)
         # 判断future_day是否不是周六或周日且不是节假日
         if future_day.weekday() >= 5 or is_holiday(future_day):
