@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
 # encoding: utf-8
+import findspark
+findspark.init()
 import datetime
 import random
 import pandas as pd
@@ -19,45 +20,36 @@ from digitforce.aip.common.utils.aip_model_manage_helper import report_to_aip
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 from digitforce.aip.common.utils.spark_helper import SparkClient
 from digitforce.aip.common.utils.time_helper import DATE_FORMAT
-import findspark
-findspark.init()
+
 
 today = datetime.datetime.today().strftime(DATE_FORMAT)
 
 
 def start_model_train(
-    train_table_name,
-    test_table_name,
-    learning_rate=0.05,
-    n_estimators=200,
-    max_depth=5,
-    scale_pos_weight=0.5,
-    is_automl=False,
-    model_and_metrics_data_hdfs_path=None,
+        train_table_name,
+        test_table_name,
+        learning_rate=0.05,
+        n_estimators=200,
+        max_depth=5,
+        scale_pos_weight=0.5,
+        is_automl=False,
+        model_and_metrics_data_hdfs_path=None,
 ):
     spark_client = SparkClient.get()
     spark = spark_client.get_session()
-    df_train = (
-        spark
-        .sql(
-            f"""
+    df_train = spark.sql(
+        f"""
             select * from {train_table_name} limit 1000000
             """
-        )
-        .toPandas()
-    )
+    ).toPandas()
 
-    print("&&&&&&&&&&&&&&&&&&&&&&&", len(df_train))
-    df_test = (
-        spark
-        .sql(
-            f"""
+    print("训练数据规模", len(df_train))
+    df_test = spark.sql(
+        f"""
             select * from {test_table_name}
             """
-        )
-        .toPandas()
-    )
-    print("#######################", len(df_test))
+    ).toPandas()
+    print("测试数据规模", len(df_test))
     # 连续特征，离散特征，丢弃特征等的处理
     drop_features = []
     categorical_features = [
@@ -85,9 +77,9 @@ def start_model_train(
         "net_ast",
         "total_liab",
         "unmoney_fnd_val",
-        'stock_ast',
-        'cash_bal',
-        'total_prd_ast',
+        "stock_ast",
+        "cash_bal",
+        "total_prd_ast",
     ]
     df_train = featuretype_process(
         data_init=df_train,
@@ -130,20 +122,28 @@ def start_model_train(
         y_pred = model.predict(x_test)
         y_pred_score = [x[1] for x in model.predict_proba(x_test)]
 
-        def getRates(y_test, y_pred, y_pred_score):
-            s_acc = accuracy_score(y_test, y_pred)
-            s_auc = roc_auc_score(y_test, y_pred_score)
-            s_pre = precision_score(y_test, y_pred)
-            s_rec = recall_score(y_test, y_pred)
-            s_f1 = f1_score(y_test, y_pred)
-            s_loss = log_loss(y_test, y_pred_score)
+        def getRates(test, pred, pred_score):
+            """
+            计算模型预测性能各种指标
+            Args:
+                test:事实标签
+                pred:预测标签
+                pred_score:预测分数
+
+            Returns:
+            """
+            s_acc = accuracy_score(test, pred)
+            s_auc = roc_auc_score(test, pred_score)
+            s_pre = precision_score(test, pred)
+            s_rec = recall_score(test, pred)
+            s_f1 = f1_score(test, pred)
+            s_loss = log_loss(test, pred_score)
             return [s_acc, s_auc, s_pre, s_rec, s_f1, s_loss]
 
         all_score = getRates(y_test, y_pred, y_pred_score)
-        print(
-            "test-logloss={:.4f}, test-auc={:.4f}".format(all_score[5], all_score[1]))
+        print("test-logloss={:.4f}, test-auc={:.4f}".format(all_score[5], all_score[1]))
     else:
-        all_score = [0.5,0.5,0.5,0.5,0.5,0.5]
+        all_score = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
 
     if not is_automl:  # automl 默认值这里给False
         local_file_path = "{}_aip_zq_dixiaohu.model".format(today)
@@ -172,6 +172,7 @@ def start_model_train(
             model_type="pk",
             **metrics_info,
         )
+        print("report_to_aip COMPLETE-------")
 
 
 # 写hdfs，覆盖写！
@@ -182,12 +183,10 @@ def write_hdfs_path(local_path, hdfs_path):
 
 
 # 处理分类特征，数值特征，需要丢掉的特征
-def featuretype_process(data_init, drop_labels, categorical_feature, float_feature):
+def featuretype_process(data_init: pd.DataFrame, drop_labels: list, categorical_feature: list, float_feature: list):
     """TODO:自动识别连续特征和离散特征"""
     # Process Feature 1
-    data_process = data_init.drop(
-        labels=drop_labels, axis=1, errors="ignore"
-    )
+    data_process = data_init.drop(labels=drop_labels, axis=1, errors="ignore")
     data_process[categorical_feature] = (
         data_process[categorical_feature].astype("str").astype("category")
     )

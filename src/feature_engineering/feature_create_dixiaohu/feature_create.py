@@ -1,29 +1,27 @@
 # encoding: utf-8
-import datetime
-from dateutil.relativedelta import relativedelta
-from digitforce.aip.common.utils.spark_helper import SparkClient
 import findspark
 findspark.init()
-from pyspark.sql import window as W  # NOQA: E402
-from pyspark.sql import functions as F  # NOQA: E402
-from pyspark.sql import types as T  # NOQA: E402
-from utils import *  # NOQA: E402
+
+from digitforce.aip.common.utils.spark_helper import SparkClient
 from digitforce.aip.common.utils.time_helper import DATE_FORMAT
+import datetime
+
+import pyspark.sql.functions as F
 
 today = datetime.datetime.today().strftime(DATE_FORMAT)
 
 
 def feature_create(
-    sample_table_name: str,
-    dixiao_before_days: int,
-    dixiao_after_days: int,
-    feature_days=180,
+        sample_table_name: str,
+        dixiao_before_days: int,
+        dixiao_after_days: int,
+        feature_days=180,
 ):
     """产生训练数据集和验证数据集（回测数据集）
     TODO: 预测特征参考liushi重新造
 
     Args:
-        sample_table_name (str): _description_
+        sample_table_name (str): 标签表，在HIVE里
         dixiao_before_days (int): _description_
         dixiao_after_days (int): _description_
         feature_days (int, optional): _description_. Defaults to 180.
@@ -38,26 +36,24 @@ def feature_create(
     zj_table = "zq_standard.dm_cust_capital_flow_aggregate_df"
     jy_table = "zq_standard.dm_cust_subs_redm_event_aggregate_df"
     zc_table = "zq_standard.dm_cust_ast_redm_event_df"
-    user_view = user_table[user_table.find(".")+1:]
-    app_view = app_table[app_table.find(".")+1:]
-    zj_view = zj_table[zj_table.find(".")+1:]
-    jy_view = jy_table[jy_table.find(".")+1:]
-    zc_view = zc_table[zc_table.find(".")+1:]
+    user_view = user_table[user_table.find(".") + 1:]
+    app_view = app_table[app_table.find(".") + 1:]
+    zj_view = zj_table[zj_table.find(".") + 1:]
+    jy_view = jy_table[jy_table.find(".") + 1:]
+    zc_view = zc_table[zc_table.find(".") + 1:]
 
     # 1.获取关键时间点
     window_test_days = 3
     window_train_days = 5
     now = datetime.datetime.now()
     dixiao_end_date = now - datetime.timedelta(days=2)  # 低效户结束日期
-    end_date = dixiao_end_date - \
-        datetime.timedelta(days=dixiao_after_days)  # 低效户结束日期
+    end_date = dixiao_end_date - datetime.timedelta(days=dixiao_after_days)  # 低效户结束日期
     mid_date = end_date - datetime.timedelta(days=window_test_days)
     start_date = mid_date - datetime.timedelta(days=window_train_days)
     dixiao_start_date = start_date - datetime.timedelta(
         days=dixiao_before_days
     )  # 低效户开始日期
-    feature_date = dixiao_start_date - \
-        datetime.timedelta(days=feature_days)  # 特征数据最早日期
+    feature_date = dixiao_start_date - datetime.timedelta(days=feature_days)  # 特征数据最早日期
 
     now = now.strftime(DATE_FORMAT)
     dixiao_end_date = dixiao_end_date.strftime(DATE_FORMAT)
@@ -67,16 +63,11 @@ def feature_create(
     dixiao_start_date = dixiao_start_date.strftime(DATE_FORMAT)
     feature_date = feature_date.strftime(DATE_FORMAT)
     # 2. 特征预处理
-    spark_client.get_starrocks_table_df(
-        user_table).createOrReplaceTempView(user_view)
-    spark_client.get_starrocks_table_df(
-        app_table).createOrReplaceTempView(app_view)
-    spark_client.get_starrocks_table_df(
-        zj_table).createOrReplaceTempView(zj_view)
-    spark_client.get_starrocks_table_df(
-        jy_table).createOrReplaceTempView(jy_view)
-    spark_client.get_starrocks_table_df(
-        zc_table).createOrReplaceTempView(zc_view)
+    spark_client.get_starrocks_table_df(user_table).createOrReplaceTempView(user_view)
+    spark_client.get_starrocks_table_df(app_table).createOrReplaceTempView(app_view)
+    spark_client.get_starrocks_table_df(zj_table).createOrReplaceTempView(zj_view)
+    spark_client.get_starrocks_table_df(jy_table).createOrReplaceTempView(jy_view)
+    spark_client.get_starrocks_table_df(zc_table).createOrReplaceTempView(zc_view)
 
     # 客户号，年龄，性别，城市，省份，教育程度(end_date 的基础信息)
     table_user = spark.sql(
@@ -123,7 +114,7 @@ def feature_create(
             f"""
             SELECT cust_code,label,dt
             FROM {sample_table_name}
-            WHERE dt>= {dixiao_start_date} and dt <= {end_date}
+            WHERE dt>= '{dixiao_start_date}' and dt <= '{end_date}'
             """
         )
         .join(table_user, on=["cust_code"], how="left")
@@ -133,9 +124,15 @@ def feature_create(
         .join(table_zc, on=["cust_code", "dt"], how="left")
     )
     # TODO: 特征加工
+    print("dixiao_start_date-----", dixiao_start_date)
+    print("end_date-----", end_date)
+    print("特征数据规模-----", len(data.toPandas()))
 
     data_train_df = data.filter(F.col("dt") <= mid_date)
     data_test_df = data.filter(F.col("dt") > mid_date)
+
+    print("训练数据规模-----", len(data_train_df.toPandas()))
+    print("测试数据规模-----", len(data_test_df.toPandas()))
 
     train_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_train_standarddata"
     test_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_test_standarddata"
@@ -155,8 +152,7 @@ def write_hdfs_path(local_path, hdfs_path, hdfs_client):
 # dict先写本地，再写入hdfs
 def write_hdfs_dict(content, file_name, hdfs_client):
     local_path = "dict.{}.{}".format(today, file_name)
-    hdfs_path = "/user/ai/aip/zq/liushi/enum_dict/{}/{}".format(
-        today, file_name)
+    hdfs_path = "/user/ai/aip/zq/liushi/enum_dict/{}/{}".format(today, file_name)
 
     with open(local_path, "w") as f:
         for key in content:
@@ -165,9 +161,7 @@ def write_hdfs_dict(content, file_name, hdfs_client):
 
 
 def write_hive(spark, inp_df, table_name, partition_col):
-    check_table = (
-        spark._jsparkSession.catalog().tableExists(table_name)
-    )
+    check_table = spark._jsparkSession.catalog().tableExists(table_name)
 
     if check_table:  # 如果存在该表
         print("table:{} exist......".format(table_name))
