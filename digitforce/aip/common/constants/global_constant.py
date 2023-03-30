@@ -8,3 +8,5 @@ AI_PLATFORM_IMAGE_REPO_V2 = "aip-tcr.tencentcloudcr.com/aip"
 SPARK_APP_NAME = 'default-name'
 # 配置文件挂载地址 TODO 0.2.1版本尝试删除
 CONFIG_MOUNT_PATH = '/mnt/config'
+# 模型包存储的Bucket
+MODEL_PACKAGE_BUCKET = 'warehouse'

@@ -9,14 +9,14 @@ spec:
   containers:
     - name: algorithm-dev
       image: aip-tcr.tencentcloudcr.com/aip/algorithm-base
-      command: ["/usr/sbin/init"]
+      command: [ "/usr/sbin/init" ]
       imagePullPolicy: Always
       securityContext:
         privileged: true
       resources:
         limits:
           cpu: 4000m
-          memory: 40Gi
+          memory: 10Gi
         requests:
           cpu: 1000m
           memory: 6Gi
