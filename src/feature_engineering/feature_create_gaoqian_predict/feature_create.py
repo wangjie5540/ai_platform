@@ -4,7 +4,7 @@ import datetime
 from digitforce.aip.common.utils.spark_helper import SparkClient
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 import utils
-from pyspark.sql.types import *
+
 
 DATE_FORMAT = "%Y%m%d"
 today = datetime.datetime.today().strftime(DATE_FORMAT)
