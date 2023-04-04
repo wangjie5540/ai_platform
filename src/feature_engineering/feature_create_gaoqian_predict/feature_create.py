@@ -162,6 +162,7 @@ def feature_create(predict_samples_table_name,
     print('--2. -------predict----------')
     print(f"data_predict : {data_predict.take(3)}")
     print('--3. -------predict----------')
+
     data_predict_df = spark_client.get_session().createDataFrame(data_predict, feature_cols)
     print(data_predict_df.show(5))
     predict_table_name = "algorithm.tmp_aip_user_feature_gaoqian_predict"
