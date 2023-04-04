@@ -4,6 +4,7 @@ import datetime
 from digitforce.aip.common.utils.spark_helper import SparkClient
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 import utils
+from pyspark.sql.types import *
 
 DATE_FORMAT = "%Y%m%d"
 today = datetime.datetime.today().strftime(DATE_FORMAT)
@@ -114,7 +115,7 @@ def feature_create(predict_samples_table_name,
     # 3.4 客户基本信息(年龄，性别，城市，省份，教育程度)
     merge_feature4 = merge_feature3.leftOuterJoin(user_feature). \
         map(lambda x: ((x[0], x[1][0][0]), (x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8], x[1][1])) if x[1][1] else  \
-        ((x[0], x[1][0][0]), (x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8], (0, 'male', 'beijingl', 'beijing', '大学'))))
+        ((x[0], x[1][0][0]), (x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8], (0, 0, 0, 0, 0))))
 
     # 3.5 当天总资产, 总负债，基金资产，股票资产，资金余额，产品资产
     merge_feature5 = merge_feature4.leftOuterJoin(zc_feature). \
@@ -139,9 +140,9 @@ def feature_create(predict_samples_table_name,
     dict_edu = get_dict("edu")
 
     # 3.7 将枚举型转为数值型
-    merge_feature7 = merge_feature6.map(lambda x: (x[0], x[1][:49] + [dict_sex.get(x[1][49]), dict_city.get(x[1][50]),
-                                                                      dict_province.get(x[1][51]),
-                                                                      dict_edu.get(x[1][52])] + x[1][53:]))
+    merge_feature7 = merge_feature6.map(lambda x: (x[0], x[1][:49] + [dict_sex.get(x[1][49], 0), dict_city.get(x[1][50], 0),
+                                                                      dict_province.get(x[1][51], 0),
+                                                                      dict_edu.get(x[1][52], 0)] + x[1][53:]))
 
     feature_cols = ["custom_id", "label", "last_jy_days", "last_jy_money", "3_jy_cnt", "3_jy_money", "3_jy_gp_cnt",
                     "3_jy_gp_money", "3_jy_jj_cnt", "3_jy_jj_money", "7_jy_cnt", "7_jy_money", "7_jy_gp_cnt",
@@ -157,6 +158,11 @@ def feature_create(predict_samples_table_name,
     # dt(今天,分区), lable, 最近一次...
     data_predict = merge_feature7.map(lambda x: [x[0][0]] + [x[0][2]] + x[1] + [today])
     print(f"data_predict : {data_predict.count()}")
+    schema = StructType([
+        StructField("custom_id", StringType(), True),
+        StructField("label", IntegerType(), True),
+
+    ])
     data_predict_df = spark_client.get_session().createDataFrame(data_predict, feature_cols)
     print(data_predict_df.show(5))
     predict_table_name = "algorithm.tmp_aip_user_feature_gaoqian_predict"
