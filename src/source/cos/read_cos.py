@@ -8,10 +8,9 @@ from io import StringIO
 def read_to_table(url: str, columns: str, x_tenant: str = None):
     column_list = columns.strip().split(',')
     headers = {}
-    skiprows = 0
+    skiprows = 0 if 'cos.ap-beijing' in url else 1
     if x_tenant is not None:
         headers['X_TENANT'] = x_tenant
-        skiprows = 1
     response = requests.get(url, headers=headers)
     data = StringIO(response.text)
     df = pd.read_csv(data, skiprows=skiprows, names=column_list)
