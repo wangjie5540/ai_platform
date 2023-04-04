@@ -156,10 +156,12 @@ def feature_create(predict_samples_table_name,
                     "now_zc_jj", "now_zc_gp", "now_zj", "now_zc_cp", "dt"]
 
     # dt(今天,分区), lable, 最近一次...
+    print('--1. -------predict----------')
     data_predict = merge_feature7.map(lambda x: [x[0][0]] + [x[0][2]] + x[1] + [today])
     print(f"data_predict : {data_predict.count()}")
-    print('---------predict----------')
+    print('--2. -------predict----------')
     print(f"data_predict : {data_predict.take(3)}")
+    print('--3. -------predict----------')
     data_predict_df = spark_client.get_session().createDataFrame(data_predict, feature_cols)
     print(data_predict_df.show(5))
     predict_table_name = "algorithm.tmp_aip_user_feature_gaoqian_predict"
