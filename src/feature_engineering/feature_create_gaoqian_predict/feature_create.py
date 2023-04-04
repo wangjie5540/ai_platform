@@ -158,7 +158,7 @@ def feature_create(predict_samples_table_name,
     # dt(今天,分区), lable, 最近一次...
     data_predict = merge_feature7.map(lambda x: [x[0][0]] + [x[0][2]] + x[1] + [today])
     print(f"data_predict : {data_predict.count()}")
-
+    print(f"data_predict : {data_predict.take(3)}" )
     data_predict_df = spark_client.get_session().createDataFrame(data_predict, feature_cols)
     print(data_predict_df.show(5))
     predict_table_name = "algorithm.tmp_aip_user_feature_gaoqian_predict"
