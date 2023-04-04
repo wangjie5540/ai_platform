@@ -120,7 +120,10 @@ def feature_create(predict_samples_table_name,
     # 3.4 客户基本信息(年龄，性别，城市，省份，教育程度)
     merge_feature4 = merge_feature3.leftOuterJoin(user_feature). \
         map(lambda x: ((x[0], x[1][0][0]), (
-        x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8], x[1][1])))
+        x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8], x[1][1]))
+        if x[1][1] else
+        ((x[0], x[1][0][0]), (
+        x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8], (10,"女","鹤岗","上海","本科"))))
 
     # 3.5 当天总资产, 总负债，基金资产，股票资产，资金余额，产品资产
     merge_feature5 = merge_feature4.leftOuterJoin(zc_feature). \
@@ -170,10 +173,12 @@ def feature_create(predict_samples_table_name,
 
     return predict_table_name
 
+
 # 读hdfs
 def read_hdfs_path(local_path, hdfs_path, hdfs_client):
     if hdfs_client.exists(hdfs_path):
         hdfs_client.copy_to_local(hdfs_path, local_path)
+
 
 def get_dict(feature_name):
     local_path = "dict.{}".format(feature_name)
