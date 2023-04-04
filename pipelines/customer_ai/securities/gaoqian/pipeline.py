@@ -4,7 +4,7 @@ from digitforce.aip.components.sample import SampleSelectionGaoqian
 from digitforce.aip.components.source.cos import Cos
 import kfp.dsl as dsl
 
-pipeline_name = 'gaoqian_prod'
+pipeline_name = 'gaoqian'
 
 @dsl.pipeline(name=pipeline_name)
 def pipeline_func(global_params: str, flag='TRAIN'):
@@ -26,7 +26,7 @@ def pipeline_func(global_params: str, flag='TRAIN'):
         predict_table_op = Cos("predict_cos_url",global_params)
         predict_feature_op = FeatureCreateGaoqianPredict(name="feature_create_predict", global_params=global_params,
                                                         sample=predict_table_op.outputs[Cos.OUTPUT_1],
-                                                        tag=RUN_ENV)
+                                                        tag='2.0.0')
         gaoqian_predict_op = GaoqianPredict(name="model_predict", global_params=global_params, tag=RUN_ENV,
                                           predict_table_name=predict_feature_op.outputs[
                                               predict_feature_op.OUTPUT_PREDICT_FEATURE
