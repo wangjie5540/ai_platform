@@ -1,6 +1,7 @@
 # coding: utf-8
 import argparse
 import digitforce.aip.common.utils.component_helper as component_helper
+component_helper.init_config()
 import json
 import read_cos
 
