@@ -14,7 +14,8 @@ def report_to_aip(model_and_metrics_data_hdfs_path,
                   precision=0,
                   recall=0,
                   f1_score=0,
-                  loss=0):
+                  loss=0,
+                  roc_plot=None):
     # all_score = [s_acc, s_auc, s_pre, s_rec, s_f1, s_loss]
     metrics_info = {
         "accuracy": accuracy,
@@ -23,6 +24,7 @@ def report_to_aip(model_and_metrics_data_hdfs_path,
         "recall": recall,
         "f1_score": f1_score,
         "loss": loss,
+        "roc": roc_plot,
     }
     metrics_info = [{"name": k, "value": v} for k, v in metrics_info.items()]
     metrics_data = json.dumps({"model_name": model_name,
