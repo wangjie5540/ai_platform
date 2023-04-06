@@ -4,12 +4,12 @@ from digitforce.aip.components.sample import *
 from digitforce.aip.components.source.cos import Cos
 from digitforce.aip.components.feature_engineering import *
 
-pipeline_name = 'lookalike_dev'
+pipeline_name = 'lookalike_prod'
 
 
 @dsl.pipeline(name=pipeline_name)
 def pipeline_func(global_params: str, flag='TRAIN'):
-    RUN_ENV = "dev-wh"
+    RUN_ENV = "2.0.0"
     with dsl.Condition(flag != "PREDICT", name="is_not_predict"):
         raw_user_feature_op = RawUserFeatureOp(name='raw_user_feature', global_params=global_params, tag=RUN_ENV)
         raw_item_feature_op = RawItemFeatureOp(name='raw_item_feature', global_params=global_params, tag=RUN_ENV)

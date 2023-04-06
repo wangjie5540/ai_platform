@@ -120,7 +120,8 @@ def feature_create(predict_samples_table_name,
     # 3.4 客户基本信息(年龄，性别，城市，省份，教育程度)
     merge_feature4 = merge_feature3.leftOuterJoin(user_feature). \
         map(lambda x: ((x[0], x[1][0][0]), (
-        x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8], x[1][1])))
+        x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8], x[1][1])) if x[1][1] else \
+        ((x[0], x[1][0][0]), (x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8],(0, 0, 0, 0, 0))))
 
     # 3.5 当天总资产, 总负债，基金资产，股票资产，资金余额，产品资产
     merge_feature5 = merge_feature4.leftOuterJoin(zc_feature). \
@@ -145,9 +146,9 @@ def feature_create(predict_samples_table_name,
     dict_edu = get_dict("edu")
 
     # 3.7 将枚举型转为数值型
-    merge_feature7 = merge_feature6.map(lambda x: (x[0], x[1][:49] + [dict_sex.get(x[1][49]), dict_city.get(x[1][50]),
-                                                                      dict_province.get(x[1][51]),
-                                                                      dict_edu.get(x[1][52])] + x[1][53:]))
+    merge_feature7 = merge_feature6.map(lambda x: (x[0], x[1][:49] + [dict_sex.get(x[1][49],0), dict_city.get(x[1][50],0),
+                                                                      dict_province.get(x[1][51],0),
+                                                                      dict_edu.get(x[1][52]),0] + x[1][53:]))
 
     feature_cols = ["custom_id", "label", "last_jy_days", "last_jy_money", "3_jy_cnt", "3_jy_money", "3_jy_gp_cnt",
                     "3_jy_gp_money", "3_jy_jj_cnt", "3_jy_jj_money", "7_jy_cnt", "7_jy_money", "7_jy_gp_cnt",
@@ -170,10 +171,12 @@ def feature_create(predict_samples_table_name,
 
     return predict_table_name
 
+
 # 读hdfs
 def read_hdfs_path(local_path, hdfs_path, hdfs_client):
     if hdfs_client.exists(hdfs_path):
         hdfs_client.copy_to_local(hdfs_path, local_path)
+
 
 def get_dict(feature_name):
     local_path = "dict.{}".format(feature_name)

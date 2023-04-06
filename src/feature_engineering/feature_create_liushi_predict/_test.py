@@ -2,7 +2,7 @@
 # encoding: utf-8
 from feature_create import feature_create
 
-predict_table_name = "aip.cos_4728115722869280769"
+predict_table_name = "aip.cos_4740925280993939457"
 active_before_days = 1
 active_after_days = 1
 
