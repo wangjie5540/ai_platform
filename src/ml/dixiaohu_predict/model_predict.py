@@ -9,11 +9,6 @@ import joblib
 from digitforce.aip.common.utils.time_helper import DATE_FORMAT
 from digitforce.aip.common.utils.spark_helper import SparkClient
 
-now = datetime.datetime.today()
-today = now.strftime(DATE_FORMAT)
-predict_day = (now - datetime.timedelta(days=5)).strftime(
-    DATE_FORMAT
-)  # 预测的日期为5天前，防止没有数据
 hdfs_client = hdfs_helper.HdfsClient()
 
 
@@ -30,12 +25,12 @@ def start_model_predict(
     spark_client = SparkClient.get()
     spark = spark_client.get_session()
     print("spark init-----------------")
+
     df_predict = spark.sql(
         f"""
-        select * from {predict_table_name} where dt = '{predict_day}'
+        select * from {predict_table_name}
         """
     ).toPandas()
-    print("predict_day---------", predict_day)
     # 连续特征，离散特征，丢弃特征等的处理
     drop_features = []
     categorical_features = [
@@ -78,7 +73,7 @@ def start_model_predict(
     # 模型加载
     local_file_path = "./model"
     read_hdfs_path(local_file_path, model_hdfs_path, hdfs_client)
-    model = joblib.load(local_file_path)
+    model = joblib.load(local_file_path)  # hdfs上的模型加载到本地
 
     # 预测打分
     custom_list = df_predict["cust_code"].values
@@ -91,11 +86,7 @@ def start_model_predict(
 
     # 结果存储
     result_local_path = "result.csv"
-    result_hdfs_path = "/user/ai/aip/zq/dixiaohu/result/{}_dixiaohu_result.csv".format(
-        predict_day
-    )
     result.to_csv(result_local_path, index=False, header=False)
-    write_hdfs_path(result_local_path, result_hdfs_path, hdfs_client)
     output_file_path = cos_helper.upload_file("result.csv", output_file_name)
     print("output_file_path-----*****", output_file_path)
 
@@ -107,14 +98,14 @@ def start_model_predict(
     )
     # 存储ale
     ale_local_path = "ale.csv"
-    ale_hdfs_path = "/user/ai/aip/zq/dixiaohu/explain/{}_ale.csv".format(predict_day)
+    ale_hdfs_path = "/user/ai/aip/zq/dixiaohu/explain/_ale.csv"
     ale_df.to_csv(ale_local_path, index=False, header=False)
     write_hdfs_path(ale_local_path, ale_hdfs_path, hdfs_client)
     print("ale_ 计算存储完成-----*****", ale_hdfs_path)
 
     # 存储shap
     shap_local_path = "shap.csv"
-    shap_hdfs_path = "/user/ai/aip/zq/dixiaohu/explain/{}_shap.csv".format(predict_day)
+    shap_hdfs_path = "/user/ai/aip/zq/dixiaohu/explain/_shap.csv"
     shap_df.to_csv(shap_local_path, index=False, header=False)
     write_hdfs_path(shap_local_path, shap_hdfs_path, hdfs_client)
     print("shap 计算存储完成-----*****", shap_hdfs_path)
