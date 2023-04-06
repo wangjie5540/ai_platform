@@ -168,7 +168,7 @@ def start_model_train(
             "recall": all_score[3],
             "f1_score": all_score[4],
             "loss": all_score[5],
-            "roc": all_score[6],
+            "roc_plot": all_score[6],
         }
         report_to_aip(
             model_and_metrics_data_hdfs_path,
