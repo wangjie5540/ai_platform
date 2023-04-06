@@ -141,8 +141,8 @@ def start_model_train(
             s_f1 = f1_score(test, pred)
             s_loss = log_loss(test, pred_score)
             fpr, tpr, _ = roc_curve(test, pred_score)
-            roc_list = [(fpr[i], tpr[i]) for i in range(len(fpr))]
-            return [s_acc, s_auc, s_pre, s_rec, s_f1, s_loss, roc_list]
+            roc_plot = {"x": list(fpr), "y": list(tpr)}
+            return [s_acc, s_auc, s_pre, s_rec, s_f1, s_loss, roc_plot]
 
         all_score = getRates(y_test, y_pred, y_pred_score)
         print("test-logloss={:.4f}, test-auc={:.4f}".format(all_score[5], all_score[1]))
