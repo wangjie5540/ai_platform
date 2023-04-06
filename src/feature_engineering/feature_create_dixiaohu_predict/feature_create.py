@@ -1,5 +1,6 @@
 # encoding: utf-8
 import findspark
+
 findspark.init()
 import datetime
 from digitforce.aip.common.utils.spark_helper import SparkClient
@@ -116,9 +117,8 @@ def feature_create(
     data = (
         spark.sql(
             f"""
-            SELECT cust_code,label,dt
+            SELECT custom_id as cust_code,'0' as label,'{end_date}' as dt
             FROM {sample_table_name}
-            WHERE dt >= '{dixiao_start_date}' and dt <= '{end_date}'
             """
         )
         .join(table_user, on=["cust_code"], how="left")
