@@ -1,5 +1,6 @@
 # encoding: utf-8
 import findspark
+
 findspark.init()
 import datetime
 import random
@@ -13,6 +14,8 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
     log_loss,
+    roc_curve,
+    auc,
 )
 import lightgbm as lgb
 
@@ -20,7 +23,6 @@ from digitforce.aip.common.utils.aip_model_manage_helper import report_to_aip
 from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 from digitforce.aip.common.utils.spark_helper import SparkClient
 from digitforce.aip.common.utils.time_helper import DATE_FORMAT
-
 
 today = datetime.datetime.today().strftime(DATE_FORMAT)
 
@@ -138,12 +140,14 @@ def start_model_train(
             s_rec = recall_score(test, pred)
             s_f1 = f1_score(test, pred)
             s_loss = log_loss(test, pred_score)
-            return [s_acc, s_auc, s_pre, s_rec, s_f1, s_loss]
+            fpr, tpr, _ = roc_curve(test, pred_score)
+            roc_list = [(fpr[i], tpr[i]) for i in range(len(fpr))]
+            return [s_acc, s_auc, s_pre, s_rec, s_f1, s_loss, roc_list]
 
         all_score = getRates(y_test, y_pred, y_pred_score)
         print("test-logloss={:.4f}, test-auc={:.4f}".format(all_score[5], all_score[1]))
     else:
-        all_score = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+        all_score = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, [(None, None)]]
 
     if not is_automl:  # automl 默认值这里给False
         local_file_path = "{}_aip_zq_dixiaohu.model".format(today)
@@ -164,6 +168,7 @@ def start_model_train(
             "recall": all_score[3],
             "f1_score": all_score[4],
             "loss": all_score[5],
+            "roc": all_score[6],
         }
         report_to_aip(
             model_and_metrics_data_hdfs_path,
@@ -183,7 +188,8 @@ def write_hdfs_path(local_path, hdfs_path):
 
 
 # 处理分类特征，数值特征，需要丢掉的特征
-def featuretype_process(data_init: pd.DataFrame, drop_labels: list, categorical_feature: list, float_feature: list):
+def featuretype_process(data_init: pd.DataFrame, drop_labels: list, categorical_feature: list,
+                        float_feature: list):
     """TODO:自动识别连续特征和离散特征"""
     # Process Feature 1
     data_process = data_init.drop(labels=drop_labels, axis=1, errors="ignore")
