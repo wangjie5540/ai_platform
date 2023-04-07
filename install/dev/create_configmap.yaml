@@ -2,9 +2,12 @@ apiVersion: v1
 data:
   aip_config.yaml: |+
     starrocks:
+      db: aip
       user: root
       password: ''
       fenodes: 172.24.20.42:8030,172.24.20.39:8030,172.24.20.45:8030
+      jdbc_url: jdbc:mysql://dev-common-starrocks-n1.digitforce.com:9030,dev-common-starrocks-n2.digitforce.com:9030,dev-common-starrocks-n3.digitforce.com:9030
+      load_url: 172.24.20.42:8030
     hive:
       server2:
         host: 172.22.30.58
