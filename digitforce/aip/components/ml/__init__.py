@@ -6,7 +6,8 @@ import digitforce.aip.common.constants.global_constant as global_constant
 
 
 class LookalikeModel(BaseComponent):
-    def __init__(self, name, global_params, train_dataset_table_name, test_dataset_table_name, tag='latest'):
+    def __init__(self, name, global_params, train_dataset_table_name, test_dataset_table_name,
+                 tag='latest'):
         super().__init__(
             name=name,
             image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/ml-lookalike',
@@ -55,7 +56,8 @@ class LiushiPredict(BaseComponent):
         super().__init__(
             name=name,
             image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/ml-liushi_predict',
-            arguments=['--name', name, '--global_params', global_params, '--predict_table_name', predict_table_name,
+            arguments=['--name', name, '--global_params', global_params, '--predict_table_name',
+                       predict_table_name,
                        ],
             tag=tag,
             file_outputs={
@@ -84,7 +86,8 @@ class GaoqianPredict(BaseComponent):
             image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/'
                   f'ml-gaoqian_predict',
             tag=tag,
-            arguments=['--name', name, '--global_params', global_params, '--predict_table_name', predict_table_name,
+            arguments=['--name', name, '--global_params', global_params, '--predict_table_name',
+                       predict_table_name,
                        ],
             file_outputs={
             }
@@ -97,7 +100,8 @@ class DixiaohuModel(BaseComponent):
             name=name,
             image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/ml-dixiaohu',
             arguments=['--name', name, '--global_params', global_params,
-                       '--train_table_name', train_table_name, '--test_table_name', test_table_name],
+                       '--train_table_name', train_table_name, '--test_table_name',
+                       test_table_name],
             tag=tag,
             file_outputs={
             }
@@ -105,11 +109,12 @@ class DixiaohuModel(BaseComponent):
 
 
 class DixiaohuPredict(BaseComponent):
-    def __init__(self, name, global_params, predict_table_name, tag='latest'):
+    def __init__(self, name, global_params, predict_feature_table_name, tag='latest'):
         super().__init__(
             name=name,
             image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/ml-dixiaohu_predict',
-            arguments=['--name', name, '--global_params', global_params, '--predict_table_name', predict_table_name,
+            arguments=['--name', name, '--global_params', global_params,
+                       '--predict_feature_table_name', predict_feature_table_name,
                        ],
             tag=tag,
             file_outputs={
