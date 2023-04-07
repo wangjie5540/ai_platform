@@ -1,4 +1,3 @@
-
 from digitforce.aip.components.feature_engineering import (
     FeatureCreateDixiaohu,
     FeatureCreateDixiaohuPredict,
@@ -10,6 +9,7 @@ from kfp.dsl import Condition
 import kfp.dsl as dsl
 
 pipeline_name = "dixiaohu_prod"
+
 
 @dsl.pipeline(name=pipeline_name)
 def pipeline_func(global_params: str, flag="TRAIN"):
@@ -51,7 +51,7 @@ def pipeline_func(global_params: str, flag="TRAIN"):
             name="model_predict",
             global_params=global_params,
             tag=RUN_ENV,
-            predict_table_name=predict_feature_op.outputs[
+            predict_feature_table_name=predict_feature_op.outputs[
                 predict_feature_op.OUTPUT_PREDICT_FEATURE
             ],
         )
