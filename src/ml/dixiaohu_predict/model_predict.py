@@ -90,26 +90,6 @@ def start_model_predict(
     output_file_path = cos_helper.upload_file("result.csv", output_file_name)
     print("output_file_path-----*****", output_file_path)
 
-    from digitforce.aip.common.utils.explain_helper import explain_main
-    # shap和spark存在兼容性冲突，须放在spark_client后使用
-    # 计算ale值和shap值并存储
-    ale_df, shap_df = explain_main(
-        df_predict.drop(columns=["label", "dt"]), model, categorical_features
-    )
-    # 存储ale
-    ale_local_path = "ale.csv"
-    ale_hdfs_path = "/user/ai/aip/zq/dixiaohu/explain/_ale.csv"
-    ale_df.to_csv(ale_local_path, index=False, header=False)
-    write_hdfs_path(ale_local_path, ale_hdfs_path, hdfs_client)
-    print("ale_ 计算存储完成-----*****", ale_hdfs_path)
-
-    # 存储shap
-    shap_local_path = "shap.csv"
-    shap_hdfs_path = "/user/ai/aip/zq/dixiaohu/explain/_shap.csv"
-    shap_df.to_csv(shap_local_path, index=False, header=False)
-    write_hdfs_path(shap_local_path, shap_hdfs_path, hdfs_client)
-    print("shap 计算存储完成-----*****", shap_hdfs_path)
-
 
 # 读hdfs
 def read_hdfs_path(local_path, hdfs_path, client):
