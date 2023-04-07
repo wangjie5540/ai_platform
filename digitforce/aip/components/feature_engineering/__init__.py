@@ -2,7 +2,6 @@
 import kfp.dsl as dsl
 
 import digitforce.aip.common.utils.component_helper as component_helper
-from digitforce.aip.common.constants.global_constant import ENV
 from digitforce.aip.components import BaseComponent
 import digitforce.aip.common.constants.global_constant as global_constant
 
@@ -191,7 +190,7 @@ class FeatureTransformerOp(dsl.ContainerOp):
 
     # OUTPUT_FEATURE_TABLE = 'feature_table'
 
-    def __init__(self, name, global_params, raw_user_feature_table, tag=ENV):
+    def __init__(self, name, global_params, raw_user_feature_table, tag="latest"):
         super(FeatureTransformerOp, self).__init__(
             name=name,
             image=f'digit-force-docker.pkg.coding.net/'
