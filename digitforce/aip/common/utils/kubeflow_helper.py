@@ -127,7 +127,7 @@ def upload_pipeline_version(pipeline_func, pipeline_id, pipeline_name):
     pipeline_path = f"/tmp/{pipeline_name}.yaml"
     pipeline_conf = kfp.dsl.PipelineConf()
     pipeline_conf.set_image_pull_policy("Always")
-    Compiler().compile(pipeline_func=pipeline_func, package_path=pipeline_path)
+    Compiler().compile(pipeline_func=pipeline_func, package_path=pipeline_path, pipeline_conf=pipeline_conf)
     client = kfp.Client(host=kubeflow_config['url'], cookies=get_istio_auth_session(
         url=kubeflow_config['url'], username=kubeflow_config['username'],
         password=kubeflow_config['password'])['session_cookie'])
