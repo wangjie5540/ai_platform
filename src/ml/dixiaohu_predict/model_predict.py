@@ -99,6 +99,7 @@ def start_model_predict(
     custom_list = df_predict["cust_code"].values
     x_predict = df_predict[model.feature_name_]
     pred_proba = model.predict_proba(x_predict)
+    print("x_predict-----*****/n", x_predict)
 
     y_pred_score = pred_proba[:, 1]
     result = pd.DataFrame({"cust_code": custom_list, "score": y_pred_score})
