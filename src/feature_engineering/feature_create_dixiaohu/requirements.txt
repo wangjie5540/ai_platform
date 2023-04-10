@@ -1,1 +1,1 @@
-digitforce-aip==0.1.38
+digitforce-aip==0.1.30
