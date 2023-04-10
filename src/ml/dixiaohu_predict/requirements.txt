@@ -1,4 +1,4 @@
-digitforce-aip==0.1.39
+digitforce-aip==0.1.41
 scikit-learn
 lightgbm
 joblib
