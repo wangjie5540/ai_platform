@@ -4,13 +4,13 @@
         "columns": "custom_id"
     },
     "model_predict":{
-        "model_hdfs_path": "/user/ai/aip/zq/dixiaohu/model/latest.model",
+        "model_hdfs_path": "/user/ai/aip/zq/dixiaohu/model/latest_model.pk",
         "output_file_name": "${result_file_name}"
     },
     "feature_create_predict":{
         "sample_table_name": "algorithm.aip_zq_dixiaohu_custom_label",
         "dixiao_before_days": ${sample_select__dixiao_before_days},
         "dixiao_after_days": ${sample_select__dixiao_after_days},
-        "feature_days": 30
+        "feature_days": 20
     }
 }

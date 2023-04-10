@@ -15,6 +15,7 @@ from digitforce.aip.common.utils.spark_helper import SparkClient
 hdfs_client = hdfs_helper.HdfsClient()
 
 from digitforce.aip.common.utils.starrocks_helper import write_score
+from digitforce.aip.common.utils.explain_helper import explain_main
 import pyspark.sql.functions as F
 from pyspark.sql.types import LongType, StringType, FloatType, StructType, StructField
 
@@ -107,13 +108,13 @@ def start_model_predict(
     result_local_path = "result.csv"
     result.to_csv(result_local_path, index=False, header=False)
     output_file_path = cos_helper.upload_file("result.csv", output_file_name)
-    print("output_file_path-----*****", output_file_path)
+    print("output_file_path-----*****/n", output_file_path)
 
     # 统计和可解释性部分
     result["instance_id"] = instance_id
     result = result.rename(columns={"cust_code": "user_id"})  # 重命名
     result = result[["instance_id", "user_id", "score"]]  # 调整顺序
-    print("result", result)
+    print("result-----*****/n", result)
     result_spark_df = (
         spark.createDataFrame(result)
         .select(F.col("instance_id").cast(LongType()),

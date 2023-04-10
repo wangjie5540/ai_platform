@@ -8,12 +8,12 @@ from digitforce.aip.components.source.cos import Cos
 from kfp.dsl import Condition
 import kfp.dsl as dsl
 
-pipeline_name = "dixiaohu_prod"
+pipeline_name = "dixiaohu_test"
 
 
 @dsl.pipeline(name=pipeline_name)
 def pipeline_func(global_params: str, flag="TRAIN"):
-    RUN_ENV = "2.0.0"
+    RUN_ENV = "latest"
     with Condition(flag != "PREDICT", name="is_not_predict"):
         op_sample_selection = SampleSelectionDixiaohu(
             name="sample_select", global_params=global_params, tag=RUN_ENV
