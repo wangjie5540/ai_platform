@@ -5,7 +5,7 @@ from model_train import start_model_train
 
 train_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_train_standarddata"
 test_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_test_standarddata"
-model_and_metrics_data_hdfs_path = "/user/ai/aip/model/1632699470585520130"
+model_and_metrics_data_hdfs_path = "/user/ai/aip/model/222"
 
 start_model_train(
     train_table_name,
