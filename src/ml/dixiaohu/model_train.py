@@ -152,11 +152,11 @@ def start_model_train(
         all_score = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, {"x": [], "y": []}]
 
     if not is_automl:  # automl 默认值这里给False
-        local_file_path = "{}_aip_zq_dixiaohu.model".format(today)
+        local_file_path = f"{today}_model.pk"
         joblib.dump(model, local_file_path)
 
-        hdfs_path1 = "/user/ai/aip/zq/dixiaohu/model/{}.model".format(today)
-        hdfs_path2 = "/user/ai/aip/zq/dixiaohu/model/latest.model"
+        hdfs_path1 = f"/user/ai/aip/zq/dixiaohu/model/{today}_model.pk"
+        hdfs_path2 = "/user/ai/aip/zq/dixiaohu/model/latest_model.pk"
 
         write_hdfs_path(local_file_path, hdfs_path1)
         write_hdfs_path(local_file_path, hdfs_path2)
