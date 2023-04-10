@@ -1,4 +1,7 @@
 # encoding: utf-8
+import findspark
+
+findspark.init()
 from digitforce.aip.common.utils import cos_helper
 import digitforce.aip.common.utils.hdfs_helper as hdfs_helper
 import datetime
@@ -12,6 +15,8 @@ from digitforce.aip.common.utils.spark_helper import SparkClient
 hdfs_client = hdfs_helper.HdfsClient()
 
 from digitforce.aip.common.utils.starrocks_helper import write_score
+import pyspark.sql.functions as F
+from pyspark.sql.types import LongType, StringType, FloatType, StructType, StructField
 
 
 def start_model_predict(
@@ -76,9 +81,18 @@ def start_model_predict(
     print("预测数据规模", len(df_predict))
 
     # 模型加载
-    local_file_path = "./model"
-    read_hdfs_path(local_file_path, model_hdfs_path, hdfs_client)
-    model = joblib.load(local_file_path)  # hdfs上的模型加载到本地
+    local_file_path = "/data/zyf/model.pk"
+    read_hdfs_path(local_file_path, model_hdfs_path, hdfs_client)  # hdfs上的模型复制到本地
+    print("model_hdfs_path--------------", model_hdfs_path)
+
+    import os
+    for root, dirs, files in os.walk(".", topdown=False):
+        for name in files:
+            print(os.path.join(root, name))
+        for name in dirs:
+            print(os.path.join(root, name))  # 打印当前目录下所有文件
+
+    model = joblib.load(local_file_path)
 
     # 预测打分
     custom_list = df_predict["cust_code"].values
@@ -97,10 +111,18 @@ def start_model_predict(
 
     # 统计和可解释性部分
     result["instance_id"] = instance_id
-    result = result.rename(columns={"cust_code": "user_id"})
+    result = result.rename(columns={"cust_code": "user_id"})  # 重命名
+    result = result[["instance_id", "user_id", "score"]]  # 调整顺序
     print("result", result)
-    result_spark_df = spark.createDataFrame(result)
+    result_spark_df = (
+        spark.createDataFrame(result)
+        .select(F.col("instance_id").cast(LongType()),
+                F.col("user_id").cast(StringType()),
+                F.col("score").cast(FloatType()))
+    )  # 格式化数据类型
     # 存储到starrocks,列名[['instance_id','user_id','score']]
+    result_spark_df.show()
+    print("result_spark_df.schema----", result_spark_df.schema)
     write_score(result_spark_df, predict_table_name)
 
     # from digitforce.aip.common.utils.explain_helper import explain_main
@@ -122,6 +144,7 @@ def start_model_predict(
     # shap_df.to_csv(shap_local_path, index=False, header=False)
     # write_hdfs_path(shap_local_path, shap_hdfs_path, hdfs_client)
     # print("shap 计算存储完成-----*****", shap_hdfs_path)
+    spark.stop()
 
 
 # 读hdfs
