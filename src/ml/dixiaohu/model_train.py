@@ -26,6 +26,8 @@ from digitforce.aip.common.utils.time_helper import DATE_FORMAT
 
 today = datetime.datetime.today().strftime(DATE_FORMAT)
 
+import pickle
+
 
 def start_model_train(
         train_table_name,
@@ -152,10 +154,13 @@ def start_model_train(
     if not is_automl:  # automl 默认值这里给False
         local_file_path = "{}_aip_zq_dixiaohu.model".format(today)
         joblib.dump(model, local_file_path)
+
         hdfs_path1 = "/user/ai/aip/zq/dixiaohu/model/{}.model".format(today)
         hdfs_path2 = "/user/ai/aip/zq/dixiaohu/model/latest.model"
+
         write_hdfs_path(local_file_path, hdfs_path1)
         write_hdfs_path(local_file_path, hdfs_path2)
+
         assert model_and_metrics_data_hdfs_path is not None
         model_hdfs_path = model_and_metrics_data_hdfs_path + "/model.pk"
         write_hdfs_path(local_file_path, model_hdfs_path)
