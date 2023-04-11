@@ -2,6 +2,8 @@
 import argparse
 import json
 import write_starrocks
+import digitforce.aip.common.utils.component_helper as component_helper
+component_helper.init_config()
 
 
 def run():
