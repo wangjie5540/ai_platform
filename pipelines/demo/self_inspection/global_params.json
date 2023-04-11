@@ -10,7 +10,7 @@
     "url": "https://algorithm-1308011215.cos.ap-beijing.myqcloud.com/1677049656223-gaoqian_test.csv",
     "columns": "user_id"
   },
-  "demo_read_starrocks": {
+  "demo_starrocks": {
     "table_name": "aip.item",
     "limit": 10
   }

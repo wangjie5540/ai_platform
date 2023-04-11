@@ -12,4 +12,4 @@ def pipeline_func(global_params):
     print_op = DemoPrint(name='demo_print', global_params=global_params, tag='1.0.4')
     sleep_op = DemoSleep(name='demo_sleep', global_params=global_params, tag='1.0.3')
     read_cos_op = Cos(name='demo_read_cos', global_params=global_params, tag='latest')
-    read_starrocks_op = DemoStarrocks(name="demo_read_starrocks", global_params=global_params, tag='1.0.3')
+    read_starrocks_op = DemoStarrocks(name="demo_starrocks", global_params=global_params, tag='latest')
