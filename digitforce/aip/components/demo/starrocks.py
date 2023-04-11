@@ -6,7 +6,7 @@ class DemoStarrocks(BaseComponent):
     def __init__(self, name: str, global_params: str, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/demo-starrocks',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/demo-starrocks',
             arguments=['--name', name, '--global_params', global_params],
             tag=tag,
         )
