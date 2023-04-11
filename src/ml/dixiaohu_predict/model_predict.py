@@ -131,7 +131,8 @@ def start_model_predict(
     # 存储到starrocks,列名[['instance_id','user_id','score']]
     result_spark_df.show()
     print("result_spark_df.schema----", result_spark_df.schema)
-    write_score(result_spark_df, predict_table_name)
+    do_write()
+    # write_score(result_spark_df, predict_table_name)
 
     # from digitforce.aip.common.utils.explain_helper import explain_main
     # # shap和spark存在兼容性冲突，须放在spark_client后使用
@@ -152,7 +153,42 @@ def start_model_predict(
     # shap_df.to_csv(shap_local_path, index=False, header=False)
     # write_hdfs_path(shap_local_path, shap_hdfs_path, hdfs_client)
     # print("shap 计算存储完成-----*****", shap_hdfs_path)
-    spark.stop()
+
+
+def do_write():
+    import digitforce.aip.common.utils.spark_helper as spark_helper
+    session = spark_helper.SparkClient.get().get_session()
+
+    # 数据
+    data = [
+        (1645666375508107265, 1008, 0.6165969),
+        (1645666375508107265, 1008, 0.6165969),
+        (1645666375508107265, 1008, 0.6165969),
+        (1645666375508107265, 1008, 0.6165969),
+        (1645666375508107265, 1008, 0.6165969),
+        (1645666375508107265, 1008, 0.6165969),
+        (1645666375508107265, 1008, 0.6165969),
+        (1645666375508107265, 1007, 0.5454975),
+        (1645666375508107265, 1005, 0.50651985),
+        (1645666375508107265, 1005, 0.50651985),
+    ]
+
+    # 定义schema
+    schema = StructType([
+        StructField("instance_id", LongType(), True),
+        StructField("user_id", StringType(), True),
+        StructField("score", FloatType(), True)
+    ])
+
+    df = session.createDataFrame(data, schema=schema)
+    print(df.schema)
+
+    # 显示dataframe的内容
+    df.show()
+
+    import digitforce.aip.common.utils.starrocks_helper as starrocks_helper
+
+    starrocks_helper.write_score(df, "score_251")
 
 
 # 读hdfs
