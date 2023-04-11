@@ -152,18 +152,18 @@ def start_model_train(
         all_score = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, {"x": [], "y": []}]
 
     if not is_automl:  # automl 默认值这里给False
-        local_file_path = f"{today}_model.pk"
-        joblib.dump(model, local_file_path)
 
-        hdfs_path1 = f"/user/ai/aip/zq/dixiaohu/model/{today}_model.pk"
-        hdfs_path2 = "/user/ai/aip/zq/dixiaohu/model/latest_model.pk"
-
+        local_file_path = "model.pickle.dat"
+        pkl_save(local_file_path, model)
+        hdfs_path1 = f"/user/ai/aip/zq/dixiaohu/model/{today}_model.pickle.dat"
+        hdfs_path2 = "/user/ai/aip/zq/dixiaohu/model/latest_model.pickle.dat"
         write_hdfs_path(local_file_path, hdfs_path1)
-        write_hdfs_path(local_file_path, hdfs_path2)
+        write_hdfs_path(local_file_path, hdfs_path2)  # 保存模型到hdfs
 
         assert model_and_metrics_data_hdfs_path is not None
-        model_hdfs_path = model_and_metrics_data_hdfs_path + "/model.pk"
+        model_hdfs_path = model_and_metrics_data_hdfs_path + "/model.pickle.dat"
         write_hdfs_path(local_file_path, model_hdfs_path)
+        print("write_hdfs_path COMPLETE-------")
 
         # report model and metrics to aip
         metrics_info = {
@@ -206,3 +206,9 @@ def featuretype_process(data_init: pd.DataFrame, drop_labels: list, categorical_
         lambda col: pd.to_numeric(col, errors="coerce"), axis=0
     )
     return data_process
+
+
+def pkl_save(filename, file):
+    output = open(filename, "wb")
+    pickle.dump(file, output)
+    output.close()
