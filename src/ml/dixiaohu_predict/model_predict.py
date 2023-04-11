@@ -125,6 +125,7 @@ def start_model_predict(
         .select(F.col("instance_id").cast(LongType()),
                 F.col("user_id").cast(StringType()),
                 F.col("score").cast(FloatType()))
+        .distinct()
     )  # 格式化数据类型
     # 存储到starrocks,列名[['instance_id','user_id','score']]
     result_spark_df.show()
