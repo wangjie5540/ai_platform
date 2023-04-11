@@ -2,3 +2,4 @@ digitforce-aip==0.1.41
 scikit-learn
 lightgbm
 joblib
+shap~=0.41.0
