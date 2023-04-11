@@ -85,7 +85,7 @@ def start_model_predict(
     # 模型加载
     # local_file_path = "model.pk"
     # local_file_path = "/data/zyf/dixiaohu.model"
-    local_file_path = "/data/zyf/model.pickle.dat"
+    local_file_path = "model.pickle.dat"
     print("local_file_path--------------", local_file_path)
     read_hdfs_path(local_file_path, model_hdfs_path, hdfs_client)  # hdfs上的模型复制到本地
     print("model_hdfs_path--------------", model_hdfs_path)
