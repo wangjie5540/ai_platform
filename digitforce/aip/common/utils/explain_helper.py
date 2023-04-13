@@ -347,7 +347,7 @@ def shap_value(X: pd.DataFrame, model):
     return result_df
 
 
-def explain_main(X: pd.DataFrame, model, cat_cols: List[str]):
+def explain(X: pd.DataFrame, model, cat_cols: List[str]):
     """计算ale值和shap值，合并
     # user_id, target, feature_contribution
     # 1123, 2, {"age": 0.2, "tall": 0.3}
@@ -376,3 +376,69 @@ def explain_main(X: pd.DataFrame, model, cat_cols: List[str]):
         ale_df[["target", "feature", "feature_trends"]],
         shap_df[["cust_code", "target", "feature_contribution"]],
     )
+
+
+def df_to_json(df, group_cols):
+    """将dataframe转换成json格式
+
+    Args:
+        df (pd.DataFrame): 要求必须有target列
+        group_cols (List[str]): 要groupby的列
+
+    Returns:
+        返回json格式的字符串
+    """
+    df['target'] = df['target'].astype(int)
+    # Group the DataFrame by target and feature
+    grouped = df.groupby(group_cols)
+
+    # output
+    output = []
+
+    group_cols_d = {}
+    feature_method = df.columns[2]
+
+    # Loop over the groups and populate the output dictionary
+    for (target, b), data in grouped:
+
+        if target not in group_cols_d:
+            class_d = {group_cols[0]: str(target), feature_method: []}
+            output.append(class_d)
+            group_cols_d[target] = str(b)
+
+        x_result = []
+        y_result = []
+        for i in range(len(data)):
+            x_result.append(list(data[feature_method].iloc[i].keys())[0])
+            y_result.append(list(data[feature_method].iloc[i].values())[0])
+
+        feature_method_d = {group_cols[1]: b, "coordinates": {
+            "x": x_result,
+            "y": y_result
+        }}
+
+        output[target][feature_method].append(feature_method_d)
+
+    print(output)
+
+    return output
+
+
+def get_explain_result(X, model, cat_cols):
+    """获取explain的结果
+
+    Args:
+        X (pd.DataFrame): 要求必须有cust_code列和模型要求的输入列
+        model : 列现支持sklearn接口的机器学习模型
+        cat_cols (List[str]): 离散型变量的list
+
+    Returns:
+        返回两个dataframe，ale_df[['target', 'feature', 'feature_trends']],形如
+        2, “age”, {0.1: 0.2, 0.2: 0.3}
+         shap_df[['cust_code', 'target', 'feature_contribution']]，形如
+        1123, 2, {"age": 0.2, "tall": 0.3}
+    """
+    ale_df, shap_df = explain(X, model, cat_cols)
+    ale_json = df_to_json(ale_df, ["target", "feature"])
+    shap_json = df_to_json(shap_df, ["target", "cust_code"])
+    return ale_json, shap_json
