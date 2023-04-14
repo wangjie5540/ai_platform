@@ -4,29 +4,28 @@ import findspark
 findspark.init()
 from digitforce.aip.common.utils import cos_helper
 import digitforce.aip.common.utils.hdfs_helper as hdfs_helper
-import datetime
 
 import pandas as pd
 import joblib
 
-from digitforce.aip.common.utils.time_helper import DATE_FORMAT
 from digitforce.aip.common.utils.spark_helper import SparkClient
 
 hdfs_client = hdfs_helper.HdfsClient()
 
 from digitforce.aip.common.utils.starrocks_helper import write_score
-from digitforce.aip.common.utils.explain_helper import explain_main
 import pyspark.sql.functions as F
 from pyspark.sql.types import LongType, StringType, FloatType, StructType, StructField
+import json
 
 
 def start_model_predict(
         predict_feature_table_name: str, model_hdfs_path: str, output_file_name: str,
-        instance_id: int, predict_table_name: str
+        instance_id: int, predict_table_name: str, shapley_table_name: str,
 ):
     """
     预测过程
     Args:
+        shapley_table_name: shap分数存储表名
         instance_id: 预测任务id，需要接收的
         predict_table_name: 预测分数存储表名
         predict_feature_table_name: 预测特征表名
@@ -133,25 +132,34 @@ def start_model_predict(
     print("result_spark_df.schema----", result_spark_df.schema)
     write_score(result_spark_df, predict_table_name)
 
-    # from digitforce.aip.common.utils.explain_helper import explain_main
-    # # shap和spark存在兼容性冲突，须放在spark_client后使用
-    # # 计算ale值和shap值并存储
-    # ale_df, shap_df = explain_main(
-    #     df_predict.drop(columns=["label", "dt"]), model, categorical_features
-    # )
-    # # 存储ale
-    # ale_local_path = "ale.csv"
-    # ale_hdfs_path = "/user/ai/aip/zq/dixiaohu/explain/_ale.csv"
-    # ale_df.to_csv(ale_local_path, index=False, header=False)
-    # write_hdfs_path(ale_local_path, ale_hdfs_path, hdfs_client)
-    # print("ale_ 计算存储完成-----*****", ale_hdfs_path)
-    #
-    # # 存储shap到starrocks
-    # shap_local_path = "shap.csv"
-    # shap_hdfs_path = "/user/ai/aip/zq/dixiaohu/explain/_shap.csv"
-    # shap_df.to_csv(shap_local_path, index=False, header=False)
-    # write_hdfs_path(shap_local_path, shap_hdfs_path, hdfs_client)
-    # print("shap 计算存储完成-----*****", shap_hdfs_path)
+    from digitforce.aip.common.utils.explain_helper import get_explain_result
+    # shap和spark存在兼容性冲突，须放在spark_client后使用
+    # 计算ale值和shap值并存储
+    ale_json, shap_df = get_explain_result(
+        df_predict.drop(columns=["label", "dt"]), model, categorical_features
+    )
+    # 存储ale
+    ale_local_path = "ale.json"
+    ale_hdfs_path = f"/user/ai/aip/zq/dixiaohu/explain/{instance_id}/ale.json"
+    with open(ale_local_path, "w") as f:
+        json.dump(ale_json, f, indent=4)
+    write_hdfs_path(ale_local_path, ale_hdfs_path, hdfs_client)
+    print("ale_ 计算存储完成-----*****", ale_hdfs_path)
+
+    # 存储shap
+    shap_df["instance_id"] = instance_id
+    shap_df = shap_df.rename(columns={"user_code": "user_id"})  # 重命名
+    shap_df = shap_df[["instance_id", "user_id", "shap"]]  # 调整顺序
+    print("shap_df-----*****/n", shap_df)
+    shap_spark_df = (
+        spark.createDataFrame(shap_df)
+        .select(F.col("instance_id").cast(LongType()),
+                F.col("user_id").cast(StringType()),
+                F.col("shap").cast(StringType()))
+        .distinct()
+    )  # 格式化数据类型
+    print("shap_spark_df.schema----", shap_spark_df.schema)
+    write_score(shap_spark_df, shapley_table_name)
 
 
 # 读hdfs
