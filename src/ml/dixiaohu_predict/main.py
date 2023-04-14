@@ -29,6 +29,7 @@ def run():
     # instance_id和存储表名由上游给出
     instance_id = global_params['instance_id']
     predict_table_name = global_params['predict_table_name']
+    shapley_table_name = global_params['shapley_table_name']
 
     print(f"predict_table_name:{predict_feature_table_name}")
     print(f"model_hdfs_path:{model_hdfs_path}")
@@ -37,7 +38,8 @@ def run():
                         , model_hdfs_path=model_hdfs_path
                         , output_file_name=output_file_name
                         , instance_id=instance_id
-                        , predict_table_name=predict_table_name)
+                        , predict_table_name=predict_table_name
+                        , shapley_table_name=shapley_table_name)
 
     outputs = {}
     # component_helper.write_output(outputs)
