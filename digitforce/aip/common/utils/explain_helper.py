@@ -455,15 +455,15 @@ def shap_agg(df):
             output.append({
                 "target": str(data["target"].iloc[i]),
                 "feature_contributions": {
-                    "x": list(data["feature_contributions"].iloc[i].keys()),
-                    "y": list(data["feature_contributions"].iloc[i].values()),
+                    "x": list(data["feature_contribution"].iloc[i].keys()),
+                    "y": list(data["feature_contribution"].iloc[i].values()),
                 },
             })
         output = json.dumps(output)
         return output
 
-    df = df.groupby('user_code').apply(lambda x: get_shap_col(x))
-    df = df.reset_index().rename(columns={0: "shap"})
+    df = df.groupby('cust_code').apply(lambda x: get_shap_col(x))
+    df = df.reset_index().rename(columns={0: "shapley"})
     return df
 
 
@@ -477,7 +477,7 @@ def get_explain_result(X, model, cat_cols):
 
     Returns:
         返回ale的json格式和shap的dataframe,,形如
-         shap_df[['cust_code', 'shap']]，形如
+         shap_df[['cust_code', 'shapley']]，形如
         [1123,
     '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}},
      {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}}]']
@@ -485,4 +485,4 @@ def get_explain_result(X, model, cat_cols):
     ale_df, shap_df = explain(X, model, cat_cols)
     ale_json = df_to_json(ale_df, ["target", "feature"])
     shap_df = shap_agg(shap_df)
-    return ale_json, shap_df
+    return ale_json, shap_df[['cust_code', 'shapley']]
