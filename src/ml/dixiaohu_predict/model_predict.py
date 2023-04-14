@@ -14,7 +14,7 @@ hdfs_client = hdfs_helper.HdfsClient()
 
 from digitforce.aip.common.utils.starrocks_helper import write_score
 import pyspark.sql.functions as F
-from pyspark.sql.types import LongType, StringType, FloatType, StructType, StructField
+from pyspark.sql.types import LongType, StringType, FloatType
 import json
 
 
@@ -88,14 +88,6 @@ def start_model_predict(
     print("local_file_path--------------", local_file_path)
     read_hdfs_path(local_file_path, model_hdfs_path, hdfs_client)  # hdfs上的模型复制到本地
     print("model_hdfs_path--------------", model_hdfs_path)
-
-    import os
-    for root, dirs, files in os.walk(".", topdown=False):
-        for name in files:
-            print(os.path.join(root, name))
-        for name in dirs:
-            print(os.path.join(root, name))  # 打印当前目录下所有文件
-
     model = joblib.load(local_file_path)
 
     # 预测打分
@@ -150,16 +142,17 @@ def start_model_predict(
     shap_df["instance_id"] = instance_id
     shap_df = shap_df.rename(columns={"cust_code": "user_id"})  # 重命名
     shap_df = shap_df[["instance_id", "user_id", "shapley"]]  # 调整顺序
-    print("shap_df-----*****/n", shap_df)
+    print("shap_df-----***** \n", shap_df)
     shap_spark_df = (
         spark.createDataFrame(shap_df)
         .select(F.col("instance_id").cast(LongType()),
                 F.col("user_id").cast(StringType()),
                 F.col("shapley").cast(StringType()))
-        .distinct()
     )  # 格式化数据类型
-    print("shap_spark_df.schema----", shap_spark_df.schema)
+    shap_spark_df.show()
+    print("shap_spark_df.schema---- \n", shap_spark_df.schema)
     write_score(shap_spark_df, shapley_table_name)
+    print("compute shapley value and store to starrocks success")
 
 
 # 读hdfs
