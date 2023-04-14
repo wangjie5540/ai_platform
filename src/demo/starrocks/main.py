@@ -1,6 +1,9 @@
 # coding: utf-8
 import argparse
 import json
+import write_starrocks
+import digitforce.aip.common.utils.component_helper as component_helper
+component_helper.init_config()
 
 
 def run():
@@ -17,6 +20,7 @@ def run():
     limit = component_params['limit']
     import read_starrocks
     read_starrocks.do_read(table_name=table_name, limit=limit)
+    write_starrocks.do_write()
 
 
 if __name__ == '__main__':
