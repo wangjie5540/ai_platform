@@ -1,4 +1,6 @@
-digitforce-aip==0.1.30
+digitforce-aip==0.1.42
 scikit-learn
 lightgbm
 joblib
+shap~=0.41.0
+matplotlib~=3.4.3

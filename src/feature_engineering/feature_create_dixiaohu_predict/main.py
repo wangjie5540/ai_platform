@@ -2,9 +2,10 @@
 
 import argparse
 import json
-import digitforce.aip.common.utils.component_helper as component_helper 
+import digitforce.aip.common.utils.component_helper as component_helper
+
 component_helper.init_config()
-from feature_create import feature_create 
+from feature_create import feature_create
 
 
 def run():
@@ -18,8 +19,8 @@ def run():
     global_params = args.global_params
     global_params = json.loads(global_params)
 
-
-    sample_table_name = args.sample
+    sample_table_name = json.loads(args.sample).get('table_name')
+    print('sample_table_name-----------', sample_table_name)
     dixiao_before_days = global_params[args.name]['dixiao_before_days']
     dixiao_after_days = global_params[args.name]['dixiao_after_days']
     feature_days = global_params[args.name]['feature_days']

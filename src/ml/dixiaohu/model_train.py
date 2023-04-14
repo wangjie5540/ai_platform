@@ -1,5 +1,6 @@
 # encoding: utf-8
 import findspark
+
 findspark.init()
 import datetime
 import random
@@ -13,6 +14,8 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
     log_loss,
+    roc_curve,
+    auc,
 )
 import lightgbm as lgb
 
@@ -21,8 +24,9 @@ from digitforce.aip.common.utils.hdfs_helper import hdfs_client
 from digitforce.aip.common.utils.spark_helper import SparkClient
 from digitforce.aip.common.utils.time_helper import DATE_FORMAT
 
-
 today = datetime.datetime.today().strftime(DATE_FORMAT)
+
+import pickle
 
 
 def start_model_train(
@@ -138,23 +142,28 @@ def start_model_train(
             s_rec = recall_score(test, pred)
             s_f1 = f1_score(test, pred)
             s_loss = log_loss(test, pred_score)
-            return [s_acc, s_auc, s_pre, s_rec, s_f1, s_loss]
+            fpr, tpr, _ = roc_curve(test, pred_score)
+            roc_plot = {"x": list(fpr), "y": list(tpr)}
+            return [s_acc, s_auc, s_pre, s_rec, s_f1, s_loss, roc_plot]
 
         all_score = getRates(y_test, y_pred, y_pred_score)
         print("test-logloss={:.4f}, test-auc={:.4f}".format(all_score[5], all_score[1]))
     else:
-        all_score = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+        all_score = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, {"x": [], "y": []}]
 
     if not is_automl:  # automl 默认值这里给False
-        local_file_path = "{}_aip_zq_dixiaohu.model".format(today)
-        joblib.dump(model, local_file_path)
-        hdfs_path1 = "/user/ai/aip/zq/dixiaohu/model/{}.model".format(today)
-        hdfs_path2 = "/user/ai/aip/zq/dixiaohu/model/latest.model"
+
+        local_file_path = "model.pickle.dat"
+        pkl_save(local_file_path, model)
+        hdfs_path1 = f"/user/ai/aip/zq/dixiaohu/model/{today}_model.pickle.dat"
+        hdfs_path2 = "/user/ai/aip/zq/dixiaohu/model/latest_model.pickle.dat"
         write_hdfs_path(local_file_path, hdfs_path1)
-        write_hdfs_path(local_file_path, hdfs_path2)
+        write_hdfs_path(local_file_path, hdfs_path2)  # 保存模型到hdfs
+
         assert model_and_metrics_data_hdfs_path is not None
-        model_hdfs_path = model_and_metrics_data_hdfs_path + "/model.pk"
+        model_hdfs_path = model_and_metrics_data_hdfs_path + "/model.pickle.dat"
         write_hdfs_path(local_file_path, model_hdfs_path)
+        print("write_hdfs_path COMPLETE-------")
 
         # report model and metrics to aip
         metrics_info = {
@@ -164,6 +173,7 @@ def start_model_train(
             "recall": all_score[3],
             "f1_score": all_score[4],
             "loss": all_score[5],
+            # "roc_plot": all_score[6],
         }
         report_to_aip(
             model_and_metrics_data_hdfs_path,
@@ -183,7 +193,8 @@ def write_hdfs_path(local_path, hdfs_path):
 
 
 # 处理分类特征，数值特征，需要丢掉的特征
-def featuretype_process(data_init: pd.DataFrame, drop_labels: list, categorical_feature: list, float_feature: list):
+def featuretype_process(data_init: pd.DataFrame, drop_labels: list, categorical_feature: list,
+                        float_feature: list):
     """TODO:自动识别连续特征和离散特征"""
     # Process Feature 1
     data_process = data_init.drop(labels=drop_labels, axis=1, errors="ignore")
@@ -195,3 +206,9 @@ def featuretype_process(data_init: pd.DataFrame, drop_labels: list, categorical_
         lambda col: pd.to_numeric(col, errors="coerce"), axis=0
     )
     return data_process
+
+
+def pkl_save(filename, file):
+    output = open(filename, "wb")
+    pickle.dump(file, output)
+    output.close()

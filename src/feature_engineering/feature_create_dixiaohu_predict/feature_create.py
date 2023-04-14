@@ -1,5 +1,6 @@
 # encoding: utf-8
 import findspark
+
 findspark.init()
 import datetime
 from digitforce.aip.common.utils.spark_helper import SparkClient
@@ -27,6 +28,8 @@ def feature_create(
     """
     spark_client = SparkClient.get()
     spark = spark_client.get_session()
+    print("spark init success")
+
     user_table = "zq_standard.dm_cust_label_base_attributes_df"
     app_table = "zq_standard.dm_cust_traf_behv_aggregate_df"
     zj_table = "zq_standard.dm_cust_capital_flow_aggregate_df"
@@ -76,52 +79,55 @@ def feature_create(
     # 客户号，年龄，性别，城市，省份，教育程度(end_date 的基础信息)
     table_user = spark.sql(
         f"""
-        select cust_code, age, sex, city_name, province_name, educational_degree 
-        from {user_view} where dt = '{end_date}'
+        select cust_code, dt, age, sex, city_name, province_name, educational_degree 
+        from {user_view} where dt between '{start_date}' and '{end_date}'
         """
     )
+    print("table_user------/n", table_user.toPandas().sort_values(by="cust_code"))
     # 客户号，日期，客户是否登录
     table_app = spark.sql(
         f"""
         select cust_code, dt, is_login from {app_view} 
-        where dt between '{feature_date}' and '{end_date}'
+        where dt between '{start_date}' and '{end_date}'
         """
     )
+    print("table_app------/n", table_app.toPandas().sort_values(by="cust_code"))
     # 客户号，日期，资金转出金额，资金转入金额，资金转出笔数，资金转入笔数
     table_zj = spark.sql(
         f"""
         select cust_code, dt, transfer_out_amt, transfer_in_amt, transfer_out_cnt, transfer_in_cnt 
         from {zj_view} 
-        where dt between '{feature_date}' and '{end_date}'
+        where dt between '{start_date}' and '{end_date}'
         """
     )
+    print("table_zj------/n", table_zj.toPandas().sort_values(by="cust_code"))
     # 客户号，日期，交易笔数，交易金额，股票笔数，股票金额，基金笔数，基金金额, 债券笔数， 债券金额
     table_jy = spark.sql(
         f"""
         select cust_code, dt, total_tran_cnt, total_tran_amt, gp_tran_cnt, gp_tran_amt, jj_tran_cnt, jj_tran_amt, zq_tran_cnt, zq_tran_amt 
         from {jy_view} 
-        where dt between '{feature_date}' and '{end_date}'
+        where dt between '{start_date}' and '{end_date}'
         """
     )
+    print("table_jy------/n", table_jy.toPandas().sort_values(by="cust_code"))
     # 客户号，日期，总资产，净资产，总负债，非货币型基金资产，股票资产，资金余额，产品资产
     table_zc = spark.sql(
         f"""
         select cust_code, dt, total_ast, net_ast, total_liab, unmoney_fnd_val, stock_ast, cash_bal, total_prd_ast 
         from {zc_view} 
-        where dt between '{feature_date}' and '{end_date}'
+        where dt between '{start_date}' and '{end_date}'
         """
     )
-
+    print("table_zc------/n", table_zc.toPandas().sort_values(by="cust_code"))
     # 3. 特征融合
     data = (
         spark.sql(
             f"""
-            SELECT cust_code,label,dt
+            SELECT cust_code,'0' as label,'{end_date}' as dt
             FROM {sample_table_name}
-            WHERE dt >= '{dixiao_start_date}' and dt <= '{end_date}'
             """
         )
-        .join(table_user, on=["cust_code"], how="left")
+        .join(table_user, on=["cust_code", "dt"], how="left")
         .join(table_app, on=["cust_code", "dt"], how="left")
         .join(table_zj, on=["cust_code", "dt"], how="left")
         .join(table_jy, on=["cust_code", "dt"], how="left")
@@ -130,11 +136,13 @@ def feature_create(
     # TODO: 特征加工
     print("dixiao_start_date-----", dixiao_start_date)
     print("end_date-----", end_date)
+    print("data-----", data.toPandas())
     print("特征数据规模-----", len(data.toPandas()))
 
     predict_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_predict_standarddata"
     write_hive(spark, data, predict_table_name, "dt")
-
+    spark.stop()
+    print("spark complete")
     return predict_table_name
 
 

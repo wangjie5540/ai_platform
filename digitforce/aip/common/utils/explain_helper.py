@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 plt.rcParams["font.sans-serif"] = ["SimHei"]  # 设置字体
 plt.rcParams["axes.unicode_minus"] = False  # 该语句解决图像中的“-”负号的乱码问题
 
+import json
+
 
 # 测试离散型变量的ALE
 def cat_ale(x_test: pd.DataFrame, model, cat_var: str):
@@ -347,7 +349,7 @@ def shap_value(X: pd.DataFrame, model):
     return result_df
 
 
-def explain_main(X: pd.DataFrame, model, cat_cols: List[str]):
+def explain(X: pd.DataFrame, model, cat_cols: List[str]):
     """计算ale值和shap值，合并
     # user_id, target, feature_contribution
     # 1123, 2, {"age": 0.2, "tall": 0.3}
@@ -361,7 +363,7 @@ def explain_main(X: pd.DataFrame, model, cat_cols: List[str]):
         返回两个dataframe，ale_df[['target', 'feature', 'feature_trends']],形如
         2, “age”, {0.1: 0.2, 0.2: 0.3}
          shap_df[['cust_code', 'target', 'feature_contribution']]，形如
-        1123, 2, {"age": 0.2, "tall": 0.3}
+        1123, 2, '{"age": 0.2, "tall": 0.3}'
     """
     ale_df = ale_main(X.drop(columns=["cust_code"]), model, cat_cols)
     ale_df["feature_trends"] = ale_df.apply(lambda row: {row[2]: row[3]}, axis=1)
@@ -376,3 +378,111 @@ def explain_main(X: pd.DataFrame, model, cat_cols: List[str]):
         ale_df[["target", "feature", "feature_trends"]],
         shap_df[["cust_code", "target", "feature_contribution"]],
     )
+
+
+def df_to_json(df, group_cols):
+    """将dataframe转换成json格式
+
+    Args:
+        df (pd.DataFrame): 要求必须有target列
+        group_cols (List[str]): 要groupby的列
+
+    Returns:
+        返回json格式的字符串
+    """
+    df['target'] = df['target'].astype(int)
+    # Group the DataFrame by target and feature
+    grouped = df.groupby(group_cols)
+
+    # output
+    output = []
+
+    group_cols_d = {}
+    feature_method = df.columns[2]
+
+    # Loop over the groups and populate the output dictionary
+    for (target, b), data in grouped:
+
+        if target not in group_cols_d:
+            class_d = {group_cols[0]: str(target), feature_method: []}
+            output.append(class_d)
+            group_cols_d[target] = str(b)
+
+        x_result = []
+        y_result = []
+        for i in range(len(data)):
+            x_result.append(list(data[feature_method].iloc[i].keys())[0])
+            y_result.append(list(data[feature_method].iloc[i].values())[0])
+
+        feature_method_d = {group_cols[1]: b, "coordinates": {
+            "x": x_result,
+            "y": y_result
+        }}
+
+        output[target][feature_method].append(feature_method_d)
+
+    return output
+
+
+def shap_agg(df):
+    """
+    将shape的结果按照user_code进行聚合，返回的结果是json格式的字符串
+    [['user_code', 'shap']']]
+    [1123,
+    '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}},
+     {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}}]']
+
+    Args:
+        df:
+
+    Returns:
+
+    """
+    df = df.reset_index()
+
+    def get_shap_col(data):
+        """
+        获取shap列的值
+
+        Args:
+            data:
+
+        Returns:
+
+        """
+        output = []
+        for i in range(len(data)):
+            output.append({
+                "target": str(data["target"].iloc[i]),
+                "feature_contributions": {
+                    "x": list(data["feature_contributions"].iloc[i].keys()),
+                    "y": list(data["feature_contributions"].iloc[i].values()),
+                },
+            })
+        output = json.dumps(output)
+        return output
+
+    df = df.groupby('user_code').apply(lambda x: get_shap_col(x))
+    df = df.reset_index().rename(columns={0: "shap"})
+    return df
+
+
+def get_explain_result(X, model, cat_cols):
+    """获取explain的结果
+
+    Args:
+        X (pd.DataFrame): 要求必须有cust_code列和模型要求的输入列
+        model : 列现支持sklearn接口的机器学习模型
+        cat_cols (List[str]): 离散型变量的list
+
+    Returns:
+        返回ale的json格式和shap的dataframe,,形如
+         shap_df[['cust_code', 'shap']]，形如
+        [1123,
+    '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}},
+     {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}}]']
+    """
+    ale_df, shap_df = explain(X, model, cat_cols)
+    ale_json = df_to_json(ale_df, ["target", "feature"])
+    shap_df = shap_agg(shap_df)
+    return ale_json, shap_df
