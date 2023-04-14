@@ -148,14 +148,14 @@ def start_model_predict(
 
     # 存储shap
     shap_df["instance_id"] = instance_id
-    shap_df = shap_df.rename(columns={"user_code": "user_id"})  # 重命名
-    shap_df = shap_df[["instance_id", "user_id", "shap"]]  # 调整顺序
+    shap_df = shap_df.rename(columns={"cust_code": "user_id"})  # 重命名
+    shap_df = shap_df[["instance_id", "user_id", "shapley"]]  # 调整顺序
     print("shap_df-----*****/n", shap_df)
     shap_spark_df = (
         spark.createDataFrame(shap_df)
         .select(F.col("instance_id").cast(LongType()),
                 F.col("user_id").cast(StringType()),
-                F.col("shap").cast(StringType()))
+                F.col("shapley").cast(StringType()))
         .distinct()
     )  # 格式化数据类型
     print("shap_spark_df.schema----", shap_spark_df.schema)
