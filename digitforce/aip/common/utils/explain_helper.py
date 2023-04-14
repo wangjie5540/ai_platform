@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 plt.rcParams["font.sans-serif"] = ["SimHei"]  # 设置字体
 plt.rcParams["axes.unicode_minus"] = False  # 该语句解决图像中的“-”负号的乱码问题
 
+import json
+
 
 # 测试离散型变量的ALE
 def cat_ale(x_test: pd.DataFrame, model, cat_var: str):
@@ -361,7 +363,7 @@ def explain(X: pd.DataFrame, model, cat_cols: List[str]):
         返回两个dataframe，ale_df[['target', 'feature', 'feature_trends']],形如
         2, “age”, {0.1: 0.2, 0.2: 0.3}
          shap_df[['cust_code', 'target', 'feature_contribution']]，形如
-        1123, 2, {"age": 0.2, "tall": 0.3}
+        1123, 2, '{"age": 0.2, "tall": 0.3}'
     """
     ale_df = ale_main(X.drop(columns=["cust_code"]), model, cat_cols)
     ale_df["feature_trends"] = ale_df.apply(lambda row: {row[2]: row[3]}, axis=1)
@@ -419,9 +421,50 @@ def df_to_json(df, group_cols):
 
         output[target][feature_method].append(feature_method_d)
 
-    print(output)
-
     return output
+
+
+def shap_agg(df):
+    """
+    将shape的结果按照user_code进行聚合，返回的结果是json格式的字符串
+    [['user_code', 'shap']']]
+    [1123,
+    '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}},
+     {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}}]']
+
+    Args:
+        df:
+
+    Returns:
+
+    """
+    df = df.reset_index()
+
+    def get_shap_col(data):
+        """
+        获取shap列的值
+
+        Args:
+            data:
+
+        Returns:
+
+        """
+        output = []
+        for i in range(len(data)):
+            output.append({
+                "target": str(data["target"].iloc[i]),
+                "feature_contributions": {
+                    "x": list(data["feature_contributions"].iloc[i].keys()),
+                    "y": list(data["feature_contributions"].iloc[i].values()),
+                },
+            })
+        output = json.dumps(output)
+        return output
+
+    df = df.groupby('user_code').apply(lambda x: get_shap_col(x))
+    df = df.reset_index().rename(columns={0: "shap"})
+    return df
 
 
 def get_explain_result(X, model, cat_cols):
@@ -433,12 +476,13 @@ def get_explain_result(X, model, cat_cols):
         cat_cols (List[str]): 离散型变量的list
 
     Returns:
-        返回两个dataframe，ale_df[['target', 'feature', 'feature_trends']],形如
-        2, “age”, {0.1: 0.2, 0.2: 0.3}
-         shap_df[['cust_code', 'target', 'feature_contribution']]，形如
-        1123, 2, {"age": 0.2, "tall": 0.3}
+        返回ale的json格式和shap的dataframe,,形如
+         shap_df[['cust_code', 'shap']]，形如
+        [1123,
+    '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}},
+     {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}}]']
     """
     ale_df, shap_df = explain(X, model, cat_cols)
     ale_json = df_to_json(ale_df, ["target", "feature"])
-    shap_json = df_to_json(shap_df, ["target", "cust_code"])
-    return ale_json, shap_json
+    shap_df = shap_agg(shap_df)
+    return ale_json, shap_df
