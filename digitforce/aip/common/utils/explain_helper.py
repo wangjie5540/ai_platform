@@ -363,7 +363,7 @@ def explain(X: pd.DataFrame, model, cat_cols: List[str]):
         返回两个dataframe，ale_df[['target', 'feature', 'feature_trends']],形如
         2, “age”, {0.1: 0.2, 0.2: 0.3}
          shap_df[['cust_code', 'target', 'feature_contribution']]，形如
-        1123, 2, '{"age": 0.2, "tall": 0.3}'
+        1123, 2, '{"age": 0.2}'
     """
     ale_df = ale_main(X.drop(columns=["cust_code"]), model, cat_cols)
     ale_df["feature_trends"] = ale_df.apply(lambda row: {row[2]: row[3]}, axis=1)
@@ -424,21 +424,30 @@ def df_to_json(df, group_cols):
     return output
 
 
-def shap_agg(df):
+def shap_agg(df: pd.DataFrame):
     """
-    将shape的结果按照user_code进行聚合，返回的结果是json格式的字符串
-    [['user_code', 'shap']']]
+
+    将shape的结果按照user_code进行聚合，
+
+    Args:
+        df: shap的结果，必须有cust_code，target，feature_contribution列，形如
+        [1123, 0, {"age": 0.2}]
+
+    Returns:
+        返回dataframe, 其中shapley列为json格式的字符串，形如
+    [['user_code', 'shapley']']]
     [1123,
     '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}},
      {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}}]']
 
-    Args:
-        df:
-
-    Returns:
-
     """
-    df = df.reset_index()
+    df = df.sort_values(by=['cust_code', 'target'])
+
+    def user_target_agg(data):
+        merge_d = {}
+        for feature_shap_d in data['feature_contribution']:
+            merge_d = {**merge_d, **feature_shap_d}
+        return merge_d
 
     def get_shap_col(data):
         """
@@ -462,6 +471,9 @@ def shap_agg(df):
         output = json.dumps(output)
         return output
 
+    df = (df.groupby(['cust_code', 'target'])
+          .apply(
+        lambda x: user_target_agg(x)).reset_index().rename(columns={0: "feature_contribution"}))
     df = df.groupby('cust_code').apply(lambda x: get_shap_col(x))
     df = df.reset_index().rename(columns={0: "shapley"})
     return df
