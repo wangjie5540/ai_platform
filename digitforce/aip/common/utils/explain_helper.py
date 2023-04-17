@@ -190,7 +190,8 @@ def num_ale(X: pd.DataFrame, feature: str, model, n_bins=20):
                 X_bin_repl = X_bin.copy()
                 X_bin_repl[feature] = feat_range[i]
 
-                # Get the average prediction of the samples in the i-th bin after replacing the feature values
+                # Get the average prediction of the samples in the i-th bin
+                # after replacing the feature values
                 bin_mean_repl = np.mean(model.predict_proba(X_bin_repl), axis=0)
 
                 # Compute the ALE value for the i-th bin
@@ -366,12 +367,12 @@ def explain(X: pd.DataFrame, model, cat_cols: List[str]):
         1123, 2, '{"age": 0.2}'
     """
     ale_df = ale_main(X.drop(columns=["cust_code"]), model, cat_cols)
-    ale_df["feature_trends"] = ale_df.apply(lambda row: {row[2]: row[3]}, axis=1)
+    ale_df["feature_trends"] = ale_df.apply(lambda row: {row[2]: float(row[3])}, axis=1)
     ale_df = ale_df.rename(columns={"y_value": "target"})
     # ale值和shap值最后两列分别做字典，新成一列
     shap_df = shap_value(X, model)
     shap_df["feature_contribution"] = shap_df.apply(
-        lambda row: {row[2]: row[3]}, axis=1
+        lambda row: {row[2]: float(row[3])}, axis=1
     )
     shap_df = shap_df.rename(columns={"y_value": "target"})
     return (
@@ -400,6 +401,166 @@ def df_to_json(df, group_cols):
     group_cols_d = {}
     feature_method = df.columns[2]
 
+    def ale_description(value: dict) -> str:
+        """ale值的"解释说明"
+
+        Args:
+            value: 输入value = {
+                    "x": [23, 27, 31, 35, 39, 43, 47, 51, 55, 59],
+                    "y": [0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.5, 0.5, 0.4, 0.3],
+                    }
+
+        Returns:
+            dict: 返回解释说明的字符串
+
+        """
+
+        def find_consecutive_ranges(numbers: list) -> list:
+            """找到连续的递增的间隔为1的序列
+
+            Args:
+                numbers (list): _description_
+
+            Returns:
+                list: _description_
+            """
+            ranges = []
+            range_start = numbers[0]
+            range_end = numbers[0]
+            for num in numbers[1:]:
+                if num == range_end + 1:
+                    range_end = num
+                else:
+                    ranges.append((range_start, range_end))
+                    range_start = range_end = num
+            ranges.append((range_start, range_end))
+            return ranges
+
+        x = value["x"]
+        y = np.array(value["y"])
+
+        # 异常值
+        mean = np.mean(y)
+        std_deviation = np.std(y)
+        threshold = 3 * std_deviation
+        outliers = [(index, value) for index, value in enumerate(y) if
+                    abs(value - mean) > threshold]
+
+        # 强趋势点
+        # strong_trend_points = []
+        # for ix in range(len(y) - 2):
+        #     if y[ix] < y[ix + 1] < y[ix + 2]:
+        #         strong_trend_points.append((ix + 1, "上涨"))
+        #     elif y[ix] > y[ix + 1] > y[ix + 2]:
+        #         strong_trend_points.append((ix + 1, "下降"))
+
+        strong_trend_points = []
+        for ix in range(len(y) - 1):
+            if y[ix] < y[ix + 1]:
+                strong_trend_points.append((ix + 1, "上涨"))
+            elif y[ix] > y[ix + 1]:
+                strong_trend_points.append((ix + 1, "下降"))
+
+        # 变革点
+        change_points = []
+        for ix in range(len(y) - 2):
+            if y[ix] < mean and y[ix + 1] < mean and y[ix + 2] < mean:
+                change_points.append((ix + 1, "均值以下"))
+            elif y[ix] > mean and y[ix + 1] > mean and y[ix + 2] > mean:
+                change_points.append((ix + 1, "均值以上"))
+
+        # 最值点
+        max_index = np.argmax(y)
+        min_index = np.argmin(y)
+        max_point = (x[max_index], y[max_index])
+        min_point = (x[min_index], y[min_index])
+
+        # 结论
+        conclusion = "结论：\n"
+
+        # 异常值范围
+        if outliers:
+            high_outliers = [value for index, value in outliers if value > mean]
+            low_outliers = [value for index, value in outliers if value < mean]
+            if high_outliers:
+                conclusion += f"存在高异常值：{high_outliers}\n"
+            if low_outliers:
+                conclusion += f"存在低异常值：{low_outliers}\n"
+
+        # 强趋势点范围
+        up_trends = [index for index, trend in strong_trend_points if trend == "上涨"]
+        down_trends = [index for index, trend in strong_trend_points if trend == "下降"]
+
+        if up_trends:  # 检查是否存在上涨强趋势点范围
+            up_trend_ranges = find_consecutive_ranges(up_trends)
+            for start, end in up_trend_ranges:
+                if end - start >= 3:
+                    conclusion += f"存在上涨强趋势点范围：{x[start - 1]} - {x[end - 1]}\n"
+                elif end - start == 2:
+                    conclusion += f"存在上涨弱趋势点范围：{x[start - 1]} - {x[end - 1]}\n"
+
+        if down_trends:  # 检查是否存在下降强趋势点范围
+            down_trend_ranges = find_consecutive_ranges(down_trends)
+            for start, end in down_trend_ranges:
+                if end - start >= 3:
+                    conclusion += f"存在下降强趋势点范围：{x[start - 1]} - {x[end - 1]}\n"
+                elif end - start == 2:
+                    conclusion += f"存在下降弱趋势点范围：{x[start - 1]} - {x[end - 1]}\n"
+
+        if not up_trends and not down_trends:
+            conclusion += "不存在上涨或下降趋势点范围\n"
+
+        # 变革点范围
+        below_mean_changes = [index for index, position in change_points if position == "均值以下"]
+        above_mean_changes = [index for index, position in change_points if position == "均值以上"]
+
+        if below_mean_changes:
+            below_mean_change_ranges = find_consecutive_ranges(below_mean_changes)
+            for start, end in below_mean_change_ranges:
+                if end - start >= 3:
+                    conclusion += f"存在均值以下变革点范围：{x[start - 1]} - {x[end - 1]}\n"
+                elif end - start == 2:
+                    conclusion += f"存在均值以下弱变革点范围：{x[start - 1]} - {x[end - 1]}\n"
+
+        if above_mean_changes:
+            above_mean_change_ranges = find_consecutive_ranges(above_mean_changes)
+            for start, end in above_mean_change_ranges:
+                if end - start >= 3:
+                    conclusion += f"存在均值以上变革点范围：{x[start - 1]} - {x[end - 1]}\n"
+                elif end - start == 2:
+                    conclusion += f"存在均值以上弱变革点范围：{x[start - 1]} - {x[end - 1]}\n"
+
+        if not below_mean_changes and not above_mean_changes:
+            conclusion += "不存在均值以下或均值以上变革点范围\n"
+
+        if np.unique(y).size == 1:
+            conclusion += "所有值相同，无法分析\n"
+        elif np.unique(y).size == 2:
+            conclusion += "所有值相近，无法分析\n"
+        else:
+            # 最值点
+            conclusion += f"""
+            最大值点：位置 {max_point[0]}，值 {max_point[1]}；
+            最小值点：位置 {min_point[0]}，值 {min_point[1]}\n
+            """
+
+            # 分析趋势
+            trends = []
+            if 0.1 * len(y) < max_index < 0.9 * len(y):
+                if y[max_index - 1] < y[max_index] > y[max_index + 1]:
+                    trends.append("最大值点附近为峰值")
+            elif max_index > 0.1 * len(y):
+                if y[max_index - 1] < y[max_index]:
+                    trends.append("最大值点左侧上升")
+            if max_index < 0.9 * len(y):
+                if y[max_index] > y[max_index + 1]:
+                    trends.append("最大值点右侧下降")
+
+            for trend in trends:
+                conclusion += f"{trend}\n"
+
+        return conclusion
+
     # Loop over the groups and populate the output dictionary
     for (target, b), data in grouped:
 
@@ -414,10 +575,14 @@ def df_to_json(df, group_cols):
             x_result.append(list(data[feature_method].iloc[i].keys())[0])
             y_result.append(list(data[feature_method].iloc[i].values())[0])
 
-        feature_method_d = {group_cols[1]: b, "coordinates": {
-            "x": x_result,
-            "y": y_result
-        }}
+        feature_method_d = {
+            group_cols[1]: b,
+            "coordinates": {
+                "x": x_result,
+                "y": y_result
+            },
+        }
+        feature_method_d["description"] = ale_description(feature_method_d["coordinates"])
 
         output[target][feature_method].append(feature_method_d)
 
@@ -443,11 +608,62 @@ def shap_agg(df: pd.DataFrame):
     """
     df = df.sort_values(by=['cust_code', 'target'])
 
-    def user_target_agg(data):
+    def user_target_agg(data) -> dict:
+        """
+        将同一个用户的同一个目标的shapley值进行合并
+        Args:
+            data:
+
+        Returns:
+            dict: 合并后的shapley值,形如{"age": 0.2, ""tall": 0.3}
+        """
         merge_d = {}
         for feature_shap_d in data['feature_contribution']:
             merge_d = {**merge_d, **feature_shap_d}
         return merge_d
+
+    def shapley_description(value: dict) -> str:
+        """生成shapley的描述
+
+        Args:
+            value: 传入字典，类似于 value = {
+                                "x": ['年龄', '最近一周登录天数', '最近20个交易日银证转入金额',
+                                      '持仓股票数量', '省份'],
+                                "y": [-0.1, 0.2, 0.3, 0.4, -0.6],
+                            }
+
+        Returns:
+            str: 返回描述字符串
+
+        """
+
+        x_labels = value['x']
+        y_values = value['y']
+
+        # 计算均值
+        mean_value = np.mean(y_values)
+
+        # 找到最大和最小点
+        max_index = np.argmax(y_values)
+        min_index = np.argmin(y_values)
+
+        # 计算与均值同号的贡献最高的数据点
+        if mean_value > 0:
+            same_sign_indices = np.where(np.array(y_values) > 0)[0]
+        else:
+            same_sign_indices = np.where(np.array(y_values) < 0)[0]
+
+        highest_contrib_index = same_sign_indices[
+            np.argmax(np.abs(np.array(y_values)[same_sign_indices]))]
+
+        result = (
+            f"均值为: {mean_value:.2f}\n"
+            f"最大点: {x_labels[max_index]} (正向贡献: {y_values[max_index]:.2f})\n"
+            f"最小点: {x_labels[min_index]} (负向贡献: {y_values[min_index]:.2f})\n"
+            f"与均值同号贡献最高的数据点: {x_labels[highest_contrib_index]} ({y_values[highest_contrib_index]:.2f})"
+        )
+
+        return result
 
     def get_shap_col(data):
         """
@@ -461,13 +677,18 @@ def shap_agg(df: pd.DataFrame):
         """
         output = []
         for i in range(len(data)):
-            output.append({
+            feature_contributions_d = {
                 "target": str(data["target"].iloc[i]),
                 "feature_contributions": {
                     "x": list(data["feature_contribution"].iloc[i].keys()),
                     "y": list(data["feature_contribution"].iloc[i].values()),
                 },
-            })
+            }
+            feature_contributions_d["description"] = shapley_description(
+                feature_contributions_d["feature_contributions"])  # 生成描述
+
+            output.append(feature_contributions_d)
+
         output = json.dumps(output)
         return output
 
