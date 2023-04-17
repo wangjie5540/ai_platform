@@ -1,7 +1,7 @@
 import os
 
 import digitforce.aip.common.utils.s3_helper as s3_helper
-import digitforce.aip.common.constants.global_constant as global_constants
+import digitforce.aip.common.utils.config_helper as config_helper
 import json
 import tempfile
 
@@ -21,21 +21,33 @@ def report_model_metrics(metrics: dict, train_id):
         f.write(json.dumps(metrics).encode('utf-8'))
         f.flush()
         # 目标文件地址
-        target_file_path = os.path.join(train_id, 'metrics.json')
-        client.upload_file(bucket_name=global_constants.MODEL_PACKAGE_BUCKET, local_file_path=f.name,
+        target_file_path = os.path.join('model', train_id, 'metrics.json')
+        client.upload_file(bucket_name=config_helper.get_module_config('s3')['bucket'], local_file_path=f.name,
                            output_file_name=target_file_path)
 
 
-def upload_data(local_data_path, fitted_id, target_file_name):
+def get_model_metrics(train_id):
+    """
+    打印模型评估指标
+    :param train_id: 模型训练id
+    :return:
+    """
+    # 目标文件地址
+    target_file_path = os.path.join('model', train_id, 'metrics.json')
+    metrics_str = client.get_object_str(bucket_name=config_helper.get_module_config('s3')['bucket'], key=target_file_path)
+    return json.loads(metrics_str)
+
+
+def upload_data(local_data_path, train_id, target_file_name):
     """
     保存数据
     :param local_data_path: 本地数据路径
-    :param fitted_id: 模型训练id
+    :param train_id: 模型训练id
     :param target_file_name: 目标文件名
     :return:
     """
-    target_file_path = os.path.join(fitted_id, target_file_name)
-    client.upload_file(bucket_name=global_constants.MODEL_PACKAGE_BUCKET, local_file_path=local_data_path,
+    target_file_path = os.path.join(train_id, target_file_name)
+    client.upload_file(bucket_name=config_helper.get_module_config('s3')['bucket'], local_file_path=local_data_path,
                        output_file_name=target_file_path)
 
 
@@ -47,5 +59,5 @@ def download_data(fitted_id, target_file_name):
     :return:
     """
     target_file_path = os.path.join(fitted_id, target_file_name)
-    client.download_file(bucket_name=global_constants.MODEL_PACKAGE_BUCKET, key=target_file_path,
+    client.download_file(bucket_name=config_helper.get_module_config('s3')['bucket'], key=target_file_path,
                          local_file_path=target_file_name)

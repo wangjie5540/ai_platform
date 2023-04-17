@@ -7,16 +7,13 @@ class S3Client(object):
 
     def __init__(self, endpoint_url=None, access_key=None, secret_key=None):
         if endpoint_url is None or access_key is None or secret_key is None:
-            # s3_config = config_helper.get_module_config('s3')
-            # endpoint_url = s3_config['endpoint_url']
-            # access_key = s3_config['access_key']
-            # secret_key = s3_config['secret_key']
-            # TODO 后续切换
-            endpoint_url = "http://172.24.20.91:32222/"
-            access_key = "FzaylFbX7h6tte12"
-            secret_key = "l2hOAWMweie7UP4MZpxB8icNdGezodel"
+            s3_config = config_helper.get_module_config('s3')
+            endpoint_url = s3_config['endpoint_url']
+            access_key = s3_config['aws_access_key_id']
+            secret_key = s3_config['aws_secret_access_key']
         self.client = boto3.client(
             's3',
+            region_name='ap-beijing',
             endpoint_url=endpoint_url,
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_key,
@@ -31,7 +28,7 @@ class S3Client(object):
             return []
         return [bucket['Name'] for bucket in response['Buckets']]
 
-    def list_objects(self, bucket_name, prefix='/', max_keys=20):
+    def list_objects(self, bucket_name, prefix='', max_keys=20):
         """
         List all objects in a bucket
         :param bucket_name: 桶名
@@ -73,8 +70,8 @@ class S3Client(object):
     def create_bucket(self, bucket_name):
         self.client.create_bucket(Bucket=bucket_name)
 
-    def get_object(self, bucket_name, key):
-        return self.client.get_object(Bucket=bucket_name, Key=key)
+    def get_object_str(self, bucket_name, key):
+        return self.client.get_object(Bucket=bucket_name, Key=key)['Body'].read().decode('utf-8')
 
     def get_object_url_with_expire(self, bucket_name, key, expire=3600):
         return self.client.generate_presigned_url(

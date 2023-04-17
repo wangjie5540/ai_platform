@@ -29,7 +29,8 @@ cos:
   secret_key: kEWEjyxiDaw7C4jDTfh0FKF1fBUedQ3U
   base_url: https://algorithm-1308011215.cos.ap-beijing.myqcloud.com
 s3:
-  endpoint_url: http://172.24.20.91:32222/
-  aws_access_key_id: FzaylFbX7h6tte12
-  aws_secret_access_key: l2hOAWMweie7UP4MZpxB8icNdGezodel
+  endpoint_url: https://cos.ap-beijing.myqcloud.com
+  aws_access_key_id: AKIDeNpeP0PaU87uSo7HFxFCwaBYpwue9VbS
+  aws_secret_access_key: kEWEjyxiDaw7C4jDTfh0FKF1fBUedQ3U
+  bucket: algorithm-1308011215
 
