@@ -25,6 +25,8 @@ spec:
           mountPath: /usr/local/etc
         - name: kube-config
           mountPath: /root/.kube
+        - name: ai-platform-pvc
+          mountPath: /data/ai-platform
   volumes:
     - name: aip-config
       configMap:
@@ -35,6 +37,10 @@ spec:
     - name: kube-config
       configMap:
         name: kube-config
+    # ai-platform-pvc是测试环境申请的pvc，需要根据实际情况修改
+    - name: ai-platform-pvc
+      persistentVolumeClaim:
+        claimName: ai-platform-pvc
 ---
 apiVersion: v1
 kind: Service
