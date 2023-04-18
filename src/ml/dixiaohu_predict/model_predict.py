@@ -123,6 +123,7 @@ def start_model_predict(
     result_spark_df.show()
     print("result_spark_df.schema----", result_spark_df.schema)
     write_score(result_spark_df, predict_table_name)
+    print("预测分数存储完成-----*****")
 
     from digitforce.aip.common.utils.explain_helper import get_explain_result
     # shap和spark存在兼容性冲突，须放在spark_client后使用
@@ -132,7 +133,7 @@ def start_model_predict(
     )
     # 存储ale
     ale_local_path = "ale.json"
-    ale_hdfs_path = f"/user/ai/aip/zq/dixiaohu/explain/{instance_id}/ale.json"
+    ale_hdfs_path = f"/user/ai/aip/predict/{instance_id}/ale.json"
     with open(ale_local_path, "w") as f:
         json.dump(ale_json, f, indent=4)
     write_hdfs_path(ale_local_path, ale_hdfs_path, hdfs_client)
