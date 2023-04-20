@@ -647,7 +647,6 @@ def shap_agg(df: pd.DataFrame):
                 "feature_cname_list": [feature_cname_list]
             }
         )
-        print("\n d------------", d)
         return pd.DataFrame(
             {
                 "feature_contribution": [merge_d],
