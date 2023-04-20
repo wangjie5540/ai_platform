@@ -1,7 +1,8 @@
+from pandas import DataFrame
 from shap import Explainer
 import pandas as pd
 import numpy as np
-from typing import List
+from typing import List, Tuple, Any
 
 import matplotlib.pyplot as plt
 
@@ -30,9 +31,13 @@ def cat_ale(x_test: pd.DataFrame, model, cat_var: str):
     else:
         model_type = "regressor"
     if model_type == "classifier":
+        class_cols = model.classes_.tolist()  # 预测的每个类的列名称
+        if not len(x_test):
+            # 添加对离散型变量的空值处理
+            print("该离散型变量的除none以外的预测样本集为空")
+            return pd.DataFrame(columns=["feature_value"] + class_cols)
         predict_prob = model.predict_proba(x_test)
         num_class = predict_prob.shape[1]
-        class_cols = [str(i) for i in range(num_class)]  # 预测的每个类的列名称
         pred_dataframe = pd.DataFrame(predict_prob, columns=class_cols)
         pred_dataframe = pd.concat(
             [x_test.reset_index(drop=True), pred_dataframe], axis=1
@@ -68,6 +73,10 @@ def cat_ale(x_test: pd.DataFrame, model, cat_var: str):
         cat_var_ale = pd.DataFrame(class_ale, columns=["feature_value"] + class_cols)
         return cat_var_ale
     elif model_type == "regressor":
+        if not len(x_test):
+            # 添加对离散型变量的空值处理
+            print("该离散型变量的除none以外的预测样本集为空")
+            return pd.DataFrame(columns=["feature_value", "ale"])
         y_pred = model.predict(x_test)
         pred_dataframe = x_test.copy()
         pred_dataframe["price_pred"] = y_pred
@@ -165,7 +174,7 @@ def num_ale(X: pd.DataFrame, feature: str, model, n_bins=20):
     if model_type == "classifier":
         # FOR CLASSIFIER
         # Compute the ALE values
-        num_class = model.predict_proba(X).shape[1]
+        num_class = model.classes_.shape[0]
         ale_values = np.zeros((n_bins, num_class))
         feat_range_median = np.zeros(n_bins)
         tmp = np.zeros(num_class)
@@ -238,7 +247,10 @@ def ale(X: pd.DataFrame, feature: str, model, feature_type: str):
        ale值计算结果
     """
     if feature_type in ["categorical", "cat"]:
-        return cat_ale(X, model, feature)
+        # 去除nan和None,空值不进行离散型变量的ale计算
+        X_copy = X.copy().dropna(axis=0, how='any')
+        X_copy = X_copy[~(X_copy[feature].isin(['nan', 'None']))]
+        return cat_ale(X_copy, model, feature)
     elif feature_type in ["numeric", "num"]:
         return num_ale(X, feature, model)
 
@@ -350,12 +362,14 @@ def shap_value(X: pd.DataFrame, model):
     return result_df
 
 
-def explain(X: pd.DataFrame, model, cat_cols: List[str]):
+def explain(X: pd.DataFrame, model, cat_cols: List[str], feature_cname_dict: dict) -> Tuple[
+    pd.DataFrame, pd.DataFrame]:
     """计算ale值和shap值，合并
     # user_id, target, feature_contribution
     # 1123, 2, {"age": 0.2, "tall": 0.3}
 
     Args:
+        feature_cname_dict: 特征中文名字字典
         X (pd.DataFrame): 要求必须有cust_code列和模型要求的输入列
         model : 列现支持sklearn接口的机器学习模型
         cat_cols (List[str]): 离散型变量的list
@@ -369,19 +383,22 @@ def explain(X: pd.DataFrame, model, cat_cols: List[str]):
     ale_df = ale_main(X.drop(columns=["cust_code"]), model, cat_cols)
     ale_df["feature_trends"] = ale_df.apply(lambda row: {row[2]: float(row[3])}, axis=1)
     ale_df = ale_df.rename(columns={"y_value": "target"})
+    ale_df['feature_cname'] = ale_df['feature'].map(feature_cname_dict)  # 特征中文名字
+
     # ale值和shap值最后两列分别做字典，新成一列
     shap_df = shap_value(X, model)
     shap_df["feature_contribution"] = shap_df.apply(
         lambda row: {row[2]: float(row[3])}, axis=1
     )
     shap_df = shap_df.rename(columns={"y_value": "target"})
+    shap_df['feature_cname'] = shap_df['feature'].map(feature_cname_dict)  # 特征中文名字
     return (
-        ale_df[["target", "feature", "feature_trends"]],
-        shap_df[["cust_code", "target", "feature_contribution"]],
+        ale_df[["target", "feature", "feature_trends", "feature_cname"]],
+        shap_df[["cust_code", "target", "feature_contribution", "feature_cname"]],
     )
 
 
-def df_to_json(df, group_cols):
+def ale_to_json(df, group_cols):
     """将dataframe转换成json格式
 
     Args:
@@ -562,21 +579,24 @@ def df_to_json(df, group_cols):
         return conclusion
 
     # Loop over the groups and populate the output dictionary
-    for (target, b), data in grouped:
+    for (target, feature, feature_cname), data in grouped:
 
         if target not in group_cols_d:
             class_d = {group_cols[0]: str(target), feature_method: []}
             output.append(class_d)
-            group_cols_d[target] = str(b)
+            group_cols_d[target] = str(feature)
 
         x_result = []
         y_result = []
         for i in range(len(data)):
-            x_result.append(list(data[feature_method].iloc[i].keys())[0])
-            y_result.append(list(data[feature_method].iloc[i].values())[0])
+            x = list(data[feature_method].iloc[i].keys())[0]
+            x_result.append(x)
+            y = list(data[feature_method].iloc[i].values())[0]
+            y_result.append(y)
 
         feature_method_d = {
-            group_cols[1]: b,
+            group_cols[1]: feature,
+            group_cols[2]: feature_cname,
             "coordinates": {
                 "x": x_result,
                 "y": y_result
@@ -595,8 +615,8 @@ def shap_agg(df: pd.DataFrame):
     将shape的结果按照user_code进行聚合，
 
     Args:
-        df: shap的结果，必须有cust_code，target，feature_contribution列，形如
-        [1123, 0, {"age": 0.2}]
+        df: shap的结果，必须有cust_code，target，feature_contribution， feature_cname列，形如
+        [1123, 0, {"age": 0.2}, "年龄"]
 
     Returns:
         返回dataframe, 其中shapley列为json格式的字符串，形如
@@ -608,19 +628,32 @@ def shap_agg(df: pd.DataFrame):
     """
     df = df.sort_values(by=['cust_code', 'target'])
 
-    def user_target_agg(data) -> dict:
+    def user_target_agg(data) -> pd.DataFrame:
         """
         将同一个用户的同一个目标的shapley值进行合并
         Args:
             data:
 
         Returns:
-            dict: 合并后的shapley值,形如{"age": 0.2, ""tall": 0.3}
+            dict: 合并后的shapley值,形如{"age": 0.2, "tall": 0.3}
         """
         merge_d = {}
         for feature_shap_d in data['feature_contribution']:
-            merge_d = {**merge_d, **feature_shap_d}
-        return merge_d
+            merge_d = {**merge_d, **feature_shap_d}  # 合并字典
+        feature_cname_list = list(data['feature_cname'])
+        d = pd.DataFrame(
+            {
+                "merge_d": [merge_d],
+                "feature_cname_list": [feature_cname_list]
+            }
+        )
+        print("\n d------------", d)
+        return pd.DataFrame(
+            {
+                "feature_contribution": [merge_d],
+                "feature_cname_list": [feature_cname_list]
+            }
+        )
 
     def shapley_description(value: dict) -> str:
         """生成shapley的描述
@@ -682,6 +715,7 @@ def shap_agg(df: pd.DataFrame):
                 "feature_contributions": {
                     "x": list(data["feature_contribution"].iloc[i].keys()),
                     "y": list(data["feature_contribution"].iloc[i].values()),
+                    "feature_cname": data["feature_cname_list"].iloc[i],
                 },
             }
             feature_contributions_d["description"] = shapley_description(
@@ -692,18 +726,21 @@ def shap_agg(df: pd.DataFrame):
         output = json.dumps(output)
         return output
 
-    df = (df.groupby(['cust_code', 'target'])
-          .apply(
-        lambda x: user_target_agg(x)).reset_index().rename(columns={0: "feature_contribution"}))
+    df = (
+        df.groupby(['cust_code', 'target'])
+        .apply(lambda x: user_target_agg(x))
+        .reset_index()
+    )
     df = df.groupby('cust_code').apply(lambda x: get_shap_col(x))
     df = df.reset_index().rename(columns={0: "shapley"})
     return df
 
 
-def get_explain_result(X, model, cat_cols):
+def get_explain_result(X, model, cat_cols: List[str], feature_cname_dict: dict):
     """获取explain的结果
 
     Args:
+        feature_cname_dict: 特征中文名字的字典
         X (pd.DataFrame): 要求必须有cust_code列和模型要求的输入列
         model : 列现支持sklearn接口的机器学习模型
         cat_cols (List[str]): 离散型变量的list
@@ -715,7 +752,7 @@ def get_explain_result(X, model, cat_cols):
     '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}},
      {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}}]']
     """
-    ale_df, shap_df = explain(X, model, cat_cols)
-    ale_json = df_to_json(ale_df, ["target", "feature"])
+    ale_df, shap_df = explain(X, model, cat_cols, feature_cname_dict)
+    ale_json = ale_to_json(ale_df, ["target", "feature", "feature_cname"])
     shap_df = shap_agg(shap_df)
     return ale_json, shap_df[['cust_code', 'shapley']]
