@@ -31,6 +31,8 @@ def start_sample_selection(
     """
     spark_client = SparkClient.get()
     spark = spark_client.get_session()
+    print("spark init-----------------")
+
     zc_table = "zq_standard.dm_cust_ast_redm_event_df"
     app_table = "zq_standard.dm_cust_traf_behv_aggregate_df"
     jy_table = "zq_standard.dm_cust_subs_redm_event_aggregate_df"

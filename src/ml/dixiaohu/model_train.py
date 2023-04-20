@@ -148,6 +148,7 @@ def start_model_train(
 
         all_score = getRates(y_test, y_pred, y_pred_score)
         print("test-logloss={:.4f}, test-auc={:.4f}".format(all_score[5], all_score[1]))
+        print("all_score", all_score)
     else:
         all_score = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, {"x": [], "y": []}]
 
@@ -173,7 +174,7 @@ def start_model_train(
             "recall": all_score[3],
             "f1_score": all_score[4],
             "loss": all_score[5],
-            # "roc_plot": all_score[6],
+            "roc_plot": all_score[6],
         }
         report_to_aip(
             model_and_metrics_data_hdfs_path,

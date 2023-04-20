@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # encoding: utf-8
 import datetime
 from chinese_calendar import is_holiday
@@ -11,7 +10,8 @@ def get_zc_jf(feature_list: list, start_date: str, end_date: str,
     """
 
     Args:
-        feature_list (list): 输入某个客户的每日资产，顺序排列 [("20230101",123456),("20230102",1234567),("20230103",12345)]
+        feature_list (list): 输入某个客户的每日资产
+        ，顺序排列 [("20230101",123456),("20230102",1234567),("20230103",12345)]
         start_date (str): 需要计算样本起始时间,样式形如"20230203"
         end_date (str): 需要计算样本结束时间,样式形如"20230203"
         dixiao_before_days (int): 过去n个交易日,要求大于0
@@ -19,7 +19,8 @@ def get_zc_jf(feature_list: list, start_date: str, end_date: str,
         noexchangedate_list (list[str]): 非交易日列表，['2023-02-04','2023-02-05']
 
     Returns:
-        _type_: 某个客户在start_date到end_date之间，每一天，相较过去n个交易日的日均资产，未来m个交易日的日均资产，例如：[('20220103',12113，123)]
+        _type_: 某个客户在start_date到end_date之间，每一天，相较过去n个交易日的日均资产
+        ，未来m个交易日的日均资产，例如：[('20220103',12113，123)]
     """
 
     # date类型
@@ -41,7 +42,7 @@ def get_zc_jf(feature_list: list, start_date: str, end_date: str,
             break
 
     res = []
-    for ix in range(start_index, end_index + 1):
+    for ix in range(start_index, end_index + 1):  # TODO： 超出范围的情况
 
         right1 = ix  # right1
         #

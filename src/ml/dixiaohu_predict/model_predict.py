@@ -127,9 +127,38 @@ def start_model_predict(
 
     from digitforce.aip.common.utils.explain_helper import get_explain_result
     # shap和spark存在兼容性冲突，须放在spark_client后使用
+    feature_cname_dict = {
+        "cust_code": "客户编号",
+        "label": "标签",
+        "age": "年龄",
+        "sex": "性别",
+        "city_name": "城市",
+        "province_name": "省份",
+        "educational_degree": "学历",
+        "is_login": "是否登录",
+        "transfer_out_amt": "转出金额",
+        "transfer_in_amt": "转入金额",
+        "transfer_out_cnt": "转出次数",
+        "transfer_in_cnt": "转入次数",
+        "total_tran_cnt": "总交易次数",
+        "total_tran_amt": "总交易金额",
+        "gp_tran_cnt": "股票交易次数",
+        "gp_tran_amt": "股票交易金额",
+        "jj_tran_cnt": "基金交易次数",
+        "jj_tran_amt": "基金交易金额",
+        "zq_tran_cnt": "债券交易次数",
+        "zq_tran_amt": "债券交易金额",
+        "total_ast": "总资产",
+        "net_ast": "净资产",
+        "total_liab": "总负债",
+        "unmoney_fnd_val": "货币基金净值",
+        "stock_ast": "股票资产",
+        "cash_bal": "现金余额",
+        "total_prd_ast": "产品资产",
+    }
     # 计算ale值和shap值并存储
     ale_json, shap_df = get_explain_result(
-        df_predict.drop(columns=["label", "dt"]), model, categorical_features
+        df_predict.drop(columns=["label", "dt"]), model, categorical_features, feature_cname_dict
     )
     # 存储ale
     ale_local_path = "ale.json"
