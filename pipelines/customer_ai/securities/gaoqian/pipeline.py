@@ -4,7 +4,7 @@ from digitforce.aip.components.sample import SampleSelectionGaoqian
 from digitforce.aip.components.source.cos import Cos
 import kfp.dsl as dsl
 
-pipeline_name = 'gaoqian'
+pipeline_name = 'gaoqian_prod'
 
 @dsl.pipeline(name=pipeline_name)
 def pipeline_func(global_params: str, flag='TRAIN'):
