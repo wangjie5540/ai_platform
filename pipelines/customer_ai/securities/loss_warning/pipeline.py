@@ -17,7 +17,7 @@ pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 
 @dsl.pipeline(name=pipeline_name)
-def ml_loss_warning(global_params: str, flag='TRAIN'):
+def pipeline_func(global_params: str, flag='TRAIN'):
     with Condition(flag != "PREDICT", name="is_not_predict"):
         op_sample_selection = SampleSelectionLiushi(name='sample_select', global_params=global_params, tag="2.0.0")
         op_sample_selection.container.set_image_pull_policy("Always")
