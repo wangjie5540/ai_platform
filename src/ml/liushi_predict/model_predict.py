@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # encoding: utf-8
+import findspark
+findspark.init()
 import datetime
-
 import json
 import pandas as pd
 import joblib
@@ -14,11 +15,11 @@ from pyspark.sql.types import LongType, StringType, FloatType
 
 DATE_FORMAT = "%Y%m%d"
 today = datetime.datetime.today().strftime(DATE_FORMAT)
-
+hdfs_client = hdfs_helper.HdfsClient()
 
 def start_model_predict(predict_table_name, model_hdfs_path, output_file_name,
                         instance_id: int, predict_score_table_name: str, shapley_table_name: str,):
-    hdfs_client = hdfs_helper.HdfsClient()
+
     spark_client = SparkClient.get()
     spark = spark_client.get_session()
 
@@ -58,7 +59,7 @@ def start_model_predict(predict_table_name, model_hdfs_path, output_file_name,
 
     # 统计和可解释性部分
     result["instance_id"] = instance_id
-    result = result.rename(columns={"cust_code": "user_id"})  # 重命名
+    result = result.rename(columns={"custom_id": "user_id"})  # 重命名
     result = result[["instance_id", "user_id", "score"]]  # 调整顺序
     print("result-----*****/n", result)
     result_spark_df = (
