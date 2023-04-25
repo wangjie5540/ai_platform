@@ -32,7 +32,7 @@ class FeatureCreateLiushi(BaseComponent):
     def __init__(self, name, global_params, sample, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-feature_create_liushi',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/feature_engineering-feature_create_liushi',
             arguments=['--name', name, '--global_params',
                        global_params, '--sample', sample],
             tag=tag,
@@ -50,7 +50,7 @@ class FeatureCreateLiushiPredict(BaseComponent):
     def __init__(self, name, global_params, sample, tag='latest'):
         super().__init__(
             name=name,
-            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO}/feature_engineering-feature_create_liushi_predict',
+            image=f'{global_constant.AI_PLATFORM_IMAGE_REPO_V2}/feature_engineering-feature_create_liushi_predict',
             arguments=['--name', name, '--global_params', global_params,
                        '--sample', sample],
             tag=tag,

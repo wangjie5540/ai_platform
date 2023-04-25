@@ -22,7 +22,7 @@ def pipeline_func(global_params: str, flag='TRAIN'):
         op_sample_selection = SampleSelectionLiushi(name='sample_select', global_params=global_params, tag="2.0.0")
         op_sample_selection.container.set_image_pull_policy("Always")
 
-        op_feature_create = FeatureCreateLiushi(name='feature_create', global_params=global_params, tag="2.0.0",
+        op_feature_create = FeatureCreateLiushi(name='feature_create', global_params=global_params, tag="2.1.0",
                                                 sample=op_sample_selection.outputs['sample_table_name'])
         op_feature_create.container.set_image_pull_policy("Always")
 
