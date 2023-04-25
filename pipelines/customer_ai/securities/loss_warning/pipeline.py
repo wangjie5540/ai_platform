@@ -18,17 +18,16 @@ pipeline_path = f'/tmp/{pipeline_name}.yaml'
 
 @dsl.pipeline(name=pipeline_name)
 def ml_loss_warning(global_params: str, flag='TRAIN'):
-    RUN_ENV = "dev"
     with Condition(flag != "PREDICT", name="is_not_predict"):
-        op_sample_selection = SampleSelectionLiushi(name='sample_select', global_params=global_params, tag=RUN_ENV)
+        op_sample_selection = SampleSelectionLiushi(name='sample_select', global_params=global_params, tag="2.0.0")
         op_sample_selection.container.set_image_pull_policy("Always")
 
-        op_feature_create = FeatureCreateLiushi(name='feature_create', global_params=global_params, tag=RUN_ENV,
+        op_feature_create = FeatureCreateLiushi(name='feature_create', global_params=global_params, tag="2.0.0",
                                                 sample=op_sample_selection.outputs['sample_table_name'])
         op_feature_create.container.set_image_pull_policy("Always")
 
         with Condition(flag == 'TRAIN', name="is_train"):
-            op_sample_comb = LiushiModel(name="model", global_params=global_params, tag=RUN_ENV,
+            op_sample_comb = LiushiModel(name="model", global_params=global_params, tag="2.1.0",
                                          train_data=op_feature_create.outputs[
                                              op_feature_create.OUTPUT_TRAIN_FEATURE
                                          ],
@@ -41,9 +40,9 @@ def ml_loss_warning(global_params: str, flag='TRAIN'):
         predict_table_op.container.set_image_pull_policy("Always")
         predict_feature_op = FeatureCreateLiushiPredict(name="feature_create_predict", global_params=global_params,
                                                         sample=predict_table_op.outputs[Cos.OUTPUT_1],
-                                                        tag=RUN_ENV)
+                                                        tag="2.0.0")
         predict_feature_op.container.set_image_pull_policy("Always")
-        liushi_predict_op = LiushiPredict(name="model_predict", global_params=global_params, tag=RUN_ENV,
+        liushi_predict_op = LiushiPredict(name="model_predict", global_params=global_params, tag="2.1.0",
                                           predict_table_name=predict_feature_op.outputs[
                                               predict_feature_op.OUTPUT_PREDICT_FEATURE
                                           ])
