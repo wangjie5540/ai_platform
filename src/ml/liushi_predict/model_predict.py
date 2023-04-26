@@ -30,6 +30,8 @@ def start_model_predict(predict_table_name, model_hdfs_path, output_file_name,
         "select * from {} where dt = {}".format(predict_table_name, dt)).toPandas()
 
     for col in df_predict.columns:
+        if col == "custom_id":
+            continue
         if df_predict[col].dtypes == "object":
             df_predict[col] = df_predict[col].astype(float)
 
