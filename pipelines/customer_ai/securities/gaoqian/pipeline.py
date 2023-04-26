@@ -4,11 +4,12 @@ from digitforce.aip.components.sample import SampleSelectionGaoqian
 from digitforce.aip.components.source.cos import Cos
 import kfp.dsl as dsl
 
-pipeline_name = 'gaoqian_prod'
+pipeline_name = 'gaoqian'
+# 3.0.0 - expainable ai
 
 @dsl.pipeline(name=pipeline_name)
 def pipeline_func(global_params: str, flag='TRAIN'):
-    RUN_ENV = "2.0.0"
+    RUN_ENV = "3.0.0"
     with dsl.Condition(flag != "PREDICT", name="is_not_predict"):
         op_sample_selection = SampleSelectionGaoqian(name='sample_select', global_params=global_params, tag=RUN_ENV)
         op_feature_create = FeatureCreateGaoqian(name='feature_create', global_params=global_params, tag=RUN_ENV,

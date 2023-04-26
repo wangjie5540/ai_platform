@@ -19,10 +19,15 @@ def run():
     predict_table_name = df_argument_helper.get_argument("predict_table_name")
     model_hdfs_path = df_argument_helper.get_argument("model_hdfs_path")
     output_file_name = df_argument_helper.get_argument("output_file_name")
+
+    instance_id = df_argument_helper.get_argument("instance_id")
+    predict_score_table_name = df_argument_helper.get_argument("predict_table_name")
+    shapley_table_name = df_argument_helper.get_argument("shapley_table_name")
+
     print(f"predict_table_name:{predict_table_name}")
     print(f"model_hdfs_path:{model_hdfs_path}")
     print(f"output_file_name:{output_file_name}")
-    start_model_predict(predict_table_name, model_hdfs_path, output_file_name)
+    start_model_predict(predict_table_name, model_hdfs_path, output_file_name, instance_id, predict_score_table_name, shapley_table_name)
 
 
 

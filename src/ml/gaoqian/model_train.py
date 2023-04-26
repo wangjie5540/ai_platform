@@ -94,7 +94,7 @@ def start_model_train(train_table_name, test_table_name,
             "recall": all_score[3],
             "f1_score": all_score[4],
             "loss": all_score[5],
-            "roc": roc_plot
+            "roc_plot": roc_plot
         }
         report_to_aip(model_and_metrics_data_hdfs_path,
                       model_hdfs_path,
