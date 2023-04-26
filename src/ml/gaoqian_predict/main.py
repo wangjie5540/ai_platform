@@ -33,9 +33,7 @@ def run():
     print(f"model_hdfs_path:{model_hdfs_path}")
     print(f"output_file_name:{output_file_name}")
 
-    print(f"predict_table_name:{predict_feature_table_name}")
-    print(f"model_hdfs_path:{model_hdfs_path}")
-    print(f"output_file_name:{output_file_name}")
+
     start_model_predict(predict_feature_table_name, model_hdfs_path, output_file_name, instance_id, predict_score_table_name, shapley_table_name)
 
 
