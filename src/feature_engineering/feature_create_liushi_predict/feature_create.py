@@ -167,7 +167,7 @@ def feature_create(predict_samples_table_name,
     data_predict_df = spark_client.get_session().createDataFrame(data_predict, feature_cols)
 
     predict_table_name = "algorithm.aip_zq_liushi_custom_feature_predict"
-    data_predict_df.write.format("hive").mode("overwrite").partitionBy("dt").saveAsTable(predict_table_name)
+    data_predict_df.write.format("orc").mode("overwrite").partitionBy("dt").saveAsTable(predict_table_name)
 
     return predict_table_name
 
