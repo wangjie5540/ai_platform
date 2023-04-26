@@ -80,7 +80,7 @@ def start_model_predict(predict_table_name, model_hdfs_path, output_file_name,
     from digitforce.aip.common.utils.explain_helper import get_explain_result
     # shap和spark存在兼容性冲突，须放在spark_client后使用
     feature_cname_dict = {
-        'custom_id': '客户编号',
+        'custom_code': '客户编号',
          'label': '标签',
          'last_jy_days': '上次交易距今天数',
          'last_jy_money': '上次交易金额',
@@ -144,6 +144,7 @@ def start_model_predict(predict_table_name, model_hdfs_path, output_file_name,
     }
     # 计算ale值和shap值并存储
     categorical_features = []
+    df_predict = df_predict.rename(columns={"custom_id": "custom_code"})
     ale_json, shap_df = get_explain_result(
         df_predict.drop(columns=["label", "dt"]), model, categorical_features, feature_cname_dict
     )
