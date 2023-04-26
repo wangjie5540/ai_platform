@@ -40,7 +40,7 @@ def pipeline_func(global_params: str, flag='TRAIN'):
         predict_table_op.container.set_image_pull_policy("Always")
         predict_feature_op = FeatureCreateLiushiPredict(name="feature_create_predict", global_params=global_params,
                                                         sample=predict_table_op.outputs[Cos.OUTPUT_1],
-                                                        tag="2.0.0")
+                                                        tag="2.1.0")
         predict_feature_op.container.set_image_pull_policy("Always")
         liushi_predict_op = LiushiPredict(name="model_predict", global_params=global_params, tag="2.1.0",
                                           predict_table_name=predict_feature_op.outputs[
