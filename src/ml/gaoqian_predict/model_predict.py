@@ -88,7 +88,7 @@ def start_model_predict(predict_feature_table_name, model_hdfs_path, output_file
                     "now_zc_jj", "now_zc_gp", "now_zj", "now_zc_cp", "dt"]
     # 将feature_cols中的每一个转化为{feature_name:feature_cname}的字典,去掉custom_id,label,dt
     feature_cname_dict = {
-        "custom_id": "客户号",
+        "cust_code": "客户号",
         "label": "标签",
         "last_jy_days": "最近交易距今天数",
         "last_jy_money": "最近交易金额",
@@ -150,6 +150,7 @@ def start_model_predict(predict_feature_table_name, model_hdfs_path, output_file
         "now_zj": "当前资金",
         "now_zc_cp": "当前资产-产品"
     }
+    df_predict = df_predict.rename(columns = {"custom_id": "cust_code"})
     ale_json, shap_df = get_explain_result(
         df_predict.drop(columns=["label", "dt"]), model, [], feature_cname_dict
     )
