@@ -4,7 +4,7 @@ from digitforce.aip.components.sample import *
 from digitforce.aip.components.source.cos import Cos
 from digitforce.aip.components.feature_engineering import *
 
-pipeline_name = 'lookalike_prod'
+pipeline_name = 'lookalike'
 
 
 @dsl.pipeline(name=pipeline_name)

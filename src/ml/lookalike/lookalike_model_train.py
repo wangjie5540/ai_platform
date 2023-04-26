@@ -41,13 +41,13 @@ def train(train_data_table_name, test_data_table_name,
     # train_data = hive_client.query_to_df(
     #     f"""select * from {train_data_table_name}""")
     # train_data.columns = [_.split(".")[-1] for _ in train_data.columns]
-    train_data =spark_client.get_session().sql(f"""select * from {train_data_table_name}""").toPandas()
+    train_data =spark_client.get_session().sql(f"""select * from {train_data_table_name} where user_id_raw is not null""").toPandas()
     train_data = train_data.sample(frac=1)
     print("read test dataset")
     # test_data = hive_client.query_to_df(
     #     f"""select * from {test_data_table_name}""")
     # test_data.columns = [_.split(".")[-1] for _ in test_data.columns]
-    test_data = spark_client.get_session().sql(f"""select * from {test_data_table_name}""").toPandas()
+    test_data = spark_client.get_session().sql(f"""select * from {test_data_table_name} where user_id_raw is not null""").toPandas()
     test_data = test_data.sample(frac=1)
 
     print("show user_feature_encoder and item_feature_encoder")
