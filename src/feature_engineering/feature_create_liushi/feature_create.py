@@ -178,8 +178,8 @@ def feature_create(sample_table_name,
 
     train_table_name = "algorithm.aip_zq_liushi_custom_feature_train"
     test_table_name = "algorithm.aip_zq_liushi_custom_feature_test"
-    data_train_df.write.format("hive").mode("overwrite").saveAsTable(train_table_name)
-    data_test_df.write.format("hive").mode("overwrite").saveAsTable(test_table_name)
+    data_train_df.write.format("hive").mode("overwrite").partitionBy("dt").saveAsTable(train_table_name)
+    data_test_df.write.format("hive").mode("overwrite").partitionBy("dt").saveAsTable(test_table_name)
 
     return train_table_name, test_table_name
 
