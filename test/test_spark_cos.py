@@ -6,11 +6,11 @@ df = pd.read_csv("https://algorithm-1308011215.cos.ap-beijing.myqcloud.com/16753
 df = spark_helper.SparkClient.get().get_session().createDataFrame(df)
 df.show()
 
-df.write.format("com.digitforce.bdp.StarrocksSource") \
-    .option("database-name", "aip") \
-    .option("table-name", "wtg_test") \
-    .option("jdbc-url", "jdbc:mysql://dev-common-starrocks-n1.digitforce.com:9030") \
-    .option("load-url", "172.24.20.42:8030") \
-    .option("username", "root") \
-    .option("password", "") \
-    .save()
+# df.write.format("com.digitforce.bdp.StarrocksSource") \
+#     .option("database-name", "aip") \
+#     .option("table-name", "wtg_test") \
+#     .option("jdbc-url", "jdbc:mysql://dev-common-starrocks-n1.digitforce.com:9030") \
+#     .option("load-url", "172.24.20.42:8030") \
+#     .option("username", "root") \
+#     .option("password", "") \
+#     .save()

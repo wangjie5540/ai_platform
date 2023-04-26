@@ -148,7 +148,7 @@ def feature_create(predict_samples_table_name,
     # 3.7 将枚举型转为数值型
     merge_feature7 = merge_feature6.map(lambda x: (x[0], x[1][:49] + [dict_sex.get(x[1][49],0), dict_city.get(x[1][50],0),
                                                                       dict_province.get(x[1][51],0),
-                                                                      dict_edu.get(x[1][52]),0] + x[1][53:]))
+                                                                      dict_edu.get(x[1][52],0)] + x[1][53:]))
 
     feature_cols = ["custom_id", "label", "last_jy_days", "last_jy_money", "3_jy_cnt", "3_jy_money", "3_jy_gp_cnt",
                     "3_jy_gp_money", "3_jy_jj_cnt", "3_jy_jj_money", "7_jy_cnt", "7_jy_money", "7_jy_gp_cnt",
@@ -167,7 +167,7 @@ def feature_create(predict_samples_table_name,
     data_predict_df = spark_client.get_session().createDataFrame(data_predict, feature_cols)
 
     predict_table_name = "algorithm.aip_zq_liushi_custom_feature_predict"
-    write_hive(data_predict_df, predict_table_name, "dt", spark_client)
+    data_predict_df.write.format("orc").mode("overwrite").partitionBy("dt").saveAsTable(predict_table_name)
 
     return predict_table_name
 

@@ -115,7 +115,12 @@ def feature_create(sample_table_name,
     # 3.4 客户基本信息(年龄，性别，城市，省份，教育程度)
     merge_feature4 = merge_feature3.leftOuterJoin(user_feature). \
         map(lambda x: ((x[0], x[1][0][0]), (
-        x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8], x[1][1])))
+        x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8], x[1][1])) if
+    x[1][
+        1] else \
+        ((x[0], x[1][0][0]), (
+            x[1][0][1], x[1][0][2], x[1][0][3], x[1][0][4], x[1][0][5], x[1][0][6], x[1][0][7], x[1][0][8],
+            (0, 0, 0, 0, 0))))
 
     # 3.5 当天总资产, 总负债，基金资产，股票资产，资金余额，产品资产
     merge_feature5 = merge_feature4.leftOuterJoin(zc_feature). \
@@ -173,8 +178,8 @@ def feature_create(sample_table_name,
 
     train_table_name = "algorithm.aip_zq_liushi_custom_feature_train"
     test_table_name = "algorithm.aip_zq_liushi_custom_feature_test"
-    write_hive(data_train_df, train_table_name, "dt", spark_client)
-    write_hive(data_test_df, test_table_name, "dt", spark_client)
+    data_train_df.write.format("orc").mode("overwrite").partitionBy("dt").saveAsTable(train_table_name)
+    data_test_df.write.format("orc").mode("overwrite").partitionBy("dt").saveAsTable(test_table_name)
 
     return train_table_name, test_table_name
 

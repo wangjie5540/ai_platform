@@ -8,6 +8,6 @@ with open('global_params.json', 'r') as f:
         experiment_name='default',
         arguments={
             'global_params': f.read(),
-            'flag': 'TRAIN',
+            'flag': 'Predict',
         }
     )

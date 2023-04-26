@@ -15,6 +15,6 @@ loss_warning_SERVING_template
     {
         "active_before_days": ${sample_select__active_before_days},
         "active_after_days": ${sample_select__active_after_days},
-        "sample": "algorithm.aip_zq_liushi_custom_predict"
+        "sample": "algorithm.aip_zq_liushi_custom_feature_predict"
     }
 }
