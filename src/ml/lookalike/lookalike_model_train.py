@@ -7,7 +7,7 @@ from digitforce.aip.common.utils.spark_helper import SparkClient
 import numpy as np
 import torch
 import torch.optim.adam as adam
-from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, precision_score, recall_score, log_loss
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, precision_score, recall_score, log_loss, roc_curve
 from digitforce.aip.common.utils.aip_model_manage_helper import report_to_aip
 from digitforce.aip.common.aip_feature.zq_feature import *
 from model.dssm import DSSM
@@ -95,6 +95,10 @@ def train(train_data_table_name, test_data_table_name,
     print("test-logloss={:.4f}, test-auc={:.4f}".format(all_score[5],
                                                         all_score[1]))
 
+    # 绘制ROC曲线
+    fpr, tpr, _ = roc_curve(test_data["label"].values, pred_ts)
+    roc_plot = [(x, y) for x, y in zip(fpr, tpr)]
+
     if not is_automl:
         # 获取单塔 user tower
         dict_trained = model.state_dict()
@@ -139,6 +143,7 @@ def train(train_data_table_name, test_data_table_name,
             "recall": all_score[3],
             "f1_score": all_score[4],
             "loss": all_score[5],
+            "roc_plot": roc_plot
         }
         report_to_aip(model_and_metrics_data_hdfs_path,
                       model_hdfs_path,
