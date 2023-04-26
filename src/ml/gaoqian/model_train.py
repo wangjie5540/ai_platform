@@ -5,7 +5,7 @@ import random
 
 import joblib
 from digitforce.aip.common.utils.spark_helper import SparkClient
-from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, precision_score, recall_score, log_loss
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, precision_score, recall_score, log_loss, roc_curve, auc
 from xgboost import XGBClassifier
 
 from digitforce.aip.common.utils.aip_model_manage_helper import report_to_aip
@@ -71,6 +71,10 @@ def start_model_train(train_table_name, test_table_name,
     all_score = getRates(y_test, y_pred, y_pred_score)
     print("test-logloss={:.4f}, test-auc={:.4f}".format(all_score[5], all_score[1]))
 
+    # 绘制ROC曲线
+    fpr, tpr, _ = roc_curve(y_test, model.predict_proba(x_test)[:, 1])
+    roc_plot = [(x, y) for x, y in zip(fpr, tpr)]
+
     if not is_automl:
         local_file_path = "{}_aip_zq_gaoqian.model".format(today)
         joblib.dump(model, local_file_path)
@@ -90,6 +94,7 @@ def start_model_train(train_table_name, test_table_name,
             "recall": all_score[3],
             "f1_score": all_score[4],
             "loss": all_score[5],
+            "roc_plot": roc_plot
         }
         report_to_aip(model_and_metrics_data_hdfs_path,
                       model_hdfs_path,

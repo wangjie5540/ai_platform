@@ -50,7 +50,7 @@ def sample_create(trade_table_name, trade_columns, event_table_name, event_colum
     ## --未来m天未买入该类产品：label=0
     ## --未来m天买入该类产品：label=1
     sample_all = user_days.filter(lambda x: x[1][1] >= 1)\
-        .map(lambda x: (x[0], (x[1][0], 0)) if x[1][1] == 0 else (x[0], (x[1][0], 1)))
+        .map(lambda x: (x[0], (x[1][0], 0)) if x[1][2] == 0 else (x[0], (x[1][0], 1)))
 
     ## 1.5 采样
     all_cnt = sample_all.count()
