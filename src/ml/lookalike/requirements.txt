@@ -1,2 +1,2 @@
-digitforce-aip
+digitforce-aip==0.1.43
 scikit-learn
