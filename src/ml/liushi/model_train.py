@@ -73,7 +73,7 @@ def start_model_train(train_table_name, test_table_name,
 
     # 绘制ROC曲线
     fpr, tpr, _ = roc_curve(y_test, model.predict_proba(x_test)[:, 1])
-    roc_plot = [(x, y) for x, y in zip(fpr, tpr)]
+    roc_plot = {"x": list(fpr), "y": list(tpr)}
 
     if not is_automl:
         local_file_path = "{}_aip_zq_liushi.model".format(today)
