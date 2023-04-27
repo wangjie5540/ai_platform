@@ -8,9 +8,10 @@ predict_feature_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_predict_d
 model_hdfs_path = "/user/ai/aip/zq/dixiaohu/model/latest_model.pickle.dat"
 # print("model_hdfs_path:", model_hdfs_path)
 output_file_name = "result.csv"
-instance_id = 1648576669813211138
-predict_table_name = "aip.score_257"
-shapley_table_name = "aip.shapley_257"
+instance_id = 1651543743225315329
+
+predict_table_name = "aip.score_272"
+shapley_table_name = "aip.shapley_272"
 start_model_predict(predict_feature_table_name=predict_feature_table_name
                     , model_hdfs_path=model_hdfs_path
                     , output_file_name=output_file_name
