@@ -21,6 +21,9 @@ def run():
 
     sample_table_name = json.loads(args.sample).get('table_name')
     print('sample_table_name-----------', sample_table_name)
+    # instance_id和存储表名由上游给出
+    instance_id = global_params['instance_id']
+
     dixiao_before_days = global_params[args.name]['dixiao_before_days']
     dixiao_after_days = global_params[args.name]['dixiao_after_days']
     feature_days = global_params[args.name]['feature_days']
@@ -30,6 +33,7 @@ def run():
         dixiao_before_days=dixiao_before_days,
         dixiao_after_days=dixiao_after_days,
         feature_days=feature_days,
+        instance_id=instance_id,
     )
 
     component_helper.write_output(

@@ -13,7 +13,8 @@ def feature_create(
         sample_table_name: str,
         dixiao_before_days: int,
         dixiao_after_days: int,
-        feature_days=180,
+        feature_days=20,
+        instance_id: int = None,
 ):
     """产生训练数据集和验证数据集（回测数据集）
 
@@ -121,10 +122,42 @@ def feature_create(
     )
     print("table_zc------/n", table_zc.toPandas().sort_values(by="cust_code"))
     # 3. 特征融合
+    final_cols = [
+        "cust_code",
+        "label",
+        "dt",
+        "age",
+        "sex",
+        "city_name",
+        "province_name",
+        "educational_degree",
+        "is_login",
+        "transfer_out_amt",
+        "transfer_in_amt",
+        "transfer_out_cnt",
+        "transfer_in_cnt",
+        "total_tran_cnt",
+        "total_tran_amt",
+        "gp_tran_cnt",
+        "gp_tran_amt",
+        "jj_tran_cnt",
+        "jj_tran_amt",
+        "zq_tran_cnt",
+        "zq_tran_amt",
+        "total_ast",
+        "net_ast",
+        "total_liab",
+        "unmoney_fnd_val",
+        "stock_ast",
+        "cash_bal",
+        "total_prd_ast",
+        "instance_id",
+    ]
     data = (
         spark.sql(
             f"""
-            SELECT cust_code,'0' as label,'{end_date}' as dt
+            SELECT distinct cust_code, '0' as label,'{end_date}' as dt,
+                  '{instance_id}' as instance_id
             FROM {sample_table_name}
             """
         )
@@ -133,6 +166,8 @@ def feature_create(
         .join(table_zj, on=["cust_code"], how="left")
         .join(table_jy, on=["cust_code"], how="left")
         .join(table_zc, on=["cust_code"], how="left")
+        .select(final_cols)  # 选择特征
+        .distinct()  # 去重
     )
     # TODO: 特征加工
     print("dixiao_start_date-----", dixiao_start_date)
@@ -140,8 +175,15 @@ def feature_create(
     print("data-----", data.toPandas())
     print("特征数据规模-----", len(data.toPandas()))
 
-    predict_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_predict_standarddata"
-    write_hive(spark, data, predict_table_name, "dt")
+    predict_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_predict_dev"
+    write_hive(
+        spark=spark,
+        inp_df=data,
+        table_name=predict_table_name,
+        partition_col="instance_id",
+        partition_val=instance_id,
+        cols_list=final_cols,
+    )
     spark.stop()
     print("spark complete")
     return predict_table_name
@@ -166,14 +208,27 @@ def write_hdfs_dict(content, file_name, hdfs_client):
     write_hdfs_path(local_path, hdfs_path, hdfs_client)
 
 
-def write_hive(spark, inp_df, table_name, partition_col):
+def write_hive(spark, inp_df, table_name, partition_col, partition_val, cols_list):
     check_table = (
         spark._jsparkSession.catalog().tableExists(table_name)
     )
 
     if check_table:  # 如果存在该表
         print("table:{} exist......".format(table_name))
-        inp_df.write.format("orc").mode("overwrite").insertInto(table_name)
+        (
+            inp_df
+            .filter(f"{partition_col}='{partition_val}'")
+            .drop(partition_col)
+            .createOrReplaceTempView("test_temp")
+        )  # 创建临时表
+        cols_list.remove(partition_col)
+        cols_str = str(cols_list).replace("[", "").replace("]", "").replace("'", "")
+        spark.sql(
+            f"""
+            insert overwrite table {table_name} partition({partition_col}='{partition_val}') 
+            select {cols_str}
+            from test_temp
+            """)
 
     else:  # 如果不存在
         print("table:{} not exist......".format(table_name))

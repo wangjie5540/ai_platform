@@ -1,17 +1,24 @@
-
 # encoding: utf-8
 import argparse
 import json
 
-
 import digitforce.aip.common.utils.component_helper as component_helper
+
 component_helper.init_config()
 from digitforce.aip.common.utils.argument_helper import df_argument_helper
-from model_train import start_model_train 
+from model_train import start_model_train
 
 
 def run():
     # 参数解析
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--global_params", type=str, required=True, help="全局参数")
+    # parser.add_argument("--name", type=str, required=True, help="名称")
+    # args = parser.parse_args()
+    #
+    # global_params = args.global_params
+    # global_params = json.loads(global_params)
+
     df_argument_helper.add_argument(
         "--global_params", type=str, required=False, help="全局参数"
     )
@@ -49,13 +56,21 @@ def run():
     n_estimators = int(df_argument_helper.get_argument("n_estimators"))
     max_depth = int(df_argument_helper.get_argument("max_depth"))
     scale_pos_weight = float(
-        df_argument_helper.get_argument("scale_pos_weight"))
+        df_argument_helper.get_argument("scale_pos_weight")
+    )
+    dixiao_before_days = int(df_argument_helper.get_argument("dixiao_before_days"))
+    dixiao_after_days = int(df_argument_helper.get_argument("dixiao_after_days"))
 
     train_table_name = df_argument_helper.get_argument("train_table_name")
     test_table_name = df_argument_helper.get_argument("test_table_name")
     model_and_metrics_data_hdfs_path = df_argument_helper.get_argument(
         "model_and_metrics_data_hdfs_path"
     )
+    # train_table_name = args.train_table_name
+    # test_table_name = args.test_table_name
+    # dixiao_before_days = global_params[args.name]['dixiao_before_days']
+    # dixiao_after_days = global_params[args.name]['dixiao_after_days']
+
     start_model_train(
         train_table_name=train_table_name,
         test_table_name=test_table_name,
@@ -65,10 +80,9 @@ def run():
         scale_pos_weight=scale_pos_weight,
         is_automl=is_automl,
         model_and_metrics_data_hdfs_path=model_and_metrics_data_hdfs_path,
+        dixiao_before_days=dixiao_before_days,
+        dixiao_after_days=dixiao_after_days,
     )
-
-    outputs = {}
-    # component_helper.write_output(outputs)
 
 
 if __name__ == "__main__":

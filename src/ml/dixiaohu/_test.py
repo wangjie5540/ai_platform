@@ -1,10 +1,7 @@
-#!/usr/bin/env python3
-# encoding: utf-8
-
 from model_train import start_model_train
 
-train_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_train_standarddata"
-test_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_test_standarddata"
+train_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_train_dev"
+test_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_test_dev"
 model_and_metrics_data_hdfs_path = "/user/ai/aip/model/222"
 
 start_model_train(

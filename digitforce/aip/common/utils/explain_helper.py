@@ -281,6 +281,7 @@ def ale_main(X: pd.DataFrame, model, cat_cols: List[str]):
     else:
         MODEL_TYPE = "regressor"
 
+    result_df = None  # 事先添加结果计算的变量
     # 结果计算
     if MODEL_TYPE == "regressor":
         # 回归
@@ -291,14 +292,11 @@ def ale_main(X: pd.DataFrame, model, cat_cols: List[str]):
                 FEATURE_TYPE = "cat"
             else:
                 FEATURE_TYPE = "num"
-            ale_df = ale(X, feature, model, FEATURE_TYPE)
+            ale_df = ale(X[feature_list], feature, model, FEATURE_TYPE) # 计算ale值
             ale_df["feature"] = feature
             result_df = pd.concat([result_df, ale_df])
 
         result_df["y_value"] = "默认目标"  # 回归的多添加一列空值
-        result_df = result_df.reset_index(drop=True)
-        # 返回y_value, feature，feature_value, ale四列
-        return result_df[["y_value", "feature", "feature_value", "ale"]]
     elif MODEL_TYPE == "classifier":
         # 分类
         result_df = pd.DataFrame(columns=["y_value", "feature", "feature_value", "ale"])
@@ -307,7 +305,7 @@ def ale_main(X: pd.DataFrame, model, cat_cols: List[str]):
                 FEATURE_TYPE = "cat"
             else:
                 FEATURE_TYPE = "num"
-            ale_df = ale(X, feature, model, FEATURE_TYPE)
+            ale_df = ale(X[feature_list], feature, model, FEATURE_TYPE)
 
             # 意思对feature_value之后以类名命名的列拆解
             unstack_se = ale_df.set_index("feature_value").unstack()
@@ -315,9 +313,10 @@ def ale_main(X: pd.DataFrame, model, cat_cols: List[str]):
             unstack_df = unstack_se.reset_index().rename(columns={0: "ale"})
             unstack_df["feature"] = feature
             result_df = pd.concat([result_df, unstack_df])
-        result_df = result_df.reset_index(drop=True)
-        # 返回y_value, feature，feature_value, ale四列
-        return result_df[["y_value", "feature", "feature_value", "ale"]]
+
+    result_df = result_df.reset_index(drop=True)
+    # 返回y_value, feature，feature_value, ale四列
+    return result_df[["y_value", "feature", "feature_value", "ale"]]
 
 
 def shap_value(X: pd.DataFrame, model):
@@ -357,8 +356,17 @@ def shap_value(X: pd.DataFrame, model):
 
     shap_series = shap_df.set_index(["cust_code", "y_value"]).stack()  # 将带特征的列叠起来
     shap_series.index.names = ["cust_code", "y_value", "feature"]  # 赋予前几列名字
-    # 最后输出列：['cust_code','y_value', 'feature', 'shap_value']
     result_df = shap_series.reset_index().rename(columns={0: "shap_value"})
+    # reindex后输出列：['cust_code','y_value', 'feature', 'shap_value']
+    print("result_df.iloc[:10]_0\n", result_df.iloc[:10])
+    print("X[X['cust_code']=='10001']\n", X[X['cust_code'] == '10001'])
+    result_df = result_df.merge(X, on="cust_code", how="left")
+    print("result_df.iloc[:10]_1\n", result_df.iloc[:10])
+    result_df["feature_value"] = (
+        result_df.apply(lambda x: x[x["feature"]], axis=1)
+    )  # 添加feature_value列
+    result_df = result_df[["cust_code", "y_value", "feature", "shap_value", "feature_value"]]
+    print("result_df.iloc[:10]_2\n", result_df.iloc[:10])
     return result_df
 
 
@@ -394,7 +402,7 @@ def explain(X: pd.DataFrame, model, cat_cols: List[str], feature_cname_dict: dic
     shap_df['feature_cname'] = shap_df['feature'].map(feature_cname_dict)  # 特征中文名字
     return (
         ale_df[["target", "feature", "feature_trends", "feature_cname"]],
-        shap_df[["cust_code", "target", "feature_contribution", "feature_cname"]],
+        shap_df[["cust_code", "target", "feature_contribution", "feature_cname", "feature_value"]],
     )
 
 
@@ -453,14 +461,14 @@ def ale_to_json(df, group_cols):
             ranges.append((range_start, range_end))
             return ranges
 
-        x = value["x"]
-        y = np.array(value["y"])
+        value_x = value["x"]
+        value_y = np.array(value["y"])
 
         # 异常值
-        mean = np.mean(y)
-        std_deviation = np.std(y)
+        mean = np.mean(value_y)
+        std_deviation = np.std(value_y)
         threshold = 3 * std_deviation
-        outliers = [(index, value) for index, value in enumerate(y) if
+        outliers = [(index, value) for index, value in enumerate(value_y) if
                     abs(value - mean) > threshold]
 
         # 强趋势点
@@ -472,25 +480,25 @@ def ale_to_json(df, group_cols):
         #         strong_trend_points.append((ix + 1, "下降"))
 
         strong_trend_points = []
-        for ix in range(len(y) - 1):
-            if y[ix] < y[ix + 1]:
+        for ix in range(len(value_y) - 1):
+            if value_y[ix] < value_y[ix + 1]:
                 strong_trend_points.append((ix + 1, "上涨"))
-            elif y[ix] > y[ix + 1]:
+            elif value_y[ix] > value_y[ix + 1]:
                 strong_trend_points.append((ix + 1, "下降"))
 
         # 变革点
         change_points = []
-        for ix in range(len(y) - 2):
-            if y[ix] < mean and y[ix + 1] < mean and y[ix + 2] < mean:
+        for ix in range(len(value_y) - 2):
+            if value_y[ix] < mean and value_y[ix + 1] < mean and value_y[ix + 2] < mean:
                 change_points.append((ix + 1, "均值以下"))
-            elif y[ix] > mean and y[ix + 1] > mean and y[ix + 2] > mean:
+            elif value_y[ix] > mean and value_y[ix + 1] > mean and value_y[ix + 2] > mean:
                 change_points.append((ix + 1, "均值以上"))
 
         # 最值点
-        max_index = np.argmax(y)
-        min_index = np.argmin(y)
-        max_point = (x[max_index], y[max_index])
-        min_point = (x[min_index], y[min_index])
+        max_index = np.argmax(value_y)
+        min_index = np.argmin(value_y)
+        max_point = (value_x[max_index], value_y[max_index])
+        min_point = (value_x[min_index], value_y[min_index])
 
         # 结论
         conclusion = "结论：\n"
@@ -512,17 +520,17 @@ def ale_to_json(df, group_cols):
             up_trend_ranges = find_consecutive_ranges(up_trends)
             for start, end in up_trend_ranges:
                 if end - start >= 3:
-                    conclusion += f"存在上涨强趋势点范围：{x[start - 1]} - {x[end - 1]}\n"
+                    conclusion += f"存在上涨强趋势点范围：{value_x[start - 1]} - {value_x[end - 1]}\n"
                 elif end - start == 2:
-                    conclusion += f"存在上涨弱趋势点范围：{x[start - 1]} - {x[end - 1]}\n"
+                    conclusion += f"存在上涨弱趋势点范围：{value_x[start - 1]} - {value_x[end - 1]}\n"
 
         if down_trends:  # 检查是否存在下降强趋势点范围
             down_trend_ranges = find_consecutive_ranges(down_trends)
             for start, end in down_trend_ranges:
                 if end - start >= 3:
-                    conclusion += f"存在下降强趋势点范围：{x[start - 1]} - {x[end - 1]}\n"
+                    conclusion += f"存在下降强趋势点范围：{value_x[start - 1]} - {value_x[end - 1]}\n"
                 elif end - start == 2:
-                    conclusion += f"存在下降弱趋势点范围：{x[start - 1]} - {x[end - 1]}\n"
+                    conclusion += f"存在下降弱趋势点范围：{value_x[start - 1]} - {value_x[end - 1]}\n"
 
         if not up_trends and not down_trends:
             conclusion += "不存在上涨或下降趋势点范围\n"
@@ -535,24 +543,24 @@ def ale_to_json(df, group_cols):
             below_mean_change_ranges = find_consecutive_ranges(below_mean_changes)
             for start, end in below_mean_change_ranges:
                 if end - start >= 3:
-                    conclusion += f"存在均值以下变革点范围：{x[start - 1]} - {x[end - 1]}\n"
+                    conclusion += f"存在均值以下变革点范围：{value_x[start - 1]} - {value_x[end - 1]}\n"
                 elif end - start == 2:
-                    conclusion += f"存在均值以下弱变革点范围：{x[start - 1]} - {x[end - 1]}\n"
+                    conclusion += f"存在均值以下弱变革点范围：{value_x[start - 1]} - {value_x[end - 1]}\n"
 
         if above_mean_changes:
             above_mean_change_ranges = find_consecutive_ranges(above_mean_changes)
             for start, end in above_mean_change_ranges:
                 if end - start >= 3:
-                    conclusion += f"存在均值以上变革点范围：{x[start - 1]} - {x[end - 1]}\n"
+                    conclusion += f"存在均值以上变革点范围：{value_x[start - 1]} - {value_x[end - 1]}\n"
                 elif end - start == 2:
-                    conclusion += f"存在均值以上弱变革点范围：{x[start - 1]} - {x[end - 1]}\n"
+                    conclusion += f"存在均值以上弱变革点范围：{value_x[start - 1]} - {value_x[end - 1]}\n"
 
         if not below_mean_changes and not above_mean_changes:
             conclusion += "不存在均值以下或均值以上变革点范围\n"
 
-        if np.unique(y).size == 1:
+        if np.unique(value_y).size == 1:
             conclusion += "所有值相同，无法分析\n"
-        elif np.unique(y).size == 2:
+        elif np.unique(value_y).size == 2:
             conclusion += "所有值相近，无法分析\n"
         else:
             # 最值点
@@ -563,14 +571,14 @@ def ale_to_json(df, group_cols):
 
             # 分析趋势
             trends = []
-            if 0.1 * len(y) < max_index < 0.9 * len(y):
-                if y[max_index - 1] < y[max_index] > y[max_index + 1]:
+            if 0.1 * len(value_y) < max_index < 0.9 * len(value_y):
+                if value_y[max_index - 1] < value_y[max_index] > value_y[max_index + 1]:
                     trends.append("最大值点附近为峰值")
-            elif max_index > 0.1 * len(y):
-                if y[max_index - 1] < y[max_index]:
+            elif max_index > 0.1 * len(value_y):
+                if value_y[max_index - 1] < value_y[max_index]:
                     trends.append("最大值点左侧上升")
-            if max_index < 0.9 * len(y):
-                if y[max_index] > y[max_index + 1]:
+            if max_index < 0.9 * len(value_y):
+                if value_y[max_index] > value_y[max_index + 1]:
                     trends.append("最大值点右侧下降")
 
             for trend in trends:
@@ -606,6 +614,12 @@ def ale_to_json(df, group_cols):
 
         output[target][feature_method].append(feature_method_d)
 
+    for item in output:
+        feature_trends = item['feature_trends']
+        item['feature_trends'] = (
+            sorted(feature_trends, key=lambda ft_: max(ft_['coordinates']['y']),
+                   reverse=False)
+        )  # 按照y的最大值对feature_trends内的每个特征的ale值进行排序
     return output
 
 
@@ -615,8 +629,9 @@ def shap_agg(df: pd.DataFrame):
     将shape的结果按照user_code进行聚合，
 
     Args:
-        df: shap的结果，必须有cust_code，target，feature_contribution， feature_cname列，形如
-        [1123, 0, {"age": 0.2}, "年龄"]
+        df: shap的结果，必须有cust_code，target，feature_contribution, feature_cname, feature_value列
+        ，形如
+        [1123, 0, {"age": 0.2}, "年龄", 23]
 
     Returns:
         返回dataframe, 其中shapley列为json格式的字符串，形如
@@ -640,17 +655,13 @@ def shap_agg(df: pd.DataFrame):
         merge_d = {}
         for feature_shap_d in data['feature_contribution']:
             merge_d = {**merge_d, **feature_shap_d}  # 合并字典
-        feature_cname_list = list(data['feature_cname'])
-        d = pd.DataFrame(
-            {
-                "merge_d": [merge_d],
-                "feature_cname_list": [feature_cname_list]
-            }
-        )
+        feature_cname_list = list(data['feature_cname'])  # 中文名列表
+        feature_value_list = list(data['feature_value'])  # 特征的值列表
         return pd.DataFrame(
             {
                 "feature_contribution": [merge_d],
-                "feature_cname_list": [feature_cname_list]
+                "feature_cname_list": [feature_cname_list],
+                "feature_value_list": [feature_value_list]
             }
         )
 
@@ -715,6 +726,7 @@ def shap_agg(df: pd.DataFrame):
                     "x": list(data["feature_contribution"].iloc[i].keys()),
                     "y": list(data["feature_contribution"].iloc[i].values()),
                     "feature_cname": data["feature_cname_list"].iloc[i],
+                    "feature_value": data["feature_value_list"].iloc[i],
                 },
             }
             feature_contributions_d["description"] = shapley_description(

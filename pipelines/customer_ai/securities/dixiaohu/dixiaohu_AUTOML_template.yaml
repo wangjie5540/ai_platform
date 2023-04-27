@@ -61,14 +61,15 @@
 		"dixiao_before_days": ${sample_select__dixiao_before_days},
 		"dixiao_after_days": ${sample_select__dixiao_after_days},
 		"right_zc_threshold": ${sample_select__right_zc_threshold},
-		"avg_zc_threshold": ${sample_select__avg_zc_threshold}
+		"avg_zc_threshold": ${sample_select__avg_zc_threshold},
+        "event_tag": ${sample_select__event_tag}
 	  },
 	  "model": {
 	  },
 	  "feature_create": {
 		"dixiao_before_days": ${sample_select__dixiao_before_days},
 		"dixiao_after_days": ${sample_select__dixiao_after_days},
-		"feature_days": 30
+		"feature_days": 20
 	  }
     },
     "flag": "AUTOML"
