@@ -181,7 +181,7 @@ def feature_create(
         inp_df=data,
         table_name=predict_table_name,
         partition_col="instance_id",
-        patition_val=instance_id,
+        partition_val=instance_id,
         cols_list=final_cols,
     )
     spark.stop()
@@ -208,23 +208,27 @@ def write_hdfs_dict(content, file_name, hdfs_client):
     write_hdfs_path(local_path, hdfs_path, hdfs_client)
 
 
-def write_hive(spark, inp_df, table_name, partition_col, patition_val, cols_list):
+def write_hive(spark, inp_df, table_name, partition_col, partition_val, cols_list):
     check_table = (
         spark._jsparkSession.catalog().tableExists(table_name)
     )
 
     if check_table:  # 如果存在该表
         print("table:{} exist......".format(table_name))
-        inp_df.drop(partition_col).createOrReplaceTempView("test_temp")
+        (
+            inp_df
+            .filter(f"{partition_col}='{partition_val}'")
+            .drop(partition_col)
+            .createOrReplaceTempView("test_temp")
+        )  # 创建临时表
         cols_list.remove(partition_col)
         cols_str = str(cols_list).replace("[", "").replace("]", "").replace("'", "")
         spark.sql(
             f"""
-            insert overwrite table {table_name} partition({partition_col}='{patition_val}') 
+            insert overwrite table {table_name} partition({partition_col}='{partition_val}') 
             select {cols_str}
             from test_temp
             """)
-        # inp_df.write.format("orc").mode("overwrite").insertInto(table_name)
 
     else:  # 如果不存在
         print("table:{} not exist......".format(table_name))
