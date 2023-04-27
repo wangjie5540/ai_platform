@@ -17,6 +17,7 @@ from digitforce.aip.common.utils.starrocks_helper import write_score
 import pyspark.sql.functions as F
 from pyspark.sql.types import LongType, StringType, FloatType
 import json
+from datetime import datetime
 
 
 def start_model_predict(
@@ -189,9 +190,11 @@ def start_model_predict(
         "total_prd_ast": "产品资产",
     }
     # 计算ale值和shap值并存储
+    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "-----------ale——shap计算开始---------")
     ale_json, shap_df = get_explain_result(
         df_predict.drop(columns=["label", "dt"]), model, categorical_features, feature_cname_dict
     )
+    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "-----------ale——shap计算结束---------")
     # 存储ale
     ale_local_path = "ale.json"
     ale_hdfs_path = f"/user/ai/aip/predict/{instance_id}/ale.json"
@@ -215,6 +218,7 @@ def start_model_predict(
     print("shap_spark_df.schema---- \n", shap_spark_df.schema)
     write_score(shap_spark_df, shapley_table_name)
     print("compute shapley value and store to starrocks success")
+    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "-----------ale——shap存储结束---------")
 
 
 # 读hdfs
@@ -244,6 +248,7 @@ def featuretype_process(data_init, drop_labels, categorical_feature, float_featu
         .mode(axis=0, dropna=True)
         .to_dict(orient='records')[0]
     )  # 获取众数
+    print("values------------------", values)
     data_process[categorical_feature] = data_process[categorical_feature].fillna(values)  # 填充缺失值
 
     data_process[float_feature] = (
