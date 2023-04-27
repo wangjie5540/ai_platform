@@ -11,6 +11,8 @@
     "scale_pos_weight": ${model__scale_pos_weight},
     "n_estimators": ${model__n_estimators},
     "learning_rate": ${model__learning_rate},
+    "dixiao_before_days": ${sample_select__dixiao_before_days},
+    "dixiao_after_days": ${sample_select__dixiao_after_days},
     "model_and_metrics_data_hdfs_path":"/user/ai/aip/model/${solution_run_id}"
   },
   "feature_create": {
