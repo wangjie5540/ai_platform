@@ -221,8 +221,9 @@ def write_hive(spark, inp_df, table_name, partition_col, partition_val, cols_lis
             .drop(partition_col)
             .createOrReplaceTempView("test_temp")
         )  # 创建临时表
-        cols_list.remove(partition_col)
-        cols_str = str(cols_list).replace("[", "").replace("]", "").replace("'", "")
+        cols_list_copy = cols_list.copy()
+        cols_list_copy.remove(partition_col)
+        cols_str = str(cols_list_copy).replace("[", "").replace("]", "").replace("'", "")
         spark.sql(
             f"""
             insert overwrite table {table_name} partition({partition_col}='{partition_val}') 
