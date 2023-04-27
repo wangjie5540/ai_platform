@@ -5,6 +5,7 @@ findspark.init()
 import datetime
 import random
 import pandas as pd
+import numpy as np
 
 import joblib
 from sklearn.metrics import (
@@ -38,20 +39,46 @@ def start_model_train(
         scale_pos_weight=0.5,
         is_automl=False,
         model_and_metrics_data_hdfs_path=None,
+        dixiao_before_days: int = 10,
+        dixiao_after_days: int = 10,
 ):
     spark_client = SparkClient.get()
     spark = spark_client.get_session()
+    # 1.获取关键时间点
+    window_test_days = 3
+    window_train_days = 5
+    now = datetime.datetime.now()
+    dixiao_end_date = now - datetime.timedelta(days=2)  # 低效户结束日期
+    end_date = dixiao_end_date - datetime.timedelta(days=dixiao_after_days)  # 低效户结束日期
+    mid_date = end_date - datetime.timedelta(days=window_test_days)
+    start_date = mid_date - datetime.timedelta(days=window_train_days)
+    dixiao_start_date = start_date - datetime.timedelta(
+        days=dixiao_before_days
+    )  # 低效户开始日期
+
+    now = now.strftime(DATE_FORMAT)
+    dixiao_end_date = dixiao_end_date.strftime(DATE_FORMAT)
+    end_date = end_date.strftime(DATE_FORMAT)
+    mid_date = mid_date.strftime(DATE_FORMAT)
+    start_date = start_date.strftime(DATE_FORMAT)
+    dixiao_start_date = dixiao_start_date.strftime(DATE_FORMAT)
+
     df_train = spark.sql(
         f"""
-            select * from {train_table_name} limit 1000000
-            """
+        select * 
+        from {train_table_name}
+        where dt between '{dixiao_start_date}' and '{mid_date}'
+        limit 1000000
+        """
     ).toPandas()
 
     print("训练数据规模", len(df_train))
     df_test = spark.sql(
         f"""
-            select * from {test_table_name}
-            """
+        select * 
+        from {test_table_name}
+        where dt between '{mid_date}' and '{end_date}'
+        """
     ).toPandas()
     print("测试数据规模", len(df_test))
     # 连续特征，离散特征，丢弃特征等的处理
@@ -117,7 +144,6 @@ def start_model_train(
         n_estimators=n_estimators,
         max_depth=max_depth,
         scale_pos_weight=scale_pos_weight,
-        eval_metric="logloss",
     )
     if len(x_train) and len(x_test):  # 检查训练集测试集都存在数据
         model.fit(x_train, y_train, verbose=True)
@@ -194,17 +220,25 @@ def write_hdfs_path(local_path, hdfs_path):
 
 
 # 处理分类特征，数值特征，需要丢掉的特征
-def featuretype_process(data_init: pd.DataFrame, drop_labels: list, categorical_feature: list,
-                        float_feature: list):
+def featuretype_process(data_init, drop_labels, categorical_feature, float_feature):
     """TODO:自动识别连续特征和离散特征"""
-    # Process Feature 1
-    data_process = data_init.drop(labels=drop_labels, axis=1, errors="ignore")
+    data_process = data_init.drop(labels=drop_labels, axis=1, errors="ignore")  # 丢掉不需要的特征
     data_process[categorical_feature] = (
-        data_process[categorical_feature].astype("str").astype("category")
+        data_process[categorical_feature]
+        .replace([np.nan, pd.NA], None)  # 替换缺失值
+        .astype("str").astype("category")  # 转换为类别特征
     )
-    # data_process[float_feature] = data_process[float_feature].astype('float')
-    data_process[float_feature] = data_process[float_feature].apply(
-        lambda col: pd.to_numeric(col, errors="coerce"), axis=0
+    values = (
+        data_process[categorical_feature]
+        .mode(axis=0, dropna=True)
+        .to_dict(orient='records')[0]
+    )  # 获取众数
+    data_process[categorical_feature] = data_process[categorical_feature].fillna(values)  # 填充缺失值
+
+    data_process[float_feature] = (
+        data_process[float_feature]
+        .fillna(0)  # 填充缺失值
+        .apply(lambda col: pd.to_numeric(col, errors="coerce"), axis=0)
     )
     return data_process
 
