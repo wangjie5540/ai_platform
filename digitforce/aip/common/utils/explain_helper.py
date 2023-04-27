@@ -42,9 +42,7 @@ def cat_ale(x_test: pd.DataFrame, model, cat_var: str):
         pred_dataframe = pd.concat(
             [x_test.reset_index(drop=True), pred_dataframe], axis=1
         )  # 在预测样本数据后添加每个类别对应的预测概率
-        cat_var_sorted = sorted(
-            pred_dataframe[cat_var].unique()
-        )  # 对离散值进行排序 TODO:离散变量排序方式优化
+        cat_var_sorted = pred_dataframe[cat_var].unique()  # 对离散值进行排序 TODO:离散变量排序方式优化
 
         cat_mean_probs = np.zeros((len(cat_var_sorted), num_class))
         ale_vals = np.zeros((len(cat_var_sorted), num_class))
@@ -103,7 +101,7 @@ def cat_ale(x_test: pd.DataFrame, model, cat_var: str):
 
 
 # 测试连续型变量的ALE
-def num_ale(X: pd.DataFrame, feature: str, model, n_bins=20):
+def num_ale(X: pd.DataFrame, feature: str, model, n_bins=10):
     """连续型变量的ale值
 
     Args:
@@ -111,14 +109,18 @@ def num_ale(X: pd.DataFrame, feature: str, model, n_bins=20):
         feature (str): 连续型特征名称
         model : 现支持sklearn接口的机器学习模型
         n_bins (int, optional): 分块数量，也是折线图数据点数量，数字越大，折线走势越受到数据分布的影响
-        ，数字越小越不容易被数据分布影响. Defaults to 20.
+        ，数字越小越不容易被数据分布影响. Defaults to 10.
 
     Returns:
         回归返回每个bins的中位数对应的ale值，[['cat_var','ale_val']]
         ，分类返回每个枚举值对应的每个类别的ale值：[['cat_var',class_cols]]
     """
     # 计算端点值，TODO:分箱方式优化
-    feat_range = np.linspace(np.min(X[feature]), np.max(X[feature]), n_bins + 1)
+    seg_len = (np.max(X[feature]) - np.min(X[feature])) / n_bins
+    feat_range = (
+        np.linspace(np.min(X[feature]), np.max(X[feature]) - seg_len, n_bins)
+        # 左端点值
+    )
     if hasattr(model, "predict_proba"):
         model_type = "classifier"
     else:
@@ -186,10 +188,10 @@ def num_ale(X: pd.DataFrame, feature: str, model, n_bins=20):
                 condition_bin = (X[feature] >= feat_range[i]) & (
                         X[feature] < feat_range[i + 1]
                 )  # bin 下的数据所在位置，左闭右开
+                feat_range_median[i] = (feat_range[i] + feat_range[i + 1]) / 2  # 区间中位数
             else:
-                condition_bin = (X[feature] >= feat_range[i]) & (
-                        X[feature] <= feat_range[i + 1]
-                )  # 最后一个区间全闭
+                condition_bin = X[feature] >= feat_range[i]  # 最后一个区间
+                feat_range_median[i] = (feat_range[i] + np.max(X[feature])) / 2  # 区间中位数
             X_bin = X[condition_bin]
 
             if len(X_bin):
@@ -212,7 +214,6 @@ def num_ale(X: pd.DataFrame, feature: str, model, n_bins=20):
             tmp += ale_values[i]
             ale_tmp[condition_bin] = tmp
             left_point[condition_bin] = feat_range[i]
-            feat_range_median[i] = (feat_range[i] + feat_range[i + 1]) / 2
         ale_values_acc = np.cumsum(ale_values, axis=0)
         return pd.DataFrame(
             np.hstack((feat_range_median.reshape(-1, 1), ale_values_acc)),
@@ -292,7 +293,7 @@ def ale_main(X: pd.DataFrame, model, cat_cols: List[str]):
                 FEATURE_TYPE = "cat"
             else:
                 FEATURE_TYPE = "num"
-            ale_df = ale(X[feature_list], feature, model, FEATURE_TYPE) # 计算ale值
+            ale_df = ale(X[feature_list], feature, model, FEATURE_TYPE)  # 计算ale值
             ale_df["feature"] = feature
             result_df = pd.concat([result_df, ale_df])
 
@@ -572,12 +573,16 @@ def ale_to_json(df, group_cols):
             # 分析趋势
             trends = []
             if 0.1 * len(value_y) < max_index < 0.9 * len(value_y):
-                if value_y[max_index - 1] < value_y[max_index] > value_y[max_index + 1]:
+                if max_index == 0 and value_y[max_index] > value_y[max_index + 1]:
+                    trends.append("最大值点附近为峰值")
+                elif max_index == len(value_y) - 1 and value_y[max_index - 1] < value_y[max_index]:
+                    trends.append("最大值点附近为峰值")
+                elif value_y[max_index - 1] < value_y[max_index] > value_y[max_index + 1]:
                     trends.append("最大值点附近为峰值")
             elif max_index > 0.1 * len(value_y):
                 if value_y[max_index - 1] < value_y[max_index]:
                     trends.append("最大值点左侧上升")
-            if max_index < 0.9 * len(value_y):
+            if max_index < 0.9 * (len(value_y) - 1):
                 if value_y[max_index] > value_y[max_index + 1]:
                     trends.append("最大值点右侧下降")
 
@@ -617,8 +622,8 @@ def ale_to_json(df, group_cols):
     for item in output:
         feature_trends = item['feature_trends']
         item['feature_trends'] = (
-            sorted(feature_trends, key=lambda ft_: max(ft_['coordinates']['y']),
-                   reverse=False)
+            sorted(feature_trends, key=lambda ft_: max(list(map(abs, ft_['coordinates']['y']))),
+                   reverse=True)
         )  # 按照y的最大值对feature_trends内的每个特征的ale值进行排序
     return output
 
