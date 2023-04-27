@@ -6,6 +6,7 @@ from digitforce.aip.common.utils import cos_helper
 import digitforce.aip.common.utils.hdfs_helper as hdfs_helper
 
 import pandas as pd
+import numpy as np
 import joblib
 
 from digitforce.aip.common.utils.spark_helper import SparkClient
@@ -35,10 +36,43 @@ def start_model_predict(
     spark_client = SparkClient.get()
     spark = spark_client.get_session()
     print("spark init-----------------")
-
+    final_cols_list = [
+        "cust_code",
+        "label",
+        "dt",
+        "age",
+        "sex",
+        "city_name",
+        "province_name",
+        "educational_degree",
+        "is_login",
+        "transfer_out_amt",
+        "transfer_in_amt",
+        "transfer_out_cnt",
+        "transfer_in_cnt",
+        "total_tran_cnt",
+        "total_tran_amt",
+        "gp_tran_cnt",
+        "gp_tran_amt",
+        "jj_tran_cnt",
+        "jj_tran_amt",
+        "zq_tran_cnt",
+        "zq_tran_amt",
+        "total_ast",
+        "net_ast",
+        "total_liab",
+        "unmoney_fnd_val",
+        "stock_ast",
+        "cash_bal",
+        "total_prd_ast",
+        "instance_id",
+    ]
+    final_cols_str = str(final_cols_list).replace("[", "").replace("]", "").replace("'", "")
     df_predict = spark.sql(
         f"""
-        select * from {predict_feature_table_name}
+        select {final_cols_str} 
+        from {predict_feature_table_name} 
+        where instance_id = {instance_id}
         """
     ).toPandas()
     # 连续特征，离散特征，丢弃特征等的处理
@@ -82,8 +116,6 @@ def start_model_predict(
     print("预测数据", df_predict.head())
 
     # 模型加载
-    # local_file_path = "model.pk"
-    # local_file_path = "/data/zyf/dixiaohu.model"
     local_file_path = "model.pickle.dat"
     print("local_file_path--------------", local_file_path)
     read_hdfs_path(local_file_path, model_hdfs_path, hdfs_client)  # hdfs上的模型复制到本地
@@ -91,26 +123,26 @@ def start_model_predict(
     model = joblib.load(local_file_path)
 
     # 预测打分
-    custom_list = df_predict["cust_code"].values
+    customer_list = df_predict["cust_code"].values
     x_predict = df_predict[model.feature_name_]
     pred_proba = model.predict_proba(x_predict)
-    print("x_predict-----*****/n", x_predict)
+    print("x_predict-----*****\n", x_predict)
 
     y_pred_score = pred_proba[:, 1]
-    result = pd.DataFrame({"cust_code": custom_list, "score": y_pred_score})
+    result = pd.DataFrame({"cust_code": customer_list, "score": y_pred_score})
     result.sort_values(by="score", inplace=True, ascending=False)
 
     # 结果存储
     result_local_path = "result.csv"
     result.to_csv(result_local_path, index=False, header=False)
     output_file_path = cos_helper.upload_file("result.csv", output_file_name)
-    print("output_file_path-----*****/n", output_file_path)
+    print("output_file_path-----*****\n", output_file_path)
 
     # 统计和可解释性部分
     result["instance_id"] = instance_id
     result = result.rename(columns={"cust_code": "user_id"})  # 重命名
     result = result[["instance_id", "user_id", "score"]]  # 调整顺序
-    print("result-----*****/n", result)
+    print("result-----*****\n", result)
     result_spark_df = (
         spark.createDataFrame(result)
         .select(F.col("instance_id").cast(LongType()),
@@ -201,13 +233,22 @@ def write_hdfs_path(local_path, hdfs_path, client):
 # 处理分类特征，数值特征，需要丢掉的特征
 def featuretype_process(data_init, drop_labels, categorical_feature, float_feature):
     """TODO:自动识别连续特征和离散特征"""
-    # Process Feature 1
-    data_process = data_init.drop(labels=drop_labels, axis=1, errors="ignore")
+    data_process = data_init.drop(labels=drop_labels, axis=1, errors="ignore")  # 丢掉不需要的特征
     data_process[categorical_feature] = (
-        data_process[categorical_feature].astype("str").astype("category")
+        data_process[categorical_feature]
+        .replace([np.nan, pd.NA], None)  # 替换缺失值
+        .astype("str").astype("category")  # 转换为类别特征
     )
-    # data_process[float_feature] = data_process[float_feature].astype('float')
-    data_process[float_feature] = data_process[float_feature].apply(
-        lambda col: pd.to_numeric(col, errors="coerce"), axis=0
+    values = (
+        data_process[categorical_feature]
+        .mode(axis=0, dropna=True)
+        .to_dict(orient='records')[0]
+    )  # 获取众数
+    data_process[categorical_feature] = data_process[categorical_feature].fillna(values)  # 填充缺失值
+
+    data_process[float_feature] = (
+        data_process[float_feature]
+        .fillna(0)  # 填充缺失值
+        .apply(lambda col: pd.to_numeric(col, errors="coerce"), axis=0)
     )
     return data_process
