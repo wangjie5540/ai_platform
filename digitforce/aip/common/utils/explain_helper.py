@@ -655,19 +655,8 @@ def shap_agg(df: pd.DataFrame):
         merge_d = {}
         for feature_shap_d in data['feature_contribution']:
             merge_d = {**merge_d, **feature_shap_d}  # 合并字典
-        # print("data['feature_cname'].iloc[0]", "*" * 100, "\n", data['feature_cname'].iloc[0])
-        # print("data['feature_value'].iloc[0]", "*" * 100, "\n", data['feature_value'].iloc[0])
         feature_cname_list = list(data['feature_cname'])  # 中文名列表
         feature_value_list = list(data['feature_value'])  # 特征的值列表
-        d = pd.DataFrame(
-            {
-                "merge_d": [merge_d],
-                "feature_cname_list": [feature_cname_list],
-                "feature_value_list": [feature_value_list]
-            }
-        )
-        # print("feature_cname_list", "*" * 100, "\n", feature_cname_list)
-        # print("feature_value_list", "*" * 100, "\n", feature_value_list)
         return pd.DataFrame(
             {
                 "feature_contribution": [merge_d],
@@ -731,10 +720,6 @@ def shap_agg(df: pd.DataFrame):
         """
         output = []
         for i in range(len(data)):
-            # print("data['feature_cname_list'].iloc[i]", "*" * 100,
-            #       "\n", data["feature_cname_list"].iloc[i])
-            # print("data['feature_value_list'].iloc[i]", "*" * 100,
-            #       "\n", data["feature_value_list"].iloc[i])
             feature_contributions_d = {
                 "target": str(data["target"].iloc[i]),
                 "feature_contributions": {
