@@ -226,6 +226,8 @@ def start_sample_selection(
     # 3.write to hive
     sample_table_name = "algorithm.aip_zq_dixiaohu_custom_label"
     sample_df.write.format("hive").mode("overwrite").saveAsTable(sample_table_name)
+
+    print("sample table saved to hive")
     return sample_table_name
 
 
