@@ -1,5 +1,6 @@
 # encoding: utf-8
 import findspark
+
 findspark.init()
 
 from digitforce.aip.common.utils.spark_helper import SparkClient
@@ -29,6 +30,7 @@ def feature_create(
     Returns:
         _type_: _description_
     """
+
     spark_client = SparkClient.get()
     spark = spark_client.get_session()
     user_table = "zq_standard.dm_cust_label_base_attributes_df"
@@ -127,17 +129,69 @@ def feature_create(
     print("dixiao_start_date-----", dixiao_start_date)
     print("end_date-----", end_date)
     print("特征数据规模-----", len(data.toPandas()))
-
-    data_train_df = data.filter(F.col("dt") <= mid_date)
-    data_test_df = data.filter(F.col("dt") > mid_date)
+    final_cols = [
+        "cust_code",
+        "label",
+        "age",
+        "sex",
+        "city_name",
+        "province_name",
+        "educational_degree",
+        "is_login",
+        "transfer_out_amt",
+        "transfer_in_amt",
+        "transfer_out_cnt",
+        "transfer_in_cnt",
+        "total_tran_cnt",
+        "total_tran_amt",
+        "gp_tran_cnt",
+        "gp_tran_amt",
+        "jj_tran_cnt",
+        "jj_tran_amt",
+        "zq_tran_cnt",
+        "zq_tran_amt",
+        "total_ast",
+        "net_ast",
+        "total_liab",
+        "unmoney_fnd_val",
+        "stock_ast",
+        "cash_bal",
+        "total_prd_ast",
+        "dt",
+    ]
+    data_train_df = data.filter(F.col("dt") <= mid_date).select(final_cols).distinct()
+    data_test_df = data.filter(F.col("dt") > mid_date).select(final_cols).distinct()
 
     print("训练数据规模-----", len(data_train_df.toPandas()))
     print("测试数据规模-----", len(data_test_df.toPandas()))
 
-    train_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_train_standarddata"
-    test_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_test_standarddata"
-    write_hive(spark, data_train_df, train_table_name, "dt")
-    write_hive(spark, data_test_df, test_table_name, "dt")
+    train_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_train_dev"
+    test_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_test_dev"
+
+    if len(data_train_df.toPandas()) == 0 or len(data_test_df.toPandas()) == 0:
+        print("数据为空，不写入hive")
+        return train_table_name, test_table_name
+
+    train_partition_list = data_train_df.select("dt").distinct().toPandas()["dt"].tolist()
+    test_partition_list = data_test_df.select("dt").distinct().toPandas()["dt"].tolist()
+    for dt in train_partition_list:
+        write_hive(
+            spark=spark,
+            inp_df=data_train_df,
+            table_name=train_table_name,
+            partition_col="dt",
+            partition_val=dt,
+            cols_list=final_cols,
+        )  # 按照日期分区写入hive
+    for dt in test_partition_list:
+        write_hive(
+            spark=spark,
+            inp_df=data_test_df,
+            table_name=test_table_name,
+            partition_col="dt",
+            partition_val=dt,
+            cols_list=final_cols,
+        )
 
     return train_table_name, test_table_name
 
@@ -160,12 +214,28 @@ def write_hdfs_dict(content, file_name, hdfs_client):
     write_hdfs_path(local_path, hdfs_path, hdfs_client)
 
 
-def write_hive(spark, inp_df, table_name, partition_col):
-    check_table = spark._jsparkSession.catalog().tableExists(table_name)
+def write_hive(spark, inp_df, table_name, partition_col, partition_val, cols_list):
+    check_table = (
+        spark._jsparkSession.catalog().tableExists(table_name)
+    )
 
     if check_table:  # 如果存在该表
         print("table:{} exist......".format(table_name))
-        inp_df.write.format("orc").mode("overwrite").insertInto(table_name)
+        (
+            inp_df
+            .filter(f"{partition_col}='{partition_val}'")
+            .drop(partition_col)
+            .createOrReplaceTempView("test_temp")
+        )  # 创建临时表
+        cols_list_copy = cols_list.copy()
+        cols_list_copy.remove(partition_col)  # copy后去除分区字段,防止重复删除
+        cols_str = str(cols_list_copy).replace("[", "").replace("]", "").replace("'", "")
+        spark.sql(
+            f"""
+            insert overwrite table {table_name} partition({partition_col}='{partition_val}') 
+            select {cols_str}
+            from test_temp 
+            """)
 
     else:  # 如果不存在
         print("table:{} not exist......".format(table_name))
