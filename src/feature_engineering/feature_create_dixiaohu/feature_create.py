@@ -165,8 +165,8 @@ def feature_create(
     print("训练数据规模-----", len(data_train_df.toPandas()))
     print("测试数据规模-----", len(data_test_df.toPandas()))
 
-    train_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_train_dev"
-    test_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_test_dev"
+    train_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_train_test"
+    test_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_test_test"
 
     if len(data_train_df.toPandas()) == 0 or len(data_test_df.toPandas()) == 0:
         print("数据为空，不写入hive")

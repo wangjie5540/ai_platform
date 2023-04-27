@@ -175,7 +175,7 @@ def feature_create(
     print("data-----", data.toPandas())
     print("特征数据规模-----", len(data.toPandas()))
 
-    predict_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_predict_dev"
+    predict_table_name = "algorithm.aip_zq_dixiaohu_custom_feature_predict_test"
     write_hive(
         spark=spark,
         inp_df=data,
