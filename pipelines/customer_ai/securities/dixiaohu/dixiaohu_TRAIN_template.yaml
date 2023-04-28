@@ -18,6 +18,6 @@
   "feature_create": {
     "dixiao_before_days": ${sample_select__dixiao_before_days},
     "dixiao_after_days": ${sample_select__dixiao_after_days},
-    "feature_days": 20
+    "feature_days": 10
   }
 }

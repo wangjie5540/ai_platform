@@ -42,9 +42,7 @@ def cat_ale(x_test: pd.DataFrame, model, cat_var: str):
         pred_dataframe = pd.concat(
             [x_test.reset_index(drop=True), pred_dataframe], axis=1
         )  # 在预测样本数据后添加每个类别对应的预测概率
-        cat_var_sorted = sorted(
-            pred_dataframe[cat_var].unique()
-        )  # 对离散值进行排序 TODO:离散变量排序方式优化
+        cat_var_sorted = pred_dataframe[cat_var].unique()  # 对离散值进行排序 TODO:离散变量排序方式优化
 
         cat_mean_probs = np.zeros((len(cat_var_sorted), num_class))
         ale_vals = np.zeros((len(cat_var_sorted), num_class))
@@ -103,7 +101,7 @@ def cat_ale(x_test: pd.DataFrame, model, cat_var: str):
 
 
 # 测试连续型变量的ALE
-def num_ale(X: pd.DataFrame, feature: str, model, n_bins=20):
+def num_ale(X: pd.DataFrame, feature: str, model, n_bins=10):
     """连续型变量的ale值
 
     Args:
@@ -111,14 +109,18 @@ def num_ale(X: pd.DataFrame, feature: str, model, n_bins=20):
         feature (str): 连续型特征名称
         model : 现支持sklearn接口的机器学习模型
         n_bins (int, optional): 分块数量，也是折线图数据点数量，数字越大，折线走势越受到数据分布的影响
-        ，数字越小越不容易被数据分布影响. Defaults to 20.
+        ，数字越小越不容易被数据分布影响. Defaults to 10.
 
     Returns:
         回归返回每个bins的中位数对应的ale值，[['cat_var','ale_val']]
         ，分类返回每个枚举值对应的每个类别的ale值：[['cat_var',class_cols]]
     """
     # 计算端点值，TODO:分箱方式优化
-    feat_range = np.linspace(np.min(X[feature]), np.max(X[feature]), n_bins + 1)
+    seg_len = (np.max(X[feature]) - np.min(X[feature])) / n_bins
+    feat_range = (
+        np.linspace(np.min(X[feature]), np.max(X[feature]) - seg_len, n_bins)
+        # 左端点值
+    )
     if hasattr(model, "predict_proba"):
         model_type = "classifier"
     else:
@@ -186,10 +188,10 @@ def num_ale(X: pd.DataFrame, feature: str, model, n_bins=20):
                 condition_bin = (X[feature] >= feat_range[i]) & (
                         X[feature] < feat_range[i + 1]
                 )  # bin 下的数据所在位置，左闭右开
+                feat_range_median[i] = (feat_range[i] + feat_range[i + 1]) / 2  # 区间中位数
             else:
-                condition_bin = (X[feature] >= feat_range[i]) & (
-                        X[feature] <= feat_range[i + 1]
-                )  # 最后一个区间全闭
+                condition_bin = X[feature] >= feat_range[i]  # 最后一个区间
+                feat_range_median[i] = (feat_range[i] + np.max(X[feature])) / 2  # 区间中位数
             X_bin = X[condition_bin]
 
             if len(X_bin):
@@ -212,7 +214,6 @@ def num_ale(X: pd.DataFrame, feature: str, model, n_bins=20):
             tmp += ale_values[i]
             ale_tmp[condition_bin] = tmp
             left_point[condition_bin] = feat_range[i]
-            feat_range_median[i] = (feat_range[i] + feat_range[i + 1]) / 2
         ale_values_acc = np.cumsum(ale_values, axis=0)
         return pd.DataFrame(
             np.hstack((feat_range_median.reshape(-1, 1), ale_values_acc)),
@@ -264,7 +265,7 @@ def ale_main(X: pd.DataFrame, model, cat_cols: List[str]):
         cat_cols (List[str]): 离散型变量的列表
 
     Returns:
-        返回y_value, feature, feature_value, ale四列
+        返回["y_value", "feature", "feature_value", "ale"]四列
     """
     # 特征列表
     feature_list = []
@@ -292,7 +293,7 @@ def ale_main(X: pd.DataFrame, model, cat_cols: List[str]):
                 FEATURE_TYPE = "cat"
             else:
                 FEATURE_TYPE = "num"
-            ale_df = ale(X[feature_list], feature, model, FEATURE_TYPE) # 计算ale值
+            ale_df = ale(X[feature_list], feature, model, FEATURE_TYPE)  # 计算ale值
             ale_df["feature"] = feature
             result_df = pd.concat([result_df, ale_df])
 
@@ -327,7 +328,7 @@ def shap_value(X: pd.DataFrame, model):
         model : 现支持sklearn接口的机器学习模型
 
     Returns:
-        返回dataframe，列包括['cust_code','y_value', 'feature', 'shap_value']
+        返回dataframe，列包括["cust_code", "y_value", "feature", "shap_value", "feature_value"]
     """
     # feature_list
     feature_list = []
@@ -359,7 +360,6 @@ def shap_value(X: pd.DataFrame, model):
     result_df = shap_series.reset_index().rename(columns={0: "shap_value"})
     # reindex后输出列：['cust_code','y_value', 'feature', 'shap_value']
     print("result_df.iloc[:10]_0\n", result_df.iloc[:10])
-    print("X[X['cust_code']=='10001']\n", X[X['cust_code'] == '10001'])
     result_df = result_df.merge(X, on="cust_code", how="left")
     print("result_df.iloc[:10]_1\n", result_df.iloc[:10])
     result_df["feature_value"] = (
@@ -383,10 +383,11 @@ def explain(X: pd.DataFrame, model, cat_cols: List[str], feature_cname_dict: dic
         cat_cols (List[str]): 离散型变量的list
 
     Returns:
-        返回两个dataframe，ale_df[['target', 'feature', 'feature_trends']],形如
-        2, “age”, {0.1: 0.2, 0.2: 0.3}
-         shap_df[['cust_code', 'target', 'feature_contribution']]，形如
-        1123, 2, '{"age": 0.2}'
+        返回两个dataframe，ale_df[['target', 'feature', 'feature_trends','feature_cname']],形如
+        2, “age”, {0.1: 0.2, 0.2: 0.3}, '年龄'
+         shap_df[['cust_code', 'target', 'feature_contribution', 'feature_cname', 'feature_value']]
+         ，形如
+        1123, 2, '{"age": 0.2}', '年龄', 23
     """
     ale_df = ale_main(X.drop(columns=["cust_code"]), model, cat_cols)
     ale_df["feature_trends"] = ale_df.apply(lambda row: {row[2]: float(row[3])}, axis=1)
@@ -572,12 +573,16 @@ def ale_to_json(df, group_cols):
             # 分析趋势
             trends = []
             if 0.1 * len(value_y) < max_index < 0.9 * len(value_y):
-                if value_y[max_index - 1] < value_y[max_index] > value_y[max_index + 1]:
+                if max_index == 0 and value_y[max_index] > value_y[max_index + 1]:
+                    trends.append("最大值点附近为峰值")
+                elif max_index == len(value_y) - 1 and value_y[max_index - 1] < value_y[max_index]:
+                    trends.append("最大值点附近为峰值")
+                elif value_y[max_index - 1] < value_y[max_index] > value_y[max_index + 1]:
                     trends.append("最大值点附近为峰值")
             elif max_index > 0.1 * len(value_y):
                 if value_y[max_index - 1] < value_y[max_index]:
                     trends.append("最大值点左侧上升")
-            if max_index < 0.9 * len(value_y):
+            if max_index < 0.9 * (len(value_y) - 1):
                 if value_y[max_index] > value_y[max_index + 1]:
                     trends.append("最大值点右侧下降")
 
@@ -598,9 +603,12 @@ def ale_to_json(df, group_cols):
         y_result = []
         for i in range(len(data)):
             x = list(data[feature_method].iloc[i].keys())[0]
-            x_result.append(x)
+            if isinstance(x, str):
+                x_result.append(x)
+            elif isinstance(x, (int, float)):
+                x_result.append(round(x, 2))  # 保留两位小数
             y = list(data[feature_method].iloc[i].values())[0]
-            y_result.append(y)
+            y_result.append(round(y, 2))  # 保留两位小数
 
         feature_method_d = {
             group_cols[1]: feature,
@@ -617,8 +625,8 @@ def ale_to_json(df, group_cols):
     for item in output:
         feature_trends = item['feature_trends']
         item['feature_trends'] = (
-            sorted(feature_trends, key=lambda ft_: max(ft_['coordinates']['y']),
-                   reverse=False)
+            sorted(feature_trends, key=lambda ft_: max(list(map(abs, ft_['coordinates']['y']))),
+                   reverse=True)
         )  # 按照y的最大值对feature_trends内的每个特征的ale值进行排序
     return output
 
@@ -637,8 +645,10 @@ def shap_agg(df: pd.DataFrame):
         返回dataframe, 其中shapley列为json格式的字符串，形如
     [['user_code', 'shapley']']]
     [1123,
-    '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}},
-     {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}}]']
+    '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]
+    , "feature_cname": ["年龄", "身高"], "feature_value": ["23", "180"]}},
+     {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.6, 0.3],
+      "feature_cname": ["年龄", "身高"], "feature_value": ["34", "175"]}}]']
 
     """
     df = df.sort_values(by=['cust_code', 'target'])
@@ -724,11 +734,13 @@ def shap_agg(df: pd.DataFrame):
                 "target": str(data["target"].iloc[i]),
                 "feature_contributions": {
                     "x": list(data["feature_contribution"].iloc[i].keys()),
-                    "y": list(data["feature_contribution"].iloc[i].values()),
+                    "y": [round(y, 2) for y in data["feature_contribution"].iloc[i].values()],
+                    # 保留两位小数
                     "feature_cname": data["feature_cname_list"].iloc[i],
                     "feature_value": data["feature_value_list"].iloc[i],
                 },
             }
+            print("*" * 90, "\n", feature_contributions_d['feature_contributions']['y'])
             feature_contributions_d["description"] = shapley_description(
                 feature_contributions_d["feature_contributions"])  # 生成描述
 
@@ -759,9 +771,12 @@ def get_explain_result(X, model, cat_cols: List[str], feature_cname_dict: dict):
     Returns:
         返回ale的json格式和shap的dataframe,,形如
          shap_df[['cust_code', 'shapley']]，形如
-        [1123,
-    '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}},
-     {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}}]']
+    [['user_code', 'shapley']']]
+    [1123,
+    '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]
+    , "feature_cname": ["年龄", "身高"], "feature_value": ["23", "180"]}},
+     {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.6, 0.3],
+      "feature_cname": ["年龄", "身高"], "feature_value": ["34", "175"]}}]']
     """
     ale_df, shap_df = explain(X, model, cat_cols, feature_cname_dict)
     ale_json = ale_to_json(ale_df, ["target", "feature", "feature_cname"])
