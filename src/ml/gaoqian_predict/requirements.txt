@@ -1,4 +1,4 @@
-digitforce-aip==0.1.43
+digitforce-aip==0.1.44
 joblib
 scikit-learn
 shap~=0.41.0
