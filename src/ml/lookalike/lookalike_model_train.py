@@ -97,7 +97,7 @@ def train(train_data_table_name, test_data_table_name,
 
     # 绘制ROC曲线
     fpr, tpr, _ = roc_curve(test_data["label"].values, pred_ts)
-    roc_plot = [(x, y) for x, y in zip(fpr, tpr)]
+    roc_plot = {"x": list(fpr), "y": list(tpr)}
 
     if not is_automl:
         # 获取单塔 user tower
