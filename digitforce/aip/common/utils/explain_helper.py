@@ -780,5 +780,11 @@ def get_explain_result(X, model, cat_cols: List[str], feature_cname_dict: dict):
     """
     ale_df, shap_df = explain(X, model, cat_cols, feature_cname_dict)
     ale_json = ale_to_json(ale_df, ["target", "feature", "feature_cname"])
+    for item in ale_json:
+        feature_trends = item['feature_trends']
+        item['feature_trends'] = (
+            sorted(feature_trends, key=lambda ft_: max(list(map(abs, ft_['coordinates']['y']))),
+                   reverse=True)
+        )  # 按照y的最大值对feature_trends内的每个特征的ale值进行排序
     shap_df = shap_agg(shap_df)
     return ale_json, shap_df[['cust_code', 'shapley']]
