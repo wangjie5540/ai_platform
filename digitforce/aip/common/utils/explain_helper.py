@@ -265,7 +265,7 @@ def ale_main(X: pd.DataFrame, model, cat_cols: List[str]):
         cat_cols (List[str]): 离散型变量的列表
 
     Returns:
-        返回y_value, feature, feature_value, ale四列
+        返回["y_value", "feature", "feature_value", "ale"]四列
     """
     # 特征列表
     feature_list = []
@@ -328,7 +328,7 @@ def shap_value(X: pd.DataFrame, model):
         model : 现支持sklearn接口的机器学习模型
 
     Returns:
-        返回dataframe，列包括['cust_code','y_value', 'feature', 'shap_value']
+        返回dataframe，列包括["cust_code", "y_value", "feature", "shap_value", "feature_value"]
     """
     # feature_list
     feature_list = []
@@ -360,7 +360,6 @@ def shap_value(X: pd.DataFrame, model):
     result_df = shap_series.reset_index().rename(columns={0: "shap_value"})
     # reindex后输出列：['cust_code','y_value', 'feature', 'shap_value']
     print("result_df.iloc[:10]_0\n", result_df.iloc[:10])
-    print("X[X['cust_code']=='10001']\n", X[X['cust_code'] == '10001'])
     result_df = result_df.merge(X, on="cust_code", how="left")
     print("result_df.iloc[:10]_1\n", result_df.iloc[:10])
     result_df["feature_value"] = (
@@ -384,10 +383,11 @@ def explain(X: pd.DataFrame, model, cat_cols: List[str], feature_cname_dict: dic
         cat_cols (List[str]): 离散型变量的list
 
     Returns:
-        返回两个dataframe，ale_df[['target', 'feature', 'feature_trends']],形如
-        2, “age”, {0.1: 0.2, 0.2: 0.3}
-         shap_df[['cust_code', 'target', 'feature_contribution']]，形如
-        1123, 2, '{"age": 0.2}'
+        返回两个dataframe，ale_df[['target', 'feature', 'feature_trends','feature_cname']],形如
+        2, “age”, {0.1: 0.2, 0.2: 0.3}, '年龄'
+         shap_df[['cust_code', 'target', 'feature_contribution', 'feature_cname', 'feature_value']]
+         ，形如
+        1123, 2, '{"age": 0.2}', '年龄', 23
     """
     ale_df = ale_main(X.drop(columns=["cust_code"]), model, cat_cols)
     ale_df["feature_trends"] = ale_df.apply(lambda row: {row[2]: float(row[3])}, axis=1)
@@ -603,9 +603,12 @@ def ale_to_json(df, group_cols):
         y_result = []
         for i in range(len(data)):
             x = list(data[feature_method].iloc[i].keys())[0]
-            x_result.append(x)
+            if isinstance(x, str):
+                x_result.append(x)
+            elif isinstance(x, (int, float)):
+                x_result.append(round(x, 2))  # 保留两位小数
             y = list(data[feature_method].iloc[i].values())[0]
-            y_result.append(y)
+            y_result.append(round(y, 2))  # 保留两位小数
 
         feature_method_d = {
             group_cols[1]: feature,
@@ -642,8 +645,10 @@ def shap_agg(df: pd.DataFrame):
         返回dataframe, 其中shapley列为json格式的字符串，形如
     [['user_code', 'shapley']']]
     [1123,
-    '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}},
-     {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}}]']
+    '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]
+    , "feature_cname": ["年龄", "身高"], "feature_value": ["23", "180"]}},
+     {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.6, 0.3],
+      "feature_cname": ["年龄", "身高"], "feature_value": ["34", "175"]}}]']
 
     """
     df = df.sort_values(by=['cust_code', 'target'])
@@ -729,11 +734,13 @@ def shap_agg(df: pd.DataFrame):
                 "target": str(data["target"].iloc[i]),
                 "feature_contributions": {
                     "x": list(data["feature_contribution"].iloc[i].keys()),
-                    "y": list(data["feature_contribution"].iloc[i].values()),
+                    "y": [round(y, 2) for y in data["feature_contribution"].iloc[i].values()],
+                    # 保留两位小数
                     "feature_cname": data["feature_cname_list"].iloc[i],
                     "feature_value": data["feature_value_list"].iloc[i],
                 },
             }
+            print("*" * 90, "\n", feature_contributions_d['feature_contributions']['y'])
             feature_contributions_d["description"] = shapley_description(
                 feature_contributions_d["feature_contributions"])  # 生成描述
 
@@ -764,9 +771,12 @@ def get_explain_result(X, model, cat_cols: List[str], feature_cname_dict: dict):
     Returns:
         返回ale的json格式和shap的dataframe,,形如
          shap_df[['cust_code', 'shapley']]，形如
-        [1123,
-    '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}},
-     {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]}}]']
+    [['user_code', 'shapley']']]
+    [1123,
+    '[{"target": "0", "feature_contributions": {"x": ["age", "tall"], "y": [0.2, 0.3]
+    , "feature_cname": ["年龄", "身高"], "feature_value": ["23", "180"]}},
+     {"target": "1", "feature_contributions": {"x": ["age", "tall"], "y": [0.6, 0.3],
+      "feature_cname": ["年龄", "身高"], "feature_value": ["34", "175"]}}]']
     """
     ale_df, shap_df = explain(X, model, cat_cols, feature_cname_dict)
     ale_json = ale_to_json(ale_df, ["target", "feature", "feature_cname"])
