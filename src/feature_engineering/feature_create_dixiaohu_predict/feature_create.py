@@ -14,11 +14,12 @@ def feature_create(
         dixiao_before_days: int,
         dixiao_after_days: int,
         feature_days=20,
-        instance_id: int = None,
+        instance_id: str = None,
 ):
     """产生训练数据集和验证数据集（回测数据集）
 
     Args:
+        instance_id: 预测数据分区
         sample_table_name (str): _description_
         dixiao_before_days (int): _description_
         dixiao_after_days (int): _description_

@@ -22,7 +22,7 @@ from datetime import datetime
 
 def start_model_predict(
         predict_feature_table_name: str, model_hdfs_path: str, output_file_name: str,
-        instance_id: int, predict_table_name: str, shapley_table_name: str,
+        instance_id: str, predict_table_name: str, shapley_table_name: str,
 ):
     """
     预测过程
