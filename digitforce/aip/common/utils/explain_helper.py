@@ -297,7 +297,7 @@ def ale_main(X: pd.DataFrame, model, cat_cols: List[str]):
             ale_df["feature"] = feature
             result_df = pd.concat([result_df, ale_df])
 
-        result_df["y_value"] = "默认目标"  # 回归的多添加一列空值
+        result_df["y_value"] = "1"  # 回归的多添加一列空值
     elif MODEL_TYPE == "classifier":
         # 分类
         result_df = pd.DataFrame(columns=["y_value", "feature", "feature_value", "ale"])
@@ -338,7 +338,6 @@ def shap_value(X: pd.DataFrame, model):
             feature_list = feature_list.tolist()
     elif hasattr(model, "feature_name_"):
         feature_list = model.feature_name_
-
     explainer = Explainer(model)
     shap_values = explainer.shap_values(X[feature_list])  # shap值计算
     if isinstance(shap_values, list):  # 分类的会给出list
@@ -353,20 +352,17 @@ def shap_value(X: pd.DataFrame, model):
     else:  # 回归的多添加一列空值
         shap_df = pd.DataFrame(shap_values, columns=feature_list)
         shap_df["cust_code"] = X["cust_code"]
-        shap_df["y_value"] = "默认目标"  # 回归的多添加一列空值
+        shap_df["y_value"] = "1"  # 回归的多添加一列空值
 
     shap_series = shap_df.set_index(["cust_code", "y_value"]).stack()  # 将带特征的列叠起来
     shap_series.index.names = ["cust_code", "y_value", "feature"]  # 赋予前几列名字
     result_df = shap_series.reset_index().rename(columns={0: "shap_value"})
     # reindex后输出列：['cust_code','y_value', 'feature', 'shap_value']
-    print("result_df.iloc[:10]_0\n", result_df.iloc[:10])
     result_df = result_df.merge(X, on="cust_code", how="left")
-    print("result_df.iloc[:10]_1\n", result_df.iloc[:10])
     result_df["feature_value"] = (
         result_df.apply(lambda x: x[x["feature"]], axis=1)
     )  # 添加feature_value列
     result_df = result_df[["cust_code", "y_value", "feature", "shap_value", "feature_value"]]
-    print("result_df.iloc[:10]_2\n", result_df.iloc[:10])
     return result_df
 
 
